@@ -161,6 +161,78 @@
         }
       }
     },
+    "apiForbiddenAddDetails" : {
+      "comment" : "Argument is the localized resource name (e.g. User, Document type)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        }
+      }
+    },
+    "apiForbiddenAddErrorMessage" : {
+      "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create not permitted"
+          }
+        }
+      }
+    },
+    "apiForbiddenChangeDetails" : {
+      "comment" : "Argument is the localized resource name (e.g. User, Document type)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        }
+      }
+    },
+    "apiForbiddenChangeErrorMessage" : {
+      "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit not permitted"
+          }
+        }
+      }
+    },
+    "apiForbiddenDeleteDetails" : {
+      "comment" : "Argument is the localized resource name (e.g. User, Document type)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        }
+      }
+    },
+    "apiForbiddenDeleteErrorMessage" : {
+      "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete not permitted"
+          }
+        }
+      }
+    },
     "apiForbiddenDetails" : {
       "comment" : "Argument 1 is the localized resource name (e.g. User, Document type), argument 2 is the detail error string reported by the backend",
       "extractionState" : "manual",
@@ -265,6 +337,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erişim yok: %@"
+          }
+        }
+      }
+    },
+    "apiForbiddenViewDetails" : {
+      "comment" : "Argument is the localized resource name (e.g. User, Document type)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        }
+      }
+    },
+    "apiForbiddenViewErrorMessage" : {
+      "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View not permitted"
           }
         }
       }
@@ -6495,49 +6591,49 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tryk for detaljer!"
+            "value" : "Detaljer"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Für Details antippen!"
+            "value" : "Details"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap for details!"
+            "value" : "Details"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appuyez pour en savoir plus!"
+            "value" : "Détails"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tocca per maggiori dettagli!"
+            "value" : "Dettagli"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tik voor meer informatie!"
+            "value" : "Details"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dotknij, aby zobaczyć szczegóły!"
+            "value" : "Szczegóły"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detaylar için dokun!"
+            "value" : "Ayrıntılar"
           }
         }
       }
@@ -6548,49 +6644,49 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der opstod en fejl"
+            "value" : "Uventet fejl"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein Fehler ist aufgetreten"
+            "value" : "Unerwarteter Fehler"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An unexpected error occurred"
+            "value" : "Unexpected error"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une erreur est survenue"
+            "value" : "Erreur inattendue"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si è verificato un errore imprevisto"
+            "value" : "Errore imprevisto"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er is een fout opgetreden"
+            "value" : "Onverwachte fout"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wystąpił błąd"
+            "value" : "Nieoczekiwany błąd"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beklenmedik bir hata oluştu"
+            "value" : "Beklenmedik hata"
           }
         }
       }
@@ -11803,6 +11899,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geçersiz ek"
+          }
+        }
+      }
+    },
+    "shareSheetNeedsAuthMessage" : {
+      "comment" : "Alert body in the Share Extension when the server rejected the login (401). The extension cannot run the re-authentication flow itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        }
+      }
+    },
+    "shareSheetNeedsAuthTitle" : {
+      "comment" : "Alert title in the Share Extension when the server rejected the login (401)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in again"
           }
         }
       }

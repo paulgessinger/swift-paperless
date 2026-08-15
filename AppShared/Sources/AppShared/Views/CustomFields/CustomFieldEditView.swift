@@ -142,7 +142,7 @@ private struct AddCustomFieldView: View {
 
     .task {
       do {
-        try await store.fetchAllCustomFields()
+        try await store.sync()
       } catch {
         //                Logger.shared.error("Error fetching custom fields: \(error, privacy: .public)")
         errorController.push(error: error)
@@ -364,14 +364,14 @@ private let instances = [
 
 @MainActor
 private func getDocument(store: DocumentStore) async throws -> Document? {
-  let repository = store.repository as! TransientRepository
+  let repository = store.previewRepository(as: TransientRepository.self)
   repository.addUser(
     User(id: 1, isSuperUser: false, username: "user", groups: [1]))
   try? repository.login(userId: 1)
   for field in customFields {
     _ = try await repository.add(customField: field)
   }
-  try await store.fetchAll()
+  try await store.sync()
   try await store.repository.create(
     document: ProtoDocument(title: "blubb"),
     file: #URL("http://example.com"), filename: "blubb.pdf"
@@ -383,7 +383,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
 #Preview("Fully equipped") {
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
@@ -410,7 +410,7 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
 #Preview("Empty") {
   @Previewable
-  @State var store = DocumentStore(repository: TransientRepository())
+  @State var store = DocumentStore.preview(TransientRepository())
 
   @Previewable
   @StateObject var errorController = ErrorController()
@@ -428,12 +428,12 @@ private func getDocument(store: DocumentStore) async throws -> Document? {
 
     Button("Toggle perms") {
       Task {
-        let repository = store.repository as! TransientRepository
+        let repository = store.previewRepository(as: TransientRepository.self)
         repository.set(
           permissions: .full {
             $0.set(.view, to: !store.permissions.test(.view, for: .customField), for: .customField)
           })
-        try? await store.fetchAll()
+        try? await store.sync()
       }
     }
   }

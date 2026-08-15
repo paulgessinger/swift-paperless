@@ -959,7 +959,7 @@ private let customFields = [
 ]
 
 #Preview {
-  @Previewable @State var store = DocumentStore(repository: TransientRepository())
+  @Previewable @State var store = DocumentStore.preview(TransientRepository())
   @Previewable @State var filterModel = FilterModel()
   @Previewable @StateObject var errorController = ErrorController()
 
@@ -978,7 +978,7 @@ private let customFields = [
   }
   .task {
     do {
-      let repository = store.repository as! TransientRepository
+      let repository = store.previewRepository(as: TransientRepository.self)
       repository.addUser(
         User(id: 1, isSuperUser: false, username: "user", groups: [1]))
       try? repository.login(userId: 1)
@@ -991,7 +991,7 @@ private let customFields = [
       _ = try await store.create(documentType: ProtoDocumentType(name: "Test Document Type"))
       _ = try await store.create(storagePath: ProtoStoragePath(name: "Test Storage Path"))
 
-      try await store.fetchAll()
+      try await store.sync()
       try await store.repository.create(
         document: ProtoDocument(title: "blubb"),
         file: #URL("http://example.com"), filename: "blubb.pdf"

@@ -46,8 +46,31 @@ public final class DocumentStore: Sendable {
   public var customFields: [UInt: CustomField] { elementStore.customFields }
   public var currentUser: User? { elementStore.currentUser }
   public var serverConfiguration: ServerConfiguration? { elementStore.serverConfiguration }
-  public var permissions: UserPermissions { elementStore.permissions }
+  /// The permission matrix to *gate on* — and, until `ui_settings` has landed
+  /// for the active server, a deliberate optimistic lie.
+  ///
+  /// The stored value starts `.empty`, which tests `false` for everything and is
+  /// therefore indistinguishable from a genuine denial: on a cold start (first
+  /// launch, or any launch while offline before the first successful sync) every
+  /// gate in the app read as "you have no permissions". Handing out `.full`
+  /// instead means the UI stays usable and the *server* answers, which is the
+  /// same bet `CachingRepository.syncElements` already makes (its gate is a
+  /// `UserPermissions?`, and `nil` → fetch everything, let the 403 decide).
+  ///
+  /// Anything that *displays* this matrix, rather than gating on it, must check
+  /// ``permissionsKnown`` first — otherwise it reports access the server never
+  /// granted. `PermissionsView` does.
+  public var permissions: UserPermissions {
+    permissionsKnown ? elementStore.permissions : .full
+  }
+
   public var settings: UISettingsSettings { elementStore.settings }
+
+  /// Whether ``permissions`` reflects the server's answer yet, or is the
+  /// optimistic `.full` stand-in. Gates don't need this; anything that shows the
+  /// matrix, or that would otherwise assert *why* something is unavailable,
+  /// does.
+  public var permissionsKnown: Bool { elementStore.isHydrated }
 
   /// True while a network `sync` is in flight. Distinct from data-presence so a
   /// cold cache shows loading rather than emptiness.
@@ -84,6 +107,13 @@ public final class DocumentStore: Sendable {
 
   @ObservationIgnored
   private var taskUpdateTask: Task<Void, Never>?
+
+  // The in-flight element sync, if any. Concurrent `sync` callers join this one
+  // task instead of each firing their own `syncElements` (the launch flurry of
+  // sync / fetchUISettings / scenePhase triggers shares a single network
+  // pass). Only ever touched on the main actor.
+  @ObservationIgnored
+  private var syncTask: Task<Void, Error>?
 
   // MARK: Methods
 
@@ -163,6 +193,25 @@ public final class DocumentStore: Sendable {
   }
 
   public func set(repository: some Repository, reload: Bool = true) {
+    // A repository that doesn't front the DB detaches the element projection
+    // (see `wireElementStore()`), which blanks every element read site until the
+    // next relaunch. That is legitimate before login, but only via `init` —
+    // anything *replacing* a live repository is expected to assemble a caching
+    // stack, so a bare one here is a caller bug. Be loud instead of silently
+    // emptying the UI: this exact mistake shipped once already, from
+    // `ConnectionsView.updateExtraHeaders`.
+    if !(repository is any CachingBackend) {
+      Logger.shared.fault(
+        "Installing non-caching repository \(String(describing: type(of: repository)), privacy: .public) on a live store; element projection will stay detached until relaunch"
+      )
+    }
+    // An element sync in flight belongs to the *outgoing* backend: it writes the
+    // old server's rows, and `runSyncElements` would let the caller's follow-up
+    // sync join it (both callers do `set(repository:)` → `sync()`) and return
+    // without ever fetching the new server's cache. Nothing here is worth
+    // keeping, so cancel rather than detach.
+    syncTask?.cancel()
+    syncTask = nil
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     wireElementStore()
@@ -207,50 +256,54 @@ public final class DocumentStore: Sendable {
 
   public func updateDocument(_ document: Document) async throws -> Document {
     Logger.shared.info("Updating document with ID \(document.id, privacy: .public)")
-    try checkPermission(.change, for: .document)
-    events.emit(.changed(document: document))
+    return try await performing(.change, on: .document) {
+      events.emit(.changed(document: document))
 
-    var document = document
+      var document = document
 
-    if settings.documentEditing.removeInboxTags {
-      Logger.shared.debug("Removing inbox tags from document as per setting")
-      let inboxTags = tags.values.filter(\.isInboxTag)
-      for tag in inboxTags {
-        document.tags.removeAll(where: { $0 == tag.id })
+      if settings.documentEditing.removeInboxTags {
+        Logger.shared.debug("Removing inbox tags from document as per setting")
+        let inboxTags = tags.values.filter(\.isInboxTag)
+        for tag in inboxTags {
+          document.tags.removeAll(where: { $0 == tag.id })
+        }
       }
-    }
 
-    let updated = try await repository.update(document: document)
-    documents[updated.id] = updated
-    events.emit(.changeReceived(document: updated))
-    return updated
+      let updated = try await repository.update(document: document)
+      documents[updated.id] = updated
+      events.emit(.changeReceived(document: updated))
+      return updated
+    }
   }
 
   public func deleteDocument(_ document: Document) async throws {
     Logger.shared.info("Deleting document with ID \(document.id, privacy: .public)")
-    try checkPermission(.delete, for: .document)
-    try await repository.delete(document: document)
-    documents.removeValue(forKey: document.id)
-    events.emit(.deleted(document: document))
+    try await performing(.delete, on: .document) {
+      try await repository.delete(document: document)
+      documents.removeValue(forKey: document.id)
+      events.emit(.deleted(document: document))
+    }
   }
 
   public func deleteNote(from document: Document, id: UInt) async throws {
     Logger.shared.info("Deleting note with ID \(id, privacy: .public)")
-    try checkPermission(.delete, for: .note)
-    events.emit(.changed(document: document))
-    _ = try await repository.deleteNote(id: id, documentId: document.id)
+    try await performing(.delete, on: .note) {
+      events.emit(.changed(document: document))
+      _ = try await repository.deleteNote(id: id, documentId: document.id)
 
-    events.emit(.changeReceived(document: document))
+      events.emit(.changeReceived(document: document))
+    }
   }
 
   public func addNote(to document: Document, note: ProtoDocument.Note) async throws {
     Logger.shared.info("Adding note to document \(document.id, privacy: .public)")
-    try checkPermission(.add, for: .note)
-    events.emit(.changed(document: document))
+    try await performing(.add, on: .note) {
+      events.emit(.changed(document: document))
 
-    _ = try await repository.createNote(documentId: document.id, note: note)
+      _ = try await repository.createNote(documentId: document.id, note: note)
 
-    events.emit(.changeReceived(document: document))
+      events.emit(.changeReceived(document: document))
+    }
   }
 
   public func notes(for document: Document) async throws -> [Document.Note] {
@@ -279,61 +332,82 @@ public final class DocumentStore: Sendable {
     await fetchTasks()
   }
 
-  // On-demand element refreshers kept for their external callers. Under the
-  // source-of-truth model "refresh collection X" means "sync into the DB"; the
-  // live observation then repaints the projection. `syncElements` reconciles
-  // every collection at once, so these all delegate to it.
-  public func fetchAllUsers() async throws { try await sync(userInitiated: true) }
-  public func fetchAllGroups() async throws { try await sync(userInitiated: true) }
-  public func fetchAllCustomFields() async throws { try await sync(userInitiated: true) }
-
-  /// Refresh `ui_settings` (permissions/settings) from the network. Syncs into
-  /// the DB, then synchronously pulls the singleton into the projection — the
-  /// one path (`DocumentListViewModel.load`) that reads `permissions`
-  /// immediately afterwards can't wait for the observation's runloop hop.
+  /// Refresh `ui_settings` (permissions/settings) from the network, then
+  /// synchronously pull the singleton into the projection — the one path
+  /// (`DocumentListViewModel.load`) that reads `permissions` immediately
+  /// afterwards can't wait for the observation's runloop hop. Automatic (not
+  /// user-initiated): a sync failure fails soft and we proceed with the cached
+  /// permissions (offline-first) instead of aborting the launch load.
   public func fetchUISettings() async throws {
-    try await sync(userInitiated: true)
+    try await sync()
     if let backend = repository as? any CachingBackend {
       elementStore.refreshUISettings(from: backend.database, serverID: backend.serverID)
     }
   }
 
   /// Network → DB via the caching backend; the live element observation repaints
-  /// the projection. Automatic syncs fail soft into `lastSyncError`;
-  /// user-initiated syncs rethrow so the caller can surface the failure (toast).
+  /// the projection. Concurrent calls coalesce onto a single in-flight
+  /// `syncElements` (see `syncTask`); each caller still applies its own
+  /// `userInitiated` policy to the shared outcome — automatic syncs fail soft
+  /// into `lastSyncError`, user-initiated syncs rethrow so the caller can
+  /// surface the failure (toast). So a user-initiated call joining a background
+  /// sync still sees the error. This is what entry views call eagerly on
+  /// appear, and what pull-to-refresh calls with `userInitiated: true`.
   public func sync(userInitiated: Bool = false) async throws {
     Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
+    do {
+      try await runSyncElements()
+      lastSyncError = nil
+      Logger.shared.info("Sync store complete")
+    } catch {
+      // A cancellation is never the user's problem to see: either the caller's
+      // own task went away, or `set(repository:)` retired this sync on a
+      // connection switch. Drop it before the userInitiated rethrow so neither
+      // case toasts.
+      if error.isCancellationError {
+        Logger.shared.debug("Element sync cancelled")
+        return
+      }
+      if userInitiated { throw error }
+      // Only presentable failures are recorded. A non-displayable one (a GRDB
+      // `DatabaseError`, a raw `URLError`) leaves any degraded state already
+      // on screen intact rather than clearing it.
+      if let displayable = error as? any DisplayableError {
+        lastSyncError = displayable
+      }
+      Logger.shared.error("Background sync failed (suppressed): \(error)")
+    }
+  }
+
+  /// Run (or join) the single in-flight `syncElements`. Returns when it
+  /// completes; throws its error to every joined caller (who each decide what to
+  /// do with it). A no-op without a caching backend.
+  private func runSyncElements() async throws {
+    if let syncTask {
+      Logger.shared.debug("Joining in-flight element sync")
+      return try await syncTask.value
+    }
     guard let backend = repository as? any CachingBackend else {
       // No DB-backed repository (e.g. NullRepository before login). Nothing to
       // sync; the projection is empty until a caching repository is set.
       Logger.shared.info("Sync skipped: repository is not a caching backend")
       return
     }
+    Logger.shared.debug("Starting element sync")
+    let task = Task { try await backend.syncElements() }
+    syncTask = task
     isRefreshing = true
-    defer { isRefreshing = false }
-    do {
-      try await backend.syncElements()
-      lastSyncError = nil
-      Logger.shared.info("Sync store complete")
-    } catch {
-      if userInitiated { throw error }
-      if !error.isCancellationError {
-        // Only presentable failures are recorded. A non-displayable one (a GRDB
-        // `DatabaseError`, a raw `URLError`) leaves any degraded state already
-        // on screen intact rather than clearing it.
-        if let displayable = error as? any DisplayableError {
-          lastSyncError = displayable
-        }
-        Logger.shared.error("Background sync failed (suppressed): \(error)")
+    defer {
+      // Retract only what we installed. `set(repository:)` can retire this sync
+      // mid-flight and a replacement can already own `syncTask` by the time we
+      // resume; clearing it blindly would break the replacement's coalescing and
+      // drop `isRefreshing` while it is still running.
+      if syncTask == task {
+        syncTask = nil
+        isRefreshing = false
       }
     }
-  }
-
-  /// The eager entry views call. Triggers a network → DB sync; the element
-  /// projection repaints from the live observation.
-  public func fetchAll() async throws {
-    Logger.shared.notice("Fetch all store request")
-    try await sync()
+    try await task.value
   }
 
   public func document(id: UInt) async throws -> Document? {
@@ -343,37 +417,46 @@ public final class DocumentStore: Sendable {
 
   private func create<E, R>(
     _: R.Type, from element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> R
   ) async throws -> R
   where E: Sendable & PermissionsModel, R: Identifiable & Sendable {
-    // `settings` is kept live by the element observation, so its permission
-    // defaults are already current — apply them directly. The repository
-    // write-throughs the created element to the DB; the observation repaints it
-    // into the projection.
-    let updated = settings.permissions.appliedAsDefaults(to: element)
-    return try await method(updated)
+    try await performing(.add, on: resource) {
+      // `settings` is kept live by the element observation, so its permission
+      // defaults are already current — apply them directly. The repository
+      // write-throughs the created element to the DB; the observation repaints
+      // it into the projection.
+      let updated = settings.permissions.appliedAsDefaults(to: element)
+      return try await method(updated)
+    }
   }
 
   private func update<E>(
     _ element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> E
   ) async throws where E: Identifiable & Sendable {
-    _ = try await method(element)
+    try await performing(.change, on: resource) {
+      _ = try await method(element)
+    }
   }
 
   private func delete<E>(
     _ element: E,
+    resource: UserPermissions.Resource,
     method: (E) async throws -> Void
   ) async throws where E: Identifiable & Sendable {
-    do {
-      try await method(element)
-    } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
-      let id = "\(element.id)"
-      Logger.api.debug(
-        "Element with ID \(id) not found (probably already deleted)")
+    try await performing(.delete, on: resource) {
+      do {
+        try await method(element)
+      } catch let RequestError.unexpectedStatusCode(code: code, _) where code == .notFound {
+        let id = "\(element.id)"
+        Logger.api.debug(
+          "Element with ID \(id) not found (probably already deleted)")
+      }
+      // The repository write-throughs the delete to the DB; the observation
+      // removes it from the projection.
     }
-    // The repository write-throughs the delete to the DB; the observation
-    // removes it from the projection.
   }
 
   public func create(tag: ProtoTag) async throws -> Tag {
@@ -381,17 +464,18 @@ public final class DocumentStore: Sendable {
     return try await create(
       Tag.self,
       from: tag,
+      resource: .tag,
       method: repository.create(tag:))
   }
 
   public func update(tag: Tag) async throws {
     Logger.api.info("Updating tag with ID \(tag.id)")
-    return try await update(tag, method: repository.update(tag:))
+    return try await update(tag, resource: .tag, method: repository.update(tag:))
   }
 
   public func delete(tag: Tag) async throws {
     Logger.api.info("Deleting tag with ID \(tag.id)")
-    return try await delete(tag, method: repository.delete(tag:))
+    return try await delete(tag, resource: .tag, method: repository.delete(tag:))
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
@@ -399,6 +483,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       Correspondent.self,
       from: correspondent,
+      resource: .correspondent,
       method: repository.create(correspondent:))
   }
 
@@ -406,6 +491,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating correspondent with ID \(correspondent.id)")
     return try await update(
       correspondent,
+      resource: .correspondent,
       method: repository.update(correspondent:))
   }
 
@@ -413,6 +499,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting correspondent with ID \(correspondent.id)")
     return try await delete(
       correspondent,
+      resource: .correspondent,
       method: repository.delete(correspondent:))
   }
 
@@ -421,6 +508,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       DocumentType.self,
       from: documentType,
+      resource: .documentType,
       method: repository.create(documentType:))
   }
 
@@ -428,6 +516,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating document type with ID \(documentType.id)")
     return try await update(
       documentType,
+      resource: .documentType,
       method: repository.update(documentType:))
   }
 
@@ -435,11 +524,13 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting document type with ID \(documentType.id)")
     return try await delete(
       documentType,
+      resource: .documentType,
       method: repository.delete(documentType:))
   }
 
   public func create(savedView: ProtoSavedView) async throws -> SavedView {
     Logger.api.info("Creating saved view with name \(savedView.name)")
+    try checkPermission(.add, for: .savedView)
     let created = try await repository.create(savedView: savedView)
 
     try await handleSavedViewVisibility(created)
@@ -492,6 +583,7 @@ public final class DocumentStore: Sendable {
 
   public func update(savedView: SavedView) async throws {
     Logger.api.info("Updating saved view with ID \(savedView.id)")
+    try checkPermission(.change, for: .savedView)
     _ = try await repository.update(savedView: savedView)
 
     try await handleSavedViewVisibility(savedView)
@@ -499,6 +591,7 @@ public final class DocumentStore: Sendable {
 
   public func delete(savedView: SavedView) async throws {
     Logger.api.info("Deleting saved view with ID \(savedView.id)")
+    try checkPermission(.delete, for: .savedView)
     try await repository.delete(savedView: savedView)
   }
 
@@ -507,6 +600,7 @@ public final class DocumentStore: Sendable {
     return try await create(
       StoragePath.self,
       from: storagePath,
+      resource: .storagePath,
       method: repository.create(storagePath:))
   }
 
@@ -514,6 +608,7 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Updating storage path with ID \(storagePath.id)")
     try await update(
       storagePath,
+      resource: .storagePath,
       method: repository.update(storagePath:))
   }
 
@@ -521,7 +616,29 @@ public final class DocumentStore: Sendable {
     Logger.api.info("Deleting storage path with ID \(storagePath.id)")
     try await delete(
       storagePath,
+      resource: .storagePath,
       method: repository.delete(storagePath:))
+  }
+
+  /// Runs `body` behind its permission check and gives whatever comes back the
+  /// operation context the user needs. The local permission matrix and the
+  /// server can disagree (object-level permissions aren't in the matrix, and it
+  /// can be stale), so a refusal arrives either as our own check failing or as a
+  /// 403 from the request — both surface as a `PermissionsError` that names the
+  /// operation that was attempted rather than a bare "request was denied".
+  private func performing<T>(
+    _ operation: UserPermissions.Operation, on resource: UserPermissions.Resource,
+    _ body: () async throws -> T
+  ) async throws -> T {
+    try checkPermission(operation, for: resource)
+    do {
+      return try await body()
+    } catch let RequestError.forbidden(detail) {
+      Logger.api.debug(
+        "Server refused \(operation.description, privacy: .public) on \(resource.rawValue, privacy: .public)"
+      )
+      throw PermissionsError(resource: resource, operation: operation, detail: detail)
+    }
   }
 
   private func checkPermission(
@@ -530,6 +647,10 @@ public final class DocumentStore: Sendable {
     Logger.api.info(
       "Checking permission for \(operation.description, privacy: .public) on \(resource.rawValue, privacy: .public)"
     )
+    // No hydration check needed: `permissions` is `.full` until the real matrix
+    // lands, so a cold start falls through to the request and lets the server
+    // answer instead of refusing with a permission error the user can do
+    // nothing about.
     if !permissions.test(operation, for: resource) {
       Logger.api.debug("No permissions for \(operation.description) on \(resource.rawValue)")
       throw PermissionsError(resource: resource, operation: operation)
@@ -539,7 +660,14 @@ public final class DocumentStore: Sendable {
 
 //// Permissions checking for resources
 extension DocumentStore {
+  /// The optimistic ``permissions`` default isn't enough for these three: they
+  /// also consult `currentUser`, which is nil until `ui_settings` lands, so
+  /// `currentUser?.canView(document) ?? false` would still deny every document
+  /// on a cold start. Answer optimistically until we know — the server still
+  /// refuses anything the user may not do, and a wrong "you don't have
+  /// permission" banner is worse than an edit that fails.
   public func userCanView(document: Document) -> Bool {
+    guard permissionsKnown else { return true }
     if !permissions.test(.view, for: .document) {
       return false
     }
@@ -548,6 +676,7 @@ extension DocumentStore {
   }
 
   public func userCanChange(document: Document) -> Bool {
+    guard permissionsKnown else { return true }
     if !permissions.test(.change, for: .document) {
       return false
     }
@@ -556,6 +685,7 @@ extension DocumentStore {
   }
 
   public func userCanDelete(document: Document) -> Bool {
+    guard permissionsKnown else { return true }
     if !permissions.test(.delete, for: .document) {
       return false
     }

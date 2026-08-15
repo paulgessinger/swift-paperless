@@ -200,7 +200,7 @@ public struct ConnectionsView: View {
           value: stored.identity ?? String(localized: .login(.noIdentity)))
 
         NavigationLink {
-          PermissionsView(userPermissions: store.permissions)
+          PermissionsView(userPermissions: store.permissions, isKnown: store.permissionsKnown)
         } label: {
           Label(localized: .permissions(.title), systemImage: "lock.fill")
         }

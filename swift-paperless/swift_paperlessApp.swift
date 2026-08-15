@@ -170,7 +170,7 @@ struct MainView: View {
         await sleep(.seconds(0.3))
         store.set(repository: repository)
         storeReady = true
-        try? await store.fetchAll()
+        try? await store.sync()
         store.startTaskPolling()
         await sleep(.seconds(0.3))
         showLoadingScreen = false
@@ -179,7 +179,7 @@ struct MainView: View {
         store = newStore
         observeFriendlyName(on: newStore)
         storeReady = true
-        try? await newStore.fetchAll()
+        try? await newStore.sync()
         newStore.startTaskPolling()
         showLoadingScreen = false
       }

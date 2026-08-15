@@ -214,7 +214,7 @@ public struct DocumentNoteView: View {
 // - MARK: Preview
 
 private struct PreviewHelper: View {
-  @State public var store = DocumentStore(repository: PreviewRepository(downloadDelay: 3.0))
+  @State public var store = DocumentStore.preview(PreviewRepository(downloadDelay: 3.0))
   @StateObject public var errorController = ErrorController()
 
   @State public var document: Document?
@@ -238,7 +238,7 @@ private struct PreviewHelper: View {
     .environmentObject(errorController)
 
     .task {
-      try? await store.fetchAll()
+      try? await store.sync()
     }
   }
 }

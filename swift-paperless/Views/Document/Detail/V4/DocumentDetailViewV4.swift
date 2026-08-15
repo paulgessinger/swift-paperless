@@ -667,7 +667,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       let model = viewModel
       async let document: () = model.loadDocument()
       async let metadata: () = model.loadMetadata()
-      _ = await (document, metadata)
+      async let permissions: () = model.refreshPermissions()
+      _ = await (document, metadata, permissions)
     }
     .safeAreaInset(edge: .bottom) {
       metadataBar
@@ -946,7 +947,7 @@ extension Tag {
 }
 
 private struct DocumentDetailViewV4PreviewHelper: View {
-  @State private var store = DocumentStore(repository: TransientRepository())
+  @State private var store = DocumentStore.preview(TransientRepository())
   @StateObject private var errorController = ErrorController()
   @State private var connectionManager = ConnectionManager(
     database: try! Database.inMemory(), previewMode: true)
@@ -978,9 +979,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
     .environment(RouteManager())
     .task {
       do {
-        guard let repository = store.repository as? TransientRepository else {
-          return
-        }
+        let repository = store.previewRepository(as: TransientRepository.self)
         repository.addUser(User(id: 1, isSuperUser: true, username: "preview", groups: []))
         try repository.login(userId: 1)
 
@@ -1036,7 +1035,7 @@ private struct DocumentDetailViewV4PreviewHelper: View {
           )
         )
 
-        try await store.fetchAll()
+        try await store.sync()
         let documents = try await store.repository.documents(filter: .default).fetch(limit: 100_000)
         let firstDocument = documents.first
         if var firstDocument {
