@@ -11903,6 +11903,30 @@
         }
       }
     },
+    "shareSheetNeedsAuthMessage" : {
+      "comment" : "Alert body in the Share Extension when the server rejected the login (401). The extension cannot run the re-authentication flow itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        }
+      }
+    },
+    "shareSheetNeedsAuthTitle" : {
+      "comment" : "Alert title in the Share Extension when the server rejected the login (401)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in again"
+          }
+        }
+      }
+    },
     "shareSheetNotLoggedIn" : {
       "extractionState" : "manual",
       "localizations" : {

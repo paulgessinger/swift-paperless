@@ -53,17 +53,7 @@ public struct ErrorDisplay: ViewModifier {
             title: { detail in
               Text(detail.message)
             },
-            actions: { detail in
-              Button(String(localized: .app(.copyToClipboard))) {
-                Pasteboard.general.string = detail.details
-              }
-
-              if let link = detail.documentationLink {
-                Link(String(localized: .app(.errorMoreInfo)), destination: link)
-              }
-
-              Button(String(localized: .app(.ok)), role: .cancel) {}
-            },
+            actions: { ErrorAlertActions(for: $0) },
             message: { detail in
               if let details = detail.details {
                 Text(details)
@@ -77,5 +67,32 @@ public struct ErrorDisplay: ViewModifier {
 extension View {
   @MainActor public func errorOverlay(errorController: ErrorController) -> some View {
     modifier(ErrorDisplay(errorController: errorController))
+  }
+}
+
+/// The buttons an error alert offers: copy the details, follow the
+/// documentation link, dismiss. Shared with the Share Extension's alert so the
+/// two stay in the same vocabulary.
+public struct ErrorAlertActions: View {
+  private let error: any DisplayableError
+
+  public init(for error: any DisplayableError) {
+    self.error = error
+  }
+
+  public var body: some View {
+    // The app only reaches this alert when there are details to show; the
+    // extension alerts on every error, so the button is conditional.
+    if error.details != nil {
+      Button(String(localized: .app(.copyToClipboard))) {
+        Pasteboard.general.string = error.details
+      }
+    }
+
+    if let link = error.documentationLink {
+      Link(String(localized: .app(.errorMoreInfo)), destination: link)
+    }
+
+    Button(String(localized: .app(.ok)), role: .cancel) {}
   }
 }

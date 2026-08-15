@@ -10,6 +10,10 @@
 //    into toasts — no persistent UI for the offline state, just a brief
 //    announcement when the state flips.
 //
+//  None of this reaches the Share Extension: a toast renders into a
+//  screen-level window, which the extension's sheet doesn't own. Its
+//  counterpart is `ShareErrorBanner`.
+//
 //  The interactive `NeedsAuthBanner` is intentionally NOT installed here —
 //  it lives in a `safeAreaInset` on the home document screen so existing
 //  sheets visually hide it, preventing the user from triggering a SwiftUI

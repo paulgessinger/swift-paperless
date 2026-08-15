@@ -4,6 +4,7 @@
 - The content-only search mode is no longer offered, following the Paperless-ngx web interface, which has dropped it. Existing filters, saved views and links that use it keep working.
 - OIDC logins now support TOTP (two-factor authentication) codes from Paperless-ngx
 - Sharing a document link now shares the web interface URL, which opens in a browser, instead of the API URL that did not
+- The share extension now reports errors when saving a document fails, instead of only briefly flashing a warning icon. If your login has expired it says so and tells you to sign in again in the app
 - Permission errors now say which operation was refused, e.g. "Delete not permitted" instead of a generic access error, and name the affected item in the error details
 - Pulling to refresh on a document now also refreshes permissions, so a permission change on the server takes effect without restarting the app
 - Starting the app before your permissions have loaded, for example while offline, no longer looks like you have no permissions: lists and documents stay usable instead of showing "Insufficient permissions"

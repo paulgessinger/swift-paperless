@@ -28,7 +28,7 @@ struct ShareView: View {
 
   @StateObject private var errorController = ErrorController()
 
-  @State private var error: String = ""
+  @State private var presentedError: (any DisplayableError)?
 
   var callback: () -> Void
 
@@ -63,6 +63,16 @@ struct ShareView: View {
           "In-memory database fallback also failed (\(error)); cannot construct ConnectionManager")
       }
     }
+  }
+
+  // Matched on the error rather than `ConnectionManager`'s `needsAuth` flag:
+  // that flag is set through a database write, and this has to be right on the
+  // frame the alert is built.
+  private func isUnauthorized(_ error: any Error) -> Bool {
+    if let request = error as? RequestError, case .unauthorized = request {
+      return true
+    }
+    return false
   }
 
   private func internalCallback() {
@@ -191,5 +201,43 @@ struct ShareView: View {
 
     .onChange(of: connectionManager.activeConnectionId) { refreshConnection() }
     .onChange(of: connectionManager.connections) { refreshConnection() }
+
+    // Without this the `errorController` above has no subscriber at all and
+    // every push — an upload rejected for a 401 included — is dropped by the
+    // PassthroughSubject, leaving only the toolbar's three-second warning
+    // triangle.
+    //
+    // The app's toast surface can't be reused: `installToast` renders into a
+    // full-screen window inset by the safe area of its *host* view, which is
+    // ~0 inside the share sheet, so the toast lands under the Dynamic Island.
+    // An alert is positioned by the system, and the extension is a single
+    // screen with no competing presentation to conflict with.
+    .onReceive(errorController.presentations) { presentedError = $0 }
+    .alert(
+      unwrapping: $presentedError,
+      // Resolved with `String(localized:)` rather than handed to `Text` as a
+      // `LocalizedStringResource`: in the alert title slot the resource is
+      // stringified with its attributes still attached, rendering as
+      // `Sign in again{ NSLanguage = en; }`.
+      title: { error in
+        if isUnauthorized(error) {
+          Text(String(localized: .app(.shareSheetNeedsAuthTitle)))
+        } else {
+          Text(error.message)
+        }
+      },
+      actions: { ErrorAlertActions(for: $0) },
+      // An expired login is the one failure the user can act on — but not from
+      // here. `NeedsAuthRepository` flips the connection's flag, but the
+      // recovery UI lives in the app target, and `NSExtensionContext.open`
+      // does nothing from a share extension, so refer them to the app.
+      message: { error in
+        if isUnauthorized(error) {
+          Text(String(localized: .app(.shareSheetNeedsAuthMessage)))
+        } else if let details = error.details {
+          Text(details)
+        }
+      }
+    )
   }
 }
