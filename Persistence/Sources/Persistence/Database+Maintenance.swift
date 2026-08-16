@@ -12,15 +12,17 @@ extension Database {
   ///
   /// All cache tables FK-cascade from `server`, so this is *not* the same as
   /// dropping connections; it clears the caches while the connections remain.
-  public func clearCache() throws {
+  public func clearCache() throws(DatabaseError) {
     let tables =
       V3_CreateElementCache.multiRowTables
       + V3_CreateElementCache.singletonTables
       + V4_CreateDocumentCache.tables
       + V5_CreateDocumentDetailCache.tables
-    try writer.write { db in
-      for table in tables {
-        try db.execute(sql: "DELETE FROM \(table)")
+    try wrapping("clearCache") {
+      try writer.write { db in
+        for table in tables {
+          try db.execute(sql: "DELETE FROM \(table)")
+        }
       }
     }
   }

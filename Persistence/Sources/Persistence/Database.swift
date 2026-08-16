@@ -198,9 +198,12 @@ extension Database {
   /// Run a GRDB access, re-wrapping whatever it throws as a ``DatabaseError``
   /// so callers outside this package can present it without importing GRDB.
   ///
-  /// The `throws(DatabaseError)` is what lets accessors declare the same, which
-  /// in turn means an accessor cannot reach GRDB except through here: a direct
-  /// `try writer.read { }` throws an untyped error and fails to compile.
+  /// The `throws(DatabaseError)` is what lets accessors declare the same, and
+  /// *within an accessor that declares it* a direct `try writer.read { }` then
+  /// fails to compile — it throws an untyped error. The compiler enforces
+  /// nothing on an accessor that stays untyped-`throws`, so the typed signature
+  /// is the part to keep: drop it and raw `GRDB.DatabaseError`s escape the
+  /// package again.
   func wrapping<T>(_ operation: String, _ body: () throws -> T) throws(DatabaseError) -> T {
     do {
       return try body()
