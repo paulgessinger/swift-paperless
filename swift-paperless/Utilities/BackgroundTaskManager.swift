@@ -2,7 +2,7 @@
 //  BackgroundTaskManager.swift
 //  swift-paperless
 //
-//  Stage 11 (background sync): the app shell's BGTaskScheduler wiring — the
+//  Background sync: the app shell's BGTaskScheduler wiring — the
 //  only place in the project that imports BackgroundTasks (AppShared must stay
 //  extension-safe). Registration happens in AppDelegate before launch
 //  finishes; the handlers delegate to BackgroundSyncCoordinator, which decides

@@ -96,8 +96,9 @@ extension Database {
   }
 
   /// Mark every cached query containing `remoteID` order-stale under its active
-  /// sort. v1 over-marks (any query the doc is a member of); the ordering
-  /// corrects on the next fill / delta.
+  /// sort. This deliberately over-marks — every query the document is a member
+  /// of, not only those whose sort field actually changed — because the ordering
+  /// corrects itself on the next fill / delta either way.
   public func markQueriesOrderStale(containing remoteID: UInt, serverID: UUID)
     throws(DatabaseError)
   {
@@ -175,7 +176,7 @@ extension Database {
   /// list). Called ahead of ``pruneUnreferencedDocuments(serverID:)`` on a
   /// `.entireLibrary` → `.recentlyBrowsed` downgrade: saved views proactively
   /// filled while `.entireLibrary` was active should no longer be tracked at
-  /// all — they eager-fill again from scratch if reopened (Stage 8), matching
+  /// all — they eager-fill again from scratch if reopened, matching
   /// what `.recentlyBrowsed` already does for any other saved view. Returns
   /// the number of `query_order` rows removed.
   @discardableResult

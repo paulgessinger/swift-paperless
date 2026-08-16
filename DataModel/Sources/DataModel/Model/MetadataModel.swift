@@ -13,7 +13,7 @@ public struct Metadata: Sendable {
   public var hasArchiveVersion: Bool
 
   // Wire-symmetric value type — round-tripped by `ApiMetadata` and storage
-  // alike. Stays `Codable` per the Stage 3 principle.
+  // alike, so it stays `Codable`.
   public struct Item: Codable, Sendable, Equatable {
     public var namespace: String
     public var prefix: String

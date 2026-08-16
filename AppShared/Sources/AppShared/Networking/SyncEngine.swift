@@ -2,7 +2,7 @@
 //  SyncEngine.swift
 //  AppShared
 //
-//  Stage 10 (multi-server sync): keeps every configured server's offline cache
+//  Multi-server sync: keeps every configured server's offline cache
 //  warm. The sweep still *selects* the inactive ones — the active server is
 //  driven by `DocumentStore` on the same lifecycle trigger, so "active-first"
 //  falls out for free — but that is now an ordering choice, not a safety
@@ -14,7 +14,7 @@
 //  active server coalesces onto the session the store is already using.
 //
 //  Foreground app-lifecycle triggers (launch / foreground / active-change)
-//  drive `syncInactiveServers`; Stage 11's background tasks drive
+//  drive `syncInactiveServers`; the background tasks drive
 //  `syncServers(scope:tier:...)` through `BackgroundSyncCoordinator` — either
 //  against this same instance (registered UI graph) or a headless twin on a
 //  cold background launch. The engine deliberately stays `@MainActor` (an

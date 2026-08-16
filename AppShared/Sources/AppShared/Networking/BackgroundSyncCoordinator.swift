@@ -2,7 +2,7 @@
 //  BackgroundSyncCoordinator.swift
 //  AppShared
 //
-//  Stage 11 (background sync): the bridge between the app shell's BGTask
+//  Background sync: the bridge between the app shell's BGTask
 //  handlers (app target only — AppShared stays extension-safe and never
 //  imports BackgroundTasks) and the sync machinery.
 //

@@ -4,7 +4,7 @@ import GRDB
 /// last completed successfully (`timeIntervalSinceReferenceDate`, REAL, like
 /// the other cursors).
 ///
-/// Stage 11 (background sync) needs a *persisted* per-server freshness stamp:
+/// Background sync needs a *persisted* per-server freshness stamp:
 /// a cold background launch has no in-memory throttle map, so stalest-first
 /// sweep ordering must come from the DB, and the Offline & Sync screen shows
 /// it as the honest "fresh as of last successful sync" surface. Regenerable
