@@ -565,7 +565,9 @@ extension ApiRepository: Repository {
     filter.sortOrder = .ascending
     let cursor = try PageCursor<ApiDocumentID>(
       repository: self,
-      initialURL: url(.documents(page: 1, filter: filter, pageSize: 25000, fields: ["id"])))
+      initialURL: url(
+        .documents(
+          page: 1, filter: filter, pageSize: 25000, searchApi: searchApi, fields: ["id"])))
     return try await cursor.collectAll().map(\.id)
   }
 
