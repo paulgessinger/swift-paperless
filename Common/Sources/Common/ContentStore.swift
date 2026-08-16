@@ -149,7 +149,17 @@ public struct ContentStore: Sendable {
   /// store root, then recreate the empty directory. Used by the debug
   /// "clear local storage" action.
   public func purge() throws {
-    try? FileManager.default.removeItem(at: canonicalRoot)
+    // Propagate a failed removal rather than swallowing it: recreating the
+    // directory succeeds trivially when it is still there, so a `try?` here
+    // would report a clean wipe while every blob was still on disk — and the
+    // caller tells the user the cache is cleared.
+    do {
+      try FileManager.default.removeItem(at: canonicalRoot)
+    } catch let error as NSError
+      where error.domain == NSCocoaErrorDomain && error.code == NSFileNoSuchFileError
+    {
+      // Nothing cached yet; an absent root is already the desired end state.
+    }
     try createDirectory(canonicalRoot)
   }
 
