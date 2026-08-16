@@ -215,9 +215,13 @@ class DocumentListViewModel {
   private func startDocumentObservation(_ key: QueryKey, limit: Int) {
     documentTask?.cancel()
     documentTask = Task { @MainActor [weak self] in
-      guard let self else { return }
+      // Re-check `self` inside the loop, not before it: a `guard let self` out
+      // here stays strong across every suspension, and this task is stored on
+      // the view model — so neither would ever deallocate.
+      guard let store = self?.store else { return }
       do {
         for try await docs in store.observeDocumentPrefix(queryKey: key, limit: limit) {
+          guard let self else { break }
           documents = docs
           prefetchThumbnails(for: docs)
         }
@@ -231,9 +235,10 @@ class DocumentListViewModel {
   private func startStatusObservation(_ key: QueryKey) {
     statusTask?.cancel()
     statusTask = Task { @MainActor [weak self] in
-      guard let self else { return }
+      guard let store = self?.store else { return }
       do {
         for try await status in store.observeQueryStatus(queryKey: key) {
+          guard let self else { break }
           totalCount = status.totalCount
         }
       } catch is CancellationError {
