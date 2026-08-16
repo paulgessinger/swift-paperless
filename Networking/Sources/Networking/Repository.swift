@@ -196,7 +196,16 @@ extension Repository {
 
   /// Default: page the full (Tier-1) list and map ids. Correct everywhere;
   /// `ApiRepository` overrides it with the cheaper `fields=id` projection.
+  ///
+  /// Pages over a *unique* ordering for the same reason the override does: the
+  /// result is consumed as a set, and paging a non-unique one drops ids across
+  /// page boundaries — which the remote-delete reconcile then reads as
+  /// deletions. The `fields=id` projection is what can't be expressed here; the
+  /// ordering can.
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    var filter = filter
+    filter.sortField = .other("id")
+    filter.sortOrder = .ascending
     let source = try documents(filter: filter)
     var ids: [UInt] = []
     while true {
