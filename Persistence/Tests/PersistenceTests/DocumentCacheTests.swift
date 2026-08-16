@@ -128,6 +128,25 @@ struct DocumentCacheTests {
     #expect(try database.queryStatus(queryKey: key, serverID: server).localCount == 4)
   }
 
+  @Test("a second writer on the same position overwrites instead of throwing")
+  func positionCollisionDoesNotAbort() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "test")
+
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    // A concurrent fill lands on the same positions with different documents.
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
+      startPosition: 0, totalCount: 2, replaceAll: false)
+
+    // The later write wins, as it did when this used `upsert`.
+    let all = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    #expect(all.map(\.id) == [3, 4])
+  }
+
   @Test("uniqueness is per query, so a document can sit in several lists")
   func uniquenessIsScopedToTheQuery() async throws {
     let server = UUID()

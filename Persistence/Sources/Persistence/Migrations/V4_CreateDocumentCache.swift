@@ -61,7 +61,10 @@ enum V4_CreateDocumentCache {
       t.column("query_key", .text).notNull()
       t.column("position", .integer).notNull()
       t.column("remote_id", .integer).notNull()
-      t.primaryKey(["server_id", "query_key", "position"])
+      // `.replace` so a second writer claiming a position overwrites rather than
+      // aborting the whole page: the list fill and the proactive library fill can
+      // target the same query, and a thrown write kills the rest of the fill.
+      t.primaryKey(["server_id", "query_key", "position"], onConflict: .replace)
 
       // A document appears at most once per query. The server can repeat one
       // across adjacent pages when an insert/delete shifts the page offsets;
