@@ -114,9 +114,14 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// periodic sweep is how deletes (and trashings) disappear locally.
   func reconcileDocumentDeletions() async throws
 
-  /// Changed-metadata delta (R3δ): page `ordering=-modified` until older than the
-  /// per-server watermark and refresh the cached rows that changed. Keeps
-  /// already-cached documents fresh without re-opening their list.
+  /// Changed-metadata delta (R3δ): page forward from the per-server watermark
+  /// and refresh the cached rows that changed, keeping already-cached documents
+  /// fresh without re-opening their list.
+  ///
+  /// Detection is by `modified`, so it only sees what the server timestamps.
+  /// Servers older than paperless-ngx#13170 don't bump `modified` on a version
+  /// add/delete/label change; on those the delta stays blind to version-only
+  /// edits, and the list fill or detail write-through corrects them instead.
   func reconcileDocumentChanges() async throws
 
   /// The shared database and the active server this repository caches into.
@@ -683,69 +688,95 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
   }
 
-  // The number of changed documents one delta pass will apply before stopping
-  // (a runaway guard; the next pass continues from the advanced watermark).
+  // How many changed documents one delta pass applies before yielding. A budget,
+  // not a correctness boundary: the walk is resumable, so whatever is left over
+  // is picked up by the next pass from the advanced watermark.
   private let deltaCap = 1000
 
   public func reconcileDocumentChanges() async throws {
     let entireLibrary = offlineBrowsingMode == .entireLibrary
 
-    // Delta refreshes changed rows via `ordering=-modified`. Under *Recently
-    // browsed* it only touches already-cached rows (new docs surface via on-open
-    // list fills); under *Entire library* it also keeps brand-new docs, so the
-    // whole library stays current between full fills. The list payload always
-    // carries full object detail; the setting only governs which docs are kept
-    // (every row is written at `.full`). Nothing cached ⇒ the proactive fill
-    // (or a list open) seeds first.
+    // Delta refreshes changed rows. Under *Recently browsed* it only touches
+    // already-cached rows (new docs surface via on-open list fills); under
+    // *Entire library* it also keeps brand-new docs, so the whole library stays
+    // current between full fills. The list payload always carries full object
+    // detail; the setting only governs which docs are kept (every row is written
+    // at `.full`). Nothing cached ⇒ the proactive fill (or a list open) seeds
+    // first.
     let localIDs = try database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
-
-    var filter = FilterState.empty
-    filter.sortField = .modified
-    filter.sortOrder = .descending
-    let source = try wrapped.documents(filter: filter)
 
     guard let watermark = deltaWatermark() else {
       // First run: establish the baseline from the newest doc; subsequent passes
       // delta against it. (Avoids re-paging the whole library on cold start.)
-      if let newest = try await source.fetch(limit: 1).first?.modified {
+      var newestFirst = FilterState.empty
+      newestFirst.sortField = .modified
+      newestFirst.sortOrder = .descending
+      let baseline = try wrapped.documents(filter: newestFirst)
+      if let newest = try await baseline.fetch(limit: 1).first?.modified {
         setDeltaWatermark(newest)
       }
       return
     }
 
-    var changed: [Document] = []
-    var advanced = watermark
-    pageLoop: while changed.count < deltaCap {
+    // Walk *oldest-first from the watermark* so a pass is resumable: every page
+    // advances the watermark, and stopping early — capped, cancelled, or killed
+    // on a background time budget — leaves it at the last document applied, so
+    // the next pass continues from there.
+    //
+    // A newest-first walk cannot do this. A high-water mark only moves up, so
+    // once it passes a change that was never applied, nothing below the newest
+    // applied change is reachable again; a pass that stopped on `deltaCap` used
+    // to strand every remaining change permanently.
+    //
+    // The server-side bound is date-granular (`modified__date__gt`, no `gte`),
+    // and `FilterState` already widens an inclusive `start` by a day to match —
+    // so a pass re-fetches from the beginning of the watermark's day.
+    var filter = FilterState.empty
+    filter.sortField = .modified
+    filter.sortOrder = .ascending
+    filter.date.modified = .between(start: watermark, end: nil)
+    let source = try wrapped.documents(filter: filter)
+
+    var cursor = watermark
+    var applied = 0
+    while applied < deltaCap {
       let batch = try await source.fetch(limit: Endpoint.defaultDocumentPageSize)
       if batch.isEmpty { break }
+
+      var changed: [Document] = []
       for document in batch {
         guard let modified = document.modified else { continue }
-        // Sorted newest-first: once we reach the watermark, the rest is known.
-        if modified <= watermark { break pageLoop }
+        // Strict `<` so documents sharing the cursor's exact timestamp are
+        // re-applied rather than dropped; the upsert is a straight replace, so
+        // repeating one costs nothing.
+        if modified < cursor { continue }
         changed.append(document)
-        if modified > advanced { advanced = modified }
+        if modified > cursor { cursor = modified }
+      }
+
+      // *Entire library*: keep every changed/new doc. *Recently browsed*: only
+      // refresh rows already cached. Either way the row is written at `.full`.
+      let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
+      if !toUpsert.isEmpty {
+        Logger.shared.info(
+          "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
+        try database.upsertDocuments(toUpsert, serverID: serverID)
+        // Note edits bump `modified`, so a changed doc's cached notes may be
+        // stale. Drop them (cheap, local) — the upsert above just refreshed each
+        // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an empty
+        // row for free when the count is 0, or re-fetches when it's > 0. We can't
+        // tell a note change from any other field change, so this may re-fetch a
+        // few docs whose notes didn't actually change; bounded by `deltaCap`.
+        try? database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
+        applied += toUpsert.count
+      }
+      // Commit the cursor per page rather than once at the end — this is what
+      // makes an interrupted pass resume instead of restart.
+      if cursor > watermark {
+        setDeltaWatermark(cursor)
       }
       if await source.isExhausted { break }
-    }
-
-    // *Entire library*: keep every changed/new doc. *Recently browsed*: only
-    // refresh rows already cached. Either way the row is written at `.full`.
-    let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
-    if !toUpsert.isEmpty {
-      Logger.shared.info(
-        "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
-      try database.upsertDocuments(toUpsert, serverID: serverID)
-      // Note edits bump `modified`, so a changed doc's cached notes may be
-      // stale. Drop them (cheap, local) — the upsert above just refreshed each
-      // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an empty
-      // row for free when the count is 0, or re-fetches when it's > 0. We can't
-      // tell a note change from any other field change, so this may re-fetch a
-      // few docs whose notes didn't actually change; bounded by `deltaCap`.
-      try? database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
-    }
-    if advanced > watermark {
-      setDeltaWatermark(advanced)
     }
   }
 
