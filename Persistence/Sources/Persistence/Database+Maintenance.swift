@@ -18,6 +18,7 @@ extension Database {
       + V3_CreateElementCache.singletonTables
       + V4_CreateDocumentCache.tables
       + V5_CreateDocumentDetailCache.tables
+      + V6_DropProjectionAndQueryOrderFK.tables
       + V7_CreateQuerySyncError.tables
     try wrapping("clearCache") {
       try writer.write { db in

@@ -10,9 +10,19 @@ import GRDB
 /// `query_order → server` FK: connection-delete still cascades, while per-document
 /// deletes prune `query_order` explicitly (see `deleteDocuments`).
 ///
+/// Also creates `server_sync_state`, the per-server sync cursors. It lives here
+/// rather than in `V4` because this build carries the first code that reads or
+/// writes one — `V4`'s build has no cursors at all, and a migration should not
+/// create a table nothing in its own build touches.
+///
 /// A forward migration (not a `V4` edit) so each shipped stacked build upgrades
 /// cleanly — `V4` is owned by the document-cache build and must stay frozen.
 enum V6_DropProjectionAndQueryOrderFK {
+  /// Regenerable sync state (delta watermark + library coverage), so the
+  /// "clear local storage" sweep resets it too — the reconcile re-baselines and
+  /// the proactive fill re-runs over the now-empty cache.
+  static let tables = ["server_sync_state"]
+
   static func run(_ db: GRDB.Database) throws {
     try db.alter(table: "document") { t in
       t.drop(column: "projection_level")
@@ -47,5 +57,19 @@ enum V6_DropProjectionAndQueryOrderFK {
     try db.create(
       index: "idx_query_order_doc", on: "query_order",
       columns: ["server_id", "remote_id"])
+
+    // Per-server sync cursors (one row per server). Stored as REAL
+    // (`timeIntervalSinceReferenceDate`) for exact round-trips — the delta
+    // comparison is precision-sensitive.
+    try db.create(table: "server_sync_state", options: [.strict]) { t in
+      t.column("server_id", .blob)
+        .notNull()
+        .references("server", onDelete: .cascade)
+      // Newest document `modified` applied by the changed-metadata delta (R3δ).
+      t.column("delta_watermark", .real)
+      // Completed-at of the last successful proactive full-library fill.
+      t.column("library_coverage_at", .real)
+      t.primaryKey(["server_id"])
+    }
   }
 }
