@@ -16,7 +16,7 @@ import GRDB
 ///   `document` with `ON DELETE CASCADE` is load-bearing: deleting one document
 ///   row drops it from *every* list at once.
 /// - `query_meta` — one row per `(server_id, query_key)`: server-reported
-///   `total_count` (the scrollbar extent, which survives deletion gaps) and an
+///   `total_count` (the server's count, which survives deletion gaps) and an
 ///   `order_stale` flag set by mutations under the active sort.
 ///
 /// Every table FK-references `server(id)` with `ON DELETE CASCADE`, so removing a

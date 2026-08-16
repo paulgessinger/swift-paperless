@@ -37,7 +37,9 @@ class DocumentListViewModel {
   var ready = false
   var noPermissions = false
 
-  /// Server-reported total (scrollbar extent), from the query-status observation.
+  /// Server-reported total, from the query-status observation. Drives the count
+  /// pill and the "has anything at all" gate — *not* the scroll extent, which
+  /// follows the loaded prefix, since the list only ever renders `documents`.
   var totalCount: UInt?
 
   /// True while a fill (page-1 await) or refresh is in flight.

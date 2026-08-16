@@ -74,8 +74,8 @@ extension Database {
     return stream(observation)
   }
 
-  /// Live status of a cached query — server total (scrollbar extent),
-  /// locally-present count (reflects deletion gaps), order-stale flag. Tracks
+  /// Live status of a cached query — server total, locally-present count
+  /// (reflects deletion gaps), order-stale flag. Tracks
   /// both `query_meta` and `query_order`, so a fill, a delete, or a stale-marking
   /// re-fires it.
   public func observeQueryStatus(

@@ -3,8 +3,8 @@
 //  AppShared
 //
 //  Opaque result of kicking off a document-list fill (`CachingBackend.fillQuery`).
-//  Carries the `QueryKey` the list observes, the server-reported total for an
-//  exact scrollbar, and a handle to the background paging task so a refresh /
+//  Carries the `QueryKey` the list observes, the server-reported total behind
+//  the count pill, and a handle to the background paging task so a refresh /
 //  teardown can cancel the in-flight fill. No GRDB crosses this boundary.
 //
 
@@ -14,7 +14,7 @@ import Persistence
 public struct QueryFillHandle: Sendable {
   /// The key the list view-model subscribes `observeDocumentPrefix` to.
   public let queryKey: QueryKey
-  /// Server-reported total from page 1 (exact scrollbar extent), if known.
+  /// Server-reported total from page 1 (the count pill's number), if known.
   public let totalCount: UInt?
 
   private let fillTask: Task<Void, Never>

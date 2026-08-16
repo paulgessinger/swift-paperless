@@ -703,7 +703,7 @@ extension DocumentStore {
       queryKey: queryKey, serverID: backend.serverID, limit: limit)
   }
 
-  /// Live status of a cached query (scrollbar count, order-stale flag).
+  /// Live status of a cached query (server total, order-stale flag).
   public func observeQueryStatus(
     queryKey: QueryKey
   ) -> AsyncThrowingStream<QueryStatus, Error> {

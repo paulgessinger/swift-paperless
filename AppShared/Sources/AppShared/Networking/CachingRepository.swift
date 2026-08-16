@@ -184,7 +184,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let source = try wrapped.documents(filter: filter)
     let pageSize = Endpoint.defaultDocumentPageSize
 
-    // Page 1 awaited: first window on screen + exact scrollbar count.
+    // Page 1 awaited: first window on screen + the exact total for the count pill.
     let firstPage = try await source.fetch(limit: pageSize)
     let total = await source.totalCount
     try database.writeQueryPage(

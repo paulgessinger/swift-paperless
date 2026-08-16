@@ -165,8 +165,8 @@ extension Database {
     }
   }
 
-  /// Server total (scrollbar extent), locally-present count (reflects deletion
-  /// gaps), and order-stale flag for a cached query.
+  /// Server total, locally-present count (reflects deletion gaps), and
+  /// order-stale flag for a cached query.
   public func queryStatus(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) -> QueryStatus
   {
     try wrapping("queryStatus") {
