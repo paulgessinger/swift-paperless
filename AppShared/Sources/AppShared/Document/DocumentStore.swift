@@ -821,7 +821,7 @@ public final class DocumentStore: Sendable {
   }
 }
 
-// MARK: - Document cache surface (Stage 8)
+// MARK: - Document cache surface
 
 /// The GRDB-free surface the document list and detail views reach for. Each
 /// method resolves the active `CachingBackend` (the production/preview stack) and

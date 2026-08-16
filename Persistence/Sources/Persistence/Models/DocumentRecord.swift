@@ -28,8 +28,8 @@ public enum DocumentEntry: Sendable, Equatable, Identifiable {
 ///
 /// Bespoke rather than an `ElementRecord`: documents are ordered through
 /// `query_order` (never by `name`), and `Document` is not `Codable` — so the long
-/// tail is an explicit storage `Payload`, mapped by hand (the Stage 3 principle:
-/// storage shape ≠ wire shape ≠ domain shape).
+/// tail is an explicit storage `Payload`, mapped by hand (storage shape ≠ wire
+/// shape ≠ domain shape).
 ///
 /// There is no projection/completeness level: the list always requests
 /// `full_perms`, so a stored row is always the complete object. "Loaded-ness" is

@@ -5,9 +5,9 @@ import Testing
 
 @testable import Persistence
 
-/// Covers the proactive notes/file-metadata detail-fill support queries
-/// (Stage 9): the zero-note seed, the "needs a network fetch" sets, and the
-/// R3δ notes invalidation.
+/// Covers the proactive notes/file-metadata detail-fill support queries: the
+/// zero-note seed, the "needs a network fetch" sets, and the R3δ notes
+/// invalidation.
 @Suite("DetailFill")
 struct DetailFillTests {
   // MARK: - Helpers

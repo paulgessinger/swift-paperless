@@ -68,7 +68,7 @@ extension Database {
     }
   }
 
-  // MARK: - Proactive detail fill (Stage 9)
+  // MARK: - Proactive detail fill
 
   /// Seed an empty `document_note` row for every cached document that reports
   /// zero notes and has no cached notes row yet — no network. The list/fill

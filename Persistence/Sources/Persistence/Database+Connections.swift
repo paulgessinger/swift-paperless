@@ -7,8 +7,9 @@ import os
 ///
 /// These are the only entry points `ConnectionManager` uses to read or
 /// mutate `server` rows; GRDB stays hidden from AppShared and the rest of
-/// the app. Stage 7 will add analogous APIs for element and document
-/// records under the same principle ("GRDB is sealed inside Persistence").
+/// the app. `Database+Elements` and `Database+Documents` are the analogous
+/// APIs for the caches, under the same principle ("GRDB is sealed inside
+/// Persistence").
 extension Database {
   /// Fetch every connection row currently in the table.
   public func allConnections() throws(DatabaseError) -> [ConnectionRecord] {
@@ -76,8 +77,7 @@ extension Database {
   /// The first value is the current state (so callers can use this as both
   /// "initial hydrate" and "subsequent updates" in one loop). Cross-process
   /// changes (e.g. from the Share Extension) are not delivered live —
-  /// foreground re-hydrate covers that, as called out in Stage 5 of the
-  /// offline-cache plan.
+  /// foreground re-hydrate covers that.
   public func observeConnections() -> AsyncThrowingStream<[ConnectionRecord], Error> {
     let observation = ValueObservation.tracking(ConnectionRecord.fetchAll)
     let writer = writer
