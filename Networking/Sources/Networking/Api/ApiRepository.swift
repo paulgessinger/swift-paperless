@@ -554,6 +554,15 @@ extension ApiRepository: Repository {
   /// authoritative ordered id set for the remote-delete reconcile.
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
     Logger.networking.notice("Getting document id set for filter")
+    // Page over a *unique* ordering. The caller's sort carries no meaning here
+    // (the result is consumed as a set), and paging a non-unique one is not
+    // stable — `FilterState.empty` sorts by archive serial number, which is NULL
+    // for most documents, so nearly every row lands in one tie group. Any id
+    // dropped across a page boundary reads as a remote deletion to the
+    // reconcile, which then evicts that document from the cache.
+    var filter = filter
+    filter.sortField = .other("id")
+    filter.sortOrder = .ascending
     let cursor = try PageCursor<ApiDocumentID>(
       repository: self,
       initialURL: url(.documents(page: 1, filter: filter, pageSize: 25000, fields: ["id"])))
