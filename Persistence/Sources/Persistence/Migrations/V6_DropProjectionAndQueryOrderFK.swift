@@ -29,9 +29,10 @@ enum V6_DropProjectionAndQueryOrderFK {
       t.column("query_key", .text).notNull()
       t.column("position", .integer).notNull()
       t.column("remote_id", .integer).notNull()
-      t.primaryKey(["server_id", "query_key", "position"])
-      // Carried over from V4 — a rebuilt table does not inherit it. With the
-      // `document` FK gone this is the only remaining constraint on `remote_id`.
+      // Both conflict clauses carried over from V4 — a rebuilt table inherits
+      // neither. With the `document` FK gone, the unique key is also the only
+      // remaining constraint on `remote_id`.
+      t.primaryKey(["server_id", "query_key", "position"], onConflict: .replace)
       t.uniqueKey(["server_id", "query_key", "remote_id"], onConflict: .ignore)
     }
     try db.execute(
