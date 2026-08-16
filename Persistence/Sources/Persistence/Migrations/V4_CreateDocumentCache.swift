@@ -2,7 +2,7 @@ import GRDB
 
 /// Document-metadata cache tables (Stage 8).
 ///
-/// Two jobs, two tables:
+/// Three tables, three jobs:
 ///
 /// - `document` — one row per `(server_id, id)`, query-independent. A document
 ///   that appears in many lists still has a single metadata row here. Indexed
@@ -21,14 +21,15 @@ import GRDB
 ///
 /// Every table FK-references `server(id)` with `ON DELETE CASCADE`, so removing a
 /// connection tears down its whole document cache too.
+///
+/// Per-server *sync cursors* deliberately live elsewhere: nothing in this build
+/// keeps one, so the table that holds them is created by the migration that
+/// introduces the first reader rather than sitting here unused.
 enum V4_CreateDocumentCache {
   /// All document-cache tables. Listed `query_order`-before-`document` so a
   /// blanket clear deletes children before parents (the cascade makes order
   /// immaterial for correctness, but explicit is cheaper than relying on it).
-  /// `server_sync_state` is regenerable sync state (delta watermark + library
-  /// coverage), so a cache clear resets it too — the reconcile re-baselines and
-  /// the proactive fill re-runs over the now-empty cache.
-  static let tables = ["query_order", "query_meta", "document", "server_sync_state"]
+  static let tables = ["query_order", "query_meta", "document"]
 
   static func run(_ db: GRDB.Database) throws {
     try db.create(table: "document", options: [.strict]) { t in
@@ -96,20 +97,6 @@ enum V4_CreateDocumentCache {
       t.column("order_stale", .integer).notNull().defaults(to: 0)
       t.column("filled_at", .text)
       t.primaryKey(["server_id", "query_key"])
-    }
-
-    // Regenerable per-server sync cursors (one row per server). Stored as REAL
-    // (`timeIntervalSinceReferenceDate`) for exact round-trips — the delta
-    // comparison is precision-sensitive. Cleared by `clearCache` (see `tables`).
-    try db.create(table: "server_sync_state", options: [.strict]) { t in
-      t.column("server_id", .blob)
-        .notNull()
-        .references("server", onDelete: .cascade)
-      // Newest document `modified` applied by the changed-metadata delta (R3δ).
-      t.column("delta_watermark", .real)
-      // Completed-at of the last successful proactive full-library fill.
-      t.column("library_coverage_at", .real)
-      t.primaryKey(["server_id"])
     }
   }
 }
