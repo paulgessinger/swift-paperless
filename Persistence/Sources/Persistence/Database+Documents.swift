@@ -69,10 +69,10 @@ extension Database {
 
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
   /// per-saved-view / default-list membership sweep) **without** creating or
-  /// modifying `document` rows. *All* ids are written, in order — there is no FK
-  /// to `document`, so an id whose object isn't cached yet becomes a skeleton row
-  /// (it gets its object via R3δ / the next fill). `totalCount` records the
-  /// server's full count for the scrollbar extent.
+  /// modifying `document` rows. Ids are written in order, a repeat skipped —
+  /// there is no FK to `document`, so an id whose object isn't cached yet
+  /// becomes a skeleton row (it gets its object via R3δ / the next fill).
+  /// `totalCount` records the server's full count for the scrollbar extent.
   public func replaceQueryOrder(
     queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
   ) throws {
@@ -84,7 +84,7 @@ extension Database {
         try QueryOrderRow(
           serverId: serverID, queryKey: queryKey.rawValue,
           position: position, remoteId: id
-        ).upsert(db)
+        ).insert(db)
       }
       try setQueryMeta(
         db, serverID: serverID, queryKey: queryKey,
