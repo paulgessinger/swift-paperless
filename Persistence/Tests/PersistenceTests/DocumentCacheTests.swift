@@ -108,6 +108,44 @@ struct DocumentCacheTests {
     #expect(try database.queryStatus(queryKey: key, serverID: server).totalCount == 4)
   }
 
+  @Test("a document repeated across a page boundary is placed only once")
+  func overlappingPageDoesNotDuplicate() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "test")
+
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
+      startPosition: 0, totalCount: 4, replaceAll: true)
+    // Page 2 re-delivers doc 3, as it does when the page offsets shift.
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
+      startPosition: 3, totalCount: 4, replaceAll: false)
+
+    let all = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    #expect(all.map(\.id) == [1, 2, 3, 4])
+    // A duplicate would inflate `localCount` as well as duplicating the row.
+    #expect(try database.queryStatus(queryKey: key, serverID: server).localCount == 4)
+  }
+
+  @Test("uniqueness is per query, so a document can sit in several lists")
+  func uniquenessIsScopedToTheQuery() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let a = QueryKey(sentinel: "a")
+    let b = QueryKey(sentinel: "b")
+
+    try database.writeQueryPage(
+      queryKey: a, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+    try database.writeQueryPage(
+      queryKey: b, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+
+    #expect(try database.queryDocuments(queryKey: a, serverID: server, limit: 10).map(\.id) == [1])
+    #expect(try database.queryDocuments(queryKey: b, serverID: server, limit: 10).map(\.id) == [1])
+  }
+
   // MARK: - Windowing + deletion gaps
 
   @Test("the window is by ordered row offset, so deletion gaps are invisible")

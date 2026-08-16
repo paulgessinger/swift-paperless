@@ -59,7 +59,7 @@ extension Database {
         try QueryOrderRow(
           serverId: serverID, queryKey: queryKey.rawValue,
           position: startPosition + offset, remoteId: domain.id
-        ).upsert(db)
+        ).insert(db)
       }
       try setQueryMeta(
         db, serverID: serverID, queryKey: queryKey,

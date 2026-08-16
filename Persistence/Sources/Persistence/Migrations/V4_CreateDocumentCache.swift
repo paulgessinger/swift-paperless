@@ -63,6 +63,12 @@ enum V4_CreateDocumentCache {
       t.column("remote_id", .integer).notNull()
       t.primaryKey(["server_id", "query_key", "position"])
 
+      // A document appears at most once per query. The server can repeat one
+      // across adjacent pages when an insert/delete shifts the page offsets;
+      // `.ignore` skips the second placement (leaving a `position` gap, which
+      // the ordered replay tolerates) while a `position` collision still aborts.
+      t.uniqueKey(["server_id", "query_key", "remote_id"], onConflict: .ignore)
+
       // Drop a list entry whenever its document row is deleted (the remote-delete
       // cascade). Parent is `document`'s `(server_id, id)` primary key.
       t.foreignKey(
