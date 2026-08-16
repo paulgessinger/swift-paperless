@@ -81,14 +81,13 @@ extension Database {
   {
     try wrapping("markQueriesOrderStale") {
       try writer.write { db in
-        try db.execute(
-          sql: """
-            UPDATE query_meta SET order_stale = 1
-            WHERE server_id = ? AND query_key IN (
-              SELECT DISTINCT query_key FROM query_order
-              WHERE server_id = ? AND remote_id = ?)
-            """,
-          arguments: [serverID, serverID, remoteID])
+        let containing =
+          QueryOrderRow
+          .select(Column("query_key"), as: String.self)
+          .filter(Column("server_id") == serverID && Column("remote_id") == remoteID)
+        try QueryMetaRow
+          .filter(Column("server_id") == serverID && containing.contains(Column("query_key")))
+          .updateAll(db, Column("order_stale").set(to: true))
       }
     }
   }
