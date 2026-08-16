@@ -186,13 +186,15 @@ public final class DocumentStore: Sendable {
     taskUpdateTask = Task(operation: taskPoller)
   }
 
-  public func clear() {
+  /// Drop the per-server state this store still holds in memory, on a repository
+  /// swap. That is only the task list and the last sync error now: documents
+  /// aren't held in memory under source-of-truth (the list observes the DB
+  /// directly), and the element projection is owned by `elementStore` and
+  /// re-pointed by `wireElementStore()`. `private` because `set(repository:)` is
+  /// the one caller — a swap is the only moment this is the right thing to do.
+  private func clear() {
     tasks = []
     lastSyncError = nil
-    // Documents are not held in memory under source-of-truth — the list observes
-    // the DB directly (see the document-cache surface below). The element
-    // projection is owned by `elementStore` and (re)wired by `wireElementStore()`
-    // on repository change — nothing to clear here.
   }
 
   public func set(repository: some Repository, reload: Bool = true) {

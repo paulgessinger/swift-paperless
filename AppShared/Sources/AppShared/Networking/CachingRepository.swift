@@ -594,14 +594,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.nextAsn()
   }
 
+  /// The version id a document's file-metadata caches under. Both fallbacks
+  /// land on the document id, which equals the root version id server-side: the
+  /// cached row may be absent (nothing fetched it yet) and the read itself may
+  /// fail. In practice the detail view fetches the document first, so the
+  /// versions are usually known by the time this is called.
+  private func fileMetadataVersionID(documentId: UInt) -> UInt {
+    (try? database.document(serverID: serverID, id: documentId))?.currentVersionID ?? documentId
+  }
+
   public func metadata(documentId: UInt) async throws -> Metadata {
     // File-metadata is immutable per file version, so it caches under the
-    // document's current version id (fallback: the document id, which equals the
-    // root version id server-side). The detail view fetches the document first,
-    // so the cached row's versions are usually known by the time we get here.
-    let versionID =
-      (try? database.document(serverID: serverID, id: documentId))?.currentVersionID
-      ?? documentId
+    // document's current version id.
+    let versionID = fileMetadataVersionID(documentId: documentId)
     do {
       let fetched = try await wrapped.metadata(documentId: documentId)
       try database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
