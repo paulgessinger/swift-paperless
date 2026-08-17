@@ -167,8 +167,7 @@ extension Database {
 
   /// Server total, locally-present count (reflects deletion gaps), and
   /// order-stale flag for a cached query.
-  public func queryStatus(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) -> QueryStatus
-  {
+  public func queryStatus(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) -> QueryStatus {
     try wrapping("queryStatus") {
       try writer.read { db in
         try Self.fetchQueryStatus(db, queryKey: queryKey, serverID: serverID)
