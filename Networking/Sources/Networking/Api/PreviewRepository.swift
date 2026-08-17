@@ -385,6 +385,11 @@ public class PreviewRepository: Repository {
     PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
   }
 
+  // In-memory fixture: paging the full list is the cheap path here.
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    try await pagedDocumentIDs(filter: filter)
+  }
+
   public func trash() async -> [Document] {
     []
   }

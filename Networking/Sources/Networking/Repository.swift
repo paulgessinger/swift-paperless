@@ -64,11 +64,13 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   func documents(filter: FilterState) throws -> Documents
 
-  /// The complete ordered list of document IDs matching a query — the cheap
-  /// `fields=id` projection that backs the remote-delete reconcile. A default
-  /// implementation pages the full list and maps ids; `ApiRepository` overrides
-  /// it with the id-only projection. (Has a default, so existing conformers
-  /// need no change.)
+  /// The complete ordered list of document IDs matching a query — backs the
+  /// remote-delete reconcile and the saved-view membership sweep.
+  ///
+  /// Deliberately has no default: only the API layer can express the cheap
+  /// `fields=id` projection, and a default would let a conformer silently
+  /// inherit the expensive full-list paging instead. Conformers that can't do
+  /// better spell that out by calling `pagedDocumentIDs(filter:)`.
   func documentIDs(filter: FilterState) async throws -> [UInt]
 
   func nextAsn() async throws -> UInt
@@ -194,15 +196,20 @@ extension Repository {
     supports(feature: .tantivySimpleSearch) ? .tantivy : .legacy
   }
 
-  /// Default: page the full (Tier-1) list and map ids. Correct everywhere;
-  /// `ApiRepository` overrides it with the cheaper `fields=id` projection.
+  /// Fallback for `documentIDs(filter:)`: page the full (Tier-1) list and map
+  /// ids. Correct everywhere, but pulls whole `Document` payloads to read one
+  /// field — backends that can project server-side should do that instead.
   ///
-  /// Pages over a *unique* ordering for the same reason the override does: the
-  /// result is consumed as a set, and paging a non-unique one drops ids across
-  /// page boundaries — which the remote-delete reconcile then reads as
+  /// Not a default implementation on purpose. It is a helper conformers opt
+  /// into by name, so that inheriting the expensive path is a visible choice
+  /// rather than the consequence of not writing anything.
+  ///
+  /// Pages over a *unique* ordering for the same reason `ApiRepository` does:
+  /// the result is consumed as a set, and paging a non-unique one drops ids
+  /// across page boundaries — which the remote-delete reconcile then reads as
   /// deletions. The `fields=id` projection is what can't be expressed here; the
   /// ordering can.
-  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+  public func pagedDocumentIDs(filter: FilterState) async throws -> [UInt] {
     var filter = filter
     filter.sortField = .other("id")
     filter.sortOrder = .ascending

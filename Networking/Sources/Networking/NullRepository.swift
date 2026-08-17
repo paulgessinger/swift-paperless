@@ -76,6 +76,11 @@ public class NullRepository: Repository {
     NullDocumentSource()
   }
 
+  // No server-side projection to reach for; the source is empty anyway.
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    try await pagedDocumentIDs(filter: filter)
+  }
+
   public func trash() async -> [Document] { [] }
   public func restoreTrash(documents _: [UInt]) async throws {}
   public func emptyTrash(documents _: [UInt]) async throws {}

@@ -163,6 +163,11 @@ extension TransientRepository: Repository {
     return TransientDocumentSource(sequence: filteredDocs)
   }
 
+  // In-memory fixture: paging the full list is the cheap path here.
+  public func documentIDs(filter: FilterState) async throws -> [UInt] {
+    try await pagedDocumentIDs(filter: filter)
+  }
+
   public func trash() async throws -> [Document] {
     trashedDocuments.values.sorted { $0.id < $1.id }
   }
