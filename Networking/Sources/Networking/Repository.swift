@@ -64,6 +64,15 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   func documents(filter: FilterState) throws -> Documents
 
+  /// The complete ordered list of document IDs matching a query — backs the
+  /// remote-delete reconcile and the saved-view membership sweep.
+  ///
+  /// Deliberately has no default: only the API layer can express the cheap
+  /// `fields=id` projection, and a default would let a conformer silently
+  /// inherit the expensive full-list paging instead. Conformers that can't do
+  /// better spell that out by calling `pagedDocumentIDs(filter:)`.
+  func documentIDs(filter: FilterState) async throws -> [UInt]
+
   func nextAsn() async throws -> UInt
 
   func metadata(documentId: UInt) async throws -> Metadata
@@ -185,6 +194,34 @@ extension Repository {
   /// store rule types the backend has deprecated.
   public var searchApi: FilterState.SearchApi {
     supports(feature: .tantivySimpleSearch) ? .tantivy : .legacy
+  }
+
+  /// Fallback for `documentIDs(filter:)`: page the full (Tier-1) list and map
+  /// ids. Correct everywhere, but pulls whole `Document` payloads to read one
+  /// field — backends that can project server-side should do that instead.
+  ///
+  /// Not a default implementation on purpose. It is a helper conformers opt
+  /// into by name, so that inheriting the expensive path is a visible choice
+  /// rather than the consequence of not writing anything.
+  ///
+  /// Pages over a *unique* ordering for the same reason `ApiRepository` does:
+  /// the result is consumed as a set, and paging a non-unique one drops ids
+  /// across page boundaries — which the remote-delete reconcile then reads as
+  /// deletions. The `fields=id` projection is what can't be expressed here; the
+  /// ordering can.
+  public func pagedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    var filter = filter
+    filter.sortField = .other("id")
+    filter.sortOrder = .ascending
+    let source = try documents(filter: filter)
+    var ids: [UInt] = []
+    while true {
+      let batch = try await source.fetch(limit: 1000)
+      if batch.isEmpty { break }
+      ids.append(contentsOf: batch.map(\.id))
+      if await source.isExhausted { break }
+    }
+    return ids
   }
 }
 
