@@ -106,10 +106,6 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
   // version id on the server (versions are sibling rows in the same table).
   public var versions: [DocumentVersion] = []
 
-  // Presense of this depends on the endpoint
-  // If we didn't get a value, we likely just modified
-  public private(set) var userCanChange: Bool
-
   // Presence of this depends on the endpoint
   public var permissions: Permissions? {
     didSet {
@@ -138,7 +134,6 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     notes: NotesPayload = .init(),
     customFields: CustomFieldRawEntryList = CustomFieldRawEntryList(),
     versions: [DocumentVersion] = [],
-    userCanChange: Bool = true,
     permissions: Permissions? = nil,
     setPermissions: Permissions? = nil
   ) {
@@ -159,7 +154,6 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     self.notes = notes
     self.customFields = customFields
     self.versions = versions
-    self.userCanChange = userCanChange
     self.permissions = permissions
     self.setPermissions = setPermissions
   }

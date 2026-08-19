@@ -79,7 +79,6 @@ public struct DocumentRecord:
     public var notesCount: Int
     public var customFields: CustomFieldRawEntryList
     public var versions: [VersionPayload]
-    public var userCanChange: Bool
     // Always populated — the list carries `full_perms`.
     public var permissions: Permissions?
   }
@@ -132,7 +131,6 @@ extension DocumentRecord {
           id: $0.id, added: $0.added, label: $0.label,
           checksum: $0.checksum, isRoot: $0.isRoot)
       },
-      userCanChange: domain.userCanChange,
       permissions: domain.permissions)
   }
 
@@ -158,8 +156,7 @@ extension DocumentRecord {
         DocumentVersion(
           id: $0.id, added: $0.added, label: $0.label,
           checksum: $0.checksum, isRoot: $0.isRoot)
-      },
-      userCanChange: payload.userCanChange)
+      })
     document.permissions = payload.permissions
     return document
   }

@@ -39,7 +39,6 @@ public struct ApiDocument: Codable, Sendable {
   var custom_fields: CustomFieldRawEntryList?
   // Read-only on the wire; absent on backends predating multi-version support.
   var versions: [ApiDocumentVersion]?
-  var user_can_change: Bool?
   var permissions: Permissions?
 }
 
@@ -62,14 +61,7 @@ extension ApiDocument {
       pageCount: page_count,
       notes: notes?.domain ?? NotesPayload(),
       customFields: custom_fields ?? CustomFieldRawEntryList(),
-      versions: versions?.map(\.domain) ?? [],
-      // NOTE: not "the server said yes". `full_perms=true` makes paperless-ngx
-      // *drop* `user_can_change` (it swaps the field for `permissions`), and the
-      // document list always asks for full perms — so this fallback fires for
-      // every list-sourced row. Nothing reads `Document.userCanChange`; the real
-      // check is `DocumentStore.userCanChange(document:)`, which derives from
-      // `permissions` + owner and works offline.
-      userCanChange: user_can_change ?? true
+      versions: versions?.map(\.domain) ?? []
     )
     doc.permissions = permissions
     return doc
