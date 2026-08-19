@@ -44,7 +44,17 @@ public enum NetworkTransfer {
 
   /// Record `bytes` transferred under the current ``category``. Cheap no-op
   /// until a sink is registered.
+  ///
+  /// Only correct while still inside the task that set the task-local. Bytes
+  /// that arrive on a URLSession delegate callback must capture the category at
+  /// request time and use ``record(bytes:category:)`` — a delegate callback runs
+  /// outside the caller's task, where the task-local reads its default.
   public static func record(bytes: Int) {
+    record(bytes: bytes, category: category)
+  }
+
+  /// Record `bytes` against an explicitly captured ``TransferCategory``.
+  public static func record(bytes: Int, category: TransferCategory) {
     guard bytes > 0, let sink else { return }
     sink(bytes, category)
   }

@@ -357,14 +357,20 @@ public class ApiRepository {
     )
     request.cachePolicy = cachePolicy
 
+    // Captured *here*, while still inside the caller's task-local scope. The
+    // metrics callback below fires on a URLSession delegate queue, outside this
+    // task, where `NetworkTransfer.category` reads its `.other` default — which
+    // silently collapsed the whole breakdown into "Other".
+    let transferCategory = NetworkTransfer.category
+
     let result: (Data, URLResponse)
     do {
       result = try await urlSession.getData(for: request, progress: progress) { sent, received in
-        // Best-effort data-transfer accounting, categorised by the caller's
-        // task-local. Wire bytes from the task metrics, not `data.count`: the
-        // API gzips well, so the decoded length overstated actual traffic
-        // several-fold, and a `URLCache` hit counted as if it had been fetched.
-        NetworkTransfer.record(bytes: Int(sent + received))
+        // Best-effort data-transfer accounting. Wire bytes from the task
+        // metrics, not `data.count`: the API gzips well, so the decoded length
+        // overstated actual traffic several-fold, and a `URLCache` hit counted
+        // as if it had been fetched.
+        NetworkTransfer.record(bytes: Int(sent + received), category: transferCategory)
       }
     } catch let error where error.isCancellationError {
       Logger.networking.info(
