@@ -38,8 +38,11 @@ import os
 /// `static` constant is legal (it wouldn't be on the generic `CachingRepository`).
 enum LibraryCoverage {
   /// Re-run the full fill at most this often as a backstop (the cheap activation
-  /// sweeps keep things current in between).
-  static let maxAge: TimeInterval = 7 * 24 * 60 * 60
+  /// sweeps keep things current in between). Daily rather than weekly: the delta
+  /// and the membership sweep carry freshness, so a full pass mostly re-confirms
+  /// membership — and this interval also bounds how long any gap they miss can
+  /// persist.
+  static let maxAge: TimeInterval = 24 * 60 * 60
 
   static func isFresh(_ completedAt: Date?, now: Date = Date()) -> Bool {
     guard let completedAt else { return false }
@@ -85,8 +88,9 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// (one query's background paging completes before the next starts). Guarded by
   /// a per-server freshness marker so it runs once and re-runs only as a periodic
   /// backstop; `force` ignores the marker (setting just enabled). Soft per-view
-  /// failures don't abort the sweep, but the marker only advances on a fully
-  /// successful pass so an interrupted run retries.
+  /// failures don't abort the sweep and still advance the marker — otherwise one
+  /// permanently rejected saved view would pin "last full sync" at Never — but a
+  /// pass in which *every* view failed advances nothing, so it retries.
   func fillLibrary(force: Bool) async throws
 
   /// Proactive per-document detail fill (Stage 9, *Entire library*): give every
@@ -294,6 +298,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let views: [(name: String?, filter: FilterState)] =
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
+    var succeeded = 0
     for (name, filter) in views {
       try Task.checkCancellation()
       let key = QueryKey(serverID: serverID, filter: filter)
@@ -303,6 +308,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         let handle = try await fillQuery(filter: filter)
         await handle.awaitCompletion()
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
+        succeeded += 1
       } catch is CancellationError {
         throw CancellationError()
       } catch {
@@ -319,8 +325,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
     // Coverage marks a *completed* pass, not a flawless one: a persistently
     // failing view (recorded above) would otherwise pin "last full sync" at
-    // Never forever. Only cancellation — an interrupted run — skips the marker,
-    // and that bails out via the `throw` above before reaching here.
+    // Never forever. Cancellation — an interrupted run — bails out via the
+    // `throw` above before reaching here.
+    //
+    // But a pass where *nothing* succeeded cached nothing, and stamping it would
+    // suppress every retry for `LibraryCoverage.maxAge` while the screen claims
+    // a fresh full sync over an empty cache. That is the ordinary shape of being
+    // on Wi-Fi with the server unreachable — the fill's gate tests `isExpensive`
+    // and `isConstrained`, neither of which means reachable.
+    guard succeeded > 0 else {
+      Logger.shared.warning(
+        "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
+      return
+    }
     try? database.setLibraryCoverageAt(Date(), serverID: serverID)
   }
 
