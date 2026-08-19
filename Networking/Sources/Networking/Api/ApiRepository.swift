@@ -901,23 +901,6 @@ extension ApiRepository: Repository {
     }
   }
 
-  /// Cheap probe for the server's total document count — page 1, page size 1,
-  /// unfiltered. The list envelope's `count` is accurate regardless of
-  /// `page_size` (same trick as `nextAsnCompatibility()`), so this is one
-  /// small request, not a full page walk. Used only to pick a size-adaptive
-  /// default for `OfflineBrowsingMode` right after login.
-  ///
-  /// Projected to `fields=id` with no expanded permissions: only `count` is
-  /// read, so decoding a whole document would couple a best-effort probe to
-  /// every field of the document wire shape — one undecodable row would sink
-  /// the count and silently change the offline default.
-  public func documentCount() async throws -> UInt {
-    let decoded = try await send(
-      endpoint: .documents(
-        page: 1, filter: .empty, pageSize: 1, fields: ["id"], fullPerms: false),
-      returns: ListResponse<ApiDocumentID>.self)
-    return decoded.count
-  }
 
   public func users() async throws -> [User] {
     let cursor = try PageCursor<ApiUser>(

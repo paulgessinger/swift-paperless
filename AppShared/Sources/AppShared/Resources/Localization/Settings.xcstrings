@@ -2553,6 +2553,18 @@
         }
       }
     },
+    "offlineBrowsingModeRecommendation" : {
+      "comment" : "Hint under the Offline browsing picker suggesting the Entire library option, shown when the server has few documents",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        }
+      }
+    },
     "offlineSyncActivity" : {
       "comment" : "Row label on the Offline & Sync screen whose value says what the sync is doing right now",
       "extractionState" : "manual",

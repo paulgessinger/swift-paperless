@@ -7,6 +7,7 @@
 //  processes have moved (to inform Wi‑Fi gating).
 //
 
+import DataModel
 import Networking
 import SwiftUI
 
@@ -20,6 +21,9 @@ public struct OfflineSyncView: View {
   @EnvironmentObject private var errorController: ErrorController
   @State private var stats = TransferStatistics.shared
   @State private var downgradeRequested = false
+  /// The server's total for the default list, read once from the cached query
+  /// status. Only used to decide whether to suggest *Entire library*.
+  @State private var libraryTotal: UInt?
 
   public init() {}
 
@@ -31,6 +35,13 @@ public struct OfflineSyncView: View {
     guard let networkMonitor else { return true }
     return networkMonitor.allowsProactiveSync(
       syncOverCellular: connectionManager.activeSyncOverCellular)
+  }
+
+  /// Suggest the greedy mode only when it is actually cheap. A new server starts
+  /// at *Recently browsed* whatever its size — downloading a whole library is
+  /// the user's call — so this is where the size heuristic earns its keep.
+  private var recommendsEntireLibrary: Bool {
+    mode == .recentlyBrowsed && OfflineLibrarySize.isSmall(documentCount: libraryTotal)
   }
 
   /// *Entire library* is on, but the link won't currently carry the fill — the
@@ -87,7 +98,12 @@ public struct OfflineSyncView: View {
       } header: {
         Text(.settings(.offlineBrowsingModeHeader))
       } footer: {
-        Text(.settings(.offlineBrowsingModeDescription))
+        VStack(alignment: .leading, spacing: 6) {
+          Text(.settings(.offlineBrowsingModeDescription))
+          if recommendsEntireLibrary {
+            Text(.settings(.offlineBrowsingModeRecommendation))
+          }
+        }
       }
 
       Section {
@@ -206,6 +222,21 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineSyncDataHeader))
       } footer: {
         Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
+      }
+    }
+    .task {
+      // The default list's cached status already carries the server's total, so
+      // the size hint costs no request. Absent until that list has been fetched
+      // once, in which case no recommendation is made.
+      guard let key = store.documentQueryKey(filter: .default) else { return }
+      // One value is enough; the hint doesn't need to track live.
+      do {
+        for try await status in store.observeQueryStatus(queryKey: key) {
+          libraryTotal = status.totalCount
+          break
+        }
+      } catch {
+        // Best-effort: no status simply means no recommendation.
       }
     }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))
