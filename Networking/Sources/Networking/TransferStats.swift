@@ -8,10 +8,16 @@
 //  `category` is a task-local set by callers around an operation (fill / sync /
 //  reconcile), so the meter can break traffic down by what produced it.
 //
-//  Scope: this records JSON/list responses that flow through `fetchData`
-//  (metadata, list pages, element collections, detail, notes). File downloads
-//  (streamed) and thumbnails (Nuke) take other paths and are intentionally not
-//  counted here — they are explicit, user-driven transfers, not background fills.
+//  Scope: this records API requests that flow through `fetchData` (metadata,
+//  list pages, element collections, detail, notes). File downloads (streamed)
+//  and thumbnails (Nuke) take other paths and are intentionally not counted
+//  here — they are explicit, user-driven transfers, not background fills.
+//
+//  Bytes come from the task's `URLSessionTaskMetrics`, so they are what actually
+//  crossed the wire: compressed sizes, headers included, both directions, and
+//  nothing at all for a response `URLCache` served locally. Counting the decoded
+//  `Data` instead overstated a gzipped JSON list several-fold, which is the
+//  opposite of useful for a meter whose job is to inform the Wi‑Fi gate.
 //
 
 import Foundation
@@ -36,8 +42,8 @@ public enum NetworkTransfer {
   /// practice, hence `nonisolated(unsafe)`.
   nonisolated(unsafe) public static var sink: (@Sendable (Int, TransferCategory) -> Void)?
 
-  /// Record `bytes` received under the current ``category``. Cheap no-op until a
-  /// sink is registered.
+  /// Record `bytes` transferred under the current ``category``. Cheap no-op
+  /// until a sink is registered.
   public static func record(bytes: Int) {
     guard bytes > 0, let sink else { return }
     sink(bytes, category)

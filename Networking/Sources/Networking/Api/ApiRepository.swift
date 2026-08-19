@@ -359,7 +359,13 @@ public class ApiRepository {
 
     let result: (Data, URLResponse)
     do {
-      result = try await urlSession.getData(for: request, progress: progress)
+      result = try await urlSession.getData(for: request, progress: progress) { sent, received in
+        // Best-effort data-transfer accounting, categorised by the caller's
+        // task-local. Wire bytes from the task metrics, not `data.count`: the
+        // API gzips well, so the decoded length overstated actual traffic
+        // several-fold, and a `URLCache` hit counted as if it had been fetched.
+        NetworkTransfer.record(bytes: Int(sent + received))
+      }
     } catch let error where error.isCancellationError {
       Logger.networking.info(
         "Fetch request task for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public) was cancelled"
@@ -374,10 +380,6 @@ public class ApiRepository {
     }
 
     let (data, response) = result
-
-    // Best-effort data-transfer accounting (categorised by the caller's
-    // task-local). Counts JSON/list responses only; downloads/thumbnails differ.
-    NetworkTransfer.record(bytes: data.count)
 
     Logger.networking.trace("Checking response of url \(sanitizedUrl, privacy: .public)")
 
