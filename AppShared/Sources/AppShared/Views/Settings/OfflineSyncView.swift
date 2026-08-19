@@ -119,28 +119,32 @@ public struct OfflineSyncView: View {
       }
 
       Section {
-        statusRow(String(localized: .settings(.offlineSyncActivity)), value: activityText)
-        if let activity = store.syncActivity {
-          VStack(alignment: .leading, spacing: 4) {
-            if let fraction = activity.fraction {
-              ProgressView(value: fraction)
-            } else {
-              ProgressView().progressViewStyle(.linear)
-            }
-            HStack {
-              if let detail = activity.detail {
-                Text(detail)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-                  .lineLimit(1)
+        // Activity and its progress are one cell, not two. As a separate row the
+        // progress block carried its own separator, which didn't run the full
+        // width of the others — and the pair read as unrelated anyway.
+        VStack(alignment: .leading, spacing: 8) {
+          LabeledContent(String(localized: .settings(.offlineSyncActivity))) {
+            Text(activityText).foregroundStyle(.secondary)
+          }
+          if let activity = store.syncActivity {
+            // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked out
+            // its total yet.
+            ProgressView(value: activity.fraction)
+              .progressViewStyle(.linear)
+            if activity.detail != nil || activity.total != nil {
+              HStack {
+                if let detail = activity.detail {
+                  Text(detail)
+                    .lineLimit(1)
+                }
+                Spacer()
+                if let total = activity.total {
+                  Text(.settings(.offlineSyncProgressCount(activity.completed, total)))
+                    .monospacedDigit()
+                }
               }
-              Spacer()
-              if let total = activity.total {
-                Text(.settings(.offlineSyncProgressCount(activity.completed, total)))
-                  .font(.caption)
-                  .monospacedDigit()
-                  .foregroundStyle(.secondary)
-              }
+              .font(.caption)
+              .foregroundStyle(.secondary)
             }
           }
         }

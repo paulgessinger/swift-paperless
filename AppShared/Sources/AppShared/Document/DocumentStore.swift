@@ -81,7 +81,24 @@ public final class DocumentStore: Sendable {
 
   /// What the offline sync is doing right now, or `nil` when nothing is.
   /// Drives the stage label and progress bar on the Offline & Sync screen.
+  ///
+  /// Derived from ``activeStages`` rather than written directly: the sweeps
+  /// overlap, and a single property meant whichever finished first cleared the
+  /// screen to "Idle" while the others were still running.
   public private(set) var syncActivity: SyncActivity?
+
+  // One entry per sweep currently running. Keyed by stage because each sweep
+  // owns exactly one, and because a sweep reporting "done" says only *that* —
+  // it can't say which stage it was, so the key has to come from the call site.
+  @ObservationIgnored
+  private var activeStages: [SyncActivity.Stage: SyncActivity] = [:]
+
+  /// Fold one sweep's progress into the published activity. `nil` retires the
+  /// stage; the screen keeps showing whatever else is still running.
+  private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
+    activeStages[stage] = activity
+    syncActivity = activeStages.values.mostSignificant
+  }
 
 
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
@@ -819,8 +836,8 @@ extension DocumentStore {
       return
     }
     lastDocumentReconcile = Date()
-    syncActivity = SyncActivity(stage: .reconcile)
-    defer { syncActivity = nil }
+    report(SyncActivity(stage: .reconcile), for: .reconcile)
+    defer { report(nil, for: .reconcile) }
     do {
       // Deletes first (correctness), then the changed-metadata delta (freshness),
       // then the saved-view membership sweep (so newly-matched docs — now landed
@@ -829,7 +846,9 @@ extension DocumentStore {
       try await NetworkTransfer.$category.withValue(.reconcile) {
         try await backend.reconcileDocumentDeletions()
         try await backend.reconcileDocumentChanges { [weak self] in
-          self?.syncActivity = $0 ?? SyncActivity(stage: .reconcile)
+          // The delta finishing doesn't end the reconcile — the membership
+          // sweep runs after it — so fall back to the bare stage.
+          self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
         try await backend.reconcileSavedViewMembership()
       }
@@ -862,7 +881,9 @@ extension DocumentStore {
 
     let task = Task { [weak self] in
       do {
-        try await backend.fillLibrary(force: force) { [weak self] in self?.syncActivity = $0 }
+        try await backend.fillLibrary(force: force) { [weak self] in
+          self?.report($0, for: .libraryFill)
+        }
       } catch is CancellationError {
         Logger.shared.info("Proactive library fill cancelled")
       } catch {
@@ -887,7 +908,7 @@ extension DocumentStore {
       backend.offlineBrowsingMode == .entireLibrary
     else { return }
     do {
-      try await backend.fillDocumentDetails { [weak self] in self?.syncActivity = $0 }
+      try await backend.fillDocumentDetails { [weak self] in self?.report($0, for: .detailFill) }
     } catch {
       Logger.shared.info("Proactive detail fill failed (suppressed): \(error)")
     }

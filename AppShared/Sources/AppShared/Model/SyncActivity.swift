@@ -41,6 +41,21 @@ public struct SyncActivity: Sendable, Equatable {
     self.total = total
   }
 
+  /// Which stage to show when several are running at once.
+  ///
+  /// They genuinely overlap: `sync()` kicks the reconcile off in its own task
+  /// and returns, so a reconcile is usually still going when the library fill
+  /// starts. Highest wins — the heaviest, longest-running work is the most
+  /// informative thing to name.
+  fileprivate var displayPriority: Int {
+    switch stage {
+    case .libraryFill: 3
+    case .detailFill: 2
+    case .reconcile: 1
+    case .elementSync: 0
+    }
+  }
+
   /// `0...1`, or `nil` when the total is unknown or degenerate.
   public var fraction: Double? {
     guard let total, total > 0 else { return nil }
@@ -51,3 +66,10 @@ public struct SyncActivity: Sendable, Equatable {
 /// How a cache sweep tells the store what it is doing. `nil` means "finished".
 /// Main-actor because both ends are: `CachingBackend` and `DocumentStore`.
 public typealias SyncProgressReporter = @MainActor (SyncActivity?) -> Void
+
+extension Collection<SyncActivity> {
+  /// The stage to display when several overlap, or `nil` when nothing is running.
+  public var mostSignificant: SyncActivity? {
+    self.max { $0.displayPriority < $1.displayPriority }
+  }
+}

@@ -298,6 +298,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     guard force || !LibraryCoverage.isFresh(try? database.libraryCoverageAt(serverID: serverID))
     else { return }
 
+    // Claim the stage before the saved-view read, so the setup isn't a gap the
+    // screen renders as "Idle".
+    defer { progress?(nil) }
+    progress?(SyncActivity(stage: .libraryFill))
+
     // Default list first, then every cached saved view (synced by `syncElements`
     // just before this in the foreground trigger). Build the *same* FilterState
     // the UI observes so the filled QueryKeys match its subscriptions. A `nil`
@@ -307,7 +312,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
     var succeeded = 0
-    defer { progress?(nil) }
     for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
       // A downgrade mid-fill means the rest of these views are no longer wanted,
@@ -377,6 +381,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func fillDocumentDetails(progress: SyncProgressReporter?) async throws {
     guard offlineBrowsingMode == .entireLibrary else { return }
+    // Before the seed and the two "what's missing" reads: they're quick, but a
+    // gap here shows up as the activity flicking back to "Idle".
+    progress?(SyncActivity(stage: .detailFill))
 
     // Free step: every zero-note document gets an empty notes row from the list
     // payload's count — no request — so it renders "no notes" offline and drops
