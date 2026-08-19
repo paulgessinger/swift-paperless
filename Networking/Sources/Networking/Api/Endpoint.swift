@@ -101,13 +101,19 @@ extension Endpoint {
       page: page, rules: filter.rules(for: searchApi), pageSize: pageSize, fields: fields,
       fullPerms: fullPerms)
 
-    var ordering: String = filter.sortField.rawValue
-    if filter.sortOrder.reverse {
-      ordering = "-" + ordering
+    // `ordering` is a comma-separated list, most significant first. Built as
+    // terms and deduped on the *field* (ignoring the `-` direction prefix), so
+    // a query already sorted on `id` doesn't ask for it twice — and so adding
+    // another tiebreak later doesn't need another special case.
+    var terms = [filter.sortOrder.reverse ? "-\(filter.sortField.rawValue)" : filter.sortField.rawValue]
+    if stableOrdering {
+      terms.append("id")
     }
-    if stableOrdering, filter.sortField != .other("id") {
-      ordering += ",id"
-    }
+    var seenFields = Set<String>()
+    let ordering =
+      terms
+      .filter { seenFields.insert($0.hasPrefix("-") ? String($0.dropFirst()) : $0).inserted }
+      .joined(separator: ",")
 
     let queryItems = endpoint.queryItems + [.init(name: "ordering", value: ordering)]
 

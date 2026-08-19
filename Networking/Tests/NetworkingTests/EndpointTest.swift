@@ -112,6 +112,16 @@ import Testing
     #expect(endpoint.queryItems.first { $0.name == "ordering" }?.value == "id")
   }
 
+  @Test func testDocumentsStableOrderingDedupesDescendingId() {
+    // Already sorted on the unique key, just descending — the tiebreak must not
+    // re-append it in the other direction.
+    var filter = FilterState.empty
+    filter.sortField = .other("id")
+    filter.sortOrder = .descending
+    let endpoint = Endpoint.documents(page: 1, filter: filter, stableOrdering: true)
+    #expect(endpoint.queryItems.first { $0.name == "ordering" }?.value == "-id")
+  }
+
   @Test func testDocument() {
     let endpoint = Endpoint.document(id: 123)
     #expect(endpoint.path == "/api/documents/123")
