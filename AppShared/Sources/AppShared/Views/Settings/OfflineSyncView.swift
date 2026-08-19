@@ -13,7 +13,11 @@ import SwiftUI
 public struct OfflineSyncView: View {
   @Environment(DocumentStore.self) private var store
   @Environment(ConnectionManager.self) private var connectionManager
-  @Environment(NetworkMonitor.self) private var networkMonitor
+  // Optional to match `SettingsView`, which declares it the same way — the
+  // SettingsView preview injects no monitor, and a non-optional read traps as
+  // soon as the preview navigates here.
+  @Environment(NetworkMonitor.self) private var networkMonitor: NetworkMonitor?
+  @EnvironmentObject private var errorController: ErrorController
   @State private var stats = TransferStatistics.shared
   @State private var downgradeRequested = false
 
@@ -24,7 +28,8 @@ public struct OfflineSyncView: View {
   private var mode: OfflineBrowsingMode { connectionManager.activeOfflineBrowsingMode }
 
   private var unmetered: Bool {
-    !networkMonitor.isExpensive && !networkMonitor.isConstrained
+    guard let networkMonitor else { return true }
+    return !networkMonitor.isExpensive && !networkMonitor.isConstrained
   }
 
   public var body: some View {
@@ -44,6 +49,9 @@ public struct OfflineSyncView: View {
                 downgradeRequested = true
               } else {
                 connectionManager.setOfflineBrowsingMode(newMode)
+                if newMode == .entireLibrary {
+                  Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
+                }
               }
             })
         ) {
@@ -63,6 +71,7 @@ public struct OfflineSyncView: View {
           ) {
             connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
           }
+
           Button(String(localized: .app(.cancel)), role: .cancel) {}
         } message: {
           Text(.settings(.offlineBrowsingDowngradeMessage))
@@ -109,14 +118,26 @@ public struct OfflineSyncView: View {
           value: dateText(store.lastReconcileAt))
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
-          value: "\(store.cachedDocumentCount)")
+          value: store.cachedDocumentCount.formatted())
 
         Button {
           Task {
             // Explicit user action: bypass the reconcile throttle and the
             // unmetered gate, and force a re-fill ignoring the freshness marker.
-            try? await store.sync(userInitiated: true)
+            //
+            // `userInitiated` exists precisely so this rethrows instead of
+            // failing soft into `lastSyncError`; swallowing it here left a
+            // "Sync now" that looked identical whether it worked or not.
+            do {
+              try await store.sync(userInitiated: true)
+            } catch {
+              errorController.push(error: error)
+            }
             await store.fillLibraryIfEnabled(unmetered: true, force: true)
+            // Both lifecycle paths pair the library fill with the detail fill;
+            // without this, notes and file metadata could only ever be filled by
+            // backgrounding and foregrounding the app.
+            await store.fillDocumentDetailsIfEnabled(unmetered: true)
           }
         } label: {
           Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
@@ -134,6 +155,9 @@ public struct OfflineSyncView: View {
               Text(error.message)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+              Text(error.failedAt.formatted(.relative(presentation: .named)))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
             }
           }
         } header: {
@@ -166,19 +190,14 @@ public struct OfflineSyncView: View {
     }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))
     .navigationBarTitleDisplayMode(.inline)
-    .onChange(of: mode) { old, new in
-      // A genuine user switch *into* Entire library kicks an immediate (forced)
-      // fill; the unmetered gate still applies.
-      guard new == .entireLibrary, old != .entireLibrary else { return }
-      Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
-    }
   }
 
   @ViewBuilder
   private func statusRow(_ title: String, value: String) -> some View {
-    HStack {
-      Text(title)
-      Spacer()
+    // `LabeledContent`, not a bare HStack + Spacer: it pairs label and value
+    // into one accessibility element, which is what the other status rows in
+    // this settings tree already do.
+    LabeledContent(title) {
       Text(value).foregroundStyle(.secondary)
     }
   }
