@@ -858,6 +858,24 @@ extension DocumentStore {
     }
   }
 
+  /// The server's total for the default document list, from the cached query
+  /// status — no request. `nil` when there's no caching backend, or when that
+  /// list hasn't been fetched yet and so has no recorded total.
+  ///
+  /// A one-shot read of a live stream: callers want the size to make a decision
+  /// (whether to suggest *Entire library*), not to track it.
+  public func libraryDocumentCount() async -> UInt? {
+    guard let key = documentQueryKey(filter: .default) else { return nil }
+    do {
+      for try await status in observeQueryStatus(queryKey: key) {
+        return status.totalCount
+      }
+    } catch {
+      Logger.shared.info("Library size lookup failed (suppressed): \(error)")
+    }
+    return nil
+  }
+
   /// Live single document by id, for detail/preview surfaces that must repaint on
   /// mutation/sync.
   public func observeDocument(id: UInt) -> AsyncThrowingStream<Document?, Error> {

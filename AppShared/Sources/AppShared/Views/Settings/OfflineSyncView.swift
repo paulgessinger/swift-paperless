@@ -226,21 +226,7 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
       }
     }
-    .task {
-      // The default list's cached status already carries the server's total, so
-      // the size hint costs no request. Absent until that list has been fetched
-      // once, in which case no recommendation is made.
-      guard let key = store.documentQueryKey(filter: .default) else { return }
-      // One value is enough; the hint doesn't need to track live.
-      do {
-        for try await status in store.observeQueryStatus(queryKey: key) {
-          libraryTotal = status.totalCount
-          break
-        }
-      } catch {
-        // Best-effort: no status simply means no recommendation.
-      }
-    }
+    .task { libraryTotal = await store.libraryDocumentCount() }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))
     .navigationBarTitleDisplayMode(.inline)
   }
