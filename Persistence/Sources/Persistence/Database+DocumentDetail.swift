@@ -78,12 +78,10 @@ extension Database {
   /// rows seeded. Only documents that actually have notes need a network fetch
   /// (`documentIDsNeedingNotesFetch`).
   ///
-  /// One `INSERT … SELECT` rather than a full-table `fetchAll` and a decode per
-  /// row: this runs inside the write transaction, so decoding every document's
-  /// JSON blob to read one integer held the writer lock for time proportional
-  /// to the library — with `busy_timeout` at 5s, long enough for the Share
-  /// Extension to stall behind it. `'[]'` is exactly what an empty
-  /// `DocumentNoteRecord.notes` encodes to.
+  /// One `INSERT … SELECT` rather than a full-table decode: this runs *inside*
+  /// the write transaction, so the old shape held the writer lock for time
+  /// proportional to the library — long enough, at a 5s `busy_timeout`, to stall
+  /// the Share Extension behind it. `'[]'` is what empty notes encode to.
   @discardableResult
   public func seedEmptyNotesForZeroCountDocuments(serverID: UUID) throws(DatabaseError) -> Int {
     try wrapping("seedEmptyNotesForZeroCountDocuments") {
@@ -109,16 +107,13 @@ extension Database {
   /// row yet — the only documents that need an R4n `/notes/` request. Zero-note
   /// documents are covered for free by `seedEmptyNotesForZeroCountDocuments`.
   ///
-  /// Expressed as SQL rather than a `fetchAll` + Swift filter: the caller runs
-  /// this on every foreground over the whole `document` table, and decoding
-  /// every row's JSON blob to read one integer is work proportional to the
-  /// library on the main actor. `ORDER BY d.id` so the result is stable, which
-  /// is what lets a caller take a prefix and have the next pass resume rather
-  /// than re-walk the same head.
+  /// SQL rather than `fetchAll` + a Swift filter: this runs on every foreground
+  /// over the whole table, and decoding each row's JSON to read one integer is
+  /// main-actor work proportional to the library. Ordered by id so a caller can
+  /// resume instead of re-walking the same head.
   ///
-  /// - Parameter excluding: ids to leave out — the caller's per-session record
-  ///   of documents whose fetch already failed, so one permanently failing
-  ///   document can't sit at the head of the list forever.
+  /// - Parameter excluding: ids to skip — the caller's per-session record of
+  ///   failed fetches, so one bad document doesn't block the rest.
   public func documentIDsNeedingNotesFetch(
     serverID: UUID, excluding: Set<UInt> = []
   ) throws(DatabaseError) -> [UInt] {

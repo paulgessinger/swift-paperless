@@ -212,11 +212,9 @@ extension Database {
   /// already reports any other partial local presence. Returns the number of
   /// `query_order` rows removed.
   ///
-  /// Counts rows rather than comparing `position` to the limit, because
-  /// positions are gappy by design: the `(server_id, query_key, remote_id)`
-  /// unique key skips a repeat across a page boundary, and `deleteDocuments`
-  /// leaves holes too. A `position >= limit` test would therefore keep fewer
-  /// rows than asked — silently, and by an amount that varies per server.
+  /// Counts rows rather than testing `position < limit`, because positions are
+  /// gappy by design (a skipped page-boundary repeat, a deleted document), so a
+  /// position test silently keeps fewer rows than asked.
   @discardableResult
   public func truncateQueryOrder(
     serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
@@ -246,21 +244,16 @@ extension Database {
     return db.changesCount
   }
 
-  /// The whole `.entireLibrary` → `.recentlyBrowsed` reclaim, in **one**
+  /// The whole `.entireLibrary` → `.recentlyBrowsed` reclaim in **one**
   /// transaction: drop every tracked query but the default list, cap that list
-  /// to `keepingFirst` rows, prune the documents nothing references any more,
-  /// and clear the library-coverage marker.
+  /// to `keepingFirst` rows, prune now-unreferenced documents, clear the
+  /// coverage marker. Returns the documents reclaimed.
   ///
-  /// One transaction because the three steps are not independently meaningful.
-  /// The destructive half runs first, so a run that commits `dropQueries` and
-  /// then stops leaves the worst of both states: saved views untracked *and*
-  /// every document still on disk, with nothing scheduled to finish the job.
-  ///
-  /// Clearing the coverage marker matters for the same reason — the cache no
-  /// longer matches what the marker claims, so a later re-upgrade must re-fill
-  /// rather than read a fresh stamp over a gutted cache.
-  ///
-  /// Returns the number of `document` rows reclaimed.
+  /// One transaction because the destructive half runs first: stopping midway
+  /// leaves saved views untracked *and* every document still on disk, with
+  /// nothing scheduled to finish. The marker is cleared for the same reason — a
+  /// later re-upgrade must re-fill rather than trust a stamp over a gutted
+  /// cache.
   @discardableResult
   public func reclaimAfterDowngrade(
     serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int

@@ -68,18 +68,11 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// handle for the in-flight fill. Throws if page 1 fails (offline → the list
   /// falls back to whatever is already cached).
   ///
-  /// **Deliberately not capped by `OfflineBrowsingMode`.** Scrolling
-  /// (`DocumentListViewModel.fetchMoreIfNeeded`) is a pure local DB read — it
-  /// only widens the observed prefix, no network call — so a size cap here
-  /// wouldn't just bound the offline guarantee, it would become a hard ceiling
-  /// on what's reachable *even online*, since nothing re-triggers a fetch as
-  /// the user scrolls past whatever got cached. Fixing that properly needs the
-  /// deferred v2 on-scroll fill (R3b, a real network trigger from
-  /// `fetchMoreIfNeeded`), not a one-line cap. We keep the list view simple —
-  /// every opened view eager-fills in full, in both modes — and will only
-  /// build R3b if users actually complain about it (large-library fill cost);
-  /// see `local-database-source-of-truth-variant.md` Stage 8, "Why v1 stays
-  /// the shipped behavior."
+  /// **Deliberately not capped by `OfflineBrowsingMode`.** Scrolling only widens
+  /// the observed prefix over local rows — it makes no network call — so a size
+  /// cap here would become a hard ceiling on what is reachable *even online*.
+  /// Removing that ceiling needs a real on-scroll fetch trigger (R3b), not a
+  /// cap; until users ask for it, every opened view eager-fills in full.
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
 
   /// Proactive one-time coverage fill (Stage 9, *Entire library*): page the
@@ -87,10 +80,10 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// active-server library browses offline even if never opened. Sequential
   /// (one query's background paging completes before the next starts). Guarded by
   /// a per-server freshness marker so it runs once and re-runs only as a periodic
-  /// backstop; `force` ignores the marker (setting just enabled). Soft per-view
-  /// failures don't abort the sweep and still advance the marker — otherwise one
-  /// permanently rejected saved view would pin "last full sync" at Never — but a
-  /// pass in which *every* view failed advances nothing, so it retries.
+  /// backstop; `force` ignores the marker. A failing view doesn't abort the
+  /// sweep and still advances the marker — one rejected saved view would
+  /// otherwise pin "last full sync" at Never — but a pass in which *every* view
+  /// failed advances nothing, so it retries.
   func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws
 
   /// Proactive per-document detail fill (Stage 9, *Entire library*): give every
@@ -98,11 +91,9 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// offline even if never opened. Zero-note documents are seeded from the
   /// list payload's notes *count* for free (no request); only documents that
   /// actually have notes, and versions whose `/metadata/` isn't cached, cost a
-  /// request. Driven off "what's still missing", so it is inherently
-  /// checkpointed and resumes rather than restarting. Uncapped: it runs to
-  /// completion, reporting progress, and only cancellation stops it early. Runs
-  /// after `fillLibrary` has populated the document rows. No-op unless *Entire
-  /// library* is enabled.
+  /// request. Driven off what's still missing, so it resumes rather than
+  /// restarts; uncapped, reporting progress, stopped only by cancellation. Runs
+  /// after `fillLibrary`. No-op unless *Entire library* is enabled.
   func fillDocumentDetails(progress: SyncProgressReporter?) async throws
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
@@ -344,16 +335,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       }
     }
 
-    // Coverage marks a *completed* pass, not a flawless one: a persistently
-    // failing view (recorded above) would otherwise pin "last full sync" at
-    // Never forever. Cancellation — an interrupted run — bails out via the
-    // `throw` above before reaching here.
-    //
-    // But a pass where *nothing* succeeded cached nothing, and stamping it would
-    // suppress every retry for `LibraryCoverage.maxAge` while the screen claims
-    // a fresh full sync over an empty cache. That is the ordinary shape of being
-    // on Wi-Fi with the server unreachable — the fill's gate tests `isExpensive`
-    // and `isConstrained`, neither of which means reachable.
+    // A completed pass, not a flawless one: one permanently failing view would
+    // otherwise pin "last full sync" at Never. But a pass where *nothing*
+    // succeeded cached nothing, and stamping it would suppress retries for
+    // `LibraryCoverage.maxAge` while the screen claims a fresh sync over an
+    // empty cache — the ordinary shape of Wi-Fi with the server unreachable,
+    // since neither `isExpensive` nor `isConstrained` means reachable.
     guard succeeded > 0 else {
       Logger.shared.warning(
         "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
@@ -697,16 +684,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func document(id: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(id: id) else {
-        // A `nil` here means the single-document fetch 404'd — which is *not*
-        // authoritative proof the document was deleted server-side. An
-        // unhealthy or misrouted backend (proxy up / app down, tunnel origin
-        // gone, a reindex, an expired session resolving to a 404) can 404 a
-        // document that still exists. Deleting the cached row — and, via
-        // deleteDocuments, its query_order list-membership — on that weak
-        // signal makes an opened document vanish from the list until a
-        // successful fill re-adds it. Real deletions are reconciled against the
-        // server's full authoritative id set in `reconcileDocumentDeletions`;
-        // here we fall back to the cached row rather than destroying it.
+        // A 404 on a single document is not proof it was deleted: an unhealthy
+        // or misrouted backend 404s documents that still exist, and evicting the
+        // row would take its list membership with it, making an opened document
+        // vanish. `reconcileDocumentDeletions` decides deletions against the
+        // server's authoritative id set; here we serve the cached row.
         if let cached = try database.document(serverID: serverID, id: id) {
           Logger.shared.info(
             "document(id:) fetch returned nil (404?); serving cached instead of deleting")
@@ -795,28 +777,18 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return
     }
 
-    // Walk *oldest-first from the watermark* so a pass is resumable: every page
-    // advances the watermark, and stopping early — cancelled, or killed on a
-    // background time budget — leaves it at the last document applied, so the
-    // next pass continues from there.
+    // Oldest-first from the watermark, committing the cursor per page, so an
+    // interrupted pass resumes. A newest-first walk can't: a high-water mark
+    // only moves up, so once it passes an unapplied change that change is
+    // unreachable forever.
     //
-    // A newest-first walk cannot do this. A high-water mark only moves up, so
-    // once it passes a change that was never applied, nothing below the newest
-    // applied change is reachable again.
+    // Uncapped, because a per-pass budget counted *applied* documents — which
+    // barely bounds anything under `.recentlyBrowsed`, and under
+    // `.entireLibrary` a run of documents sharing one `modified` (one bulk
+    // server-side UPDATE) could exhaust it without moving the cursor at all.
     //
-    // The pass is **not** capped. A per-pass budget bounded foreground work, but
-    // it bounded the wrong thing: it counted *applied* documents, so under
-    // *Recently browsed* — where all but the cached ones are filtered out — it
-    // barely bounded anything, while under *Entire library* a run of documents
-    // sharing one `modified` value (a single server-side bulk `UPDATE` stamps
-    // them all identically) could exhaust the budget without the cursor moving
-    // at all, leaving the watermark stuck and every later change unreachable.
-    // Running to exhaustion always advances the cursor to the true newest, and
-    // progress is reported instead of hidden behind a cap.
-    //
-    // The server-side bound is date-granular (`modified__date__gt`, no `gte`),
-    // and `FilterState` already widens an inclusive `start` by a day to match —
-    // so a pass re-fetches from the beginning of the watermark's day.
+    // The server bound is date-granular and exclusive, and `FilterState` widens
+    // an inclusive start by a day, so a pass re-fetches from the watermark's day.
     var filter = FilterState.empty
     filter.sortField = .modified
     filter.sortOrder = .ascending
