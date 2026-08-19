@@ -48,7 +48,7 @@ public struct OfflineSyncView: View {
   /// difference between "nothing to do" and "not now", which the screen used to
   /// render identically as Idle.
   private var waitingForNetwork: Bool {
-    mode == .entireLibrary && !unmetered && store.syncActivity == nil
+    mode == .entireLibrary && !unmetered && store.syncActivities.isEmpty
   }
 
   public var body: some View {
@@ -119,32 +119,33 @@ public struct OfflineSyncView: View {
       }
 
       Section {
-        // Activity and its progress are one cell, not two. As a separate row the
-        // progress block carried its own separator, which didn't run the full
-        // width of the others — and the pair read as unrelated anyway.
-        VStack(alignment: .leading, spacing: 8) {
-          LabeledContent(String(localized: .settings(.offlineSyncActivity))) {
-            Text(activityText).foregroundStyle(.secondary)
-          }
-          if let activity = store.syncActivity {
-            // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked out
-            // its total yet.
-            ProgressView(value: activity.fraction)
-              .progressViewStyle(.linear)
-            if activity.detail != nil || activity.total != nil {
-              HStack {
-                if let detail = activity.detail {
-                  Text(detail)
-                    .lineLimit(1)
-                }
-                Spacer()
+        // One row per running stage, in a fixed order. They overlap — a
+        // reconcile is usually still going when a fill starts — so showing only
+        // the "main" one hid work that was genuinely in progress. Each row is a
+        // single cell so its bar and caption sit under its own label rather than
+        // carrying a separator of their own.
+        if store.syncActivities.isEmpty {
+          statusRow(String(localized: .settings(.offlineSyncActivity)), value: activityText)
+        } else {
+          ForEach(store.syncActivities) { activity in
+            VStack(alignment: .leading, spacing: 8) {
+              LabeledContent(stageLabel(for: activity.stage)) {
                 if let total = activity.total {
                   Text(.settings(.offlineSyncProgressCount(activity.completed, total)))
                     .monospacedDigit()
+                    .foregroundStyle(.secondary)
                 }
               }
-              .font(.caption)
-              .foregroundStyle(.secondary)
+              // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked
+              // out its total yet.
+              ProgressView(value: activity.fraction)
+                .progressViewStyle(.linear)
+              if let detail = activity.detail {
+                Text(detail)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+              }
             }
           }
         }
@@ -184,7 +185,7 @@ public struct OfflineSyncView: View {
         }
         // Any sweep, not just the library fill: the detail fill left this
         // enabled, so a second pass could be stacked on a running one.
-        .disabled(store.syncActivity != nil || store.isRefreshing)
+        .disabled(!store.syncActivities.isEmpty || store.isRefreshing)
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }
@@ -245,20 +246,23 @@ public struct OfflineSyncView: View {
     }
   }
 
-  private var activityText: String {
-    switch store.syncActivity?.stage {
+  private func stageLabel(for stage: SyncActivity.Stage) -> String {
+    switch stage {
     case .libraryFill: String(localized: .settings(.offlineSyncFilling))
     case .detailFill: String(localized: .settings(.offlineSyncDetailFill))
     case .reconcile: String(localized: .settings(.offlineSyncReconciling))
-    case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
-    case nil:
-      if store.isRefreshing {
-        String(localized: .settings(.offlineSyncRefreshing))
-      } else if waitingForNetwork {
-        String(localized: .settings(.offlineSyncWaitingForWifi))
-      } else {
-        String(localized: .settings(.offlineSyncIdle))
-      }
+    }
+  }
+
+  /// Only reached when nothing is running — the stage rows speak for themselves
+  /// otherwise. Says *why* it's not running where there's a reason to give.
+  private var activityText: String {
+    if store.isRefreshing {
+      String(localized: .settings(.offlineSyncRefreshing))
+    } else if waitingForNetwork {
+      String(localized: .settings(.offlineSyncWaitingForWifi))
+    } else {
+      String(localized: .settings(.offlineSyncIdle))
     }
   }
 

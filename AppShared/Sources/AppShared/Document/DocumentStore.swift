@@ -79,13 +79,16 @@ public final class DocumentStore: Sendable {
   /// User-initiated syncs rethrow instead (the caller toasts, as before).
   public private(set) var lastSyncError: (any DisplayableError)?
 
-  /// What the offline sync is doing right now, or `nil` when nothing is.
-  /// Drives the stage label and progress bar on the Offline & Sync screen.
+  /// Every sync stage running right now, in a fixed order; empty when idle.
+  /// Drives the stage rows and progress bars on the Offline & Sync screen.
   ///
-  /// Derived from ``activeStages`` rather than written directly: the sweeps
-  /// overlap, and a single property meant whichever finished first cleared the
-  /// screen to "Idle" while the others were still running.
-  public private(set) var syncActivity: SyncActivity?
+  /// A list rather than one "current" stage because they genuinely overlap:
+  /// `sync()` starts the reconcile in its own task and returns, so a reconcile
+  /// is usually still running when the library fill begins. Publishing one of
+  /// them meant whichever finished first blanked the screen to "Idle" while the
+  /// other carried on — and, because progress is reported coarsely, it stayed
+  /// blank until the survivor reached its next checkpoint.
+  public private(set) var syncActivities: [SyncActivity] = []
 
   // One entry per sweep currently running. Keyed by stage because each sweep
   // owns exactly one, and because a sweep reporting "done" says only *that* —
@@ -97,7 +100,7 @@ public final class DocumentStore: Sendable {
   /// stage; the screen keeps showing whatever else is still running.
   private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
     activeStages[stage] = activity
-    syncActivity = activeStages.values.mostSignificant
+    syncActivities = activeStages.values.sortedForDisplay
   }
 
 

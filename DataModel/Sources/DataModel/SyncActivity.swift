@@ -1,6 +1,6 @@
 //
 //  SyncActivity.swift
-//  AppShared
+//  DataModel
 //
 
 import Foundation
@@ -13,10 +13,16 @@ import Foundation
 /// first cold fill of a large library runs for a long time and the user needs to
 /// see it moving, and which stage it is in, rather than a spinner that might
 /// equally be stuck.
-public struct SyncActivity: Sendable, Equatable {
-  public enum Stage: Sendable, Equatable {
-    /// Tags, correspondents, saved views… — the element collections.
-    case elementSync
+///
+/// Several of these run at once, so the store publishes *all* of them rather
+/// than picking one — see `AppShared.DocumentStore.syncActivities`.
+///
+/// In `DataModel` rather than `AppShared` for the same reason as
+/// ``OfflineLibrarySize``: the ordering rule is easy to regress silently and
+/// `AppShared` has no test target.
+public struct SyncActivity: Sendable, Equatable, Identifiable {
+  /// Declaration order is the display order — see ``SyncActivity/id``.
+  public enum Stage: Sendable, Equatable, CaseIterable {
     /// Paging saved views and the default list into `query_order`.
     case libraryFill
     /// Per-document notes and file metadata.
@@ -24,6 +30,10 @@ public struct SyncActivity: Sendable, Equatable {
     /// Remote deletes, the changed-metadata delta, membership.
     case reconcile
   }
+
+  /// One row per stage, so a stage keeps its identity across progress updates
+  /// and the list doesn't re-animate on every page.
+  public var id: Stage { stage }
 
   public var stage: Stage
   /// The saved view currently being worked on, where the stage proceeds view by
@@ -41,21 +51,6 @@ public struct SyncActivity: Sendable, Equatable {
     self.total = total
   }
 
-  /// Which stage to show when several are running at once.
-  ///
-  /// They genuinely overlap: `sync()` kicks the reconcile off in its own task
-  /// and returns, so a reconcile is usually still going when the library fill
-  /// starts. Highest wins — the heaviest, longest-running work is the most
-  /// informative thing to name.
-  fileprivate var displayPriority: Int {
-    switch stage {
-    case .libraryFill: 3
-    case .detailFill: 2
-    case .reconcile: 1
-    case .elementSync: 0
-    }
-  }
-
   /// `0...1`, or `nil` when the total is unknown or degenerate.
   public var fraction: Double? {
     guard let total, total > 0 else { return nil }
@@ -68,8 +63,15 @@ public struct SyncActivity: Sendable, Equatable {
 public typealias SyncProgressReporter = @MainActor (SyncActivity?) -> Void
 
 extension Collection<SyncActivity> {
-  /// The stage to display when several overlap, or `nil` when nothing is running.
-  public var mostSignificant: SyncActivity? {
-    self.max { $0.displayPriority < $1.displayPriority }
+  /// Every running stage, in a **fixed** order.
+  ///
+  /// Fixed rather than by recency or start time: the stages genuinely overlap —
+  /// `sync()` kicks the reconcile off in its own task and returns, so a
+  /// reconcile is usually still going when the library fill starts — and a list
+  /// that reorders itself as each one reports progress is unreadable.
+  public var sortedForDisplay: [SyncActivity] {
+    let order = Dictionary(
+      uniqueKeysWithValues: SyncActivity.Stage.allCases.enumerated().map { ($1, $0) })
+    return sorted { (order[$0.stage] ?? 0) < (order[$1.stage] ?? 0) }
   }
 }
