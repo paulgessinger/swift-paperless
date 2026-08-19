@@ -95,7 +95,7 @@ extension Database {
               ON n.server_id = d.server_id AND n.document_id = d.id
             WHERE d.server_id = ?
               AND n.document_id IS NULL
-              AND json_extract(d.data, '$.notesCount') = 0
+              AND d.notes_count = 0
             """,
           arguments: [serverID])
         return db.changesCount
@@ -109,8 +109,10 @@ extension Database {
   ///
   /// SQL rather than `fetchAll` + a Swift filter: this runs on every foreground
   /// over the whole table, and decoding each row's JSON to read one integer is
-  /// main-actor work proportional to the library. Ordered by id so a caller can
-  /// resume instead of re-walking the same head.
+  /// main-actor work proportional to the library. `notes_count` is a real column
+  /// (`V9`), so the predicate is indexed rather than a `json_extract` scan over
+  /// a `TEXT` blob. Ordered by id so a caller can resume instead of re-walking
+  /// the same head.
   ///
   /// - Parameter excluding: ids to skip — the caller's per-session record of
   ///   failed fetches, so one bad document doesn't block the rest.
@@ -127,7 +129,7 @@ extension Database {
               ON n.server_id = d.server_id AND n.document_id = d.id
             WHERE d.server_id = ?
               AND n.document_id IS NULL
-              AND json_extract(d.data, '$.notesCount') > 0
+              AND d.notes_count > 0
             ORDER BY d.id
             """,
           arguments: [serverID]
@@ -145,9 +147,9 @@ extension Database {
   /// falling back to the document id).
   ///
   /// Same shape as ``documentIDsNeedingNotesFetch(serverID:excluding:)`` and for
-  /// the same reason. `currentVersionID` — the highest version id, falling back
-  /// to the document id when a document has no versions (`DocumentModel`) — is
-  /// reproduced here in SQL rather than by decoding each row.
+  /// the same reason. `current_version_id` is a real column (`V9`) holding what
+  /// `Document.currentVersionID` computes, so this is an anti-join against
+  /// `file_metadata`'s primary key rather than a `json_each` walk per row.
   public func documentIDsMissingFileMetadata(
     serverID: UUID, excluding: Set<UInt> = []
   ) throws(DatabaseError) -> [UInt] {
@@ -161,10 +163,7 @@ extension Database {
               AND NOT EXISTS (
                 SELECT 1 FROM file_metadata f
                 WHERE f.server_id = d.server_id
-                  AND f.version_id = COALESCE(
-                    (SELECT MAX(CAST(json_extract(v.value, '$.id') AS INTEGER))
-                     FROM json_each(d.data, '$.versions') v),
-                    d.id)
+                  AND f.version_id = d.current_version_id
               )
             ORDER BY d.id
             """,

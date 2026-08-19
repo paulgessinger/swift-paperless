@@ -63,6 +63,10 @@ enum Migrations {
       try V8_AddSyncOverCellular.run(db)
     }
 
+    migrator.registerMigration("v9_promote_document_query_columns") { db in
+      try V9_PromoteDocumentQueryColumns.run(db)
+    }
+
     return migrator
   }
 }

@@ -43,7 +43,11 @@ struct DatabaseSchemaTests {
       let docColumns = Set(try db.columns(in: "document").map(\.name))
       #expect(!docColumns.contains("projection_level"))
       #expect(!docColumns.contains("detail_fetched_at"))
-      #expect(docColumns == ["server_id", "id", "title", "asn", "data"])
+      // `notes_count` / `current_version_id` are V9's promotions out of `data`.
+      #expect(
+        docColumns == [
+          "server_id", "id", "title", "asn", "data", "notes_count", "current_version_id",
+        ])
 
       // query_order no longer FK-references `document` (so it can hold skeletons);
       // its only remaining foreign key is to `server`.

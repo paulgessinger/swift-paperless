@@ -44,6 +44,14 @@ public struct DocumentRecord:
   public var id: UInt
   public var title: String
   public var asn: UInt?
+  /// Promoted out of `payload` so the detail-fill predicates can be indexed
+  /// SQL rather than `json_extract` over a `TEXT` blob (see `V9`). Derived,
+  /// never an independent source of truth: `domain` still reads the notes count
+  /// from the payload, and both are set together in `init(serverId:domain:)`.
+  public var notesCount: Int
+  /// Likewise promoted: `Document.currentVersionID`, i.e. the highest version
+  /// id, falling back to the document id when there are no versions.
+  public var currentVersionID: UInt
   public var payload: Payload
 
   /// Storage-local copy of a `DocumentVersion` (decoupled from the domain type
@@ -81,6 +89,8 @@ public struct DocumentRecord:
     case id
     case title
     case asn
+    case notesCount = "notes_count"
+    case currentVersionID = "current_version_id"
     case payload = "data"
   }
 
@@ -101,6 +111,8 @@ extension DocumentRecord {
     id = domain.id
     title = domain.title
     asn = domain.asn
+    notesCount = domain.notes.count
+    currentVersionID = domain.currentVersionID
     payload = Payload(
       documentType: domain.documentType,
       correspondent: domain.correspondent,
