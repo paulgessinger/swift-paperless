@@ -79,9 +79,23 @@ public final class DocumentStore: Sendable {
   /// User-initiated syncs rethrow instead (the caller toasts, as before).
   public private(set) var lastSyncError: (any DisplayableError)?
 
+  /// What the offline sync is doing right now, or `nil` when nothing is.
+  /// Drives the stage label and progress bar on the Offline & Sync screen.
+  public private(set) var syncActivity: SyncActivity?
+
   /// True while a proactive full-library fill is running (drives the status UI).
-  /// Only the foreground trigger sets this.
-  public private(set) var isFillingLibrary = false
+  /// Derived from ``syncActivity`` rather than a separate flag, so two
+  /// overlapping fills can't have the first one to finish report "idle" while
+  /// the second is still running.
+  public var isFillingLibrary: Bool { syncActivity?.stage == .libraryFill }
+
+  /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
+  /// `nil` until the first successful reconcile this session.
+  ///
+  /// Observed (not `@ObservationIgnored`) because the Offline & Sync screen
+  /// renders it: untracked storage would leave the row reading "Never" until
+  /// some other observed property happened to fire.
+  public private(set) var lastReconcileAt: Date?
 
   /// When the active server's library was last fully filled (`nil` if never).
   /// A stored, observed mirror of `server_sync_state.library_coverage_at` —
@@ -148,10 +162,10 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var documentCountObservationTask: Task<Void, Never>?
 
-  // Last successful (or attempted) remote-delete reconcile. The sweep fetches
-  // the server's whole id set, so it is throttled — `sync()` kicks it
-  // fire-and-forget on launch/foreground/refresh, but it only runs at most once
-  // per `reconcileThrottle` unless user-initiated.
+  // When the reconcile last *ran*, which is what the throttle needs — it has to
+  // advance on every attempt or a failing server would re-sweep its whole id set
+  // on every foreground. `lastReconcileAt` is the separate, user-facing stamp and
+  // only advances on success.
   @ObservationIgnored
   private var lastDocumentReconcile: Date?
   private let reconcileThrottle: TimeInterval = 300
@@ -797,6 +811,8 @@ extension DocumentStore {
       return
     }
     lastDocumentReconcile = Date()
+    syncActivity = SyncActivity(stage: .reconcile)
+    defer { syncActivity = nil }
     do {
       // Deletes first (correctness), then the changed-metadata delta (freshness),
       // then the saved-view membership sweep (so newly-matched docs — now landed
@@ -807,14 +823,13 @@ extension DocumentStore {
         try await backend.reconcileDocumentChanges()
         try await backend.reconcileSavedViewMembership()
       }
+      // Only on success: a server that fails every sweep must not display a
+      // fresh "last refreshed" while nothing is actually being refreshed.
+      lastReconcileAt = Date()
     } catch {
       Logger.shared.info("Document reconcile failed (suppressed): \(error)")
     }
   }
-
-  /// When the document reconcile sweep (R2/R3δ/membership) last ran, for the
-  /// Offline & Sync status screen. `nil` until the first reconcile this session.
-  public var lastReconcileAt: Date? { lastDocumentReconcile }
 
   /// Proactive *Entire library* fill, gated by the setting and an unmetered link.
   /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
@@ -824,10 +839,8 @@ extension DocumentStore {
     guard unmetered, let backend = repository as? any CachingBackend,
       backend.offlineBrowsingMode == .entireLibrary
     else { return }
-    isFillingLibrary = true
-    defer { isFillingLibrary = false }
     do {
-      try await backend.fillLibrary(force: force)
+      try await backend.fillLibrary(force: force) { [weak self] in self?.syncActivity = $0 }
     } catch {
       Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
     }
@@ -842,7 +855,7 @@ extension DocumentStore {
       backend.offlineBrowsingMode == .entireLibrary
     else { return }
     do {
-      try await backend.fillDocumentDetails()
+      try await backend.fillDocumentDetails { [weak self] in self?.syncActivity = $0 }
     } catch {
       Logger.shared.info("Proactive detail fill failed (suppressed): \(error)")
     }

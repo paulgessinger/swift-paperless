@@ -91,7 +91,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// failures don't abort the sweep and still advance the marker — otherwise one
   /// permanently rejected saved view would pin "last full sync" at Never — but a
   /// pass in which *every* view failed advances nothing, so it retries.
-  func fillLibrary(force: Bool) async throws
+  func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws
 
   /// Proactive per-document detail fill (Stage 9, *Entire library*): give every
   /// cached document its notes and file-metadata so it's fully renderable
@@ -101,7 +101,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// request. Driven off "what's still missing" so it's inherently
   /// checkpointed/resumable and capped per pass. Runs after `fillLibrary` has
   /// populated the document rows. No-op unless *Entire library* is enabled.
-  func fillDocumentDetails() async throws
+  func fillDocumentDetails(progress: SyncProgressReporter?) async throws
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -139,6 +139,17 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// ``OfflineBrowsingModeStore``). The reconcile sweeps and the proactive fill
   /// branch on it.
   var offlineBrowsingMode: OfflineBrowsingMode { get }
+}
+
+extension CachingBackend {
+  /// Progress is optional; the sweeps are just as correct unobserved.
+  public func fillLibrary(force: Bool) async throws {
+    try await fillLibrary(force: force, progress: nil)
+  }
+
+  public func fillDocumentDetails() async throws {
+    try await fillDocumentDetails(progress: nil)
+  }
 }
 
 enum CachingRepositoryError: Error {
@@ -286,7 +297,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
 
-  public func fillLibrary(force: Bool) async throws {
+  public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
     guard force || !LibraryCoverage.isFresh(try? database.libraryCoverageAt(serverID: serverID))
     else { return }
 
@@ -299,8 +310,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
     var succeeded = 0
-    for (name, filter) in views {
+    defer { progress?(nil) }
+    for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
+      progress?(
+        SyncActivity(
+          stage: .libraryFill, detail: name, completed: index, total: views.count))
       let key = QueryKey(serverID: serverID, filter: filter)
       do {
         // Sequential: let each query's background paging finish before the next,
@@ -346,7 +361,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // R3δ `deltaCap`) rather than one marathon of per-document round-trips.
   private let detailFillCap = 500
 
-  public func fillDocumentDetails() async throws {
+  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws {
     guard offlineBrowsingMode == .entireLibrary else { return }
 
     // Free step: every zero-note document gets an empty notes row from the list
@@ -359,17 +374,28 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // still-missing set simply shrinks and the next pass resumes.
     var fetchedMetadata = 0
     var fetchedNotes = 0
+    defer { progress?(nil) }
     try await NetworkTransfer.$category.withValue(.fill) {
       let missingMetadata = (try? database.documentIDsMissingFileMetadata(serverID: serverID)) ?? []
+      let needsNotes = (try? database.documentIDsNeedingNotesFetch(serverID: serverID)) ?? []
+      // One budget across both legs, so the bar tracks the whole pass rather
+      // than resetting halfway.
+      let total = min(missingMetadata.count, detailFillCap) + min(needsNotes.count, detailFillCap)
+      var done = 0
+      progress?(SyncActivity(stage: .detailFill, completed: 0, total: total))
+
       for id in missingMetadata.prefix(detailFillCap) {
         try Task.checkCancellation()
         if (try? await metadata(documentId: id)) != nil { fetchedMetadata += 1 }
+        done += 1
+        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
 
-      let needsNotes = (try? database.documentIDsNeedingNotesFetch(serverID: serverID)) ?? []
       for id in needsNotes.prefix(detailFillCap) {
         try Task.checkCancellation()
         if (try? await notes(documentId: id)) != nil { fetchedNotes += 1 }
+        done += 1
+        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
     }
 

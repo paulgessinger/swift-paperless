@@ -75,6 +75,30 @@ public struct OfflineSyncView: View {
 
       Section {
         statusRow(String(localized: .settings(.offlineSyncActivity)), value: activityText)
+        if let activity = store.syncActivity {
+          VStack(alignment: .leading, spacing: 4) {
+            if let fraction = activity.fraction {
+              ProgressView(value: fraction)
+            } else {
+              ProgressView().progressViewStyle(.linear)
+            }
+            HStack {
+              if let detail = activity.detail {
+                Text(detail)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+              }
+              Spacer()
+              if let total = activity.total {
+                Text(.settings(.offlineSyncProgressCount(activity.completed, total)))
+                  .font(.caption)
+                  .monospacedDigit()
+                  .foregroundStyle(.secondary)
+              }
+            }
+          }
+        }
         if mode == .entireLibrary {
           statusRow(
             String(localized: .settings(.offlineSyncLastFullFill)),
@@ -160,12 +184,15 @@ public struct OfflineSyncView: View {
   }
 
   private var activityText: String {
-    if store.isFillingLibrary {
-      String(localized: .settings(.offlineSyncFilling))
-    } else if store.isRefreshing {
-      String(localized: .settings(.offlineSyncRefreshing))
-    } else {
-      String(localized: .settings(.offlineSyncIdle))
+    switch store.syncActivity?.stage {
+    case .libraryFill: String(localized: .settings(.offlineSyncFilling))
+    case .detailFill: String(localized: .settings(.offlineSyncDetailFill))
+    case .reconcile: String(localized: .settings(.offlineSyncReconciling))
+    case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
+    case nil:
+      store.isRefreshing
+        ? String(localized: .settings(.offlineSyncRefreshing))
+        : String(localized: .settings(.offlineSyncIdle))
     }
   }
 

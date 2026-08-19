@@ -2593,6 +2593,18 @@
         }
       }
     },
+    "offlineSyncDetailFill" : {
+      "comment" : "Activity label on the Offline & Sync screen while per-document notes and file metadata are downloading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading document details…"
+          }
+        }
+      }
+    },
     "offlineSyncFilling" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2692,6 +2704,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sync problems"
+          }
+        }
+      }
+    },
+    "offlineSyncProgressCount" : {
+      "comment" : "Progress counter under the sync progress bar. %1$lld is the number of items finished, %2$lld the total",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "offlineSyncReconciling" : {
+      "comment" : "Activity label on the Offline & Sync screen while the app reconciles server-side changes into the offline cache",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking for changes…"
           }
         }
       }
