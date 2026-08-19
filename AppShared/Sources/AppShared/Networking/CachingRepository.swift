@@ -310,6 +310,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     defer { progress?(nil) }
     for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
+      // A downgrade mid-fill means the rest of these views are no longer wanted,
+      // and `reclaimAfterDowngrade` runs right behind us — continuing would
+      // write back rows it has just reclaimed. One connection-row read per view,
+      // and there are few views.
+      guard offlineBrowsingMode == .entireLibrary else {
+        Logger.shared.info("Library fill: mode left Entire library mid-pass; stopping")
+        return
+      }
       progress?(
         SyncActivity(
           stage: .libraryFill, detail: name, completed: index, total: views.count))
@@ -318,7 +326,18 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // Sequential: let each query's background paging finish before the next,
         // so we never run N concurrent paging chains against the server.
         let handle = try await fillQuery(filter: filter)
-        await handle.awaitCompletion()
+        // `fillQuery` pages the rest of the view on a *detached* task, which
+        // inherits no cancellation, and awaiting a `Task<Void, Never>` neither
+        // throws nor propagates one. Without this bridge the only cancellation
+        // this loop can honour is between views — so cancelling mid-view still
+        // paged the whole thing, which is exactly what a background time budget
+        // or a server switch cannot afford.
+        await withTaskCancellationHandler {
+          await handle.awaitCompletion()
+        } onCancel: {
+          handle.cancel()
+        }
+        try Task.checkCancellation()
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
         succeeded += 1
       } catch is CancellationError {

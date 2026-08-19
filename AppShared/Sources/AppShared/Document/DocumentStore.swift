@@ -144,6 +144,13 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var syncTask: Task<Void, Error>?
 
+  // The in-flight proactive library fill. Held so it can be cancelled when the
+  // repository is replaced, and so a second request joins it rather than
+  // starting a parallel pass over the same queries. Only touched on the main
+  // actor.
+  @ObservationIgnored
+  private var libraryFillTask: Task<Void, Never>?
+
   // Observes the active server's `library_coverage_at` into `libraryCoverageAt`.
   // Re-pointed alongside the element projection whenever the repository changes.
   @ObservationIgnored
@@ -174,6 +181,7 @@ public final class DocumentStore: Sendable {
   }
 
   deinit {
+    libraryFillTask?.cancel()
     taskUpdateTask?.cancel()
     coverageObservationTask?.cancel()
     syncErrorObservationTask?.cancel()
@@ -296,6 +304,11 @@ public final class DocumentStore: Sendable {
     // keeping, so cancel rather than detach.
     syncTask?.cancel()
     syncTask = nil
+    // The fill belongs to the outgoing backend too: it pages the *old* server
+    // into the old server's rows. Left running it would keep spending network
+    // and main-actor write transactions on a connection the user has left.
+    libraryFillTask?.cancel()
+    libraryFillTask = nil
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     wireElementStore()
@@ -836,10 +849,32 @@ extension DocumentStore {
     guard unmetered, let backend = repository as? any CachingBackend,
       backend.offlineBrowsingMode == .entireLibrary
     else { return }
-    do {
-      try await backend.fillLibrary(force: force) { [weak self] in self?.syncActivity = $0 }
-    } catch {
-      Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
+
+    // Join an in-flight fill rather than starting a second pass over the same
+    // queries. Nothing dedupes these otherwise, and there are five triggers —
+    // launch, foreground, the mode picker, Sync now, and the background run.
+    // `force` is not lost by joining: a fill only runs at all when the coverage
+    // marker is stale or forced, so one is already doing the work.
+    if let existing = libraryFillTask {
+      await existing.value
+      return
+    }
+
+    let task = Task { [weak self] in
+      do {
+        try await backend.fillLibrary(force: force) { [weak self] in self?.syncActivity = $0 }
+      } catch is CancellationError {
+        Logger.shared.info("Proactive library fill cancelled")
+      } catch {
+        Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
+      }
+    }
+    libraryFillTask = task
+    await task.value
+    // Only clear our own: a cancel-and-restart may have installed a newer one
+    // while we were awaiting.
+    if libraryFillTask == task {
+      libraryFillTask = nil
     }
   }
 
