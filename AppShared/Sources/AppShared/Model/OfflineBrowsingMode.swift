@@ -24,11 +24,8 @@ public enum OfflineBrowsingMode: String, Codable, CaseIterable, Sendable {
 }
 
 extension OfflineBrowsingMode {
-  /// Size-adaptive default for a newly added connection. The comparison
-  /// itself is `DataModel.OfflineLibrarySize.isSmall(documentCount:)` — kept
-  /// there so it's unit-testable; this is a thin, effectively untested
-  /// adapter (one branch, no logic of its own).
-  public static func `default`(forDocumentCount count: UInt?) -> OfflineBrowsingMode {
-    OfflineLibrarySize.isSmall(documentCount: count) ? .entireLibrary : .recentlyBrowsed
-  }
+  /// What a newly added connection starts at. Deliberately not size-adaptive:
+  /// a proactive whole-library download is opt-in. `OfflineLibrarySize` still
+  /// decides whether the Offline & Sync screen *recommends* `.entireLibrary`.
+  public static let initial: OfflineBrowsingMode = .recentlyBrowsed
 }
