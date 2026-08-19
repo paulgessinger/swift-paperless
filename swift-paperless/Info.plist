@@ -7,6 +7,17 @@
 		<string>com.paulgessinger.swift-paperless.sync.refresh</string>
 		<string>com.paulgessinger.swift-paperless.sync.processing</string>
 	</array>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>da</string>
+		<string>de</string>
+		<string>fr</string>
+		<string>it</string>
+		<string>nl</string>
+		<string>pl</string>
+		<string>tr</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
