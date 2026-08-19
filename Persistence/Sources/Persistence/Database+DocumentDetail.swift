@@ -77,43 +77,64 @@ extension Database {
   /// offline as "no notes") without a `/notes/` request. Returns the number of
   /// rows seeded. Only documents that actually have notes need a network fetch
   /// (`documentIDsNeedingNotesFetch`).
+  ///
+  /// One `INSERT … SELECT` rather than a full-table `fetchAll` and a decode per
+  /// row: this runs inside the write transaction, so decoding every document's
+  /// JSON blob to read one integer held the writer lock for time proportional
+  /// to the library — with `busy_timeout` at 5s, long enough for the Share
+  /// Extension to stall behind it. `'[]'` is exactly what an empty
+  /// `DocumentNoteRecord.notes` encodes to.
   @discardableResult
   public func seedEmptyNotesForZeroCountDocuments(serverID: UUID) throws -> Int {
     try writer.write { db in
-      let cachedNoteIDs =
-        try DocumentNoteRecord
-        .select(Column("document_id"), as: UInt.self)
-        .filter(Column("server_id") == serverID)
-        .fetchSet(db)
-      let zeroNoteDocs =
-        try DocumentRecord
-        .filter(Column("server_id") == serverID)
-        .fetchAll(db)
-        .filter { $0.payload.notesCount == 0 && !cachedNoteIDs.contains($0.id) }
-      for record in zeroNoteDocs {
-        try DocumentNoteRecord(serverId: serverID, documentId: record.id, notes: [DocumentNote]())
-          .upsert(db)
-      }
-      return zeroNoteDocs.count
+      try db.execute(
+        sql: """
+          INSERT INTO document_note (server_id, document_id, data)
+          SELECT d.server_id, d.id, '[]'
+          FROM document d
+          LEFT JOIN document_note n
+            ON n.server_id = d.server_id AND n.document_id = d.id
+          WHERE d.server_id = ?
+            AND n.document_id IS NULL
+            AND json_extract(d.data, '$.notesCount') = 0
+          """,
+        arguments: [serverID])
+      return db.changesCount
     }
   }
 
   /// Cached document ids that have notes (`notesCount > 0`) but no cached notes
   /// row yet — the only documents that need an R4n `/notes/` request. Zero-note
   /// documents are covered for free by `seedEmptyNotesForZeroCountDocuments`.
-  public func documentIDsNeedingNotesFetch(serverID: UUID) throws -> [UInt] {
+  ///
+  /// Expressed as SQL rather than a `fetchAll` + Swift filter: the caller runs
+  /// this on every foreground over the whole `document` table, and decoding
+  /// every row's JSON blob to read one integer is work proportional to the
+  /// library on the main actor. `ORDER BY d.id` so the result is stable, which
+  /// is what lets a caller take a prefix and have the next pass resume rather
+  /// than re-walk the same head.
+  ///
+  /// - Parameter excluding: ids to leave out — the caller's per-session record
+  ///   of documents whose fetch already failed, so one permanently failing
+  ///   document can't sit at the head of the list forever.
+  public func documentIDsNeedingNotesFetch(
+    serverID: UUID, excluding: Set<UInt> = []
+  ) throws -> [UInt] {
     try writer.read { db in
-      let cachedNoteIDs =
-        try DocumentNoteRecord
-        .select(Column("document_id"), as: UInt.self)
-        .filter(Column("server_id") == serverID)
-        .fetchSet(db)
-      return
-        try DocumentRecord
-        .filter(Column("server_id") == serverID)
-        .fetchAll(db)
-        .filter { $0.payload.notesCount > 0 && !cachedNoteIDs.contains($0.id) }
-        .map(\.id)
+      try UInt.fetchAll(
+        db,
+        sql: """
+          SELECT d.id FROM document d
+          LEFT JOIN document_note n
+            ON n.server_id = d.server_id AND n.document_id = d.id
+          WHERE d.server_id = ?
+            AND n.document_id IS NULL
+            AND json_extract(d.data, '$.notesCount') > 0
+          ORDER BY d.id
+          """,
+        arguments: [serverID]
+      )
+      .filter { !excluding.contains($0) }
     }
   }
 
@@ -123,19 +144,33 @@ extension Database {
   /// for its current version is never re-fetched. Mirrors the version-key
   /// resolution in `CachingRepository.metadata(documentId:)` (current version,
   /// falling back to the document id).
-  public func documentIDsMissingFileMetadata(serverID: UUID) throws -> [UInt] {
+  ///
+  /// Same shape as ``documentIDsNeedingNotesFetch(serverID:excluding:)`` and for
+  /// the same reason. `currentVersionID` — the highest version id, falling back
+  /// to the document id when a document has no versions (`DocumentModel`) — is
+  /// reproduced here in SQL rather than by decoding each row.
+  public func documentIDsMissingFileMetadata(
+    serverID: UUID, excluding: Set<UInt> = []
+  ) throws -> [UInt] {
     try writer.read { db in
-      let cachedVersionIDs =
-        try FileMetadataRecord
-        .select(Column("version_id"), as: UInt.self)
-        .filter(Column("server_id") == serverID)
-        .fetchSet(db)
-      return
-        try DocumentRecord
-        .filter(Column("server_id") == serverID)
-        .fetchAll(db)
-        .filter { !cachedVersionIDs.contains($0.domain.currentVersionID) }
-        .map(\.id)
+      try UInt.fetchAll(
+        db,
+        sql: """
+          SELECT d.id FROM document d
+          WHERE d.server_id = ?
+            AND NOT EXISTS (
+              SELECT 1 FROM file_metadata f
+              WHERE f.server_id = d.server_id
+                AND f.version_id = COALESCE(
+                  (SELECT MAX(CAST(json_extract(v.value, '$.id') AS INTEGER))
+                   FROM json_each(d.data, '$.versions') v),
+                  d.id)
+            )
+          ORDER BY d.id
+          """,
+        arguments: [serverID]
+      )
+      .filter { !excluding.contains($0) }
     }
   }
 

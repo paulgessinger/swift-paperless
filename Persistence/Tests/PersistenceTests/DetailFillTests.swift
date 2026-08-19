@@ -172,4 +172,33 @@ struct DetailFillTests {
     // B's doc 2 is untouched.
     #expect(try database.documentIDsNeedingNotesFetch(serverID: serverB) == [2])
   }
+  @Test("excluding drops known-bad ids from both detail-fill queries")
+  func excludingSkipsFailedIDs() throws {
+    let server = UUID()
+    let database = try database(server)
+
+    try database.upsertDocuments(
+      [doc(1, notesCount: 1), doc(2, notesCount: 1), doc(3, notesCount: 1)], serverID: server)
+
+    #expect(try database.documentIDsNeedingNotesFetch(serverID: server) == [1, 2, 3])
+    #expect(
+      try database.documentIDsNeedingNotesFetch(serverID: server, excluding: [2]) == [1, 3])
+    #expect(
+      try database.documentIDsMissingFileMetadata(serverID: server, excluding: [1, 3]) == [2])
+  }
+
+  @Test("detail-fill queries return ids in a stable order")
+  func detailQueriesAreOrdered() throws {
+    let server = UUID()
+    let database = try database(server)
+
+    // Inserted out of order: the caller resumes by taking what is still
+    // missing, which only works if the order doesn't wander between passes.
+    try database.upsertDocuments(
+      [doc(30, notesCount: 1), doc(10, notesCount: 1), doc(20, notesCount: 1)], serverID: server)
+
+    #expect(try database.documentIDsNeedingNotesFetch(serverID: server) == [10, 20, 30])
+    #expect(try database.documentIDsMissingFileMetadata(serverID: server) == [10, 20, 30])
+  }
+
 }

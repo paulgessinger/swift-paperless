@@ -98,9 +98,11 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// offline even if never opened. Zero-note documents are seeded from the
   /// list payload's notes *count* for free (no request); only documents that
   /// actually have notes, and versions whose `/metadata/` isn't cached, cost a
-  /// request. Driven off "what's still missing" so it's inherently
-  /// checkpointed/resumable and capped per pass. Runs after `fillLibrary` has
-  /// populated the document rows. No-op unless *Entire library* is enabled.
+  /// request. Driven off "what's still missing", so it is inherently
+  /// checkpointed and resumes rather than restarting. Uncapped: it runs to
+  /// completion, reporting progress, and only cancellation stops it early. Runs
+  /// after `fillLibrary` has populated the document rows. No-op unless *Entire
+  /// library* is enabled.
   func fillDocumentDetails(progress: SyncProgressReporter?) async throws
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
@@ -360,10 +362,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try? database.setLibraryCoverageAt(Date(), serverID: serverID)
   }
 
-  // How many notes/metadata requests a single detail-fill pass makes before
-  // yielding, so a cold large library spans several foregrounds (mirroring the
-  // R3δ `deltaCap`) rather than one marathon of per-document round-trips.
-  private let detailFillCap = 500
+  // Documents whose detail fetch failed this session. Without this, a document
+  // the server will never serve — a `/notes/` the user has no permission for, a
+  // `/metadata/` that 500s on one bad file — is retried on every foreground for
+  // as long as the app runs. Per-session (not persisted) so a transient failure
+  // clears on the next launch rather than sticking forever.
+  private var detailFillFailures: Set<UInt> = []
 
   public func fillDocumentDetails(progress: SyncProgressReporter?) async throws {
     guard offlineBrowsingMode == .entireLibrary else { return }
@@ -379,25 +383,51 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     var fetchedMetadata = 0
     var fetchedNotes = 0
     defer { progress?(nil) }
+
+    // Notes are a separate resource with their own permission. Without this the
+    // fill asks for every noted document's `/notes/` and takes a 403 each time —
+    // one doomed request per document, on every foreground, forever. `nil` (no
+    // cached matrix yet) stays optimistic, matching `syncElements`.
+    let permissions = try? database.uiSettings(serverID: serverID)?.permissions
+    let canViewNotes = permissions?.test(.view, for: .note) ?? true
+
     try await NetworkTransfer.$category.withValue(.fill) {
-      let missingMetadata = (try? database.documentIDsMissingFileMetadata(serverID: serverID)) ?? []
-      let needsNotes = (try? database.documentIDsNeedingNotesFetch(serverID: serverID)) ?? []
-      // One budget across both legs, so the bar tracks the whole pass rather
-      // than resetting halfway.
-      let total = min(missingMetadata.count, detailFillCap) + min(needsNotes.count, detailFillCap)
+      let missingMetadata =
+        (try? database.documentIDsMissingFileMetadata(
+          serverID: serverID, excluding: detailFillFailures)) ?? []
+      let needsNotes =
+        canViewNotes
+        ? (try? database.documentIDsNeedingNotesFetch(
+          serverID: serverID, excluding: detailFillFailures)) ?? []
+        : []
+
+      // The pass is uncapped: a first cold fill of a large library is meant to
+      // run to completion, and the Offline & Sync screen reports it rather than
+      // a per-pass budget hiding how much is left. Cancellation (backgrounding,
+      // a server switch) is what stops it early, and the work is driven off
+      // what's still missing, so the next pass resumes.
+      let total = missingMetadata.count + needsNotes.count
       var done = 0
       progress?(SyncActivity(stage: .detailFill, completed: 0, total: total))
 
-      for id in missingMetadata.prefix(detailFillCap) {
+      for id in missingMetadata {
         try Task.checkCancellation()
-        if (try? await metadata(documentId: id)) != nil { fetchedMetadata += 1 }
+        if (try? await metadata(documentId: id)) != nil {
+          fetchedMetadata += 1
+        } else {
+          detailFillFailures.insert(id)
+        }
         done += 1
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
 
-      for id in needsNotes.prefix(detailFillCap) {
+      for id in needsNotes {
         try Task.checkCancellation()
-        if (try? await notes(documentId: id)) != nil { fetchedNotes += 1 }
+        if (try? await notes(documentId: id)) != nil {
+          fetchedNotes += 1
+        } else {
+          detailFillFailures.insert(id)
+        }
         done += 1
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
