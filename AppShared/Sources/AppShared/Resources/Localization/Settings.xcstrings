@@ -2494,6 +2494,7 @@
       }
     },
     "offlineBrowsingModeDescription" : {
+      "comment" : "Footer under the Offline browsing picker, explaining what Entire library downloads and that leaving it deletes the downloads",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2505,6 +2506,7 @@
       }
     },
     "offlineBrowsingModeEntireLibrary" : {
+      "comment" : "Offline browsing option: cache the whole library up front. Contrast with 'Recently browsed'",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2516,6 +2518,7 @@
       }
     },
     "offlineBrowsingModeHeader" : {
+      "comment" : "Section header on the Offline & Sync screen for the offline browsing scope setting",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2527,6 +2530,7 @@
       }
     },
     "offlineBrowsingModeLabel" : {
+      "comment" : "Picker label for how much of the library is kept available offline",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2538,6 +2542,7 @@
       }
     },
     "offlineBrowsingModeRecentlyBrowsed" : {
+      "comment" : "Offline browsing option: cache only what the user has actually opened. Contrast with 'Entire library'",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2549,12 +2554,25 @@
       }
     },
     "offlineSyncActivity" : {
+      "comment" : "Row label on the Offline & Sync screen whose value says what the sync is doing right now",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Activity"
+          }
+        }
+      }
+    },
+    "offlineSyncCachedDocuments" : {
+      "comment" : "Row label for how many documents are currently stored on the device for offline use",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cached documents"
           }
         }
       }
@@ -2584,6 +2602,7 @@
       }
     },
     "offlineSyncDataHeader" : {
+      "comment" : "Section header for how much network data the app has used. Covers API requests only, not file downloads",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2595,6 +2614,7 @@
       }
     },
     "offlineSyncDataSince" : {
+      "comment" : "Footer under the data-transferred figures. %@ is a formatted date and time when counting started",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2630,6 +2650,7 @@
       }
     },
     "offlineSyncFilling" : {
+      "comment" : "Activity status while the whole-library download is running",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2641,6 +2662,7 @@
       }
     },
     "offlineSyncIdle" : {
+      "comment" : "Activity status when no synchronization is running",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2652,6 +2674,7 @@
       }
     },
     "offlineSyncLastFullFill" : {
+      "comment" : "Row label for when the whole library was last downloaded in full",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2663,6 +2686,7 @@
       }
     },
     "offlineSyncLastRefresh" : {
+      "comment" : "Row label for when the app last successfully checked the server for changes",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2673,19 +2697,8 @@
         }
       }
     },
-    "offlineSyncCachedDocuments" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cached documents"
-          }
-        }
-      }
-    },
-
     "offlineSyncNever" : {
+      "comment" : "Value shown in place of a date when the thing has not happened yet",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2757,6 +2770,7 @@
       }
     },
     "offlineSyncRefreshing" : {
+      "comment" : "Activity status while the app is refreshing data from the server",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2768,6 +2782,7 @@
       }
     },
     "offlineSyncResetStatistics" : {
+      "comment" : "Destructive button that sets the data-transferred counters back to zero",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2779,6 +2794,7 @@
       }
     },
     "offlineSyncStatusHeader" : {
+      "comment" : "Section header on the Offline & Sync screen for the current sync status",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2790,6 +2806,7 @@
       }
     },
     "offlineSyncTitle" : {
+      "comment" : "Title of the settings screen for offline storage and synchronization",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2801,6 +2818,7 @@
       }
     },
     "offlineSyncTotal" : {
+      "comment" : "Row label for the sum of all data-transfer categories",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4110,6 +4128,7 @@
       }
     },
     "transferCategoryFill" : {
+      "comment" : "Data-transfer category: downloading document lists for offline use",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4121,6 +4140,7 @@
       }
     },
     "transferCategoryOther" : {
+      "comment" : "Data-transfer category: everything not covered by the named categories",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4132,6 +4152,7 @@
       }
     },
     "transferCategoryReconcile" : {
+      "comment" : "Data-transfer category: checking the server for changes to already-cached documents",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -4143,6 +4164,7 @@
       }
     },
     "transferCategorySync" : {
+      "comment" : "Data-transfer category: syncing tags, correspondents, saved views and similar",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
