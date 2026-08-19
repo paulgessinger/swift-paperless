@@ -29,21 +29,25 @@ extension Database {
   public func recordQuerySyncError(
     serverID: UUID, queryKey: String, savedViewName: String?, message: String,
     at date: Date = Date()
-  ) throws {
-    try writer.write { db in
-      try QuerySyncErrorRecord(
-        serverId: serverID, queryKey: queryKey, savedViewName: savedViewName,
-        message: message, failedAt: date.timeIntervalSinceReferenceDate
-      ).upsert(db)
+  ) throws(DatabaseError) {
+    try wrapping("recordQuerySyncError") {
+      try writer.write { db in
+        try QuerySyncErrorRecord(
+          serverId: serverID, queryKey: queryKey, savedViewName: savedViewName,
+          message: message, failedAt: date.timeIntervalSinceReferenceDate
+        ).upsert(db)
+      }
     }
   }
 
   /// Clear a query's recorded failure (called when it next syncs successfully).
-  public func clearQuerySyncError(serverID: UUID, queryKey: String) throws {
-    _ = try writer.write { db in
-      try QuerySyncErrorRecord
-        .filter(Column("server_id") == serverID && Column("query_key") == queryKey)
-        .deleteAll(db)
+  public func clearQuerySyncError(serverID: UUID, queryKey: String) throws(DatabaseError) {
+    try wrapping("clearQuerySyncError") {
+      _ = try writer.write { db in
+        try QuerySyncErrorRecord
+          .filter(Column("server_id") == serverID && Column("query_key") == queryKey)
+          .deleteAll(db)
+      }
     }
   }
 

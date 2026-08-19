@@ -75,20 +75,22 @@ extension Database {
   /// `totalCount` records the server's full count for the scrollbar extent.
   public func replaceQueryOrder(
     queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
-  ) throws {
-    try writer.write { db in
-      try QueryOrderRow
-        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-        .deleteAll(db)
-      for (position, id) in orderedIDs.enumerated() {
-        try QueryOrderRow(
-          serverId: serverID, queryKey: queryKey.rawValue,
-          position: position, remoteId: id
-        ).insert(db)
+  ) throws(DatabaseError) {
+    try wrapping("replaceQueryOrder") {
+      try writer.write { db in
+        try QueryOrderRow
+          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+          .deleteAll(db)
+        for (position, id) in orderedIDs.enumerated() {
+          try QueryOrderRow(
+            serverId: serverID, queryKey: queryKey.rawValue,
+            position: position, remoteId: id
+          ).insert(db)
+        }
+        try setQueryMeta(
+          db, serverID: serverID, queryKey: queryKey,
+          totalCount: UInt(orderedIDs.count), orderStale: false)
       }
-      try setQueryMeta(
-        db, serverID: serverID, queryKey: queryKey,
-        totalCount: UInt(orderedIDs.count), orderStale: false)
     }
   }
 
@@ -142,8 +144,10 @@ extension Database {
   /// membership — pinning (a second future exemption) doesn't exist yet.
   /// Returns the number of documents removed (for logging/tests).
   @discardableResult
-  public func pruneUnreferencedDocuments(serverID: UUID) throws -> Int {
-    try writer.write { db in try Self.pruneUnreferenced(db, serverID: serverID) }
+  public func pruneUnreferencedDocuments(serverID: UUID) throws(DatabaseError) -> Int {
+    try wrapping("pruneUnreferencedDocuments") {
+      try writer.write { db in try Self.pruneUnreferenced(db, serverID: serverID) }
+    }
   }
 
   @discardableResult
@@ -174,9 +178,11 @@ extension Database {
   /// what `.recentlyBrowsed` already does for any other saved view. Returns
   /// the number of `query_order` rows removed.
   @discardableResult
-  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws -> Int {
-    try writer.write { db in
-      try Self.dropQueries(db, serverID: serverID, exceptQueryKey: exceptQueryKey)
+  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws(DatabaseError) -> Int {
+    try wrapping("dropQueryOrder") {
+      try writer.write { db in
+        try Self.dropQueries(db, serverID: serverID, exceptQueryKey: exceptQueryKey)
+      }
     }
   }
 
@@ -214,9 +220,11 @@ extension Database {
   @discardableResult
   public func truncateQueryOrder(
     serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
-  ) throws -> Int {
-    try writer.write { db in
-      try Self.truncateQuery(db, serverID: serverID, queryKey: queryKey, keepingFirst: limit)
+  ) throws(DatabaseError) -> Int {
+    try wrapping("truncateQueryOrder") {
+      try writer.write { db in
+        try Self.truncateQuery(db, serverID: serverID, queryKey: queryKey, keepingFirst: limit)
+      }
     }
   }
 
@@ -328,9 +336,11 @@ extension Database {
   /// Count of `document` rows cached for a server — a diagnostic surface (the
   /// Offline & Sync screen) so the proactive fill and the downgrade GC's
   /// effect are visible without a debugger.
-  public func documentCount(serverID: UUID) throws -> Int {
-    try writer.read { db in
-      try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db)
+  public func documentCount(serverID: UUID) throws(DatabaseError) -> Int {
+    try wrapping("documentCount") {
+      try writer.read { db in
+        try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db)
+      }
     }
   }
 

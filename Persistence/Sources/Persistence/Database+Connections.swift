@@ -11,26 +11,32 @@ import os
 /// records under the same principle ("GRDB is sealed inside Persistence").
 extension Database {
   /// Fetch every connection row currently in the table.
-  public func allConnections() throws -> [ConnectionRecord] {
+  public func allConnections() throws(DatabaseError) -> [ConnectionRecord] {
     try wrapping("allConnections") {
-      try writer.read { db in
-        try ConnectionRecord.fetchAll(db)
+      try wrapping("allConnections") {
+        try writer.read { db in
+          try ConnectionRecord.fetchAll(db)
+        }
       }
     }
   }
 
   /// Fetch a single connection row by id, or `nil` if absent.
-  public func connection(id: UUID) throws -> ConnectionRecord? {
-    try writer.read { db in
-      try ConnectionRecord.fetchOne(db, key: id)
+  public func connection(id: UUID) throws(DatabaseError) -> ConnectionRecord? {
+    try wrapping("connection") {
+      try writer.read { db in
+        try ConnectionRecord.fetchOne(db, key: id)
+      }
     }
   }
 
   /// Insert or replace a connection row by primary key.
-  public func upsertConnection(_ record: ConnectionRecord) throws {
+  public func upsertConnection(_ record: ConnectionRecord) throws(DatabaseError) {
     try wrapping("upsertConnection") {
-      try writer.write { db in
-        try record.upsert(db)
+      try wrapping("upsertConnection") {
+        try writer.write { db in
+          try record.upsert(db)
+        }
       }
     }
   }
@@ -38,10 +44,12 @@ extension Database {
   /// Delete a connection row by id.
   /// - Returns: `true` if a row was deleted, `false` if no such row existed.
   @discardableResult
-  public func deleteConnection(id: UUID) throws -> Bool {
+  public func deleteConnection(id: UUID) throws(DatabaseError) -> Bool {
     try wrapping("deleteConnection") {
-      try writer.write { db in
-        try ConnectionRecord.deleteOne(db, key: id)
+      try wrapping("deleteConnection") {
+        try writer.write { db in
+          try ConnectionRecord.deleteOne(db, key: id)
+        }
       }
     }
   }
@@ -49,12 +57,14 @@ extension Database {
   /// Update only the `needs_auth` column on one row.
   ///
   /// No-op if the id doesn't match a row.
-  public func setNeedsAuth(_ flag: Bool, forConnection id: UUID) throws {
+  public func setNeedsAuth(_ flag: Bool, forConnection id: UUID) throws(DatabaseError) {
     try wrapping("setNeedsAuth") {
-      try writer.write { db in
-        try db.execute(
-          sql: "UPDATE server SET needs_auth = ? WHERE id = ?",
-          arguments: [flag, id])
+      try wrapping("setNeedsAuth") {
+        try writer.write { db in
+          try db.execute(
+            sql: "UPDATE server SET needs_auth = ? WHERE id = ?",
+            arguments: [flag, id])
+        }
       }
     }
   }
@@ -111,27 +121,31 @@ extension Database {
   @discardableResult
   public func exportConnectionsToLegacyUserDefaults(
     _ userDefaults: UserDefaults
-  ) throws -> Int {
-    let records = try allConnections()
-    let legacy = Dictionary(
-      uniqueKeysWithValues: records.map { ($0.id, LegacyStoredConnection(record: $0)) })
+  ) throws(DatabaseError) -> Int {
     try wrapping("exportConnectionsToLegacyUserDefaults") {
-      let data = try JSONEncoder().encode(legacy)
-      userDefaults.set(data, forKey: V2_ImportLegacyConnections.userDefaultsKey)
+      let records = try allConnections()
+      let legacy = Dictionary(
+        uniqueKeysWithValues: records.map { ($0.id, LegacyStoredConnection(record: $0)) })
+      try wrapping("exportConnectionsToLegacyUserDefaults") {
+        let data = try JSONEncoder().encode(legacy)
+        userDefaults.set(data, forKey: V2_ImportLegacyConnections.userDefaultsKey)
+      }
+      Logger.persistence.notice(
+        "Exported \(records.count, privacy: .public) connection(s) to legacy UserDefaults")
+      return records.count
     }
-    Logger.persistence.notice(
-      "Exported \(records.count, privacy: .public) connection(s) to legacy UserDefaults")
-    return records.count
   }
 
   /// App-group convenience for ``exportConnectionsToLegacyUserDefaults(_:)``.
   @discardableResult
   public func exportConnectionsToLegacyUserDefaults(
     appGroupIdentifier: String = ContentStore.appGroup
-  ) throws -> Int {
-    guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else {
-      throw DatabaseError.appGroupUnavailable(identifier: appGroupIdentifier)
+  ) throws(DatabaseError) -> Int {
+    try wrapping("exportConnectionsToLegacyUserDefaults") {
+      guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else {
+        throw DatabaseError.appGroupUnavailable(identifier: appGroupIdentifier)
+      }
+      return try exportConnectionsToLegacyUserDefaults(defaults)
     }
-    return try exportConnectionsToLegacyUserDefaults(defaults)
   }
 }

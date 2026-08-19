@@ -9,21 +9,29 @@ import GRDB
 extension Database {
   /// The newest document `modified` the changed-metadata delta has applied for
   /// this server, or `nil` if it has never baselined.
-  public func deltaWatermark(serverID: UUID) throws -> Date? {
-    try date(\.deltaWatermark, serverID: serverID)
+  public func deltaWatermark(serverID: UUID) throws(DatabaseError) -> Date? {
+    try wrapping("deltaWatermark") {
+      try date(\.deltaWatermark, serverID: serverID)
+    }
   }
 
-  public func setDeltaWatermark(_ date: Date?, serverID: UUID) throws {
-    try update(serverID: serverID) { $0.deltaWatermark = date?.timeIntervalSinceReferenceDate }
+  public func setDeltaWatermark(_ date: Date?, serverID: UUID) throws(DatabaseError) {
+    try wrapping("setDeltaWatermark") {
+      try update(serverID: serverID) { $0.deltaWatermark = date?.timeIntervalSinceReferenceDate }
+    }
   }
 
   /// When this server's library was last fully filled, or `nil` if never.
-  public func libraryCoverageAt(serverID: UUID) throws -> Date? {
-    try date(\.libraryCoverageAt, serverID: serverID)
+  public func libraryCoverageAt(serverID: UUID) throws(DatabaseError) -> Date? {
+    try wrapping("libraryCoverageAt") {
+      try date(\.libraryCoverageAt, serverID: serverID)
+    }
   }
 
-  public func setLibraryCoverageAt(_ date: Date?, serverID: UUID) throws {
-    try update(serverID: serverID) { $0.libraryCoverageAt = date?.timeIntervalSinceReferenceDate }
+  public func setLibraryCoverageAt(_ date: Date?, serverID: UUID) throws(DatabaseError) {
+    try wrapping("setLibraryCoverageAt") {
+      try update(serverID: serverID) { $0.libraryCoverageAt = date?.timeIntervalSinceReferenceDate }
+    }
   }
 
   /// Observe this server's `library_coverage_at`, emitting the current value

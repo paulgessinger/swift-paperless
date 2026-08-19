@@ -85,21 +85,23 @@ extension Database {
   /// Extension to stall behind it. `'[]'` is exactly what an empty
   /// `DocumentNoteRecord.notes` encodes to.
   @discardableResult
-  public func seedEmptyNotesForZeroCountDocuments(serverID: UUID) throws -> Int {
-    try writer.write { db in
-      try db.execute(
-        sql: """
-          INSERT INTO document_note (server_id, document_id, data)
-          SELECT d.server_id, d.id, '[]'
-          FROM document d
-          LEFT JOIN document_note n
-            ON n.server_id = d.server_id AND n.document_id = d.id
-          WHERE d.server_id = ?
-            AND n.document_id IS NULL
-            AND json_extract(d.data, '$.notesCount') = 0
-          """,
-        arguments: [serverID])
-      return db.changesCount
+  public func seedEmptyNotesForZeroCountDocuments(serverID: UUID) throws(DatabaseError) -> Int {
+    try wrapping("seedEmptyNotesForZeroCountDocuments") {
+      try writer.write { db in
+        try db.execute(
+          sql: """
+            INSERT INTO document_note (server_id, document_id, data)
+            SELECT d.server_id, d.id, '[]'
+            FROM document d
+            LEFT JOIN document_note n
+              ON n.server_id = d.server_id AND n.document_id = d.id
+            WHERE d.server_id = ?
+              AND n.document_id IS NULL
+              AND json_extract(d.data, '$.notesCount') = 0
+            """,
+          arguments: [serverID])
+        return db.changesCount
+      }
     }
   }
 
@@ -119,22 +121,24 @@ extension Database {
   ///   document can't sit at the head of the list forever.
   public func documentIDsNeedingNotesFetch(
     serverID: UUID, excluding: Set<UInt> = []
-  ) throws -> [UInt] {
-    try writer.read { db in
-      try UInt.fetchAll(
-        db,
-        sql: """
-          SELECT d.id FROM document d
-          LEFT JOIN document_note n
-            ON n.server_id = d.server_id AND n.document_id = d.id
-          WHERE d.server_id = ?
-            AND n.document_id IS NULL
-            AND json_extract(d.data, '$.notesCount') > 0
-          ORDER BY d.id
-          """,
-        arguments: [serverID]
-      )
-      .filter { !excluding.contains($0) }
+  ) throws(DatabaseError) -> [UInt] {
+    try wrapping("documentIDsNeedingNotesFetch") {
+      try writer.read { db in
+        try UInt.fetchAll(
+          db,
+          sql: """
+            SELECT d.id FROM document d
+            LEFT JOIN document_note n
+              ON n.server_id = d.server_id AND n.document_id = d.id
+            WHERE d.server_id = ?
+              AND n.document_id IS NULL
+              AND json_extract(d.data, '$.notesCount') > 0
+            ORDER BY d.id
+            """,
+          arguments: [serverID]
+        )
+        .filter { !excluding.contains($0) }
+      }
     }
   }
 
@@ -151,26 +155,28 @@ extension Database {
   /// reproduced here in SQL rather than by decoding each row.
   public func documentIDsMissingFileMetadata(
     serverID: UUID, excluding: Set<UInt> = []
-  ) throws -> [UInt] {
-    try writer.read { db in
-      try UInt.fetchAll(
-        db,
-        sql: """
-          SELECT d.id FROM document d
-          WHERE d.server_id = ?
-            AND NOT EXISTS (
-              SELECT 1 FROM file_metadata f
-              WHERE f.server_id = d.server_id
-                AND f.version_id = COALESCE(
-                  (SELECT MAX(CAST(json_extract(v.value, '$.id') AS INTEGER))
-                   FROM json_each(d.data, '$.versions') v),
-                  d.id)
-            )
-          ORDER BY d.id
-          """,
-        arguments: [serverID]
-      )
-      .filter { !excluding.contains($0) }
+  ) throws(DatabaseError) -> [UInt] {
+    try wrapping("documentIDsMissingFileMetadata") {
+      try writer.read { db in
+        try UInt.fetchAll(
+          db,
+          sql: """
+            SELECT d.id FROM document d
+            WHERE d.server_id = ?
+              AND NOT EXISTS (
+                SELECT 1 FROM file_metadata f
+                WHERE f.server_id = d.server_id
+                  AND f.version_id = COALESCE(
+                    (SELECT MAX(CAST(json_extract(v.value, '$.id') AS INTEGER))
+                     FROM json_each(d.data, '$.versions') v),
+                    d.id)
+              )
+            ORDER BY d.id
+            """,
+          arguments: [serverID]
+        )
+        .filter { !excluding.contains($0) }
+      }
     }
   }
 
@@ -178,13 +184,15 @@ extension Database {
   /// calls this for documents whose `modified` bumped (note edits bump it too),
   /// so the next detail fill re-seeds or re-fetches their notes against the
   /// fresh `notesCount`. Explicit bookkeeping, not an FK cascade.
-  public func invalidateNotes(serverID: UUID, documentIDs: [UInt]) throws {
-    guard !documentIDs.isEmpty else { return }
-    try writer.write { db in
-      _ =
-        try DocumentNoteRecord
-        .filter(Column("server_id") == serverID && documentIDs.contains(Column("document_id")))
-        .deleteAll(db)
+  public func invalidateNotes(serverID: UUID, documentIDs: [UInt]) throws(DatabaseError) {
+    try wrapping("invalidateNotes") {
+      guard !documentIDs.isEmpty else { return }
+      try writer.write { db in
+        _ =
+          try DocumentNoteRecord
+          .filter(Column("server_id") == serverID && documentIDs.contains(Column("document_id")))
+          .deleteAll(db)
+      }
     }
   }
 }
