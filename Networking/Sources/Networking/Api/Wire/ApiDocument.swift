@@ -63,6 +63,12 @@ extension ApiDocument {
       notes: notes?.domain ?? NotesPayload(),
       customFields: custom_fields ?? CustomFieldRawEntryList(),
       versions: versions?.map(\.domain) ?? [],
+      // NOTE: not "the server said yes". `full_perms=true` makes paperless-ngx
+      // *drop* `user_can_change` (it swaps the field for `permissions`), and the
+      // document list always asks for full perms — so this fallback fires for
+      // every list-sourced row. Nothing reads `Document.userCanChange`; the real
+      // check is `DocumentStore.userCanChange(document:)`, which derives from
+      // `permissions` + owner and works offline.
       userCanChange: user_can_change ?? true
     )
     doc.permissions = permissions

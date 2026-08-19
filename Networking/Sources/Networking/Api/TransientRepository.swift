@@ -168,6 +168,10 @@ extension TransientRepository: Repository {
     try await pagedDocumentIDs(filter: filter)
   }
 
+  public func orderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    try await pagedOrderedDocumentIDs(filter: filter)
+  }
+
   public func trash() async throws -> [Document] {
     trashedDocuments.values.sorted { $0.id < $1.id }
   }

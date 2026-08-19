@@ -560,7 +560,7 @@ extension ApiRepository: Repository {
   }
 
   /// Cheap id-only projection (`fields=id`) in a few very large pages — the
-  /// authoritative ordered id set for the remote-delete reconcile.
+  /// authoritative id set for the remote-delete reconcile.
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
     Logger.networking.notice("Getting document id set for filter")
     // Page over a *unique* ordering: the result is consumed as a set, and paging
@@ -569,11 +569,28 @@ extension ApiRepository: Repository {
     var filter = filter
     filter.sortField = .other("id")
     filter.sortOrder = .ascending
+    return try await pageDocumentIDs(filter: filter, stableOrdering: false)
+  }
+
+  /// Same cheap projection, but in the *query's* order — the membership sweep
+  /// writes these as `query_order` positions, so re-sorting them would rewrite
+  /// every cached list to id order. Paging stays safe because `stableOrdering`
+  /// appends `id` as a secondary key, which is what `documentIDs` gets by
+  /// sorting on `id` outright.
+  public func orderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    Logger.networking.notice("Getting ordered document id list for filter")
+    return try await pageDocumentIDs(filter: filter, stableOrdering: true)
+  }
+
+  private func pageDocumentIDs(
+    filter: FilterState, stableOrdering: Bool
+  ) async throws -> [UInt] {
     let cursor = try PageCursor<ApiDocumentID>(
       repository: self,
       initialURL: url(
         .documents(
-          page: 1, filter: filter, pageSize: 25000, searchApi: searchApi, fields: ["id"])))
+          page: 1, filter: filter, pageSize: 25000, searchApi: searchApi, fields: ["id"],
+          stableOrdering: stableOrdering)))
     return try await cursor.collectAll().map(\.id)
   }
 
@@ -857,7 +874,7 @@ extension ApiRepository: Repository {
     Logger.networking.notice("Getting next ASN with legacy compatibility method")
 
     let decoded = try await send(
-      endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
+      endpoint: .documents(page: 1, filter: .empty, pageSize: 1, fullPerms: false),
       returns: ListResponse<ApiDocument>.self)
     return (decoded.results.first?.archive_serial_number ?? 0) + 1
   }
@@ -882,10 +899,16 @@ extension ApiRepository: Repository {
   /// `page_size` (same trick as `nextAsnCompatibility()`), so this is one
   /// small request, not a full page walk. Used only to pick a size-adaptive
   /// default for `OfflineBrowsingMode` right after login.
+  ///
+  /// Projected to `fields=id` with no expanded permissions: only `count` is
+  /// read, so decoding a whole document would couple a best-effort probe to
+  /// every field of the document wire shape — one undecodable row would sink
+  /// the count and silently change the offline default.
   public func documentCount() async throws -> UInt {
     let decoded = try await send(
-      endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
-      returns: ListResponse<ApiDocument>.self)
+      endpoint: .documents(
+        page: 1, filter: .empty, pageSize: 1, fields: ["id"], fullPerms: false),
+      returns: ListResponse<ApiDocumentID>.self)
     return decoded.count
   }
 

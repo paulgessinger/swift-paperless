@@ -85,17 +85,28 @@ extension Endpoint {
 
 // MARK: - Document related endpoints
 extension Endpoint {
+  /// - Parameter stableOrdering: append `id` as a secondary ordering key. Every
+  ///   sort field the UI offers is non-unique (`created`, `modified`, `title`, …),
+  ///   and page-offset paging over a non-unique ordering can drop or repeat rows
+  ///   across page boundaries. Needed whenever the *whole* answer is paged and
+  ///   the caller keeps the order; pointless for a single page.
   public static func documents(
     page: UInt, filter: FilterState, pageSize: UInt = Self.defaultDocumentPageSize,
     searchApi: FilterState.SearchApi = .legacy,
-    fields: [String]? = nil
+    fields: [String]? = nil,
+    fullPerms: Bool = true,
+    stableOrdering: Bool = false
   ) -> Endpoint {
     let endpoint = documents(
-      page: page, rules: filter.rules(for: searchApi), pageSize: pageSize, fields: fields)
+      page: page, rules: filter.rules(for: searchApi), pageSize: pageSize, fields: fields,
+      fullPerms: fullPerms)
 
     var ordering: String = filter.sortField.rawValue
     if filter.sortOrder.reverse {
       ordering = "-" + ordering
+    }
+    if stableOrdering, filter.sortField != .other("id") {
+      ordering += ",id"
     }
 
     let queryItems = endpoint.queryItems + [.init(name: "ordering", value: ordering)]
@@ -106,16 +117,21 @@ extension Endpoint {
   /// - Parameter fields: optional field projection (paperless-ngx `?fields=`).
   ///   `["id"]` yields the cheap id-only (Tier-0) response used by the
   ///   deletion-reconcile sweep; `nil` returns the full list shape.
+  /// - Parameter fullPerms: request expanded object permissions. Rows that get
+  ///   cached need it, because permissions have to be evaluated offline. Probes
+  ///   that only read `count` or one id should pass `false`.
   ///
-  /// The full list shape (`fields == nil`) always requests `full_perms=true` so
-  /// every cached row carries custom fields, permissions and `user_can_change`
-  /// (Tier-2 object detail) — this makes the whole library renderable offline
-  /// without a per-document round-trip. The id-only projection stays lean (no
-  /// `full_perms`); asking for `fields=id` and expanded permissions is
-  /// contradictory anyway.
+  /// `full_perms=true` is an *exchange*, not an addition: paperless-ngx's
+  /// `OwnedObjectSerializer` pops `user_can_change` (and
+  /// `is_shared_by_requester`) when it is set, and pops `permissions` when it
+  /// isn't. So a full-perms row carries `permissions` and no `user_can_change`.
+  /// It is also not free — on every released backend `get_permissions` runs per
+  /// object and issues four guardian queries, so a page of `pageSize` documents
+  /// costs 4 × `pageSize` permission lookups server-side.
   public static func documents(
     page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize,
-    fields: [String]? = nil
+    fields: [String]? = nil,
+    fullPerms: Bool = true
   ) -> Endpoint {
     var queryItems = [
       URLQueryItem(name: "page", value: String(page)),
@@ -125,8 +141,9 @@ extension Endpoint {
 
     if let fields, !fields.isEmpty {
       queryItems.append(URLQueryItem(name: "fields", value: fields.joined(separator: ",")))
-    } else {
-      // Full list shape ⇒ pull object detail in bulk.
+    } else if fullPerms {
+      // Full list shape ⇒ pull object detail in bulk, so a cached row can be
+      // permission-checked offline.
       queryItems.append(URLQueryItem(name: "full_perms", value: "true"))
     }
 

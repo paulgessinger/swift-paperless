@@ -673,6 +673,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.documentIDs(filter: filter)
   }
 
+  public func orderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    try await wrapped.orderedDocumentIDs(filter: filter)
+  }
+
   public func reconcileDocumentDeletions() async throws {
     let localIDs = try database.allDocumentIDs(serverID: serverID)
     // Nothing cached yet → nothing to reconcile (skip the id fetch entirely).
@@ -795,7 +799,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       try Task.checkCancellation()
       let key = QueryKey(serverID: serverID, filter: filter)
       do {
-        let ids = try await wrapped.documentIDs(filter: filter)
+        // Ordered, not the id-set projection: these ids become `query_order`
+        // positions verbatim, so the query's own sort has to survive the round
+        // trip or the sweep rewrites every cached list to id order.
+        let ids = try await wrapped.orderedDocumentIDs(filter: filter)
         try database.replaceQueryOrder(queryKey: key, serverID: serverID, orderedIDs: ids)
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
