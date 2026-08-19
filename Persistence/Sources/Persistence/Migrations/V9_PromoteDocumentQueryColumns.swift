@@ -15,11 +15,17 @@ import GRDB
 /// `JSONB` would have made the blob itself cheap to query, but it needs SQLite
 /// 3.45 and iOS 17 ships 3.43.
 ///
-/// **Invariant:** both columns are derived from `payload` and written only by
-/// `DocumentRecord.init(serverId:domain:)`, which is the single place a row is
-/// constructed. They are a denormalisation for querying, never an independent
-/// source of truth — `domain` still reads notes count and versions from the
-/// payload.
+/// The two columns differ in kind, which matters for keeping them honest:
+///
+/// - `notes_count` **replaces** the payload's copy. Nothing else needs the count,
+///   so after this migration it lives in exactly one place and cannot drift.
+/// - `current_version_id` is a genuine denormalisation: `payload.versions` must
+///   keep the full version objects, so this is an index over them. It is written
+///   only by `DocumentRecord.init(serverId:domain:)`, alongside the payload it
+///   is derived from, which is the single place a row is constructed.
+///
+/// The backfill still reads `$.notesCount` because rows written before this
+/// migration have it; rows written after don't carry the key at all.
 enum V9_PromoteDocumentQueryColumns {
   static func run(_ db: GRDB.Database) throws {
     try db.alter(table: "document") { t in

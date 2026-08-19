@@ -44,13 +44,18 @@ public struct DocumentRecord:
   public var id: UInt
   public var title: String
   public var asn: UInt?
-  /// Promoted out of `payload` so the detail-fill predicates can be indexed
-  /// SQL rather than `json_extract` over a `TEXT` blob (see `V9`). Derived,
-  /// never an independent source of truth: `domain` still reads the notes count
-  /// from the payload, and both are set together in `init(serverId:domain:)`.
+  /// The document's notes count. A real column rather than a field of `payload`
+  /// so the detail-fill predicate can be indexed SQL instead of `json_extract`
+  /// over a `TEXT` blob (see `V9`) — and it lives *only* here, so there is no
+  /// second copy in the blob to drift out of step.
   public var notesCount: Int
-  /// Likewise promoted: `Document.currentVersionID`, i.e. the highest version
-  /// id, falling back to the document id when there are no versions.
+  /// `Document.currentVersionID`: the highest version id, falling back to the
+  /// document id when there are no versions.
+  ///
+  /// Unlike `notesCount` this one *is* a denormalisation — `payload.versions`
+  /// has to keep the full version objects, so this is an index over them, not
+  /// their home. Kept in step by being written only in
+  /// `init(serverId:domain:)`, alongside the payload it is derived from.
   public var currentVersionID: UInt
   public var payload: Payload
 
@@ -76,7 +81,6 @@ public struct DocumentRecord:
     public var storagePath: UInt?
     public var owner: Owner
     public var pageCount: Int?
-    public var notesCount: Int
     public var customFields: CustomFieldRawEntryList
     public var versions: [VersionPayload]
     // Always populated — the list carries `full_perms`.
@@ -124,7 +128,6 @@ extension DocumentRecord {
       storagePath: domain.storagePath,
       owner: domain.owner,
       pageCount: domain.pageCount,
-      notesCount: domain.notes.count,
       customFields: domain.customFields,
       versions: domain.versions.map {
         VersionPayload(
@@ -150,7 +153,7 @@ extension DocumentRecord {
       storagePath: payload.storagePath,
       owner: payload.owner,
       pageCount: payload.pageCount,
-      notes: NotesPayload(count: payload.notesCount),
+      notes: NotesPayload(count: notesCount),
       customFields: payload.customFields,
       versions: payload.versions.map {
         DocumentVersion(
