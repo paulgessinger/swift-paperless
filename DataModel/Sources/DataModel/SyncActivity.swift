@@ -23,6 +23,8 @@ import Foundation
 public struct SyncActivity: Sendable, Equatable, Identifiable {
   /// Declaration order is the display order — see ``SyncActivity/id``.
   public enum Stage: Sendable, Equatable, CaseIterable {
+    /// Tags, correspondents, saved views… — the element collections.
+    case elementSync
     /// Paging saved views and the default list into `query_order`.
     case libraryFill
     /// Per-document notes and file metadata.

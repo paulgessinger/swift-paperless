@@ -70,10 +70,6 @@ public final class DocumentStore: Sendable {
   /// does.
   public var permissionsKnown: Bool { elementStore.isHydrated }
 
-  /// True while a network `sync` is in flight. Distinct from data-presence so a
-  /// cold cache shows loading rather than emptiness.
-  public private(set) var isRefreshing = false
-
   /// The last automatic (non-user-initiated) sync failure, kept so the UI can
   /// surface a degraded state without tearing down the cached display.
   /// User-initiated syncs rethrow instead (the caller toasts, as before).
@@ -519,18 +515,17 @@ public final class DocumentStore: Sendable {
     }
     Logger.shared.debug("Starting element sync")
     let task = Task {
-      try await NetworkTransfer.$category.withValue(.sync) { try await backend.syncElements() }
+      try await NetworkTransfer.$category.withValue(.sync) {
+        try await backend.syncElements { [weak self] in self?.report($0, for: .elementSync) }
+      }
     }
     syncTask = task
-    isRefreshing = true
     defer {
       // Retract only what we installed. `set(repository:)` can retire this sync
       // mid-flight and a replacement can already own `syncTask` by the time we
-      // resume; clearing it blindly would break the replacement's coalescing and
-      // drop `isRefreshing` while it is still running.
+      // resume; clearing it blindly would break the replacement's coalescing.
       if syncTask == task {
         syncTask = nil
-        isRefreshing = false
       }
     }
     try await task.value

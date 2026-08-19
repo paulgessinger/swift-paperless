@@ -185,7 +185,7 @@ public struct OfflineSyncView: View {
         }
         // Any sweep, not just the library fill: the detail fill left this
         // enabled, so a second pass could be stacked on a running one.
-        .disabled(!store.syncActivities.isEmpty || store.isRefreshing)
+        .disabled(!store.syncActivities.isEmpty)
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }
@@ -251,15 +251,14 @@ public struct OfflineSyncView: View {
     case .libraryFill: String(localized: .settings(.offlineSyncFilling))
     case .detailFill: String(localized: .settings(.offlineSyncDetailFill))
     case .reconcile: String(localized: .settings(.offlineSyncReconciling))
+    case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
     }
   }
 
   /// Only reached when nothing is running — the stage rows speak for themselves
   /// otherwise. Says *why* it's not running where there's a reason to give.
   private var activityText: String {
-    if store.isRefreshing {
-      String(localized: .settings(.offlineSyncRefreshing))
-    } else if waitingForNetwork {
+    if waitingForNetwork {
       String(localized: .settings(.offlineSyncWaitingForWifi))
     } else {
       String(localized: .settings(.offlineSyncIdle))

@@ -59,7 +59,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// Fetch every element collection from the network and reconcile it into the
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
-  func syncElements() async throws
+  func syncElements(progress: SyncProgressReporter?) async throws
 
   /// Eager full-fill of a document list (Stage 8 v1): await page 1 (so the first
   /// window + an exact count land synchronously), write it as the query's order,
@@ -136,6 +136,10 @@ public protocol CachingBackend: AnyObject, Sendable {
 
 extension CachingBackend {
   /// Progress is optional; the sweeps are just as correct unobserved.
+  public func syncElements() async throws {
+    try await syncElements(progress: nil)
+  }
+
   public func fillLibrary(force: Bool) async throws {
     try await fillLibrary(force: force, progress: nil)
   }
@@ -180,7 +184,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   // MARK: - CachingBackend
 
-  public func syncElements() async throws {
+  public func syncElements(progress: SyncProgressReporter?) async throws {
     // Sync UI settings *first*: its permission matrix gates the rest, so we
     // don't ask the server for collections the user can't view (doomed 403s).
     // When the matrix is unavailable (uiSettings failed and nothing is cached),
@@ -191,13 +195,24 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       gate?.test(.view, for: resource) ?? true
     }
 
+    // Counted as the group is built, so the total is final before the first
+    // completion is awaited. Collections the user can't view are never added,
+    // so the bar measures the work actually being done rather than a nominal
+    // eight-of-eight that a restricted account can never reach.
+    var total = 0
+    var completed = 0
+    defer { progress?(nil) }
+    progress?(SyncActivity(stage: .elementSync))
+
     try await withThrowingTaskGroup(of: Void.self) { group in
       if canView(.tag) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(TagRecord.self) { try await wrapped.tags() }
         }
       }
       if canView(.correspondent) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(CorrespondentRecord.self) {
             try await wrapped.correspondents()
@@ -205,6 +220,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         }
       }
       if canView(.documentType) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(DocumentTypeRecord.self) {
             try await wrapped.documentTypes()
@@ -212,6 +228,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         }
       }
       if canView(.storagePath) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(StoragePathRecord.self) {
             try await wrapped.storagePaths()
@@ -219,30 +236,39 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         }
       }
       if canView(.savedView) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(SavedViewRecord.self) { try await wrapped.savedViews() }
         }
       }
       if canView(.user) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(UserRecord.self) { try await wrapped.users() }
         }
       }
       if canView(.group) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(UserGroupRecord.self) { try await wrapped.groups() }
         }
       }
       if canView(.customField) {
+        total += 1
         group.addTask { [self] in
           try await syncCollection(CustomFieldRecord.self) {
             try await wrapped.customFields()
           }
         }
       }
+      total += 1
       group.addTask { [self] in try await syncServerConfiguration() }
 
-      for try await _ in group {}
+      for try await _ in group {
+        completed += 1
+        progress?(
+          SyncActivity(stage: .elementSync, completed: completed, total: total))
+      }
     }
   }
 
