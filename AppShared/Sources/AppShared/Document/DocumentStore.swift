@@ -820,7 +820,9 @@ extension DocumentStore {
       // no-ops unless *Entire library* is enabled.
       try await NetworkTransfer.$category.withValue(.reconcile) {
         try await backend.reconcileDocumentDeletions()
-        try await backend.reconcileDocumentChanges()
+        try await backend.reconcileDocumentChanges { [weak self] in
+          self?.syncActivity = $0 ?? SyncActivity(stage: .reconcile)
+        }
         try await backend.reconcileSavedViewMembership()
       }
       // Only on success: a server that fails every sweep must not display a

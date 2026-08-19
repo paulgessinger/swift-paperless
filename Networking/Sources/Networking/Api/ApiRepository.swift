@@ -553,9 +553,14 @@ extension ApiRepository: Repository {
     Logger.networking.notice("Getting document sequence for filter")
     // The full list shape always carries object detail (`full_perms`), so every
     // cached row is renderable offline without a per-document round-trip.
+    // `stableOrdering` because every consumer of this source *pages* it, and
+    // page-offset paging over a non-unique ordering (which every sort field the
+    // UI offers is) can drop or repeat rows across page boundaries. It only
+    // disambiguates rows whose sort keys are equal, so no visible order changes.
     let cursor = try PageCursor<ApiDocument>(
       repository: self,
-      initialURL: url(.documents(page: 1, filter: filter, searchApi: searchApi)))
+      initialURL: url(
+        .documents(page: 1, filter: filter, searchApi: searchApi, stableOrdering: true)))
     return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 

@@ -126,7 +126,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// Servers older than paperless-ngx#13170 don't bump `modified` on a version
   /// add/delete/label change; on those the delta stays blind to version-only
   /// edits, and the list fill or detail write-through corrects them instead.
-  func reconcileDocumentChanges() async throws
+  func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws
 
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
@@ -149,6 +149,10 @@ extension CachingBackend {
 
   public func fillDocumentDetails() async throws {
     try await fillDocumentDetails(progress: nil)
+  }
+
+  public func reconcileDocumentChanges() async throws {
+    try await reconcileDocumentChanges(progress: nil)
   }
 }
 
@@ -735,12 +739,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
   }
 
-  // How many changed documents one delta pass applies before yielding. A budget,
-  // not a correctness boundary: the walk is resumable, so whatever is left over
-  // is picked up by the next pass from the advanced watermark.
-  private let deltaCap = 1000
-
-  public func reconcileDocumentChanges() async throws {
+  public func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws {
     let entireLibrary = offlineBrowsingMode == .entireLibrary
 
     // Delta refreshes changed rows. Under *Recently browsed* it only touches
@@ -767,14 +766,23 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
 
     // Walk *oldest-first from the watermark* so a pass is resumable: every page
-    // advances the watermark, and stopping early — capped, cancelled, or killed
-    // on a background time budget — leaves it at the last document applied, so
-    // the next pass continues from there.
+    // advances the watermark, and stopping early — cancelled, or killed on a
+    // background time budget — leaves it at the last document applied, so the
+    // next pass continues from there.
     //
     // A newest-first walk cannot do this. A high-water mark only moves up, so
     // once it passes a change that was never applied, nothing below the newest
-    // applied change is reachable again; a pass that stopped on `deltaCap` used
-    // to strand every remaining change permanently.
+    // applied change is reachable again.
+    //
+    // The pass is **not** capped. A per-pass budget bounded foreground work, but
+    // it bounded the wrong thing: it counted *applied* documents, so under
+    // *Recently browsed* — where all but the cached ones are filtered out — it
+    // barely bounded anything, while under *Entire library* a run of documents
+    // sharing one `modified` value (a single server-side bulk `UPDATE` stamps
+    // them all identically) could exhaust the budget without the cursor moving
+    // at all, leaving the watermark stuck and every later change unreachable.
+    // Running to exhaustion always advances the cursor to the true newest, and
+    // progress is reported instead of hidden behind a cap.
     //
     // The server-side bound is date-granular (`modified__date__gt`, no `gte`),
     // and `FilterState` already widens an inclusive `start` by a day to match —
@@ -787,9 +795,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
     var cursor = watermark
     var applied = 0
-    while applied < deltaCap {
+    var seen = 0
+    defer { progress?(nil) }
+    while true {
+      // Per page, so a pass that is cancelled — or killed on a background time
+      // budget — stops here with the cursor committed rather than mid-write.
+      try Task.checkCancellation()
       let batch = try await source.fetch(limit: Endpoint.defaultDocumentPageSize)
       if batch.isEmpty { break }
+      seen += batch.count
+      let total = await source.totalCount
+      progress?(
+        SyncActivity(
+          stage: .reconcile, completed: seen, total: total.map { Int($0) }))
 
       var changed: [Document] = []
       for document in batch {
@@ -814,7 +832,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an empty
         // row for free when the count is 0, or re-fetches when it's > 0. We can't
         // tell a note change from any other field change, so this may re-fetch a
-        // few docs whose notes didn't actually change; bounded by `deltaCap`.
+        // few docs whose notes didn't actually change.
         try? database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
         applied += toUpsert.count
       }
