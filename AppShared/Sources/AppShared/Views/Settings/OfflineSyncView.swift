@@ -15,6 +15,7 @@ public struct OfflineSyncView: View {
   @Environment(ConnectionManager.self) private var connectionManager
   @Environment(NetworkMonitor.self) private var networkMonitor
   @State private var stats = TransferStatistics.shared
+  @State private var downgradeRequested = false
 
   public init() {}
 
@@ -32,13 +33,39 @@ public struct OfflineSyncView: View {
         Picker(
           selection: Binding(
             get: { connectionManager.activeOfflineBrowsingMode },
-            set: { connectionManager.setOfflineBrowsingMode($0) })
+            set: { newMode in
+              // Leaving Entire library reclaims the cache, which is destructive
+              // and can't be undone short of downloading it all again. Confirm
+              // first; until then the picker snaps back, because `get:` still
+              // reads the unchanged stored mode.
+              if connectionManager.activeOfflineBrowsingMode == .entireLibrary,
+                newMode == .recentlyBrowsed
+              {
+                downgradeRequested = true
+              } else {
+                connectionManager.setOfflineBrowsingMode(newMode)
+              }
+            })
         ) {
           ForEach(OfflineBrowsingMode.allCases, id: \.self) { mode in
             Text(mode.localizedName).tag(mode)
           }
         } label: {
           Text(.settings(.offlineBrowsingModeLabel))
+        }
+        .confirmationDialog(
+          String(localized: .settings(.offlineBrowsingDowngradeTitle)),
+          isPresented: $downgradeRequested,
+          titleVisibility: .visible
+        ) {
+          Button(
+            String(localized: .settings(.offlineBrowsingDowngradeConfirm)), role: .destructive
+          ) {
+            connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
+          }
+          Button(String(localized: .app(.cancel)), role: .cancel) {}
+        } message: {
+          Text(.settings(.offlineBrowsingDowngradeMessage))
         }
       } header: {
         Text(.settings(.offlineBrowsingModeHeader))

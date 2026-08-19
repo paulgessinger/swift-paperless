@@ -2457,13 +2457,49 @@
         }
       }
     },
+    "offlineBrowsingDowngradeConfirm" : {
+      "comment" : "Destructive confirm button that turns off whole-library offline browsing and deletes the downloaded documents",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Downloaded Documents"
+          }
+        }
+      }
+    },
+    "offlineBrowsingDowngradeMessage" : {
+      "comment" : "Body of the confirmation dialog explaining what is deleted when whole-library offline browsing is turned off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        }
+      }
+    },
+    "offlineBrowsingDowngradeTitle" : {
+      "comment" : "Title of the confirmation dialog shown when the user turns off whole-library offline browsing, which deletes downloaded documents",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to Recently browsed?"
+          }
+        }
+      }
+    },
     "offlineBrowsingModeDescription" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them."
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
           }
         }
       }

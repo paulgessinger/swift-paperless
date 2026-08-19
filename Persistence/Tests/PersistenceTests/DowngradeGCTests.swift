@@ -194,6 +194,90 @@ struct DowngradeGCTests {
     #expect(try database.queryStatus(queryKey: key, serverID: server).totalCount == 5)
   }
 
+  @Test("truncateQueryOrder counts rows, not position values, when positions are gappy")
+  func truncateCountsRowsNotPositions() throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "default")
+
+    try database.upsertDocuments((1...5).map { doc($0, "d\($0)") }, serverID: server)
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5])
+    // Punch a hole the way a page-boundary repeat or a remote delete does: the
+    // surviving rows now sit at positions 0, 2, 3, 4 rather than 0...3.
+    try database.deleteDocuments(serverID: server, removedIDs: [2])
+
+    try database.truncateQueryOrder(serverID: server, queryKey: key, keepingFirst: 3)
+
+    // Three rows kept. A `position < 3` test would have kept only two (0 and 2).
+    #expect(
+      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
+        1, 3, 4,
+      ])
+  }
+
+  // MARK: - reclaimAfterDowngrade
+
+  @Test("reclaimAfterDowngrade drops, truncates and prunes in one call")
+  func reclaimDoesTheWholeSequence() throws {
+    let server = UUID()
+    let database = try database(server)
+    let keep = QueryKey(sentinel: "default")
+    let drop = QueryKey(sentinel: "saved-view")
+
+    try database.upsertDocuments((1...6).map { doc($0, "d\($0)") }, serverID: server)
+    try database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1, 2, 3, 4])
+    // 5 and 6 are only reachable through the saved view.
+    try database.replaceQueryOrder(queryKey: drop, serverID: server, orderedIDs: [5, 6])
+
+    let removed = try database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: keep, keepingFirst: 2)
+
+    // 5 and 6 lost their only reference; 3 and 4 fell off the truncated prefix.
+    #expect(removed == 4)
+    #expect(
+      try database.queryDocuments(queryKey: keep, serverID: server, limit: 10).map(\.id) == [1, 2])
+    #expect(try database.queryDocuments(queryKey: drop, serverID: server, limit: 10).isEmpty)
+    #expect(try database.document(serverID: server, id: 5) == nil)
+  }
+
+  @Test("reclaimAfterDowngrade clears the library-coverage marker")
+  func reclaimClearsCoverageMarker() throws {
+    let server = UUID()
+    let database = try database(server)
+    let keep = QueryKey(sentinel: "default")
+
+    try database.upsertDocuments([doc(1, "A")], serverID: server)
+    try database.replaceQueryOrder(queryKey: keep, serverID: server, orderedIDs: [1])
+    try database.setLibraryCoverageAt(date(5000), serverID: server)
+
+    try database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+
+    // The cache no longer matches what the marker claimed, so a later
+    // re-upgrade has to re-fill instead of reading a fresh stamp.
+    #expect(try database.libraryCoverageAt(serverID: server) == nil)
+  }
+
+  @Test("reclaimAfterDowngrade leaves the delta watermark alone")
+  func reclaimKeepsDeltaWatermark() throws {
+    let server = UUID()
+    let database = try database(server)
+    let keep = QueryKey(sentinel: "default")
+
+    try database.upsertDocuments([doc(1, "A")], serverID: server)
+    try database.replaceQueryOrder(queryKey: keep, serverID: server, orderedIDs: [1])
+    try database.setDeltaWatermark(date(7000), serverID: server)
+    try database.setLibraryCoverageAt(date(5000), serverID: server)
+
+    try database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+
+    // Documents that survive the reclaim still want their changes applied, so
+    // the delta must not re-baseline over them.
+    #expect(try database.deltaWatermark(serverID: server) == date(7000))
+  }
+
   // MARK: - End-to-end downgrade sequence
 
   @Test("drop-non-default + truncate-default + prune actually shrinks the cache")

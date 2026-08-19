@@ -541,44 +541,42 @@ public final class ConnectionManager {
     // observeConnections tick.
     connections[activeConnectionId] = stored
     let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    var persisted = true
     do {
       try database.upsertConnection(record)
     } catch {
+      persisted = false
       Logger.api.error("setOfflineBrowsingMode DB write failed: \(error)")
     }
 
-    if previousMode == .entireLibrary, mode == .recentlyBrowsed {
+    // Only reclaim once the new mode is actually on disk. The reclaim is
+    // destructive and irreversible; running it after a failed write would gut
+    // the cache and then come back at `.entireLibrary` on the next launch,
+    // which is the one combination the user can neither see nor undo.
+    if persisted, previousMode == .entireLibrary, mode == .recentlyBrowsed {
       runDowngradeGC(serverID: stored.id)
     }
   }
 
   /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`.
   /// Turning the mode off doesn't by itself orphan anything — `query_order`
-  /// rows persist until something replaces them — so a plain
-  /// `pruneUnreferencedDocuments` alone finds nothing to reclaim (every saved
-  /// view the proactive fill touched, plus the default list, still fully
-  /// references its documents). This does the two steps that make room first:
-  /// drop every tracked query except the default list (saved views eager-fill
-  /// again from scratch if reopened, per Stage 8), then cap the default
-  /// list's own `query_order` to `recentlyBrowsedDefaultListCap`. Only then
-  /// does the orphan-document prune have anything to find.
+  /// rows persist until something replaces them — so an orphan prune alone
+  /// finds nothing to reclaim. `reclaimAfterDowngrade` does the two steps that
+  /// make room first (drop every tracked query except the default list, then
+  /// cap that list), prunes, and clears the coverage marker, all in one
+  /// transaction so a suspended app can't leave the cache half-reclaimed.
   ///
-  /// Fire-and-forget: a server that was filled at `.entireLibrary` may have a
-  /// large number of rows to sweep, and this is called synchronously from a
-  /// Settings picker binding on the main actor. `Database` is `Sendable`, so
-  /// a detached task is sufficient — no signature change needed on
-  /// `setOfflineBrowsingMode`. Silent by design: logged only, no persisted
-  /// "last reclaimed" status.
+  /// Off the main actor because a server filled at `.entireLibrary` can have a
+  /// lot of rows to sweep and this is reached from a Settings picker binding.
+  /// `Database` is `Sendable`, so a detached task is enough.
   private func runDowngradeGC(serverID: UUID) {
     let database = database
     Task.detached(priority: .utility) {
       do {
-        let defaultKey = QueryKey(serverID: serverID, filter: .default)
-        try database.dropQueryOrder(serverID: serverID, exceptQueryKey: defaultKey)
-        try database.truncateQueryOrder(
-          serverID: serverID, queryKey: defaultKey,
+        let removed = try database.reclaimAfterDowngrade(
+          serverID: serverID,
+          defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
           keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
-        let removed = try database.pruneUnreferencedDocuments(serverID: serverID)
         Logger.api.info("Downgrade GC removed \(removed) unreferenced documents")
       } catch {
         Logger.api.error("Downgrade GC failed: \(error)")

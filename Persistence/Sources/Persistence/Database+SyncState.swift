@@ -68,11 +68,19 @@ extension Database {
     serverID: UUID, _ mutate: (inout ServerSyncStateRecord) -> Void
   ) throws {
     try writer.write { db in
-      var record =
-        try ServerSyncStateRecord.fetchOne(db, key: serverID)
-        ?? ServerSyncStateRecord(serverId: serverID)
-      mutate(&record)
-      try record.upsert(db)
+      try Self.updateSyncState(db, serverID: serverID, mutate)
     }
+  }
+
+  /// Same read-modify-write, for callers that already hold a transaction and
+  /// need the change to commit atomically with the rest of their work.
+  static func updateSyncState(
+    _ db: GRDB.Database, serverID: UUID, _ mutate: (inout ServerSyncStateRecord) -> Void
+  ) throws {
+    var record =
+      try ServerSyncStateRecord.fetchOne(db, key: serverID)
+      ?? ServerSyncStateRecord(serverId: serverID)
+    mutate(&record)
+    try record.upsert(db)
   }
 }

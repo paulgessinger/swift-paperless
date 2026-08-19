@@ -143,23 +143,26 @@ extension Database {
   /// Returns the number of documents removed (for logging/tests).
   @discardableResult
   public func pruneUnreferencedDocuments(serverID: UUID) throws -> Int {
-    try writer.write { db in
-      let orphanIDs = try UInt.fetchAll(
-        db,
-        sql: """
-          SELECT d.id FROM document d
-          LEFT JOIN query_order q
-            ON q.server_id = d.server_id AND q.remote_id = d.id
-          WHERE d.server_id = ? AND q.remote_id IS NULL
-          """,
-        arguments: [serverID])
-      guard !orphanIDs.isEmpty else { return 0 }
-      try Self.pruneDocumentDetail(db, serverID: serverID, documentIDs: orphanIDs)
-      return
-        try DocumentRecord
-        .filter(Column("server_id") == serverID && orphanIDs.contains(Column("id")))
-        .deleteAll(db)
-    }
+    try writer.write { db in try Self.pruneUnreferenced(db, serverID: serverID) }
+  }
+
+  @discardableResult
+  static func pruneUnreferenced(_ db: GRDB.Database, serverID: UUID) throws -> Int {
+    let orphanIDs = try UInt.fetchAll(
+      db,
+      sql: """
+        SELECT d.id FROM document d
+        LEFT JOIN query_order q
+          ON q.server_id = d.server_id AND q.remote_id = d.id
+        WHERE d.server_id = ? AND q.remote_id IS NULL
+        """,
+      arguments: [serverID])
+    guard !orphanIDs.isEmpty else { return 0 }
+    try pruneDocumentDetail(db, serverID: serverID, documentIDs: orphanIDs)
+    return
+      try DocumentRecord
+      .filter(Column("server_id") == serverID && orphanIDs.contains(Column("id")))
+      .deleteAll(db)
   }
 
   /// Drops every cached query's `query_order` / `query_meta` /
@@ -173,45 +176,96 @@ extension Database {
   @discardableResult
   public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws -> Int {
     try writer.write { db in
-      let removed =
-        try QueryOrderRow
-        .filter(
-          Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue
-        )
-        .deleteAll(db)
-      try QueryMetaRow
-        .filter(
-          Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue
-        )
-        .deleteAll(db)
-      try QuerySyncErrorRecord
-        .filter(
-          Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue
-        )
-        .deleteAll(db)
-      return removed
+      try Self.dropQueries(db, serverID: serverID, exceptQueryKey: exceptQueryKey)
     }
   }
 
-  /// Deletes the tail of a cached query's ordered membership beyond
-  /// `keepingFirst` positions. Used to cap the default list's `query_order`
-  /// on a `.recentlyBrowsed` downgrade. The remaining prefix (positions
-  /// `0..<keepingFirst`) still reads correctly via the existing growing-prefix
-  /// observation; `query_meta.total_count` is left as the server's true
-  /// count, so `QueryStatus.localCount < totalCount` reports the cap the same
-  /// way it already reports any other partial local presence. Returns the
-  /// number of `query_order` rows removed.
+  @discardableResult
+  static func dropQueries(
+    _ db: GRDB.Database, serverID: UUID, exceptQueryKey: QueryKey
+  ) throws -> Int {
+    let removed =
+      try QueryOrderRow
+      .filter(Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue)
+      .deleteAll(db)
+    try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue)
+      .deleteAll(db)
+    try QuerySyncErrorRecord
+      .filter(Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue)
+      .deleteAll(db)
+    return removed
+  }
+
+  /// Deletes the tail of a cached query's ordered membership, keeping the first
+  /// `keepingFirst` **rows** in position order. Used to cap the default list's
+  /// `query_order` on a `.recentlyBrowsed` downgrade. The remaining prefix still
+  /// reads correctly via the existing growing-prefix observation;
+  /// `query_meta.total_count` is left as the server's true count, so
+  /// `QueryStatus.localCount < totalCount` reports the cap the same way it
+  /// already reports any other partial local presence. Returns the number of
+  /// `query_order` rows removed.
+  ///
+  /// Counts rows rather than comparing `position` to the limit, because
+  /// positions are gappy by design: the `(server_id, query_key, remote_id)`
+  /// unique key skips a repeat across a page boundary, and `deleteDocuments`
+  /// leaves holes too. A `position >= limit` test would therefore keep fewer
+  /// rows than asked — silently, and by an amount that varies per server.
   @discardableResult
   public func truncateQueryOrder(
     serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
   ) throws -> Int {
     try writer.write { db in
-      try QueryOrderRow
-        .filter(
-          Column("server_id") == serverID && Column("query_key") == queryKey.rawValue
-            && Column("position") >= limit
+      try Self.truncateQuery(db, serverID: serverID, queryKey: queryKey, keepingFirst: limit)
+    }
+  }
+
+  @discardableResult
+  static func truncateQuery(
+    _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
+  ) throws -> Int {
+    try db.execute(
+      sql: """
+        DELETE FROM query_order
+        WHERE rowid IN (
+          SELECT rowid FROM query_order
+          WHERE server_id = ? AND query_key = ?
+          ORDER BY position
+          LIMIT -1 OFFSET ?
         )
-        .deleteAll(db)
+        """,
+      arguments: [serverID, queryKey.rawValue, limit])
+    return db.changesCount
+  }
+
+  /// The whole `.entireLibrary` → `.recentlyBrowsed` reclaim, in **one**
+  /// transaction: drop every tracked query but the default list, cap that list
+  /// to `keepingFirst` rows, prune the documents nothing references any more,
+  /// and clear the library-coverage marker.
+  ///
+  /// One transaction because the three steps are not independently meaningful.
+  /// The destructive half runs first, so a run that commits `dropQueries` and
+  /// then stops leaves the worst of both states: saved views untracked *and*
+  /// every document still on disk, with nothing scheduled to finish the job.
+  ///
+  /// Clearing the coverage marker matters for the same reason — the cache no
+  /// longer matches what the marker claims, so a later re-upgrade must re-fill
+  /// rather than read a fresh stamp over a gutted cache.
+  ///
+  /// Returns the number of `document` rows reclaimed.
+  @discardableResult
+  public func reclaimAfterDowngrade(
+    serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
+  ) throws(DatabaseError) -> Int {
+    try wrapping("reclaimAfterDowngrade") {
+      try writer.write { db in
+        try Self.dropQueries(db, serverID: serverID, exceptQueryKey: defaultQueryKey)
+        try Self.truncateQuery(
+          db, serverID: serverID, queryKey: defaultQueryKey, keepingFirst: limit)
+        let removed = try Self.pruneUnreferenced(db, serverID: serverID)
+        try Self.updateSyncState(db, serverID: serverID) { $0.libraryCoverageAt = nil }
+        return removed
+      }
     }
   }
 
