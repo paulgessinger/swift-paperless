@@ -83,11 +83,6 @@ public final class DocumentStore: Sendable {
   /// Drives the stage label and progress bar on the Offline & Sync screen.
   public private(set) var syncActivity: SyncActivity?
 
-  /// True while a proactive full-library fill is running (drives the status UI).
-  /// Derived from ``syncActivity`` rather than a separate flag, so two
-  /// overlapping fills can't have the first one to finish report "idle" while
-  /// the second is still running.
-  public var isFillingLibrary: Bool { syncActivity?.stage == .libraryFill }
 
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
   /// `nil` until the first successful reconcile this session.

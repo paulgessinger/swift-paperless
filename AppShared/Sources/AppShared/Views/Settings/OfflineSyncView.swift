@@ -178,7 +178,9 @@ public struct OfflineSyncView: View {
         } label: {
           Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
         }
-        .disabled(store.isFillingLibrary || store.isRefreshing)
+        // Any sweep, not just the library fill: the detail fill left this
+        // enabled, so a second pass could be stacked on a running one.
+        .disabled(store.syncActivity != nil || store.isRefreshing)
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }

@@ -7,11 +7,12 @@ import Foundation
 
 /// What the offline sync is doing right now, for the Offline & Sync screen.
 ///
-/// The screen used to infer this from two booleans (`isFillingLibrary`,
-/// `isRefreshing`), which could only ever say "something is happening". That is
-/// not enough for a pass with no cap on it: a first cold fill of a large library
-/// runs for a long time and the user needs to see it moving, and which stage it
-/// is in, rather than a spinner that might equally be stuck.
+/// The screen used to infer this from two booleans, which could only ever say
+/// "something is happening" — and only for the library fill, so the detail fill
+/// read as idle throughout. That is not enough for a pass with no cap on it: a
+/// first cold fill of a large library runs for a long time and the user needs to
+/// see it moving, and which stage it is in, rather than a spinner that might
+/// equally be stuck.
 public struct SyncActivity: Sendable, Equatable {
   public enum Stage: Sendable, Equatable {
     /// Tags, correspondents, saved views… — the element collections.
