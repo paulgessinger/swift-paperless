@@ -22,6 +22,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var identity: String?
   public var friendlyName: String? = nil
   public var offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
+  /// Whether this server's *proactive* sweeps may run on a metered link.
+  public var syncOverCellular: Bool = false
 
   public init(
     id: UUID = .init(),
@@ -30,7 +32,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     user: User,
     identity: String? = nil,
     friendlyName: String? = nil,
-    offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
+    offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed,
+    syncOverCellular: Bool = false
   ) {
     self.id = id
     self.url = url
@@ -39,6 +42,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.identity = identity
     self.friendlyName = friendlyName
     self.offlineBrowsingMode = offlineBrowsingMode
+    self.syncOverCellular = syncOverCellular
   }
 
   public var token: String? {
@@ -525,6 +529,31 @@ public final class ConnectionManager {
       return .recentlyBrowsed
     }
     return stored.offlineBrowsingMode
+  }
+
+  /// Whether the active server may run its proactive sweeps on a metered link.
+  /// `false` without an active connection, matching the conservative default.
+  public var activeSyncOverCellular: Bool {
+    guard let activeConnectionId, let stored = connections[activeConnectionId] else {
+      return false
+    }
+    return stored.syncOverCellular
+  }
+
+  public func setSyncOverCellular(_ enabled: Bool) {
+    guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+      Logger.api.warning("Tried to set sync-over-cellular but have no active connection")
+      return
+    }
+    guard stored.syncOverCellular != enabled else { return }
+    stored.syncOverCellular = enabled
+    connections[activeConnectionId] = stored
+    do {
+      try database.upsertConnection(
+        stored.toRecord(needsAuth: needsAuthIds.contains(stored.id)))
+    } catch {
+      Logger.api.error("setSyncOverCellular DB write failed: \(error)")
+    }
   }
 
   public func setOfflineBrowsingMode(_ mode: OfflineBrowsingMode) {

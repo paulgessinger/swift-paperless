@@ -6,8 +6,8 @@ import Testing
 
 @Suite("Database schema")
 struct DatabaseSchemaTests {
-  @Test("v1 creates the server table with expected columns")
-  func v1CreatesServerTable() throws {
+  @Test("the server table has the expected columns after every migration")
+  func serverTableColumns() throws {
     let database = try Database.inMemory()
     try database.writer.read { db in
       let columns = try db.columns(in: "server")
@@ -15,8 +15,14 @@ struct DatabaseSchemaTests {
       #expect(
         names == [
           "id", "url", "friendly_name", "identity", "user", "extra_headers", "needs_auth",
-          "offline_browsing_mode",
+          "offline_browsing_mode", "sync_over_cellular",
         ])
+
+      // Added by V8 on an existing table, so it needs a default for every row
+      // that predates it.
+      let cellular = try #require(columns.first(where: { $0.name == "sync_over_cellular" }))
+      #expect(cellular.isNotNull)
+      #expect(cellular.defaultValueSQL == "0")
 
       let needsAuth = try #require(columns.first(where: { $0.name == "needs_auth" }))
       #expect(needsAuth.isNotNull)

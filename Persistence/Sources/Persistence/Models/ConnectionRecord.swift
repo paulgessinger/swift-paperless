@@ -23,6 +23,9 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
   /// Raw value of AppShared's `OfflineBrowsingMode` (per-server config). Stored
   /// as a string so `Persistence` stays free of the AppShared enum.
   public var offlineBrowsingMode: String
+  /// Whether this server's *proactive* sweeps may run on a metered link.
+  /// Interactive work the user asked for is never gated on it.
+  public var syncOverCellular: Bool
 
   public init(
     id: UUID,
@@ -32,7 +35,8 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     user: StoredUser,
     extraHeaders: [StoredHeader] = [],
     needsAuth: Bool = false,
-    offlineBrowsingMode: String = "recentlyBrowsed"
+    offlineBrowsingMode: String = "recentlyBrowsed",
+    syncOverCellular: Bool = false
   ) {
     self.id = id
     self.url = url
@@ -42,6 +46,7 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     self.extraHeaders = extraHeaders
     self.needsAuth = needsAuth
     self.offlineBrowsingMode = offlineBrowsingMode
+    self.syncOverCellular = syncOverCellular
   }
 
   public struct StoredUser: Codable, Equatable, Sendable {
@@ -79,6 +84,7 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     case extraHeaders = "extra_headers"
     case needsAuth = "needs_auth"
     case offlineBrowsingMode = "offline_browsing_mode"
+    case syncOverCellular = "sync_over_cellular"
   }
 }
 
@@ -96,6 +102,7 @@ extension ConnectionRecord: FetchableRecord, PersistableRecord, TableRecord {
     public static let extraHeaders = Column(CodingKeys.extraHeaders)
     public static let needsAuth = Column(CodingKeys.needsAuth)
     public static let offlineBrowsingMode = Column(CodingKeys.offlineBrowsingMode)
+    public static let syncOverCellular = Column(CodingKeys.syncOverCellular)
   }
 
   // Storage-dedicated JSON coders. Sorted keys for deterministic on-disk

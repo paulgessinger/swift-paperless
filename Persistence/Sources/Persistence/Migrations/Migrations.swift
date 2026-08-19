@@ -59,6 +59,10 @@ enum Migrations {
       try V7_CreateQuerySyncError.run(db)
     }
 
+    migrator.registerMigration("v8_add_sync_over_cellular") { db in
+      try V8_AddSyncOverCellular.run(db)
+    }
+
     return migrator
   }
 }

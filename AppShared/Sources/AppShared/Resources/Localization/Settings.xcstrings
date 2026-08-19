@@ -2559,6 +2559,30 @@
         }
       }
     },
+    "offlineSyncCellularDescription" : {
+      "comment" : "Footer explaining the Sync over cellular toggle on the Offline & Sync screen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        }
+      }
+    },
+    "offlineSyncCellularLabel" : {
+      "comment" : "Toggle on the Offline & Sync screen letting the proactive offline download use cellular data for this server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync over cellular"
+          }
+        }
+      }
+    },
     "offlineSyncDataHeader" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2783,6 +2807,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Total"
+          }
+        }
+      }
+    },
+    "offlineSyncWaitingForWifi" : {
+      "comment" : "Activity label on the Offline & Sync screen when the offline download is paused because the connection is metered",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for Wi-Fi"
           }
         }
       }

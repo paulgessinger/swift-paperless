@@ -13,6 +13,8 @@
 - New "Offline browsing" setting: choose "Entire library" to keep every saved view and your full document list available offline, downloaded in the background over Wi-Fi
 - Turning off "Entire library" offline browsing now asks first, and says that the documents downloaded for that server will be removed
 - New "Offline & Sync" settings screen showing sync status and how much data the app has transferred
+- New per-server "Sync over cellular" setting: offline downloads stay on Wi-Fi unless you turn it on, and Low Data Mode always pauses them
+- The Offline & Sync screen now shows which stage the offline download is in and how far along it is, instead of only "Idle" or a spinner
 - Documents that belong to a list but aren't downloaded yet appear as placeholder rows instead of being missing
 - A saved view that can't be downloaded for offline use no longer blocks the rest of the offline sync; the Offline & Sync screen now lists any views that failed to sync
 - Opening a document while the server is unreachable no longer removes it from your document list

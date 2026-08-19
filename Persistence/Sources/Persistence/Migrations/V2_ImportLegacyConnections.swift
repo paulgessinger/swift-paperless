@@ -56,7 +56,28 @@ enum V2_ImportLegacyConnections {
     }
     for (uuid, legacy) in decoded {
       let record = ConnectionRecord(legacy: legacy, fallbackId: uuid)
-      try record.insert(db)
+      // Explicit column list, not `record.insert(db)`. A data migration runs
+      // against the schema *as of this migration*, but `ConnectionRecord` is the
+      // current struct — so the moment a later migration adds a column, a
+      // record-shaped INSERT starts naming a column that does not exist yet and
+      // this migration begins failing for every user upgrading from before it.
+      // Naming V1's columns pins the statement to the schema it actually runs
+      // against; later columns take their migration's own default.
+      try db.execute(
+        sql: """
+          INSERT INTO server
+            (id, url, friendly_name, identity, user, extra_headers, needs_auth,
+             offline_browsing_mode)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          """,
+        arguments: [
+          record.id, record.url, record.friendlyName, record.identity,
+          String(decoding: try ConnectionRecord.storageEncoder.encode(record.user), as: UTF8.self),
+          String(
+            decoding: try ConnectionRecord.storageEncoder.encode(record.extraHeaders),
+            as: UTF8.self),
+          record.needsAuth, record.offlineBrowsingMode,
+        ])
     }
     Logger.persistence.info(
       "Imported \(decoded.count, privacy: .public) connection(s) from UserDefaults")

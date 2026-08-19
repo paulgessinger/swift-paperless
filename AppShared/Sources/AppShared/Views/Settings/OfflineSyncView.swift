@@ -29,7 +29,15 @@ public struct OfflineSyncView: View {
 
   private var unmetered: Bool {
     guard let networkMonitor else { return true }
-    return !networkMonitor.isExpensive && !networkMonitor.isConstrained
+    return networkMonitor.allowsProactiveSync(
+      syncOverCellular: connectionManager.activeSyncOverCellular)
+  }
+
+  /// *Entire library* is on, but the link won't currently carry the fill — the
+  /// difference between "nothing to do" and "not now", which the screen used to
+  /// render identically as Idle.
+  private var waitingForNetwork: Bool {
+    mode == .entireLibrary && !unmetered && store.syncActivity == nil
   }
 
   public var body: some View {
@@ -80,6 +88,18 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineBrowsingModeHeader))
       } footer: {
         Text(.settings(.offlineBrowsingModeDescription))
+      }
+
+      Section {
+        Toggle(
+          isOn: Binding(
+            get: { connectionManager.activeSyncOverCellular },
+            set: { connectionManager.setSyncOverCellular($0) })
+        ) {
+          Text(.settings(.offlineSyncCellularLabel))
+        }
+      } footer: {
+        Text(.settings(.offlineSyncCellularDescription))
       }
 
       Section {
@@ -209,9 +229,13 @@ public struct OfflineSyncView: View {
     case .reconcile: String(localized: .settings(.offlineSyncReconciling))
     case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
     case nil:
-      store.isRefreshing
-        ? String(localized: .settings(.offlineSyncRefreshing))
-        : String(localized: .settings(.offlineSyncIdle))
+      if store.isRefreshing {
+        String(localized: .settings(.offlineSyncRefreshing))
+      } else if waitingForNetwork {
+        String(localized: .settings(.offlineSyncWaitingForWifi))
+      } else {
+        String(localized: .settings(.offlineSyncIdle))
+      }
     }
   }
 

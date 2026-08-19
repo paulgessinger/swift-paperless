@@ -144,10 +144,12 @@ struct MainView: View {
     }
   }
 
-  /// Treat a non-expensive, non-constrained path as "Wi‑Fi‑ish" — the gate for
-  /// the heavy proactive library fill (cheap reconcile sweeps run regardless).
+  /// The gate for the heavy proactive fills (cheap reconcile sweeps run
+  /// regardless). Wi‑Fi‑ish by default, unless the active server has been opted
+  /// in to cellular; Low Data Mode always wins. See
+  /// `NetworkMonitor.allowsProactiveSync(syncOverCellular:)`.
   private var isUnmetered: Bool {
-    !networkMonitor.isExpensive && !networkMonitor.isConstrained
+    networkMonitor.allowsProactiveSync(syncOverCellular: manager.activeSyncOverCellular)
   }
 
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
