@@ -2638,7 +2638,7 @@
       }
     },
     "offlineSyncDefaultView" : {
-      "comment" : "Label for the default document list in the offline sync failure list",
+      "comment" : "Label for the default document list, used both in the offline sync failure list and as the progress caption while the library fill is working on it",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2800,7 +2800,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Refreshing…"
+            "value" : "Refreshing attributes…"
           }
         }
       }

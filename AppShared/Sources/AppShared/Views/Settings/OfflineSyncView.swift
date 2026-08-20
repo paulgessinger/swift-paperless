@@ -145,6 +145,14 @@ public struct OfflineSyncView: View {
                   .font(.caption)
                   .foregroundStyle(.secondary)
                   .lineLimit(1)
+              } else if activity.stage == .libraryFill {
+                // `nil` here means "on the default list" (a saved view's name
+                // is never nil), not "no detail to show" — say so, rather than
+                // leaving the caption blank while it's already working.
+                Text(.settings(.offlineSyncDefaultView))
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
               }
             }
           }
