@@ -96,8 +96,7 @@ public final class ServerSession {
   @ObservationIgnored private var syncTask: Task<Void, Never>?
   @ObservationIgnored private var elementSyncTask: Task<Void, Error>?
   @ObservationIgnored private var reconcileTask: Task<ReconcileResult, Never>?
-  @ObservationIgnored private var libraryFillTask: Task<Bool, Never>?
-  @ObservationIgnored private var detailFillTask: Task<Bool, Never>?
+  @ObservationIgnored private var proactiveFillTask: Task<Bool, Never>?
 
   public private(set) var state: State = .idle
 
@@ -173,8 +172,7 @@ public final class ServerSession {
     syncTask?.cancel()
     elementSyncTask?.cancel()
     reconcileTask?.cancel()
-    libraryFillTask?.cancel()
-    detailFillTask?.cancel()
+    proactiveFillTask?.cancel()
   }
 
   // MARK: - Repository access
@@ -234,10 +232,8 @@ public final class ServerSession {
     elementSyncTask = nil
     reconcileTask?.cancel()
     reconcileTask = nil
-    libraryFillTask?.cancel()
-    libraryFillTask = nil
-    detailFillTask?.cancel()
-    detailFillTask = nil
+    proactiveFillTask?.cancel()
+    proactiveFillTask = nil
     built = nil
     state = .idle
   }
@@ -376,75 +372,76 @@ public final class ServerSession {
   }
 
   /// Proactive *Entire library* fill, gated by the setting and an unmetered
-  /// link. Soft-fail (offline-tolerant). `force` ignores the freshness marker
-  /// (e.g. the user just enabled the setting).
+  /// link: the library fill (paging every query), then the per-document detail
+  /// fill (notes + file metadata) over whatever the library fill just landed on
+  /// disk. Soft-fail (offline-tolerant). `force` ignores the library fill's
+  /// freshness marker (e.g. the user just enabled the setting); the detail fill
+  /// needs no `force` of its own — it is idempotent and resumable, driven off
+  /// what is still missing.
+  ///
+  /// Single-flighted as *one unit* rather than per stage. Guarding the two
+  /// separately let a second caller start a fresh library fill while the first
+  /// was still in its detail pass, so two passes over "what's still missing"
+  /// each reported their own completed/total into the same stage — read on
+  /// screen as the progress count flickering between two unrelated series.
+  /// There are five triggers that reach the same server: launch, foreground,
+  /// the mode picker, "Sync now", and a background run.
   ///
   /// Returns whether the pass finished — `true` also when there was legitimately
   /// nothing to do, `false` only when it errored or was called off. The composed
   /// sequence needs that distinction to decide whether the server is fully
   /// synced; the store's callers discard it.
   @discardableResult
-  public func fillLibrary(unmetered: Bool, force: Bool = false) async -> Bool {
+  public func runProactiveFill(unmetered: Bool, force: Bool = false) async -> Bool {
     guard unmetered, let backend = current, backend.offlineBrowsingMode == .entireLibrary
     else { return true }
 
-    // Join an in-flight fill rather than starting a second pass over the same
+    // Join an in-flight pass rather than starting a second one over the same
     // queries. `force` is not lost by joining: a fill only runs at all when the
     // coverage marker is stale or forced, so one is already doing the work.
-    if let libraryFillTask {
-      return await libraryFillTask.value
+    if let proactiveFillTask {
+      return await proactiveFillTask.value
     }
     let task = Task { @MainActor [weak self] in
-      do {
-        try await NetworkTransfer.$category.withValue(.fill) {
-          try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
-        }
-        return true
-      } catch is CancellationError {
-        Logger.sync.info("Proactive library fill cancelled")
-        return false
-      } catch {
-        Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
-        return false
-      }
+      await self?.runFill(backend: backend, force: force) ?? false
     }
-    libraryFillTask = task
+    proactiveFillTask = task
     let completed = await task.value
-    if libraryFillTask == task {
-      libraryFillTask = nil
+    if proactiveFillTask == task {
+      proactiveFillTask = nil
     }
     return completed
   }
 
-  /// Proactive *Entire library* per-document detail fill (notes + file
-  /// metadata). Run after ``fillLibrary(unmetered:force:)`` so the document rows
-  /// to walk are already on disk. Idempotent and resumable (driven off what's
-  /// still missing), so it needs no `force`. Soft-fail.
-  @discardableResult
-  public func fillDocumentDetails(unmetered: Bool) async -> Bool {
-    guard unmetered, let backend = current, backend.offlineBrowsingMode == .entireLibrary
-    else { return true }
-    if let detailFillTask {
-      return await detailFillTask.value
-    }
-    let task = Task { @MainActor [weak self] in
-      do {
-        try await NetworkTransfer.$category.withValue(.fill) {
-          try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
+  private func runFill(backend: any CachingBackend, force: Bool) async -> Bool {
+    var completed = true
+    do {
+      try await NetworkTransfer.$category.withValue(.fill) {
+        try await backend.fillLibrary(force: force) { [weak self] in
+          self?.report($0, for: .libraryFill)
         }
-        return true
-      } catch is CancellationError {
-        Logger.sync.info("Proactive detail fill cancelled")
-        return false
-      } catch {
-        Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
-        return false
       }
+    } catch is CancellationError {
+      // Cancellation means the whole pass is unwanted — don't chase it with a
+      // detail fill against a backend nobody is waiting on any more.
+      Logger.sync.info("Proactive fill cancelled")
+      return false
+    } catch {
+      Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
+      completed = false
     }
-    detailFillTask = task
-    let completed = await task.value
-    if detailFillTask == task {
-      detailFillTask = nil
+    do {
+      try await NetworkTransfer.$category.withValue(.fill) {
+        try await backend.fillDocumentDetails { [weak self] in
+          self?.report($0, for: .detailFill)
+        }
+      }
+    } catch is CancellationError {
+      Logger.sync.info("Proactive detail fill cancelled")
+      return false
+    } catch {
+      Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
+      completed = false
     }
     return completed
   }
@@ -507,8 +504,7 @@ public final class ServerSession {
       // Heavy tier: only on an unmetered *Entire library* server (SyncPlan gate).
       var filled = true
       if runHeavyFill, !reconcile.cancelled {
-        filled = await fillLibrary(unmetered: true, force: false)
-        filled = await fillDocumentDetails(unmetered: true) && filled
+        filled = await runProactiveFill(unmetered: true, force: false)
       }
 
       // Advance the stamp only on a *fully* successful pass — a pass that failed

@@ -839,19 +839,13 @@ extension DocumentStore {
     await session?.reconcileDocuments(force: userInitiated)
   }
 
-  /// Proactive *Entire library* fill on the active server, run by its session.
-  /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
-  /// marker (e.g. the user just enabled the setting). A no-op when the setting is
-  /// *Recently browsed*, the link is metered, or there is no active server.
-  public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
-    await session?.fillLibrary(unmetered: unmetered, force: force)
-  }
-
-  /// Proactive *Entire library* per-document detail fill (notes + file-metadata)
-  /// on the active server, run by its session. Run after `fillLibraryIfEnabled`
-  /// so the document rows to walk are already on disk. Soft-fail.
-  public func fillDocumentDetailsIfEnabled(unmetered: Bool) async {
-    await session?.fillDocumentDetails(unmetered: unmetered)
+  /// Proactive *Entire library* fill on the active server, run by its session:
+  /// the library fill followed by the per-document detail fill, as one pass.
+  /// Soft-fail (offline-tolerant). `force` ignores the library fill's freshness
+  /// marker (e.g. the user just enabled the setting). A no-op when the setting
+  /// is *Recently browsed*, the link is metered, or there is no active server.
+  public func runProactiveFill(unmetered: Bool, force: Bool = false) async {
+    await session?.runProactiveFill(unmetered: unmetered, force: force)
   }
 
   /// The server's total for the default document list, from the cached query
