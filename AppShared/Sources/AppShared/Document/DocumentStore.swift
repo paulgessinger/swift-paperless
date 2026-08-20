@@ -514,9 +514,9 @@ public final class DocumentStore: Sendable {
       return
     }
     Logger.shared.debug("Starting element sync")
-    let task = Task {
+    let task = Task { [weak self] in
       try await NetworkTransfer.$category.withValue(.sync) {
-        try await backend.syncElements { [weak self] in self?.report($0, for: .elementSync) }
+        try await backend.syncElements { self?.report($0, for: .elementSync) }
       }
     }
     syncTask = task
