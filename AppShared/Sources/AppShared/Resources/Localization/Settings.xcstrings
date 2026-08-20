@@ -2769,6 +2769,18 @@
         }
       }
     },
+    "offlineSyncReconcileProgressCount" : {
+      "comment" : "Progress counter under the sync progress bar while checking for server-side changes. %1$lld is the number of changes found so far, %2$lld the total changes to check",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        }
+      }
+    },
     "offlineSyncReconciling" : {
       "comment" : "Activity label on the Offline & Sync screen while the app reconciles server-side changes into the offline cache",
       "extractionState" : "manual",

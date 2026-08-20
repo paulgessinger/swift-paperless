@@ -131,7 +131,7 @@ public struct OfflineSyncView: View {
             VStack(alignment: .leading, spacing: 8) {
               LabeledContent(stageLabel(for: activity.stage)) {
                 if let total = activity.total {
-                  Text(.settings(.offlineSyncProgressCount(activity.completed, total)))
+                  Text(progressCountText(for: activity.stage, completed: activity.completed, total: total))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                 }
@@ -252,6 +252,16 @@ public struct OfflineSyncView: View {
     case .detailFill: String(localized: .settings(.offlineSyncDetailFill))
     case .reconcile: String(localized: .settings(.offlineSyncReconciling))
     case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
+    }
+  }
+
+  /// The reconcile stage counts changed documents, not documents overall —
+  /// "3 of 15" reads as meaningless there (of *what*?) where it's obvious for
+  /// the other stages from their label. Only that stage gets a labeled count.
+  private func progressCountText(for stage: SyncActivity.Stage, completed: Int, total: Int) -> LocalizedStringResource {
+    switch stage {
+    case .reconcile: .settings(.offlineSyncReconcileProgressCount(completed, total))
+    case .libraryFill, .detailFill, .elementSync: .settings(.offlineSyncProgressCount(completed, total))
     }
   }
 
