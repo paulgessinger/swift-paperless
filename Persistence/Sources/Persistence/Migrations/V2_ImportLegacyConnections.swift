@@ -171,4 +171,3 @@ struct LegacyStoredConnection: Codable {
     friendlyName = record.friendlyName
   }
 }
-

@@ -907,7 +907,6 @@ extension ApiRepository: Repository {
     }
   }
 
-
   public func users() async throws -> [User] {
     let cursor = try PageCursor<ApiUser>(
       repository: self,

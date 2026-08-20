@@ -178,7 +178,8 @@ extension Database {
   /// what `.recentlyBrowsed` already does for any other saved view. Returns
   /// the number of `query_order` rows removed.
   @discardableResult
-  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws(DatabaseError) -> Int {
+  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws(DatabaseError) -> Int
+  {
     try wrapping("dropQueryOrder") {
       try writer.write { db in
         try Self.dropQueries(db, serverID: serverID, exceptQueryKey: exceptQueryKey)

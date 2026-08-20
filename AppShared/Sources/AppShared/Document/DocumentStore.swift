@@ -99,7 +99,6 @@ public final class DocumentStore: Sendable {
     syncActivities = activeStages.values.sortedForDisplay
   }
 
-
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
   /// `nil` until the first successful reconcile this session.
   ///

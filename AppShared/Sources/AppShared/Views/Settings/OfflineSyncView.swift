@@ -131,9 +131,12 @@ public struct OfflineSyncView: View {
             VStack(alignment: .leading, spacing: 8) {
               LabeledContent(stageLabel(for: activity.stage)) {
                 if let total = activity.total {
-                  Text(progressCountText(for: activity.stage, completed: activity.completed, total: total))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                  Text(
+                    progressCountText(
+                      for: activity.stage, completed: activity.completed, total: total)
+                  )
+                  .monospacedDigit()
+                  .foregroundStyle(.secondary)
                 }
               }
               // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked
@@ -158,9 +161,11 @@ public struct OfflineSyncView: View {
           }
         }
         if mode == .entireLibrary {
-          dateStatusRow(String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
+          dateStatusRow(
+            String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
         }
-        dateStatusRow(String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastReconcileAt)
+        dateStatusRow(
+          String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastReconcileAt)
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
           value: store.cachedDocumentCount.formatted())
@@ -262,10 +267,13 @@ public struct OfflineSyncView: View {
   /// The reconcile stage counts changed documents, not documents overall —
   /// "3 of 15" reads as meaningless there (of *what*?) where it's obvious for
   /// the other stages from their label. Only that stage gets a labeled count.
-  private func progressCountText(for stage: SyncActivity.Stage, completed: Int, total: Int) -> LocalizedStringResource {
+  private func progressCountText(for stage: SyncActivity.Stage, completed: Int, total: Int)
+    -> LocalizedStringResource
+  {
     switch stage {
     case .reconcile: .settings(.offlineSyncReconcileProgressCount(completed, total))
-    case .libraryFill, .detailFill, .elementSync: .settings(.offlineSyncProgressCount(completed, total))
+    case .libraryFill, .detailFill, .elementSync:
+      .settings(.offlineSyncProgressCount(completed, total))
     }
   }
 

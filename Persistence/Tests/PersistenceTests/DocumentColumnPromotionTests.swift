@@ -38,7 +38,8 @@ struct DocumentColumnPromotionTests {
   private func insertPreV9(
     _ queue: DatabaseQueue, server: UUID, id: Int, notesCount: Int, versionIDs: [Int]
   ) throws {
-    let versions = versionIDs
+    let versions =
+      versionIDs
       .map { #"{"added":0,"id":\#($0),"isRoot":false}"# }
       .joined(separator: ",")
     let data = #"{"notesCount":\#(notesCount),"tags":[],"versions":[\#(versions)]}"#

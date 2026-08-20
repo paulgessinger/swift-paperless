@@ -105,7 +105,9 @@ extension Endpoint {
     // terms and deduped on the *field* (ignoring the `-` direction prefix), so
     // a query already sorted on `id` doesn't ask for it twice — and so adding
     // another tiebreak later doesn't need another special case.
-    var terms = [filter.sortOrder.reverse ? "-\(filter.sortField.rawValue)" : filter.sortField.rawValue]
+    var terms = [
+      filter.sortOrder.reverse ? "-\(filter.sortField.rawValue)" : filter.sortField.rawValue
+    ]
     if stableOrdering {
       terms.append("id")
     }

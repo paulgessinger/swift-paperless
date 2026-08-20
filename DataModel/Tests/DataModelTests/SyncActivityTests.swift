@@ -16,12 +16,14 @@ struct SyncActivityTests {
     // arbitrary. Whatever arrives, the list must read the same way — a list that
     // reshuffles as each stage reports progress is unreadable.
     let stages: [SyncActivity.Stage] = [.reconcile, .libraryFill, .detailFill]
-    #expect(stages.map { activity($0) }.sortedForDisplay.map(\.stage) == [
-      .libraryFill, .detailFill, .reconcile,
-    ])
-    #expect(stages.reversed().map { activity($0) }.sortedForDisplay.map(\.stage) == [
-      .libraryFill, .detailFill, .reconcile,
-    ])
+    #expect(
+      stages.map { activity($0) }.sortedForDisplay.map(\.stage) == [
+        .libraryFill, .detailFill, .reconcile,
+      ])
+    #expect(
+      stages.reversed().map { activity($0) }.sortedForDisplay.map(\.stage) == [
+        .libraryFill, .detailFill, .reconcile,
+      ])
   }
 
   @Test("order covers every stage, so a new one can't silently sort first")
