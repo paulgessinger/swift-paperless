@@ -158,13 +158,9 @@ public struct OfflineSyncView: View {
           }
         }
         if mode == .entireLibrary {
-          statusRow(
-            String(localized: .settings(.offlineSyncLastFullFill)),
-            value: dateText(store.libraryCoverageAt))
+          dateStatusRow(String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
         }
-        statusRow(
-          String(localized: .settings(.offlineSyncLastRefresh)),
-          value: dateText(store.lastReconcileAt))
+        dateStatusRow(String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastReconcileAt)
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
           value: store.cachedDocumentCount.formatted())
@@ -283,9 +279,20 @@ public struct OfflineSyncView: View {
     }
   }
 
-  private func dateText(_ date: Date?) -> String {
-    guard let date else { return String(localized: .settings(.offlineSyncNever)) }
-    return date.formatted(.relative(presentation: .named))
+  @ViewBuilder
+  private func dateStatusRow(_ title: String, date: Date?) -> some View {
+    // `Text(_:style:)`, not a formatted string: SwiftUI keeps this text live,
+    // ticking the relative offset up on its own, where a formatted string only
+    // updates the next time something else redraws this view.
+    LabeledContent(title) {
+      if let date {
+        Text(date, style: .relative)
+          .foregroundStyle(.secondary)
+      } else {
+        Text(.settings(.offlineSyncNever))
+          .foregroundStyle(.secondary)
+      }
+    }
   }
 
   private func formattedDate(_ date: Date) -> String {
