@@ -177,8 +177,7 @@ struct MainView: View {
   /// scenePhase path chains it after `sync()` directly.
   private func kickLibraryFill(_ store: DocumentStore, force: Bool = false) {
     Task {
-      await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force)
-      await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+      await store.runProactiveFill(unmetered: isUnmetered, force: force)
     }
   }
 
@@ -444,8 +443,7 @@ struct MainView: View {
           if let store {
             Task {
               try? await store.sync()
-              await store.fillLibraryIfEnabled(unmetered: isUnmetered)
-              await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+              await store.runProactiveFill(unmetered: isUnmetered)
             }
           }
           // Warm the inactive servers alongside the active refresh.

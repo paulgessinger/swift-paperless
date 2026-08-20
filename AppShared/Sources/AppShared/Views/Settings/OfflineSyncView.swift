@@ -72,7 +72,7 @@ public struct OfflineSyncView: View {
               } else {
                 connectionManager.setOfflineBrowsingMode(newMode)
                 if newMode == .entireLibrary {
-                  Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
+                  Task { await store.runProactiveFill(unmetered: unmetered, force: true) }
                 }
               }
             })
@@ -186,14 +186,15 @@ public struct OfflineSyncView: View {
             } catch {
               errorController.push(error: error)
             }
-            await store.fillLibraryIfEnabled(unmetered: true, force: true)
-            // Both lifecycle paths pair the library fill with the detail fill;
-            // without this, notes and file metadata could only ever be filled by
-            // backgrounding and foregrounding the app.
-            await store.fillDocumentDetailsIfEnabled(unmetered: true)
+            await store.runProactiveFill(unmetered: true, force: true)
           }
         } label: {
+          // Explicit `foregroundStyle`, not just `.disabled`: a `Label`'s icon
+          // in a `Form` row button doesn't pick up the row's disabled dimming
+          // the way its text does, so a disabled row otherwise reads as a
+          // grayed-out title next to a still-accent-colored icon.
           Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
+            .foregroundStyle(store.syncActivities.isEmpty ? Color.accentColor : Color.secondary)
         }
         // Any sweep, not just the library fill: the detail fill left this
         // enabled, so a second pass could be stacked on a running one.

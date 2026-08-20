@@ -120,8 +120,7 @@ public final class BackgroundSyncCoordinator {
         let condition = SyncCondition(
           isExpensive: cost.isExpensive, isConstrained: cost.isConstrained,
           syncOverCellular: graph.manager.activeSyncOverCellular)
-        await store.fillLibraryIfEnabled(unmetered: condition.allowsProactiveSync)
-        await store.fillDocumentDetailsIfEnabled(unmetered: condition.allowsProactiveSync)
+        await store.runProactiveFill(unmetered: condition.allowsProactiveSync)
       }
     }
     await graph.syncEngine.syncServers(

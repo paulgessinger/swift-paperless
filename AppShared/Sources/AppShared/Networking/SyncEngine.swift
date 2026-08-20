@@ -259,9 +259,9 @@ public final class SyncEngine {
   }
 
   /// Mirrors the active path's sequence (`DocumentStore.sync` + `reconcileDocuments`
-  /// + `fillLibraryIfEnabled` + `fillDocumentDetailsIfEnabled`) against an
-  /// ephemeral per-server backend. The whole body is caught so a per-server
-  /// failure (offline, rethrown 401, …) never escapes to sibling servers.
+  /// + `runProactiveFill`) against an ephemeral per-server backend. The whole
+  /// body is caught so a per-server failure (offline, rethrown 401, …) never
+  /// escapes to sibling servers.
   private func performServerSync(_ stored: StoredConnection, runHeavyFill: Bool) async {
     let id = stored.id
     Logger.sync.info(

@@ -165,12 +165,18 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var syncTask: Task<Void, Error>?
 
-  // The in-flight proactive library fill. Held so it can be cancelled when the
-  // repository is replaced, and so a second request joins it rather than
-  // starting a parallel pass over the same queries. Only touched on the main
-  // actor.
+  // The in-flight proactive fill — library fill followed by the per-document
+  // detail fill, as one unit. Held so it can be cancelled when the repository
+  // is replaced, and so a second request joins it rather than starting a
+  // parallel pass over the same queries. There are four triggers that can call
+  // `runProactiveFill` on the same store — launch, foreground, the mode picker,
+  // the "Sync now" button, and a `BackgroundSyncCoordinator` run against the
+  // registered (foregrounded) graph — and without single-flighting them, two
+  // concurrent passes over "what's still missing" would each report their own
+  // `completed`/`total` into the same stage, which reads as the progress count
+  // flickering between two unrelated series. Only touched on the main actor.
   @ObservationIgnored
-  private var libraryFillTask: Task<Void, Never>?
+  private var proactiveFillTask: Task<Void, Never>?
 
   // Observes the active server's `library_coverage_at` into `libraryCoverageAt`.
   // Re-pointed alongside the element projection whenever the repository changes.
@@ -206,7 +212,7 @@ public final class DocumentStore: Sendable {
   }
 
   deinit {
-    libraryFillTask?.cancel()
+    proactiveFillTask?.cancel()
     taskUpdateTask?.cancel()
     coverageObservationTask?.cancel()
     lastSyncObservationTask?.cancel()
@@ -365,8 +371,8 @@ public final class DocumentStore: Sendable {
     // The fill belongs to the outgoing backend too: it pages the *old* server
     // into the old server's rows. Left running it would keep spending network
     // and main-actor write transactions on a connection the user has left.
-    libraryFillTask?.cancel()
-    libraryFillTask = nil
+    proactiveFillTask?.cancel()
+    proactiveFillTask = nil
     self.repository = repository
     imagePipeline = Self.makeImagePipeline(delegate: repository.delegate)
     wireElementStore()
@@ -930,21 +936,25 @@ extension DocumentStore {
     }
   }
 
-  /// Proactive *Entire library* fill, gated by the setting and an unmetered link.
-  /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
-  /// marker (e.g. the user just enabled the setting). A no-op when the setting is
-  /// *Recently browsed*, the link is metered, or there's no caching backend.
-  public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
+  /// Proactive *Entire library* fill, gated by the setting and an unmetered link:
+  /// the library fill (paging every query), then the per-document detail fill
+  /// (notes + file-metadata) over whatever the library fill just landed on disk.
+  /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the library
+  /// fill's freshness marker (e.g. the user just enabled the setting); the
+  /// detail fill needs no `force` of its own — it's idempotent and resumable,
+  /// driven off what's still missing. A no-op when the setting is *Recently
+  /// browsed*, the link is metered, or there's no caching backend.
+  public func runProactiveFill(unmetered: Bool, force: Bool = false) async {
     guard unmetered, let backend = repository as? any CachingBackend,
       backend.offlineBrowsingMode == .entireLibrary
     else { return }
 
-    // Join an in-flight fill rather than starting a second pass over the same
+    // Join an in-flight pass rather than starting a second one over the same
     // queries. Nothing dedupes these otherwise, and there are five triggers —
     // launch, foreground, the mode picker, Sync now, and the background run.
     // `force` is not lost by joining: a fill only runs at all when the coverage
     // marker is stale or forced, so one is already doing the work.
-    if let existing = libraryFillTask {
+    if let existing = proactiveFillTask {
       await existing.value
       return
     }
@@ -955,32 +965,25 @@ extension DocumentStore {
           self?.report($0, for: .libraryFill)
         }
       } catch is CancellationError {
-        Logger.sync.info("Proactive library fill cancelled")
+        // Cancellation (a repository swap) means the whole pass is unwanted —
+        // don't chase it with a detail fill against the outgoing backend.
+        Logger.sync.info("Proactive fill cancelled")
+        return
       } catch {
         Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
       }
+      do {
+        try await backend.fillDocumentDetails { [weak self] in self?.report($0, for: .detailFill) }
+      } catch {
+        Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
+      }
     }
-    libraryFillTask = task
+    proactiveFillTask = task
     await task.value
     // Only clear our own: a cancel-and-restart may have installed a newer one
     // while we were awaiting.
-    if libraryFillTask == task {
-      libraryFillTask = nil
-    }
-  }
-
-  /// Proactive *Entire library* per-document detail fill (notes + file-metadata),
-  /// gated by the setting and an unmetered link. Run after `fillLibraryIfEnabled`
-  /// so the document rows to walk are already on disk. Idempotent and resumable
-  /// (driven off what's still missing), so it needs no `force`. Soft-fail.
-  public func fillDocumentDetailsIfEnabled(unmetered: Bool) async {
-    guard unmetered, let backend = repository as? any CachingBackend,
-      backend.offlineBrowsingMode == .entireLibrary
-    else { return }
-    do {
-      try await backend.fillDocumentDetails { [weak self] in self?.report($0, for: .detailFill) }
-    } catch {
-      Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
+    if proactiveFillTask == task {
+      proactiveFillTask = nil
     }
   }
 
