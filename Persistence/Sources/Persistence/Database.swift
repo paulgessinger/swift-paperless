@@ -20,6 +20,16 @@ public final class Database: Sendable {
   /// `DatabaseQueue` for in-memory test seams. Both conform to ``DatabaseWriter``.
   public let writer: any DatabaseWriter
 
+  /// Whether opening this database found a schema mismatch and DEBUG-only
+  /// `eraseDatabaseOnSchemaChange` (see `Migrations.migrator`) wiped and
+  /// recreated it — e.g. the on-disk database has a migration applied that
+  /// this build's migrator doesn't register (testing an older revision
+  /// against a database a newer one already migrated further). Always
+  /// `false` in a Release build, where that option is never enabled. Read
+  /// once at launch so the app can tell a developer "this wasn't a bug"
+  /// instead of leaving a silently-emptied database unexplained.
+  public let didEraseForSchemaChangeAtLaunch: Bool
+
   // MARK: - Init
 
   /// Production initializer. Opens (or creates) the app-group SQLite file.
@@ -85,9 +95,19 @@ public final class Database: Sendable {
     Self.applyFileProtection(path.deletingPathExtension().appendingPathExtension("sqlite-wal"))
     Self.applyFileProtection(path.deletingPathExtension().appendingPathExtension("sqlite-shm"))
 
+    let migrator = Migrations.migrator(legacyConnectionsUserDefaults: legacyConnectionsUserDefaults)
+    #if DEBUG
+      // Predicts what `eraseDatabaseOnSchemaChange` (enabled below in
+      // `Migrations.migrator`) is about to do, so it can be surfaced instead
+      // of just silently emptying the database. `hasSchemaChanges` is GRDB's
+      // own detector for the same condition — see its doc comment.
+      didEraseForSchemaChangeAtLaunch = (try? pool.read(migrator.hasSchemaChanges)) ?? false
+    #else
+      didEraseForSchemaChangeAtLaunch = false
+    #endif
+
     do {
-      try Migrations.migrator(legacyConnectionsUserDefaults: legacyConnectionsUserDefaults)
-        .migrate(pool)
+      try migrator.migrate(pool)
     } catch {
       throw DatabaseError.migrationFailed(underlying: error)
     }
@@ -125,6 +145,7 @@ public final class Database: Sendable {
   /// Private init used only by ``inMemory()``.
   private init(writer: any DatabaseWriter) {
     self.writer = writer
+    didEraseForSchemaChangeAtLaunch = false
   }
 
   // MARK: - Destructive maintenance

@@ -363,7 +363,8 @@ struct MainView: View {
     .environment(routeManager)
     .appOverlays(
       errorController: errorController,
-      networkMonitor: networkMonitor
+      networkMonitor: networkMonitor,
+      database: database
     )
   }
 }
