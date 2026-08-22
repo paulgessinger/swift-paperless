@@ -857,25 +857,55 @@ extension DocumentStore {
     lastDocumentReconcile = Date()
     report(SyncActivity(stage: .reconcile), for: .reconcile)
     defer { report(nil, for: .reconcile) }
-    do {
-      // Deletes first (correctness), then the changed-metadata delta (freshness),
-      // then the saved-view membership sweep (so newly-matched docs — now landed
-      // at detail by the delta — appear in every offline list). The last two are
-      // no-ops unless *Entire library* is enabled.
-      try await NetworkTransfer.$category.withValue(.reconcile) {
-        try await backend.reconcileDocumentDeletions()
+
+    // Each sweep carries its own catch. The delete sweep is the most
+    // failure-prone of the three — it fetches the server's entire live id set —
+    // and under one shared `do` its failure took the freshness delta *and* the
+    // membership rebuild down with it, so a single flaky request cost the whole
+    // reconcile. Cancellation is the exception: it means the pass as a whole is
+    // unwanted (a repository swap, a background time budget running out), so it
+    // stops the remaining sweeps instead of being logged and stepped over.
+    var succeeded = 0
+    var cancelled = false
+
+    func sweep(_ label: String, _ body: () async throws -> Void) async {
+      guard !cancelled else { return }
+      do {
+        try await body()
+        succeeded += 1
+      } catch {
+        guard !error.isCancellationError else {
+          Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
+          cancelled = true
+          return
+        }
+        Logger.sync.info("Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
+      }
+    }
+
+    // Deletes first (correctness), then the changed-metadata delta (freshness),
+    // then the saved-view membership sweep (so newly-matched docs — now landed
+    // at detail by the delta — appear in every offline list). The last two are
+    // no-ops unless *Entire library* is enabled.
+    await NetworkTransfer.$category.withValue(.reconcile) {
+      await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
+      await sweep("changes") {
         try await backend.reconcileDocumentChanges { [weak self] in
           // The delta finishing doesn't end the reconcile — the membership
           // sweep runs after it — so fall back to the bare stage.
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
-        try await backend.reconcileSavedViewMembership()
       }
-      // Only on success: a server that fails every sweep must not display a
-      // fresh "last refreshed" while nothing is actually being refreshed.
+      await sweep("membership") { try await backend.reconcileSavedViewMembership() }
+    }
+
+    // A pass in which *something* refreshed counts: a server that fails every
+    // sweep must not display a fresh "last refreshed" while nothing is actually
+    // being refreshed, but one failing sweep shouldn't erase the two that
+    // worked. Same policy as `fillLibrary`'s coverage marker. A cancelled pass
+    // stamps nothing — it didn't finish, it was called off.
+    if succeeded > 0, !cancelled {
       lastReconcileAt = Date()
-    } catch {
-      Logger.sync.info("Document reconcile failed (suppressed): \(error)")
     }
   }
 
