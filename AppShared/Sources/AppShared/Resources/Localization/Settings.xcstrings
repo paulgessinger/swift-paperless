@@ -3010,7 +3010,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "Non connesso"
           }
         },
         "nl" : {
@@ -3022,7 +3022,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Offline"
+            "value" : "W trybie offline"
           }
         },
         "tr" : {
