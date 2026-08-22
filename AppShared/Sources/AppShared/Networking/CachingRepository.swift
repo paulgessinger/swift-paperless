@@ -449,6 +449,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       var done = 0
       progress?(SyncActivity(stage: .detailFill, completed: 0, total: total))
 
+      // A per-document report is a main-actor `@Observable` write that
+      // repaints the whole Offline & Sync screen; on a fast link that's
+      // dozens a second for as long as the pass runs. Coalesce to a cadence
+      // no one can perceive as choppy, but always report the final count so
+      // the screen doesn't sit one document short of "done".
+      var lastReportedAt = Date.distantPast
+      @MainActor func reportThrottled() {
+        let now = Date()
+        guard done == total || now.timeIntervalSince(lastReportedAt) >= 0.1 else { return }
+        lastReportedAt = now
+        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
+      }
+
       for id in missingMetadata {
         try Task.checkCancellation()
         if (try? await metadata(documentId: id)) != nil {
@@ -457,7 +470,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           detailFillFailures.insert(id)
         }
         done += 1
-        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
+        reportThrottled()
       }
 
       for id in needsNotes {
@@ -468,7 +481,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           detailFillFailures.insert(id)
         }
         done += 1
-        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
+        reportThrottled()
       }
     }
 
