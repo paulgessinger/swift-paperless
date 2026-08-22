@@ -16,9 +16,12 @@ struct SyncPlanTests {
   private static let c = UUID(uuidString: "00000000-0000-0000-0000-0000000000CC")!
 
   private func snapshot(
-    _ id: UUID, hasToken: Bool = true, isEntireLibrary: Bool = false
+    _ id: UUID, hasToken: Bool = true, isEntireLibrary: Bool = false,
+    syncOverCellular: Bool = false
   ) -> SyncPlan.ServerSnapshot {
-    .init(id: id, hasToken: hasToken, isEntireLibrary: isEntireLibrary)
+    .init(
+      id: id, hasToken: hasToken, isEntireLibrary: isEntireLibrary,
+      syncOverCellular: syncOverCellular)
   }
 
   private let now = Date(timeIntervalSinceReferenceDate: 1_000_000)
@@ -28,7 +31,8 @@ struct SyncPlanTests {
   func activeExcluded() {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.a), snapshot(Self.b)],
-      activeID: Self.a, lastSweep: [:], now: now, throttle: throttle, unmetered: true)
+      activeID: Self.a, lastSweep: [:], now: now, throttle: throttle,
+      isExpensive: false, isConstrained: false)
     #expect(actions.map(\.serverID) == [Self.b])
   }
 
@@ -36,7 +40,8 @@ struct SyncPlanTests {
   func stableOrdering() {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.c), snapshot(Self.a), snapshot(Self.b)],
-      activeID: nil, lastSweep: [:], now: now, throttle: throttle, unmetered: true)
+      activeID: nil, lastSweep: [:], now: now, throttle: throttle,
+      isExpensive: false, isConstrained: false)
     #expect(actions.map(\.serverID) == [Self.a, Self.b, Self.c])
   }
 
@@ -46,7 +51,7 @@ struct SyncPlanTests {
       connections: [snapshot(Self.a), snapshot(Self.b)],
       activeID: nil,
       lastSweep: [Self.a: now.addingTimeInterval(-(throttle - 1))],
-      now: now, throttle: throttle, unmetered: true)
+      now: now, throttle: throttle, isExpensive: false, isConstrained: false)
     #expect(actions.map(\.serverID) == [Self.b])
   }
 
@@ -56,7 +61,7 @@ struct SyncPlanTests {
       connections: [snapshot(Self.a)],
       activeID: nil,
       lastSweep: [Self.a: now.addingTimeInterval(-(throttle + 1))],
-      now: now, throttle: throttle, unmetered: true)
+      now: now, throttle: throttle, isExpensive: false, isConstrained: false)
     #expect(actions.map(\.serverID) == [Self.a])
   }
 
@@ -67,30 +72,56 @@ struct SyncPlanTests {
       activeID: nil,
       // Even "recently swept" it must re-emit so a freshly-arrived token is caught.
       lastSweep: [Self.a: now],
-      now: now, throttle: throttle, unmetered: true)
+      now: now, throttle: throttle, isExpensive: false, isConstrained: false)
     #expect(
       actions == [SyncServerAction(serverID: Self.a, needsAuthOnly: true, runHeavyFill: false)])
   }
 
-  @Test("Heavy fill requires both unmetered and entireLibrary")
+  @Test("Heavy fill requires both an allowed link and entireLibrary")
   func heavyFillGating() {
-    func heavy(unmetered: Bool, entire: Bool) -> Bool {
+    func heavy(isExpensive: Bool, entire: Bool) -> Bool {
       SyncPlan.inactiveActions(
         connections: [snapshot(Self.a, isEntireLibrary: entire)],
-        activeID: nil, lastSweep: [:], now: now, throttle: throttle, unmetered: unmetered
+        activeID: nil, lastSweep: [:], now: now, throttle: throttle,
+        isExpensive: isExpensive, isConstrained: false
       ).first!.runHeavyFill
     }
-    #expect(heavy(unmetered: true, entire: true))
-    #expect(!heavy(unmetered: true, entire: false))
-    #expect(!heavy(unmetered: false, entire: true))
-    #expect(!heavy(unmetered: false, entire: false))
+    #expect(heavy(isExpensive: false, entire: true))
+    #expect(!heavy(isExpensive: false, entire: false))
+    #expect(!heavy(isExpensive: true, entire: true))
+    #expect(!heavy(isExpensive: true, entire: false))
+  }
+
+  @Test(
+    "A server's own syncOverCellular opts it into the heavy fill on an expensive link; a sibling without the opt-in stays cheap-only in the same sweep"
+  )
+  func perServerCellularOptIn() {
+    let actions = SyncPlan.inactiveActions(
+      connections: [
+        snapshot(Self.a, isEntireLibrary: true, syncOverCellular: true),
+        snapshot(Self.b, isEntireLibrary: true, syncOverCellular: false),
+      ],
+      activeID: nil, lastSweep: [:], now: now, throttle: throttle,
+      isExpensive: true, isConstrained: false)
+    #expect(actions.first(where: { $0.serverID == Self.a })?.runHeavyFill == true)
+    #expect(actions.first(where: { $0.serverID == Self.b })?.runHeavyFill == false)
+  }
+
+  @Test("Low Data Mode blocks the heavy fill even for a server opted into cellular")
+  func lowDataModeOverridesOptIn() {
+    let actions = SyncPlan.inactiveActions(
+      connections: [snapshot(Self.a, isEntireLibrary: true, syncOverCellular: true)],
+      activeID: nil, lastSweep: [:], now: now, throttle: throttle,
+      isExpensive: true, isConstrained: true)
+    #expect(actions.first?.runHeavyFill == false)
   }
 
   @Test("Metered entireLibrary still runs the cheap tier (action present, heavy off)")
   func meteredStillSweepsCheap() {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.a, isEntireLibrary: true)],
-      activeID: nil, lastSweep: [:], now: now, throttle: throttle, unmetered: false)
+      activeID: nil, lastSweep: [:], now: now, throttle: throttle,
+      isExpensive: true, isConstrained: false)
     #expect(actions.count == 1)
     #expect(actions.first?.needsAuthOnly == false)
     #expect(actions.first?.runHeavyFill == false)

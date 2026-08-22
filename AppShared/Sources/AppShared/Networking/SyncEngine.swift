@@ -33,9 +33,12 @@ public final class SyncEngine {
   @ObservationIgnored private let database: Database
   @ObservationIgnored private let manager: ConnectionManager
   @ObservationIgnored private let mode: ApiRepository.Mode
-  /// Live "is the link unmetered?" read for the observation-driven initial-sync
-  /// path (the lifecycle-triggered sweep receives the flag as a parameter).
-  @ObservationIgnored private let isUnmetered: @MainActor () -> Bool
+  /// Live raw path cost read for the observation-driven initial-sync path (the
+  /// lifecycle-triggered sweep receives it as a parameter instead). Raw, not a
+  /// decision — each server combines it with its own `syncOverCellular` via
+  /// `SyncCondition`.
+  @ObservationIgnored private let pathCost:
+    @MainActor () -> (isExpensive: Bool, isConstrained: Bool)
 
   /// Last successful sweep per server; drives the throttle. The active server is
   /// never keyed here (never swept by the engine).
@@ -56,12 +59,12 @@ public final class SyncEngine {
   public init(
     database: Database,
     manager: ConnectionManager,
-    isUnmetered: @escaping @MainActor () -> Bool,
+    pathCost: @escaping @MainActor () -> (isExpensive: Bool, isConstrained: Bool),
     mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode
   ) {
     self.database = database
     self.manager = manager
-    self.isUnmetered = isUnmetered
+    self.pathCost = pathCost
     self.mode = mode
   }
 
@@ -104,13 +107,16 @@ public final class SyncEngine {
   /// failure never affects the others. Coalesces concurrent callers.
   ///
   /// `userInitiated` bypasses the per-server throttle (explicit "sync now").
-  public func syncInactiveServers(unmetered: Bool, userInitiated: Bool = false) async {
+  public func syncInactiveServers(
+    isExpensive: Bool, isConstrained: Bool, userInitiated: Bool = false
+  ) async {
     if let sweepTask {
       return await sweepTask.value
     }
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
-      await runSweep(unmetered: unmetered, userInitiated: userInitiated)
+      await runSweep(
+        isExpensive: isExpensive, isConstrained: isConstrained, userInitiated: userInitiated)
     }
     sweepTask = task
     await task.value
@@ -119,12 +125,13 @@ public final class SyncEngine {
 
   // MARK: - Sweep
 
-  private func runSweep(unmetered: Bool, userInitiated: Bool) async {
+  private func runSweep(isExpensive: Bool, isConstrained: Bool, userInitiated: Bool) async {
     let snapshots = manager.connections.values.map { conn in
       SyncPlan.ServerSnapshot(
         id: conn.id,
         hasToken: hasToken(conn),
-        isEntireLibrary: conn.offlineBrowsingMode == .entireLibrary)
+        isEntireLibrary: conn.offlineBrowsingMode == .entireLibrary,
+        syncOverCellular: conn.syncOverCellular)
     }
     let actions = SyncPlan.inactiveActions(
       connections: snapshots,
@@ -132,10 +139,11 @@ public final class SyncEngine {
       lastSweep: userInitiated ? [:] : lastSweep,
       now: Date(),
       throttle: inactiveThrottle,
-      unmetered: unmetered)
+      isExpensive: isExpensive,
+      isConstrained: isConstrained)
 
     Logger.sync.info(
-      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (unmetered: \(unmetered), userInitiated: \(userInitiated))"
+      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (isExpensive: \(isExpensive), isConstrained: \(isConstrained), userInitiated: \(userInitiated))"
     )
     for action in actions {
       // Re-read per iteration: the action list was computed before the first
@@ -165,10 +173,14 @@ public final class SyncEngine {
     for id in added {
       guard let stored = manager.connections[id] else { continue }
       // Throttle-exempt initial sync for a freshly-appeared server.
+      let cost = pathCost()
+      let condition = SyncCondition(
+        isExpensive: cost.isExpensive, isConstrained: cost.isConstrained,
+        syncOverCellular: stored.syncOverCellular)
       let action = SyncServerAction(
         serverID: stored.id,
         needsAuthOnly: !hasToken(stored),
-        runHeavyFill: isUnmetered() && stored.offlineBrowsingMode == .entireLibrary)
+        runHeavyFill: condition.allowsProactiveSync && stored.offlineBrowsingMode == .entireLibrary)
       Task { @MainActor [weak self] in await self?.runAction(action, stored: stored) }
     }
   }

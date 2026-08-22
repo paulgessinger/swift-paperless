@@ -44,11 +44,15 @@ public enum SyncPlan {
     public let id: UUID
     public let hasToken: Bool
     public let isEntireLibrary: Bool
+    /// This server's own opt-in to proactive syncing on a metered link — see
+    /// ``SyncCondition``.
+    public let syncOverCellular: Bool
 
-    public init(id: UUID, hasToken: Bool, isEntireLibrary: Bool) {
+    public init(id: UUID, hasToken: Bool, isEntireLibrary: Bool, syncOverCellular: Bool) {
       self.id = id
       self.hasToken = hasToken
       self.isEntireLibrary = isEntireLibrary
+      self.syncOverCellular = syncOverCellular
     }
   }
 
@@ -61,7 +65,10 @@ public enum SyncPlan {
   ///   sweep).
   /// - Credentialed servers are dropped while their last successful sweep is
   ///   still within `throttle`; otherwise they yield a sync action whose
-  ///   `runHeavyFill` is gated on `unmetered && isEntireLibrary`.
+  ///   `runHeavyFill` is gated on `isEntireLibrary &&` that server's own
+  ///   ``SyncCondition/allowsProactiveSync`` — each server's own
+  ///   `syncOverCellular` opt-in applies to *that* server only, not the whole
+  ///   sweep.
   /// - Ordering is stable (by `id`) for deterministic, testable behavior.
   public static func inactiveActions(
     connections: [ServerSnapshot],
@@ -69,7 +76,8 @@ public enum SyncPlan {
     lastSweep: [UUID: Date],
     now: Date,
     throttle: TimeInterval,
-    unmetered: Bool
+    isExpensive: Bool,
+    isConstrained: Bool
   ) -> [SyncServerAction] {
     connections
       .filter { $0.id != activeID }
@@ -82,10 +90,13 @@ public enum SyncPlan {
         if let last = lastSweep[server.id], now.timeIntervalSince(last) < throttle {
           return nil  // still fresh — skip the network sweep
         }
+        let condition = SyncCondition(
+          isExpensive: isExpensive, isConstrained: isConstrained,
+          syncOverCellular: server.syncOverCellular)
         return SyncServerAction(
           serverID: server.id,
           needsAuthOnly: false,
-          runHeavyFill: unmetered && server.isEntireLibrary)
+          runHeavyFill: condition.allowsProactiveSync && server.isEntireLibrary)
       }
   }
 
