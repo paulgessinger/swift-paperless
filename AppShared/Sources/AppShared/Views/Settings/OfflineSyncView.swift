@@ -33,8 +33,10 @@ public struct OfflineSyncView: View {
 
   private var unmetered: Bool {
     guard let networkMonitor else { return true }
-    return networkMonitor.allowsProactiveSync(
-      syncOverCellular: connectionManager.activeSyncOverCellular)
+    return SyncCondition(
+      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
+      syncOverCellular: connectionManager.activeSyncOverCellular
+    ).allowsProactiveSync
   }
 
   /// Suggest the greedy mode only when it is actually cheap. A new server starts

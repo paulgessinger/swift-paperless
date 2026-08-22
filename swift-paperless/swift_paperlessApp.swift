@@ -58,15 +58,16 @@ struct MainView: View {
     _manager = State(wrappedValue: manager)
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
-    // Same unmetered semantics as `isUnmetered` below, read live so the engine's
-    // observation-driven initial sync gates on the current link.
+    // Raw path cost, read live so the engine's observation-driven initial
+    // sync gates on the current link — same source `isUnmetered` below reads,
+    // combined per-server via `SyncCondition` rather than folded here.
     _syncEngine = State(
       wrappedValue: SyncEngine(
         database: database,
         manager: manager,
-        isUnmetered: { [weak networkMonitor] in
-          guard let networkMonitor else { return false }
-          return !networkMonitor.isExpensive && !networkMonitor.isConstrained
+        pathCost: { [weak networkMonitor] in
+          guard let networkMonitor else { return (isExpensive: true, isConstrained: true) }
+          return (networkMonitor.isExpensive, networkMonitor.isConstrained)
         }))
     errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
@@ -159,12 +160,16 @@ struct MainView: View {
     }
   }
 
-  /// The gate for the heavy proactive fills (cheap reconcile sweeps run
-  /// regardless). Wi‑Fi‑ish by default, unless the active server has been opted
-  /// in to cellular; Low Data Mode always wins. See
-  /// `NetworkMonitor.allowsProactiveSync(syncOverCellular:)`.
+  /// The gate for the *active* server's heavy proactive fill (cheap reconcile
+  /// sweeps run regardless). Wi‑Fi‑ish by default, unless the active server has
+  /// been opted in to cellular; Low Data Mode always wins. See `SyncCondition`.
+  /// The inactive-server sweep resolves this per-server itself — pass it raw
+  /// path cost (`networkMonitor.isExpensive`/`.isConstrained`), not this.
   private var isUnmetered: Bool {
-    networkMonitor.allowsProactiveSync(syncOverCellular: manager.activeSyncOverCellular)
+    SyncCondition(
+      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
+      syncOverCellular: manager.activeSyncOverCellular
+    ).allowsProactiveSync
   }
 
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
@@ -380,7 +385,10 @@ struct MainView: View {
       // Begin observing the server table for newly-added servers, and warm every
       // inactive server's cache (the active server was just synced above).
       syncEngine.start()
-      Task { await syncEngine.syncInactiveServers(unmetered: isUnmetered) }
+      Task {
+        await syncEngine.syncInactiveServers(
+          isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+      }
     }
 
     .onEvent(from: manager.events) { event in
@@ -389,7 +397,8 @@ struct MainView: View {
         Task {
           await refreshConnection(animated: animated)
           // The just-deactivated server is now inactive: sweep it (and the rest).
-          await syncEngine.syncInactiveServers(unmetered: isUnmetered)
+          await syncEngine.syncInactiveServers(
+            isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
         }
       case .logout:
         showLoginScreen = true
@@ -424,7 +433,10 @@ struct MainView: View {
             }
           }
           // Warm the inactive servers alongside the active refresh.
-          Task { await syncEngine.syncInactiveServers(unmetered: isUnmetered) }
+          Task {
+            await syncEngine.syncInactiveServers(
+              isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+          }
         }
 
         Task { await biometricLockManager.unlockIfEnabled() }
