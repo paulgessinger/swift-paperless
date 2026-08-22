@@ -165,9 +165,51 @@
       "comment" : "Argument is the localized resource name (e.g. User, Document type)",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
           }
         }
@@ -177,9 +219,51 @@
       "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create not permitted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create not permitted"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Create not permitted"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create not permitted"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create not permitted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create not permitted"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Create not permitted"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Create not permitted"
           }
         }
@@ -189,9 +273,51 @@
       "comment" : "Argument is the localized resource name (e.g. User, Document type)",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
           }
         }
@@ -201,9 +327,51 @@
       "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit not permitted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit not permitted"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Edit not permitted"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit not permitted"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit not permitted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit not permitted"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Edit not permitted"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Edit not permitted"
           }
         }
@@ -213,9 +381,51 @@
       "comment" : "Argument is the localized resource name (e.g. User, Document type)",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
           }
         }
@@ -225,9 +435,51 @@
       "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete not permitted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete not permitted"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Delete not permitted"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete not permitted"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete not permitted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete not permitted"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete not permitted"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Delete not permitted"
           }
         }
@@ -345,9 +597,51 @@
       "comment" : "Argument is the localized resource name (e.g. User, Document type)",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
           }
         }
@@ -357,9 +651,51 @@
       "comment" : "Toast title, truncated to one line: keep it short. The resource name goes in the detail string instead",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View not permitted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View not permitted"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "View not permitted"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View not permitted"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View not permitted"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View not permitted"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View not permitted"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "View not permitted"
           }
         }
@@ -6596,7 +6932,7 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Details"
           }
         },
@@ -6620,7 +6956,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Details"
           }
         },
@@ -11907,9 +12243,51 @@
       "comment" : "Alert body in the Share Extension when the server rejected the login (401). The extension cannot run the re-authentication flow itself.",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
           }
         }
@@ -11919,9 +12297,51 @@
       "comment" : "Alert title in the Share Extension when the server rejected the login (401)",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in again"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in again"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Sign in again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in again"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in again"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in again"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sign in again"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Sign in again"
           }
         }
