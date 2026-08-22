@@ -174,7 +174,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// this: a new fill drains the current owner before touching the key, and the
   /// membership sweep steps over a key that is mid-fill. Main-actor isolated
   /// like the rest of this class, so claiming and clearing never interleave.
-  private var activeFills: [QueryKey: Task<Void, Never>] = [:]
+  private var activeFills: [QueryKey: Task<Void, any Error>] = [:]
 
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
@@ -320,7 +320,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Detached tasks inherit no task-local, so re-establish `.fill` here.
     let (firstPage, pageOne) = AsyncThrowingStream<UInt?, any Error>.makeStream()
     let task = Task.detached(priority: .utility) {
-      await NetworkTransfer.$category.withValue(.fill) {
+      try await NetworkTransfer.$category.withValue(.fill) {
         var position = 0
         do {
           let batch = try await source.fetch(limit: pageSize)
@@ -332,40 +332,55 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           pageOne.yield(total)
           pageOne.finish()
         } catch {
-          // The caller's problem, not the background's: offline on open means
-          // the list falls back to whatever is already cached.
+          // Page 1 is the caller's problem, not the background's: offline on
+          // open means the list falls back to whatever is already cached. The
+          // caller sees it through the stream, so this task ends quietly.
           pageOne.finish(throwing: error)
           return
         }
 
         // Background-page the rest to disk (append). When this completes the
         // whole view is local; scrolling then needs no network (v1).
-        do {
-          while !Task.isCancelled {
-            if await source.isExhausted { break }
-            let batch = try await source.fetch(limit: pageSize)
-            if batch.isEmpty { break }
-            // Re-check between the fetch returning and the write. Cancellation
-            // is how a newer fill takes the key over, and by now its page-1
-            // replace may already have landed — writing here would graft our
-            // stale positions onto its rows.
-            try Task.checkCancellation()
-            try database.writeQueryPage(
-              queryKey: key, serverID: serverID, documents: batch,
-              startPosition: position, totalCount: await source.totalCount,
-              replaceAll: false)
-            position += batch.count
-          }
-        } catch is CancellationError {
-        } catch {
-          Logger.sync.error("Background query fill failed: \(error)")
+        while true {
+          // Cancellation ends the fill as an error, not as a quiet `break`.
+          // The key is truncated either way, and a silent stop is exactly how
+          // a caller came to treat a 250-row order as the whole query.
+          try Task.checkCancellation()
+          if await source.isExhausted { break }
+          let batch = try await source.fetch(limit: pageSize)
+          if batch.isEmpty { break }
+          // Re-check between the fetch returning and the write. Cancellation is
+          // how a newer fill takes the key over, and by now its page-1 replace
+          // may already have landed — writing here would graft our stale
+          // positions onto its rows.
+          try Task.checkCancellation()
+          try database.writeQueryPage(
+            queryKey: key, serverID: serverID, documents: batch,
+            startPosition: position, totalCount: await source.totalCount,
+            replaceAll: false)
+          position += batch.count
         }
+
+        // Reached the end of the query: the cached order is now its complete
+        // membership, and only here is that recorded. Page 1's `replaceAll`
+        // cleared the stamp, so anything that stopped us short leaves the key
+        // marked incomplete for the next pass to redo.
+        try database.markQueryFillComplete(queryKey: key, serverID: serverID)
       }
     }
 
     activeFills[key] = task
     Task { [weak self] in
-      await task.value
+      do {
+        try await task.value
+      } catch is CancellationError {
+        // A newer fill drained us, or the view went away. Expected.
+      } catch {
+        // `fillLibrary` awaits the fill and reports its failure where the user
+        // can see it. The interactive path doesn't await the background paging
+        // at all, so without this its failures would be entirely silent.
+        Logger.sync.error("Background query fill failed: \(error)")
+      }
       // Retract only our own registration: a newer fill may have drained and
       // replaced us while this was waiting.
       guard let self, activeFills[key] == task else { return }
@@ -393,7 +408,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private func drainFill(for key: QueryKey) async {
     guard let owner = activeFills[key] else { return }
     owner.cancel()
-    await owner.value
+    // Its outcome is the departing fill's own business (its registration task
+    // logs it) — all this needs is for it to have stopped writing.
+    _ = try? await owner.value
     if activeFills[key] == owner { activeFills[key] = nil }
   }
 
@@ -445,12 +462,28 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // this loop can honour is between views — so cancelling mid-view still
         // paged the whole thing, which is exactly what a background time budget
         // or a server switch cannot afford.
-        await withTaskCancellationHandler {
-          await handle.awaitCompletion()
+        try await withTaskCancellationHandler {
+          try await handle.awaitCompletion()
         } onCancel: {
           handle.cancel()
         }
         try Task.checkCancellation()
+        // Not just "nothing threw": the stamp is the fill's own word that it
+        // paged the query to the end. A truncated order counted as covered
+        // would stamp the coverage marker and suppress the retry for a day,
+        // leaving the list hard-stopped at whatever page it reached — with the
+        // count pill still claiming the server's full total.
+        guard (try? database.queryFillCompletedAt(queryKey: key, serverID: serverID)) ?? nil != nil
+        else {
+          // A backstop, not the main path: the fill throws on every way of
+          // stopping short, so reaching here means the stamp and the outcome
+          // disagree. Left as a log rather than a user-facing message — there
+          // is nothing to tell the user beyond "it will run again".
+          Logger.sync.warning(
+            "Library fill: '\(name ?? "default", privacy: .public)' ended incomplete; not counting it as covered"
+          )
+          continue
+        }
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
         succeeded += 1
       } catch is CancellationError {

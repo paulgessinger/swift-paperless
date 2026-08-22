@@ -62,7 +62,8 @@ extension Database {
         }
         try setQueryMeta(
           db, serverID: serverID, queryKey: queryKey,
-          totalCount: totalCount, orderStale: false)
+          totalCount: totalCount, orderStale: false,
+          stamp: replaceAll ? .cleared : .unchanged)
       }
     }
   }
@@ -89,7 +90,7 @@ extension Database {
         }
         try setQueryMeta(
           db, serverID: serverID, queryKey: queryKey,
-          totalCount: UInt(orderedIDs.count), orderStale: false)
+          totalCount: UInt(orderedIDs.count), orderStale: false, stamp: .unchanged)
       }
     }
   }
@@ -338,6 +339,42 @@ extension Database {
     }
   }
 
+  /// Record that the fill owning this query paged it all the way to the end, so
+  /// the cached order is the query's complete membership.
+  ///
+  /// Called only on a clean finish — not on cancellation, not on a failed page.
+  /// The absence of the stamp is what tells the next pass the order is truncated
+  /// and has to be redone; without it an interrupted fill was silently
+  /// indistinguishable from a complete one.
+  public func markQueryFillComplete(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) {
+    try wrapping("markQueryFillComplete") {
+      try writer.write { db in
+        let meta =
+          try QueryMetaRow
+          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+          .fetchOne(db)
+        try setQueryMeta(
+          db, serverID: serverID, queryKey: queryKey,
+          totalCount: meta?.totalCount, orderStale: meta?.orderStale ?? false,
+          stamp: .completed)
+      }
+    }
+  }
+
+  /// When this query's order was last filled to completion, or `nil` if it never
+  /// was (or was truncated since by a page-1 replace).
+  public func queryFillCompletedAt(queryKey: QueryKey, serverID: UUID) throws(DatabaseError)
+    -> Date?
+  {
+    try wrapping("queryFillCompletedAt") {
+      try writer.read { db in
+        try QueryMetaRow
+          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+          .fetchOne(db)?.filledAt
+      }
+    }
+  }
+
   /// Server total, locally-present count (reflects deletion gaps), and
   /// order-stale flag for a cached query.
   public func queryStatus(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) -> QueryStatus {
@@ -433,13 +470,43 @@ extension Database {
       .deleteAll(db)
   }
 
+  /// What a `query_meta` write does to the `filled_at` stamp.
+  ///
+  /// The stamp means *"the fill that owns this key paged it to the end"*. It
+  /// used to be set on every `writeQueryPage`, i.e. it meant "a page was
+  /// written" — which is why a fill interrupted on page 2 left a 250-row order
+  /// carrying the server's full 3000 as `total_count` and a fresh `filled_at`,
+  /// indistinguishable from a complete one.
+  enum FillStamp {
+    /// Page 1 of a fill: `replaceAll` has just deleted the key's whole order,
+    /// so it is known-incomplete until the fill says otherwise.
+    case cleared
+    /// A later page, or a membership rewrite — leave whatever is recorded.
+    case unchanged
+    /// The fill's paging loop reached the end of the query.
+    case completed
+  }
+
   private func setQueryMeta(
     _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey,
-    totalCount: UInt?, orderStale: Bool
+    totalCount: UInt?, orderStale: Bool, stamp: FillStamp
   ) throws {
+    let filledAt: Date?
+    switch stamp {
+    case .cleared: filledAt = nil
+    case .completed: filledAt = Date()
+    case .unchanged:
+      // A record `upsert` rewrites every column, so carrying the stamp forward
+      // has to be explicit. Same transaction as the caller's write, so no other
+      // writer can slip in between the read and the upsert.
+      filledAt =
+        try QueryMetaRow
+        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+        .fetchOne(db)?.filledAt
+    }
     try QueryMetaRow(
       serverId: serverID, queryKey: queryKey.rawValue,
-      totalCount: totalCount, orderStale: orderStale, filledAt: Date()
+      totalCount: totalCount, orderStale: orderStale, filledAt: filledAt
     ).upsert(db)
   }
 }
