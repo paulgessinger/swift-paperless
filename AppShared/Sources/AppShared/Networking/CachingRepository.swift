@@ -169,6 +169,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public let database: Database
   public let serverID: UUID
 
+  /// The in-flight fill per `QueryKey` — page 1 included, not only the
+  /// background continuation. Every writer of a key's `query_order` consults
+  /// this: a new fill drains the current owner before touching the key, and the
+  /// membership sweep steps over a key that is mid-fill. Main-actor isolated
+  /// like the rest of this class, so claiming and clearing never interleave.
+  private var activeFills: [QueryKey: Task<Void, any Error>] = [:]
+
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
     self.database = database
@@ -180,6 +187,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let mode = OfflineBrowsingMode(rawValue: raw)
     else { return .recentlyBrowsed }
     return mode
+  }
+
+  /// Friendly-name + UUID for sync logs (see ``StoredConnection/logLabel``);
+  /// falls back to the bare UUID if the connection row can't be read.
+  private var serverLogLabel: String {
+    guard let record = try? database.connection(id: serverID) else {
+      return "[\(serverID.uuidString)]"
+    }
+    return StoredConnection(record: record).logLabel
   }
 
   // MARK: - CachingBackend
@@ -279,46 +295,127 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// library fill.
   public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
+
+    // Two fills on one key used to interleave: the newcomer's page-1
+    // `replaceAll: true` deletes every `query_order` row for the key, and the
+    // older fill then keeps appending from its own position counter, leaving a
+    // hole only a later full fill repairs. Neither write errors — the primary
+    // key is ON CONFLICT REPLACE and the unique key ON CONFLICT IGNORE — so
+    // nothing notices. Routine rather than hypothetical since the foreground
+    // library fill started paging `[(nil, .default)] + savedViews`, the very
+    // keys an open list is filling.
+    await drainFill(for: key)
+
     let source = try wrapped.documents(filter: filter)
     let pageSize = Endpoint.defaultDocumentPageSize
-
-    // Page 1 awaited: first window on screen + the exact total for the count pill.
-    let firstPage = try await NetworkTransfer.$category.withValue(.fill) {
-      try await source.fetch(limit: pageSize)
-    }
-    let total = await source.totalCount
-    try database.writeQueryPage(
-      queryKey: key, serverID: serverID, documents: firstPage,
-      startPosition: 0, totalCount: total, replaceAll: true)
-
-    // Background-page the rest to disk (append). When this completes the whole
-    // view is local; scrolling then needs no network (v1). Detached tasks don't
-    // inherit the task-local, so re-establish the `.fill` transfer category here.
     let database = database
     let serverID = serverID
-    let firstCount = firstPage.count
+
+    // Page 1 is still awaited by the caller (first window on screen + the exact
+    // total for the count pill) but is written from inside the fill's own task,
+    // so the key has a single owner from its very first write. Written from the
+    // caller's context it was unclaimed until the background task existed, and
+    // the membership sweep's whole-key `replaceQueryOrder` could land in that
+    // gap — after which the fill appended page 2 onto a different ordering.
+    // Detached tasks inherit no task-local, so re-establish `.fill` here.
+    let (firstPage, pageOne) = AsyncThrowingStream<UInt?, any Error>.makeStream()
     let task = Task.detached(priority: .utility) {
-      await NetworkTransfer.$category.withValue(.fill) {
-        var position = firstCount
+      try await NetworkTransfer.$category.withValue(.fill) {
+        var position = 0
         do {
-          while !Task.isCancelled {
-            if await source.isExhausted { break }
-            let batch = try await source.fetch(limit: pageSize)
-            if batch.isEmpty { break }
-            try database.writeQueryPage(
-              queryKey: key, serverID: serverID, documents: batch,
-              startPosition: position, totalCount: await source.totalCount,
-              replaceAll: false)
-            position += batch.count
-          }
-        } catch is CancellationError {
+          let batch = try await source.fetch(limit: pageSize)
+          let total = await source.totalCount
+          try database.writeQueryPage(
+            queryKey: key, serverID: serverID, documents: batch,
+            startPosition: 0, totalCount: total, replaceAll: true)
+          position = batch.count
+          pageOne.yield(total)
+          pageOne.finish()
         } catch {
-          Logger.shared.error("Background query fill failed: \(error)")
+          // Page 1 is the caller's problem, not the background's: offline on
+          // open means the list falls back to whatever is already cached. The
+          // caller sees it through the stream, so this task ends quietly.
+          pageOne.finish(throwing: error)
+          return
         }
+
+        // Background-page the rest to disk (append). When this completes the
+        // whole view is local; scrolling then needs no network (v1).
+        while true {
+          // Cancellation ends the fill as an error, not as a quiet `break`.
+          // The key is truncated either way, and a silent stop is exactly how
+          // a caller came to treat a 250-row order as the whole query.
+          try Task.checkCancellation()
+          if await source.isExhausted { break }
+          let batch = try await source.fetch(limit: pageSize)
+          if batch.isEmpty { break }
+          // Re-check between the fetch returning and the write. Cancellation is
+          // how a newer fill takes the key over, and by now its page-1 replace
+          // may already have landed — writing here would graft our stale
+          // positions onto its rows.
+          try Task.checkCancellation()
+          try database.writeQueryPage(
+            queryKey: key, serverID: serverID, documents: batch,
+            startPosition: position, totalCount: await source.totalCount,
+            replaceAll: false)
+          position += batch.count
+        }
+
+        // Reached the end of the query: the cached order is now its complete
+        // membership, and only here is that recorded. Page 1's `replaceAll`
+        // cleared the stamp, so anything that stopped us short leaves the key
+        // marked incomplete for the next pass to redo.
+        try database.markQueryFillComplete(queryKey: key, serverID: serverID)
       }
     }
+
+    activeFills[key] = task
+    Task { [weak self] in
+      do {
+        try await task.value
+      } catch is CancellationError {
+        // A newer fill drained us, or the view went away. Expected.
+      } catch {
+        // `fillLibrary` awaits the fill and reports its failure where the user
+        // can see it. The interactive path doesn't await the background paging
+        // at all, so without this its failures would be entirely silent.
+        Logger.sync.error("Background query fill failed: \(error)")
+      }
+      // Retract only our own registration: a newer fill may have drained and
+      // replaced us while this was waiting.
+      guard let self, activeFills[key] == task else { return }
+      activeFills[key] = nil
+    }
+
+    // A cancelled caller takes the whole fill with it — the task is detached,
+    // so nothing else would — and still reports the cancellation, as it did
+    // when page 1 ran in the caller's own context.
+    let total = try await withTaskCancellationHandler {
+      var total: UInt?
+      for try await value in firstPage { total = value }
+      return total
+    } onCancel: {
+      task.cancel()
+    }
+    try Task.checkCancellation()
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
+
+  /// Stop the fill that currently owns `key` and wait for it to actually stop.
+  /// Cancellation is cooperative — the loop only checks between pages — so
+  /// returning without the await would leave a writer alive across the caller's
+  /// own write, which is the whole problem being fixed.
+  private func drainFill(for key: QueryKey) async {
+    guard let owner = activeFills[key] else { return }
+    owner.cancel()
+    // Its outcome is the departing fill's own business (its registration task
+    // logs it) — all this needs is for it to have stopped writing.
+    _ = try? await owner.value
+    if activeFills[key] == owner { activeFills[key] = nil }
+  }
+
+  /// Whether a fill currently owns this key's `query_order`.
+  private func isFilling(_ key: QueryKey) -> Bool { activeFills[key] != nil }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
     guard force || !LibraryCoverage.isFresh(try? database.libraryCoverageAt(serverID: serverID))
@@ -338,6 +435,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
     var succeeded = 0
+    Logger.sync.info(
+      "Library fill: \(views.count, privacy: .public) view(s) for server \(self.serverLogLabel, privacy: .public)"
+    )
     for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
       // A downgrade mid-fill means the rest of these views are no longer wanted,
@@ -345,7 +445,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // write back rows it has just reclaimed. One connection-row read per view,
       // and there are few views.
       guard offlineBrowsingMode == .entireLibrary else {
-        Logger.shared.info("Library fill: mode left Entire library mid-pass; stopping")
+        Logger.sync.info("Library fill: mode left Entire library mid-pass; stopping")
         return
       }
       progress?(
@@ -362,12 +462,28 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // this loop can honour is between views — so cancelling mid-view still
         // paged the whole thing, which is exactly what a background time budget
         // or a server switch cannot afford.
-        await withTaskCancellationHandler {
-          await handle.awaitCompletion()
+        try await withTaskCancellationHandler {
+          try await handle.awaitCompletion()
         } onCancel: {
           handle.cancel()
         }
         try Task.checkCancellation()
+        // Not just "nothing threw": the stamp is the fill's own word that it
+        // paged the query to the end. A truncated order counted as covered
+        // would stamp the coverage marker and suppress the retry for a day,
+        // leaving the list hard-stopped at whatever page it reached — with the
+        // count pill still claiming the server's full total.
+        guard (try? database.queryFillCompletedAt(queryKey: key, serverID: serverID)) ?? nil != nil
+        else {
+          // A backstop, not the main path: the fill throws on every way of
+          // stopping short, so reaching here means the stamp and the outcome
+          // disagree. Left as a log rather than a user-facing message — there
+          // is nothing to tell the user beyond "it will run again".
+          Logger.sync.warning(
+            "Library fill: '\(name ?? "default", privacy: .public)' ended incomplete; not counting it as covered"
+          )
+          continue
+        }
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
         succeeded += 1
       } catch is CancellationError {
@@ -376,7 +492,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // A rejected view (e.g. an advanced full-text query the server won't run)
         // must not block the *whole* library's coverage. Record it so the
         // Offline & Sync screen can warn, and carry on.
-        Logger.shared.warning(
+        Logger.sync.warning(
           "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
         try? database.recordQuerySyncError(
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
@@ -391,7 +507,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // empty cache — the ordinary shape of Wi-Fi with the server unreachable,
     // since neither `isExpensive` nor `isConstrained` means reachable.
     guard succeeded > 0 else {
-      Logger.shared.warning(
+      Logger.sync.warning(
         "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
       return
     }
@@ -485,7 +601,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       }
     }
 
-    Logger.shared.info(
+    Logger.sync.info(
       "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata"
     )
   }
@@ -503,7 +619,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let domains = try await fetch()
       try database.replaceElements(domains, of: type, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
-      Logger.shared.info(
+      Logger.sync.info(
         "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
     }
   }
@@ -519,7 +635,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       try database.setUISettings(settings, serverID: serverID)
       return settings.permissions
     } catch {
-      Logger.shared.info(
+      Logger.sync.info(
         "uiSettings sync failed (\(error)); gating sync on cached permissions")
       return try? database.uiSettings(serverID: serverID)?.permissions
     }
@@ -530,7 +646,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let config = try await wrapped.serverConfiguration()
       try database.setServerConfiguration(config, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
-      Logger.shared.info("Skipping serverConfiguration sync: \(error)")
+      Logger.sync.info("Skipping serverConfiguration sync: \(error)")
     }
   }
 
@@ -548,6 +664,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     case .forbidden, .unauthorized: true
     default: false
     }
+  }
+
+  /// Whether a failed detail fetch may fall back to the offline cache.
+  ///
+  /// A transport failure means we never got an answer, so the last-known row is
+  /// the best one available. A 403/401 *is* the answer: the user may no longer
+  /// see this document, and serving the cached title, notes and PDF would hide a
+  /// revoked permission behind what looks like an outage. Same predicate as the
+  /// sync skip — there a permission failure is tolerated because the rest of the
+  /// sync stays valid, here it must propagate because it answers the only
+  /// question asked. (404 never reaches this: `ApiRepository.get` maps it to
+  /// `nil`, handled on the success path.)
+  private static func mayServeCache(after error: any Error) -> Bool {
+    !isSkippable(error)
   }
 
   // MARK: - Element reads (cache)
@@ -764,9 +894,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // A full-detail fetch — upgrade the row to Tier-2.
       try database.upsertDocument(fetched, serverID: serverID)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
       // rather than failing the open. Mirrors the element offline-first policy.
+      // A permission failure isn't caught here at all, so it propagates.
       if let cached = try database.document(serverID: serverID, id: id) {
         Logger.shared.info("document(id:) network failed (\(error)); serving cached")
         return cached
@@ -780,7 +911,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }
       try database.upsertDocument(fetched, serverID: serverID)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       if let cached = try database.document(serverID: serverID, asn: asn) {
         Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
         return cached
@@ -811,7 +942,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let removed = localIDs.subtracting(serverIDs)
     guard !removed.isEmpty else { return }
 
-    Logger.shared.info(
+    Logger.sync.info(
       "Reconcile: dropping \(removed.count, privacy: .public) remotely-deleted documents")
     try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
   }
@@ -891,7 +1022,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // refresh rows already cached. Either way the row is written at `.full`.
       let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
       if !toUpsert.isEmpty {
-        Logger.shared.info(
+        Logger.sync.info(
           "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
         try database.upsertDocuments(toUpsert, serverID: serverID)
         // Note edits bump `modified`, so a changed doc's cached notes may be
@@ -926,17 +1057,36 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     for (name, filter) in views {
       try Task.checkCancellation()
       let key = QueryKey(serverID: serverID, filter: filter)
+      // A fill owning this key is writing the same `query_order` rows page by
+      // page, and it writes a strictly better ordering than this Tier-0
+      // projection — it carries full document detail, and its page-1 replace has
+      // already re-baselined the key. Interleaving `replaceQueryOrder`'s
+      // delete-all-and-reinsert with the fill's appends silently merges two
+      // orderings into a garbled one, so leave the key to the fill; the next
+      // sweep picks it up.
+      guard !isFilling(key) else {
+        Logger.sync.info(
+          "Membership sweep: '\(name ?? "default", privacy: .public)' is mid-fill; skipping")
+        continue
+      }
       do {
         // Ordered, not the id-set projection: these ids become `query_order`
         // positions verbatim, so the query's own sort has to survive the round
         // trip or the sweep rewrites every cached list to id order.
         let ids = try await wrapped.orderedDocumentIDs(filter: filter)
+        // Re-check after the fetch: that suspension is exactly the window a
+        // fill can start in, and the guard above would then be stale.
+        guard !isFilling(key) else {
+          Logger.sync.info(
+            "Membership sweep: '\(name ?? "default", privacy: .public)' began filling; skipping")
+          continue
+        }
         try database.replaceQueryOrder(queryKey: key, serverID: serverID, orderedIDs: ids)
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
         throw CancellationError()
       } catch {
-        Logger.shared.info(
+        Logger.sync.info(
           "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
         )
         try? database.recordQuerySyncError(
@@ -957,7 +1107,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     do {
       try database.setDeltaWatermark(date, serverID: serverID)
     } catch {
-      Logger.shared.error("setDeltaWatermark failed: \(error)")
+      Logger.sync.error("setDeltaWatermark failed: \(error)")
     }
   }
 
@@ -982,7 +1132,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let fetched = try await wrapped.metadata(documentId: documentId)
       try database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       if let cached = try database.fileMetadata(serverID: serverID, versionID: versionID) {
         Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
         return cached
@@ -996,7 +1146,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let fetched = try await wrapped.notes(documentId: documentId)
       try database.setNotes(fetched, serverID: serverID, documentID: documentId)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
       // former propagates the network error.
       if let cached = try database.notes(serverID: serverID, documentID: documentId) {
