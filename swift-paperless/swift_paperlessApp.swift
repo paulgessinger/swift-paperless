@@ -24,14 +24,14 @@ struct MainView: View {
 
   @State private var manager: ConnectionManager
 
-  // Keeps every *inactive* server's offline cache warm (Stage 10). The active
+  // Keeps every *inactive* server's offline cache warm. The active
   // server stays on the DocumentStore path; the engine skips it.
   @State private var syncEngine: SyncEngine
 
   // Shared GRDB database, threaded into each connection's CachingRepository.
   private let database: Database
 
-  @State private var friendlyNameTask: Task<Void, Never>?
+  @State private var friendlyNameSubscription: Subscription?
 
   @StateObject private var errorController: ErrorController
 
@@ -177,8 +177,7 @@ struct MainView: View {
   /// scenePhase path chains it after `sync()` directly.
   private func kickLibraryFill(_ store: DocumentStore, force: Bool = false) {
     Task {
-      await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force)
-      await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+      await store.runProactiveFill(unmetered: isUnmetered, force: force)
     }
   }
 
@@ -235,6 +234,12 @@ struct MainView: View {
       }
 
       storeReady = true
+      // Register (or refresh) the UI graph with the background-sync coordinator
+      // *before* kicking the store's own sync: registration cancels-and-awaits
+      // any in-flight headless background run, so two CachingRepository
+      // instances never execute against the same server.
+      await BackgroundSyncCoordinator.shared.register(
+        database: database, manager: manager, syncEngine: syncEngine, store: target)
       try? await target.sync()
       target.startTaskPolling()
       kickLibraryFill(target)
@@ -246,6 +251,10 @@ struct MainView: View {
     } else {
       storeReady = false
       Logger.shared.trace("App does not have any active connection, show login screen")
+      // Still hand the graph over (store: nil): background runs can keep the
+      // configured-but-inactive servers warm while the user is logged out.
+      await BackgroundSyncCoordinator.shared.register(
+        database: database, manager: manager, syncEngine: syncEngine, store: nil)
       showLoginScreen = true
       showLoadingScreen = false
     }
@@ -256,22 +265,27 @@ struct MainView: View {
     // active connection. The nil-guard drops resets from store.clear() so
     // they don't wipe out a previously stored friendly name. setFriendlyName
     // is already idempotent, so no explicit dedup is needed.
-    friendlyNameTask?.cancel()
-    friendlyNameTask = Task { @MainActor [manager] in
-      while !Task.isCancelled {
-        let (stream, continuation) = AsyncStream<Void>.makeStream()
-        withObservationTracking {
-          _ = store.settings.appTitle
-        } onChange: {
-          continuation.yield()
-          continuation.finish()
+    //
+    // Held as a `Subscription` rather than a bare `Task` so it cancels when
+    // this view's `@State` storage is freed, the way the `AnyCancellable` it
+    // replaced did.
+    friendlyNameSubscription?.cancel()
+    friendlyNameSubscription = Subscription(
+      Task { @MainActor [manager] in
+        while !Task.isCancelled {
+          let (stream, continuation) = AsyncStream<Void>.makeStream()
+          withObservationTracking {
+            _ = store.settings.appTitle
+          } onChange: {
+            continuation.yield()
+            continuation.finish()
+          }
+          if let title = store.settings.appTitle {
+            manager.setFriendlyName(title)
+          }
+          for await _ in stream { break }
         }
-        if let title = store.settings.appTitle {
-          manager.setFriendlyName(title)
-        }
-        for await _ in stream { break }
-      }
-    }
+      })
   }
 
   private func setupQuickActions() {
@@ -414,6 +428,7 @@ struct MainView: View {
         Logger.shared.notice("App goes to background")
         biometricLockManager.lockIfEnabled()
         TransferStatistics.shared.persist()
+        BackgroundTaskManager.scheduleAll()
 
       case .active:
         store?.startTaskPolling()
@@ -428,8 +443,7 @@ struct MainView: View {
           if let store {
             Task {
               try? await store.sync()
-              await store.fillLibraryIfEnabled(unmetered: isUnmetered)
-              await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+              await store.runProactiveFill(unmetered: isUnmetered)
             }
           }
           // Warm the inactive servers alongside the active refresh.

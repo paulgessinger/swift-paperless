@@ -1,6 +1,6 @@
 import GRDB
 
-/// Per-document detail-cache tables (Stage 8 follow-up) — the two Tier-2
+/// Per-document detail-cache tables — the two Tier-2
 /// sub-resources that don't ride the `document` row's `data` blob because they
 /// have different keys and lifecycles:
 ///

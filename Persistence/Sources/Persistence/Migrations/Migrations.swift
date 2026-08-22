@@ -87,6 +87,10 @@ enum Migrations {
       try V9_PromoteDocumentQueryColumns.run(db)
     }
 
+    migrator.registerMigration("v10_add_last_sync_at") { db in
+      try V10_AddLastSyncAt.run(db)
+    }
+
     return migrator
   }
 }

@@ -24,6 +24,7 @@ public struct OfflineSyncView: View {
   /// The server's total for the default list, read once from the cached query
   /// status. Only used to decide whether to suggest *Entire library*.
   @State private var libraryTotal: UInt?
+  @State private var backgroundSync = BackgroundSyncCoordinator.shared
 
   public init() {}
 
@@ -71,7 +72,7 @@ public struct OfflineSyncView: View {
               } else {
                 connectionManager.setOfflineBrowsingMode(newMode)
                 if newMode == .entireLibrary {
-                  Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
+                  Task { await store.runProactiveFill(unmetered: unmetered, force: true) }
                 }
               }
             })
@@ -90,6 +91,11 @@ public struct OfflineSyncView: View {
           Button(
             String(localized: .settings(.offlineBrowsingDowngradeConfirm)), role: .destructive
           ) {
+            // Stop the fill *before* the mode flip triggers the reclaim GC — a
+            // still-running fill has no other way to learn it should stop
+            // (unlike a server switch, this never goes through `install`), and
+            // would otherwise keep writing rows the reclaim just removed.
+            store.cancelProactiveFill()
             connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
           }
 
@@ -167,7 +173,7 @@ public struct OfflineSyncView: View {
             String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
         }
         dateStatusRow(
-          String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastReconcileAt)
+          String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastSyncAt)
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
           value: store.cachedDocumentCount.formatted())
@@ -185,14 +191,15 @@ public struct OfflineSyncView: View {
             } catch {
               errorController.push(error: error)
             }
-            await store.fillLibraryIfEnabled(unmetered: true, force: true)
-            // Both lifecycle paths pair the library fill with the detail fill;
-            // without this, notes and file metadata could only ever be filled by
-            // backgrounding and foregrounding the app.
-            await store.fillDocumentDetailsIfEnabled(unmetered: true)
+            await store.runProactiveFill(unmetered: true, force: true)
           }
         } label: {
+          // Explicit `foregroundStyle`, not just `.disabled`: a `Label`'s icon
+          // in a `Form` row button doesn't pick up the row's disabled dimming
+          // the way its text does, so a disabled row otherwise reads as a
+          // grayed-out title next to a still-accent-colored icon.
           Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
+            .foregroundStyle(store.syncActivities.isEmpty ? Color.accentColor : Color.secondary)
         }
         // Any sweep, not just the library fill: the detail fill left this
         // enabled, so a second pass could be stacked on a running one.
@@ -280,10 +287,15 @@ public struct OfflineSyncView: View {
   }
 
   /// Only reached when nothing is running — the stage rows speak for themselves
-  /// otherwise. Says *why* it's not running where there's a reason to give.
+  /// otherwise. Says *why* it isn't running where there's a reason to give.
+  ///
+  /// The coordinator flag covers the phases the store can't see (engine sweeps
+  /// of other servers), so a task-driven run never reads as "Idle".
   private var activityText: String {
     if waitingForNetwork {
       String(localized: .settings(.offlineSyncWaitingForWifi))
+    } else if backgroundSync.isRunning {
+      String(localized: .settings(.offlineSyncBackgroundRunning))
     } else {
       String(localized: .settings(.offlineSyncIdle))
     }

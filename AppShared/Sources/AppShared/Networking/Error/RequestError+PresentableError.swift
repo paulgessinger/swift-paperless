@@ -68,6 +68,11 @@ extension RequestError: PresentableError {
       Text(.app(.requestErrorDetailLabel)) + Text(": ")
         + (Text(detail).italic())
 
+    case .connectivity(let code, let detail):
+      Text(detail)
+        .bold()
+      Text(Self.connectivityHint(for: code))
+
     case .other(let detail):
       Text(detail)
         .bold()

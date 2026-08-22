@@ -17,18 +17,22 @@ public struct ServerSyncStateRecord:
   public var serverId: UUID
   public var deltaWatermark: Double?
   public var libraryCoverageAt: Double?
+  public var lastSyncAt: Double?
 
   public init(
-    serverId: UUID, deltaWatermark: Double? = nil, libraryCoverageAt: Double? = nil
+    serverId: UUID, deltaWatermark: Double? = nil, libraryCoverageAt: Double? = nil,
+    lastSyncAt: Double? = nil
   ) {
     self.serverId = serverId
     self.deltaWatermark = deltaWatermark
     self.libraryCoverageAt = libraryCoverageAt
+    self.lastSyncAt = lastSyncAt
   }
 
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
     case deltaWatermark = "delta_watermark"
     case libraryCoverageAt = "library_coverage_at"
+    case lastSyncAt = "last_sync_at"
   }
 }
