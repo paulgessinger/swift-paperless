@@ -167,14 +167,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De godkendte legitimationsoplysninger har ikke tilladelse til at oprette %@. I mange tilfælde er der tale om en rettighedsfejl."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Der konfigurierte Zugang darf %@ nicht anlegen. In den meisten Fällen liegt das an fehlenden Berechtigungen."
           }
         },
         "en" : {
@@ -185,32 +185,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Les identifiants authentifiés ne sont pas autorisés à créer %@. Dans la plupart des cas, il s'agit d'une erreur de permission."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Le credenziali autenticate non sono autorizzate a creare %@. In molti casi si tratta di un errore di autorizzazione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De gebruikte inloggegevens hebben geen recht om %@ aan te maken. In veel gevallen is dit een fout in de toegewezen rechten."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Uwierzytelnione poświadczenia nie mają uprawnień do tworzenia elementów: %@. W wielu przypadkach jest to błąd uprawnień."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to create %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Doğrulanmış kimlik bilgilerinin %@ kaynağını oluşturma izni yok. Bu çoğunlukla bir izin hatasıdır."
           }
         }
       }
@@ -221,14 +221,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Oprettelse ikke tilladt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Anlegen nicht erlaubt"
           }
         },
         "en" : {
@@ -239,32 +239,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Création non autorisée"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Creazione non consentita"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Aanmaken niet toegestaan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Tworzenie niedozwolone"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Create not permitted"
+            "state" : "translated",
+            "value" : "Oluşturma izni yok"
           }
         }
       }
@@ -275,14 +275,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De godkendte legitimationsoplysninger har ikke tilladelse til at redigere %@. I mange tilfælde er der tale om en rettighedsfejl."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Der konfigurierte Zugang darf %@ nicht bearbeiten. In den meisten Fällen liegt das an fehlenden Berechtigungen."
           }
         },
         "en" : {
@@ -293,32 +293,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Les identifiants authentifiés ne sont pas autorisés à modifier %@. Dans la plupart des cas, il s'agit d'une erreur de permission."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Le credenziali autenticate non sono autorizzate a modificare %@. In molti casi si tratta di un errore di autorizzazione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De gebruikte inloggegevens hebben geen recht om %@ te bewerken. In veel gevallen is dit een fout in de toegewezen rechten."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Uwierzytelnione poświadczenia nie mają uprawnień do edytowania elementów: %@. W wielu przypadkach jest to błąd uprawnień."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to edit %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Doğrulanmış kimlik bilgilerinin %@ kaynağını düzenleme izni yok. Bu çoğunlukla bir izin hatasıdır."
           }
         }
       }
@@ -329,14 +329,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Redigering ikke tilladt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Bearbeiten nicht erlaubt"
           }
         },
         "en" : {
@@ -347,32 +347,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Modification non autorisée"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Modifica non consentita"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Bewerken niet toegestaan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Edycja niedozwolona"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Edit not permitted"
+            "state" : "translated",
+            "value" : "Düzenleme izni yok"
           }
         }
       }
@@ -383,14 +383,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De godkendte legitimationsoplysninger har ikke tilladelse til at slette %@. I mange tilfælde er der tale om en rettighedsfejl."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Der konfigurierte Zugang darf %@ nicht löschen. In den meisten Fällen liegt das an fehlenden Berechtigungen."
           }
         },
         "en" : {
@@ -401,32 +401,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Les identifiants authentifiés ne sont pas autorisés à supprimer %@. Dans la plupart des cas, il s'agit d'une erreur de permission."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Le credenziali autenticate non sono autorizzate a eliminare %@. In molti casi si tratta di un errore di autorizzazione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De gebruikte inloggegevens hebben geen recht om %@ te verwijderen. In veel gevallen is dit een fout in de toegewezen rechten."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Uwierzytelnione poświadczenia nie mają uprawnień do usuwania elementów: %@. W wielu przypadkach jest to błąd uprawnień."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to delete %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Doğrulanmış kimlik bilgilerinin %@ kaynağını silme izni yok. Bu çoğunlukla bir izin hatasıdır."
           }
         }
       }
@@ -437,14 +437,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Sletning ikke tilladt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Löschen nicht erlaubt"
           }
         },
         "en" : {
@@ -455,32 +455,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Suppression non autorisée"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Eliminazione non consentita"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Verwijderen niet toegestaan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Usuwanie niedozwolone"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Delete not permitted"
+            "state" : "translated",
+            "value" : "Silme izni yok"
           }
         }
       }
@@ -599,14 +599,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De godkendte legitimationsoplysninger har ikke tilladelse til at se %@. I mange tilfælde er der tale om en rettighedsfejl."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Der konfigurierte Zugang darf %@ nicht anzeigen. In den meisten Fällen liegt das an fehlenden Berechtigungen."
           }
         },
         "en" : {
@@ -617,32 +617,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Les identifiants authentifiés ne sont pas autorisés à consulter %@. Dans la plupart des cas, il s'agit d'une erreur de permission."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Le credenziali autenticate non sono autorizzate a visualizzare %@. In molti casi si tratta di un errore di autorizzazione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "De gebruikte inloggegevens hebben geen recht om %@ te bekijken. In veel gevallen is dit een fout in de toegewezen rechten."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Uwierzytelnione poświadczenia nie mają uprawnień do wyświetlania elementów: %@. W wielu przypadkach jest to błąd uprawnień."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The authenticated credentials are not allowed to view %@. In many cases, this is a permissions error."
+            "state" : "translated",
+            "value" : "Doğrulanmış kimlik bilgilerinin %@ kaynağını görüntüleme izni yok. Bu çoğunlukla bir izin hatasıdır."
           }
         }
       }
@@ -653,14 +653,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Visning ikke tilladt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Anzeigen nicht erlaubt"
           }
         },
         "en" : {
@@ -671,32 +671,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Consultation non autorisée"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Visualizzazione non consentita"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Bekijken niet toegestaan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Wyświetlanie niedozwolone"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "View not permitted"
+            "state" : "translated",
+            "value" : "Görüntüleme izni yok"
           }
         }
       }
@@ -6932,7 +6932,7 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Details"
           }
         },
@@ -6956,7 +6956,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Details"
           }
         },
@@ -12245,14 +12245,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "Dit login til denne server er udløbet. Åbn Paperless for at logge ind igen, og del derefter dokumentet på ny."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "Deine Anmeldung für diesen Server ist abgelaufen. Öffne Paperless, um dich erneut anzumelden, und teile das Dokument dann noch einmal."
           }
         },
         "en" : {
@@ -12263,32 +12263,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "Votre connexion à ce serveur a expiré. Ouvrez Paperless pour vous reconnecter, puis partagez à nouveau ce document."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "L'accesso a questo server è scaduto. Apri Paperless per accedere di nuovo, quindi condividi nuovamente il documento."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "Je login voor deze server is verlopen. Open Paperless om opnieuw in te loggen en deel dit document daarna nogmaals."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "Twoje logowanie do tego serwera wygasło. Otwórz Paperless, aby zalogować się ponownie, a następnie udostępnij ten dokument jeszcze raz."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login for this server has expired. Open Paperless to sign in again, then share this document again."
+            "state" : "translated",
+            "value" : "Bu sunucudaki oturumunuz sona erdi. Yeniden giriş yapmak için Paperless'ı açın, ardından bu dokümanı tekrar paylaşın."
           }
         }
       }
@@ -12299,14 +12299,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Log ind igen"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Erneut anmelden"
           }
         },
         "en" : {
@@ -12317,32 +12317,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Reconnectez-vous"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Accedi di nuovo"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Opnieuw inloggen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Zaloguj się ponownie"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sign in again"
+            "state" : "translated",
+            "value" : "Tekrar giriş yapın"
           }
         }
       }
