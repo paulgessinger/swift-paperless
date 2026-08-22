@@ -1,0 +1,7 @@
+// Archive with the same distribution assets that ExportOptions.plist uses.
+// The target xcconfigs consume these settings independently so each target gets
+// its own provisioning profile.
+SWP_CODE_SIGN_STYLE = Manual
+SWP_CODE_SIGN_IDENTITY = Apple Distribution
+SWP_APP_PROVISIONING_PROFILE = swift-paperless AppStore CI
+SWP_SHARE_EXTENSION_PROVISIONING_PROFILE = swift-paperless ShareExtension AppStore CI
