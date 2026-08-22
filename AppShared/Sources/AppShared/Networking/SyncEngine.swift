@@ -11,13 +11,13 @@
 //  the rest.
 //
 //  Scheduling stays on app-lifecycle triggers (launch / foreground /
-//  active-change); true `BGProcessingTask` execution is Stage 11's. When that
-//  lands, `runSweep`'s server enumeration should move from `manager.connections`
-//  (main-actor) to an off-main `database.allConnections()` read.
+//  active-change); true `BGProcessingTask` execution is Stage 11's.
 //
-//  The interesting decisions (active exclusion, throttle, uncredentialed
-//  degrade, heavy-fill gating, new-server diff) live in the pure, unit-tested
-//  `DataModel.SyncPlan`; this type is the imperative shell that executes them.
+//  This type is now purely the *scheduler*: it decides which servers to sync and
+//  in what order, and hands each one to its ``ServerSession``, which owns that
+//  server's repository and runs the sequence. The interesting decisions (active
+//  exclusion, throttle, uncredentialed degrade, heavy-fill gating, new-server
+//  diff) live in the pure, unit-tested `DataModel.SyncPlan`.
 //
 
 import Common
@@ -40,12 +40,16 @@ public final class SyncEngine {
   @ObservationIgnored private let pathCost:
     @MainActor () -> (isExpensive: Bool, isConstrained: Bool)
 
-  /// Last successful sweep per server; drives the throttle. The active server is
-  /// never keyed here (never swept by the engine).
-  @ObservationIgnored private var lastSweep: [UUID: Date] = [:]
-  /// Per-server in-flight sync, so an observation-driven initial sync and a
-  /// lifecycle sweep for the same server coalesce onto one task.
-  @ObservationIgnored private var inFlight: [UUID: Task<Void, Never>] = [:]
+  /// One session per server, retained across sweeps.
+  ///
+  /// This replaces the parallel `inFlight` / `lastSweep` dictionaries that used
+  /// to live here: both were per-server state keyed by UUID, which is precisely
+  /// what a session *is*. Retaining them also means a server's repository —
+  /// and therefore its `activeFills` dedupe — survives from one sweep to the
+  /// next instead of being rebuilt and forgotten each time.
+  ///
+  /// The active server is never keyed here: it is `DocumentStore`'s to drive.
+  @ObservationIgnored private var sessions: [UUID: ServerSession] = [:]
   /// Whole-sweep single-flight, coalescing concurrent lifecycle triggers.
   @ObservationIgnored private var sweepTask: Task<Void, Never>?
   /// Server IDs seen at the last observation tick, to detect newly-added ones.
@@ -80,8 +84,8 @@ public final class SyncEngine {
   ///
   /// This is wired to the *observation*, not the "Add server" UI action, so a
   /// Stage-12 UBKVS `server` upsert flows into the initial-sync path for free.
-  /// Removed servers need no work — the `server` row delete FK-cascades the whole
-  /// cache; the engine just drops their throttle/in-flight bookkeeping.
+  /// Removed servers need no cache work — the `server` row delete FK-cascades
+  /// the whole cache; the engine just drops their session.
   public func start() {
     guard observationTask == nil else { return }
     // Seed with the current set so the observation only reacts to *new* servers;
@@ -136,7 +140,7 @@ public final class SyncEngine {
     let actions = SyncPlan.inactiveActions(
       connections: snapshots,
       activeID: manager.activeConnectionId,
-      lastSweep: userInitiated ? [:] : lastSweep,
+      lastSweep: userInitiated ? [:] : lastSuccessfulSyncs(),
       now: Date(),
       throttle: inactiveThrottle,
       isExpensive: isExpensive,
@@ -158,11 +162,9 @@ public final class SyncEngine {
 
   private func handleConnectionsChanged() {
     let current = Set(manager.connections.keys)
-    // Drop bookkeeping for servers whose rows vanished (cache already cascaded).
+    // Drop the session of any server whose row vanished (cache already cascaded).
     for id in knownServerIDs.subtracting(current) {
-      inFlight[id]?.cancel()
-      inFlight[id] = nil
-      lastSweep[id] = nil
+      sessions.removeValue(forKey: id)?.invalidate()
     }
     let added = SyncPlan.newlyAdded(
       current: current, known: knownServerIDs, activeID: manager.activeConnectionId)
@@ -188,97 +190,31 @@ public final class SyncEngine {
   // MARK: - Per-server execution
 
   private func runAction(_ action: SyncServerAction, stored: StoredConnection) async {
+    let session = session(for: stored.id)
     if action.needsAuthOnly {
-      // Config-synced-but-uncredentialed: mark per-server needs-auth and make no
-      // network call. Deterministic and cheap; when the token later lands, the
-      // next sweep picks it up. The 401 path stays a backstop for a rejected token.
-      Logger.sync.info(
-        "Server \(stored.logLabel, privacy: .public) uncredentialed; marking needs-auth (no sync)")
-      manager.markNeedsAuth(for: stored.id)
+      session.markNeedsAuth(stored)
       return
     }
-    if let existing = inFlight[stored.id] {
-      return await existing.value
-    }
-    let task = Task { @MainActor [weak self] in
-      guard let self else { return }
-      await performServerSync(stored, runHeavyFill: action.runHeavyFill)
-    }
-    inFlight[stored.id] = task
-    await task.value
-    inFlight[stored.id] = nil
+    await session.sync(stored: stored, runHeavyFill: action.runHeavyFill)
   }
 
-  /// Mirrors the active path's sequence (`DocumentStore.sync` + `reconcileDocuments`
-  /// + `fillLibraryIfEnabled` + `fillDocumentDetailsIfEnabled`) against an
-  /// ephemeral per-server backend. The whole body is caught so a per-server
-  /// failure (offline, rethrown 401, …) never escapes to sibling servers.
-  private func performServerSync(_ stored: StoredConnection, runHeavyFill: Bool) async {
-    let id = stored.id
-    Logger.sync.info(
-      "Syncing inactive server \(stored.logLabel, privacy: .public) (heavyFill: \(runHeavyFill))")
-    do {
-      let backend = try await makeCachingRepository(
-        for: stored, database: database, manager: manager, mode: mode)
+  // MARK: - Sessions
 
-      // Cheap tier (always, regardless of metered-ness): element sync + the
-      // reconcile sweeps (the last two self-gate on *Entire library*).
-      try await NetworkTransfer.$category.withValue(.sync) {
-        try await backend.syncElements()
-      }
-      // Each reconcile sweep carries its own catch, as on the active path
-      // (`DocumentStore.reconcileDocuments`): the deletion sweep is the most
-      // failure-prone of the three — it fetches the server's entire live id set
-      // — and under one shared `try` its failure took the freshness delta, the
-      // membership rebuild *and* the heavy fill down with it. Cancellation is
-      // the exception: it means the pass as a whole is unwanted, so it stops
-      // the remaining sweeps instead of being logged and stepped over.
-      var failed = false
-      var cancelled = false
-      func sweep(_ label: String, _ body: () async throws -> Void) async {
-        guard !cancelled else { return }
-        do {
-          try await body()
-        } catch {
-          guard !error.isCancellationError else {
-            Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
-            cancelled = true
-            return
-          }
-          Logger.sync.info(
-            "Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
-          failed = true
-        }
-      }
-      await NetworkTransfer.$category.withValue(.reconcile) {
-        await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
-        await sweep("changes") { try await backend.reconcileDocumentChanges() }
-        await sweep("membership") { try await backend.reconcileSavedViewMembership() }
-      }
-
-      // Heavy tier: only on an unmetered *Entire library* server (SyncPlan gate).
-      if runHeavyFill, !cancelled {
-        try await NetworkTransfer.$category.withValue(.fill) {
-          try await backend.fillLibrary(force: false)
-          try await backend.fillDocumentDetails()
-        }
-      }
-
-      // Advance the throttle only on a *fully* successful pass — a sweep that
-      // failed or was called off partway retries on the next trigger.
-      guard !failed, !cancelled else {
-        Logger.sync.info(
-          "Inactive server \(stored.logLabel, privacy: .public) partially synced; throttle not advanced"
-        )
-        return
-      }
-      lastSweep[id] = Date()
-      Logger.sync.info("Inactive server \(stored.logLabel, privacy: .public) synced")
-    } catch {
-      Logger.sync.info(
-        "Inactive-server sync failed for \(stored.logLabel, privacy: .public) (suppressed): \(error)"
-      )
+  /// The server's session, created on first use. Sessions are cheap — a
+  /// repository is only assembled when something actually syncs.
+  private func session(for id: UUID) -> ServerSession {
+    if let existing = sessions[id] {
+      return existing
     }
+    let session = ServerSession(
+      serverID: id, database: database, manager: manager, mode: mode)
+    sessions[id] = session
+    return session
+  }
+
+  /// The throttle input `SyncPlan` consumes, projected out of the sessions.
+  private func lastSuccessfulSyncs() -> [UUID: Date] {
+    sessions.compactMapValues(\.lastSuccessfulSync)
   }
 
   // MARK: - Helpers
