@@ -562,6 +562,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
+  /// Whether a failed detail fetch may fall back to the offline cache.
+  ///
+  /// A transport failure means we never got an answer, so the last-known row is
+  /// the best one available. A 403/401 *is* the answer: the user may no longer
+  /// see this document, and serving the cached title, notes and PDF would hide a
+  /// revoked permission behind what looks like an outage. Same predicate as the
+  /// sync skip — there a permission failure is tolerated because the rest of the
+  /// sync stays valid, here it must propagate because it answers the only
+  /// question asked. (404 never reaches this: `ApiRepository.get` maps it to
+  /// `nil`, handled on the success path.)
+  private static func mayServeCache(after error: any Error) -> Bool {
+    !isSkippable(error)
+  }
+
   // MARK: - Element reads (cache)
 
   public func tags() async throws -> [Tag] {
@@ -776,9 +790,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // A full-detail fetch — upgrade the row to Tier-2.
       try database.upsertDocument(fetched, serverID: serverID)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
       // rather than failing the open. Mirrors the element offline-first policy.
+      // A permission failure isn't caught here at all, so it propagates.
       if let cached = try database.document(serverID: serverID, id: id) {
         Logger.shared.info("document(id:) network failed (\(error)); serving cached")
         return cached
@@ -792,7 +807,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }
       try database.upsertDocument(fetched, serverID: serverID)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       if let cached = try database.document(serverID: serverID, asn: asn) {
         Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
         return cached
@@ -994,7 +1009,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let fetched = try await wrapped.metadata(documentId: documentId)
       try database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       if let cached = try database.fileMetadata(serverID: serverID, versionID: versionID) {
         Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
         return cached
@@ -1008,7 +1023,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let fetched = try await wrapped.notes(documentId: documentId)
       try database.setNotes(fetched, serverID: serverID, documentID: documentId)
       return fetched
-    } catch {
+    } catch let error where Self.mayServeCache(after: error) {
       // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
       // former propagates the network error.
       if let cached = try database.notes(serverID: serverID, documentID: documentId) {
