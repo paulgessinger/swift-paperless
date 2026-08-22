@@ -1282,14 +1282,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "Dine rettigheder er endnu ikke hentet fra denne server. Indtil de er hentet, antager appen fuld adgang og lader serveren bestemme."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "Die Berechtigungen wurden von diesem Server noch nicht geladen. Bis dahin nimmt die App vollen Zugriff an und überlässt die Entscheidung dem Server."
           }
         },
         "en" : {
@@ -1300,32 +1300,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "Vos permissions n'ont pas encore été chargées depuis ce serveur. En attendant, l'application suppose un accès complet et laisse le serveur décider."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "Le tue autorizzazioni non sono ancora state caricate da questo server. Fino ad allora l'app presume l'accesso completo e lascia decidere il server."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "Je rechten zijn nog niet van deze server opgehaald. Tot die tijd gaat de app uit van volledige toegang en laat het de server beslissen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "Twoje uprawnienia nie zostały jeszcze pobrane z tego serwera. Do tego czasu aplikacja zakłada pełny dostęp i pozostawia decyzję serwerowi."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your permissions have not been loaded from this server yet. Until they arrive the app assumes full access and lets the server decide."
+            "state" : "translated",
+            "value" : "İzinleriniz bu sunucudan henüz yüklenmedi. Gelene kadar uygulama tam erişim varsayar ve kararı sunucuya bırakır."
           }
         }
       }
@@ -1707,14 +1707,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "Mail-konti"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "Mail-Konten"
           }
         },
         "en" : {
@@ -1725,32 +1725,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "Comptes de messagerie"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "Account di posta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "E-mail accounts"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "Konta pocztowe"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail accounts"
+            "state" : "translated",
+            "value" : "E-posta hesapları"
           }
         }
       }
@@ -1814,14 +1814,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "Mail-regler"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "Mail-Regeln"
           }
         },
         "en" : {
@@ -1832,32 +1832,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "Règles de courriel"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "Regole della posta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "Mail regels"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "Reguły poczty"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Mail rules"
+            "state" : "translated",
+            "value" : "E-posta kuralları"
           }
         }
       }
@@ -1921,14 +1921,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Delingslinks"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Freigabelinks"
           }
         },
         "en" : {
@@ -1939,32 +1939,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Liens partagés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Link di condivisione"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Deellinks"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Linki udostępniania"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Share links"
+            "state" : "translated",
+            "value" : "Paylaşım bağlantıları"
           }
         }
       }
@@ -2028,13 +2028,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflows"
+            "state" : "translated",
+            "value" : "Arbejdsgange"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Workflows"
           }
         },
@@ -2046,32 +2046,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflows"
+            "state" : "translated",
+            "value" : "Flux de travail"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflows"
+            "state" : "translated",
+            "value" : "Flussi di lavoro"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflows"
+            "state" : "translated",
+            "value" : "Werkstromen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflows"
+            "state" : "translated",
+            "value" : "Procesy"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Workflows"
+            "state" : "translated",
+            "value" : "İş akışları"
           }
         }
       }
