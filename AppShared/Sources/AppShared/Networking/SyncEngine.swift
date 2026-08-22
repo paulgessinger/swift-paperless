@@ -210,22 +210,52 @@ public final class SyncEngine {
       try await NetworkTransfer.$category.withValue(.sync) {
         try await backend.syncElements()
       }
-      try await NetworkTransfer.$category.withValue(.reconcile) {
-        try await backend.reconcileDocumentDeletions()
-        try await backend.reconcileDocumentChanges()
-        try await backend.reconcileSavedViewMembership()
+      // Each reconcile sweep carries its own catch, as on the active path
+      // (`DocumentStore.reconcileDocuments`): the deletion sweep is the most
+      // failure-prone of the three — it fetches the server's entire live id set
+      // — and under one shared `try` its failure took the freshness delta, the
+      // membership rebuild *and* the heavy fill down with it. Cancellation is
+      // the exception: it means the pass as a whole is unwanted, so it stops
+      // the remaining sweeps instead of being logged and stepped over.
+      var failed = false
+      var cancelled = false
+      func sweep(_ label: String, _ body: () async throws -> Void) async {
+        guard !cancelled else { return }
+        do {
+          try await body()
+        } catch {
+          guard !error.isCancellationError else {
+            Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
+            cancelled = true
+            return
+          }
+          Logger.sync.info(
+            "Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
+          failed = true
+        }
+      }
+      await NetworkTransfer.$category.withValue(.reconcile) {
+        await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
+        await sweep("changes") { try await backend.reconcileDocumentChanges() }
+        await sweep("membership") { try await backend.reconcileSavedViewMembership() }
       }
 
       // Heavy tier: only on an unmetered *Entire library* server (SyncPlan gate).
-      if runHeavyFill {
+      if runHeavyFill, !cancelled {
         try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillLibrary(force: false)
           try await backend.fillDocumentDetails()
         }
       }
 
-      // Advance the throttle only on a fully successful pass, so an interrupted
-      // sweep retries next trigger.
+      // Advance the throttle only on a *fully* successful pass — a sweep that
+      // failed or was called off partway retries on the next trigger.
+      guard !failed, !cancelled else {
+        Logger.sync.info(
+          "Inactive server \(stored.logLabel, privacy: .public) partially synced; throttle not advanced"
+        )
+        return
+      }
       lastSweep[id] = Date()
       Logger.sync.info("Inactive server \(stored.logLabel, privacy: .public) synced")
     } catch {
