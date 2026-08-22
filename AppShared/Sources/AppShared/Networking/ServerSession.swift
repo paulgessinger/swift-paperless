@@ -413,6 +413,15 @@ public final class ServerSession {
     return completed
   }
 
+  /// Stop the in-flight proactive fill, if any — e.g. the caller is about to
+  /// reclaim cache the fill would otherwise keep writing back into (leaving
+  /// *Entire library* on this server). A no-op when nothing is running; the
+  /// task's own `Task.checkCancellation()` checkpoints (per saved view in
+  /// `fillLibrary`, per document in `fillDocumentDetails`) do the rest.
+  public func cancelProactiveFill() {
+    proactiveFillTask?.cancel()
+  }
+
   private func runFill(backend: any CachingBackend, force: Bool) async -> Bool {
     var completed = true
     do {

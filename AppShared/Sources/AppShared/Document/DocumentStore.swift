@@ -848,6 +848,14 @@ extension DocumentStore {
     await session?.runProactiveFill(unmetered: unmetered, force: force)
   }
 
+  /// Stop the active server's in-flight proactive fill, if any — e.g. the caller
+  /// is about to reclaim cache the fill would otherwise keep writing back into
+  /// (leaving *Entire library* on the same server). Scoped to that server's
+  /// session, so it cannot reach into another server's work.
+  public func cancelProactiveFill() {
+    session?.cancelProactiveFill()
+  }
+
   /// The server's total for the default document list, from the cached query
   /// status — no request. `nil` when there's no caching backend, or when that
   /// list hasn't been fetched yet and so has no recorded total.
