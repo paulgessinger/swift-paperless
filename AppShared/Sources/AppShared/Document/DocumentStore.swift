@@ -987,6 +987,15 @@ extension DocumentStore {
     }
   }
 
+  /// Stop the in-flight proactive fill, if any — e.g. the caller is about to
+  /// reclaim cache the fill would otherwise keep writing back into (leaving
+  /// *Entire library* on the same server). A no-op when nothing is running;
+  /// the task's own `Task.checkCancellation()` checkpoints (per saved view in
+  /// `fillLibrary`, per document in `fillDocumentDetails`) do the rest.
+  public func cancelProactiveFill() {
+    proactiveFillTask?.cancel()
+  }
+
   /// The server's total for the default document list, from the cached query
   /// status — no request. `nil` when there's no caching backend, or when that
   /// list hasn't been fetched yet and so has no recorded total.

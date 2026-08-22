@@ -91,6 +91,11 @@ public struct OfflineSyncView: View {
           Button(
             String(localized: .settings(.offlineBrowsingDowngradeConfirm)), role: .destructive
           ) {
+            // Stop the fill *before* the mode flip triggers the reclaim GC — a
+            // still-running fill has no other way to learn it should stop
+            // (unlike a server switch, this never goes through `install`), and
+            // would otherwise keep writing rows the reclaim just removed.
+            store.cancelProactiveFill()
             connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
           }
 
