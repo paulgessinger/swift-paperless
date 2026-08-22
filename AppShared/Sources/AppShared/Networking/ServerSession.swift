@@ -61,6 +61,14 @@ public final class ServerSession {
   /// `Connection` is kept alongside and compared on each use: a changed URL,
   /// token, identity or extra header rebuilds the stack. (`Connection` is
   /// `Equatable` over exactly the fields `makeCachingRepository` consumes.)
+  ///
+  /// This comparison is load-bearing for re-auth, and only works because
+  /// `StoredConnection.token` reads the Keychain *live* on every access: a
+  /// re-auth writes the new token to the Keychain without changing the
+  /// `StoredConnection` record at all, so a session that compared records rather
+  /// than `Connection`s would keep serving the rejected token forever. The same
+  /// holds for `ConnectionsView.updateExtraHeaders`, which edits headers in
+  /// place.
   @ObservationIgnored private var built:
     (connection: Connection, repository: CachingRepository<NeedsAuthRepository<ApiRepository>>)?
 

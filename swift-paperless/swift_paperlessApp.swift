@@ -24,6 +24,11 @@ struct MainView: View {
 
   @State private var manager: ConnectionManager
 
+  // Owns one ServerSession per configured server, for the lifetime of its row.
+  // Held here rather than inside the engine because it is the process's single
+  // source of per-server repositories, not a scheduling detail.
+  @State private var sessionRegistry: ServerSessionRegistry
+
   // Keeps every *inactive* server's offline cache warm (Stage 10). The active
   // server stays on the DocumentStore path; the engine skips it.
   @State private var syncEngine: SyncEngine
@@ -61,9 +66,11 @@ struct MainView: View {
     // Raw path cost, read live so the engine's observation-driven initial
     // sync gates on the current link — same source `isUnmetered` below reads,
     // combined per-server via `SyncCondition` rather than folded here.
+    let sessionRegistry = ServerSessionRegistry(database: database, manager: manager)
+    _sessionRegistry = State(wrappedValue: sessionRegistry)
     _syncEngine = State(
       wrappedValue: SyncEngine(
-        database: database,
+        registry: sessionRegistry,
         manager: manager,
         pathCost: { [weak networkMonitor] in
           guard let networkMonitor else { return (isExpensive: true, isConstrained: true) }
