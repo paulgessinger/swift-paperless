@@ -47,19 +47,46 @@ enum DocumentDownloadState: Equatable {
 }
 
 /// Accumulates the errors thrown across one `DocumentDetailModel.load()` pass so
-/// duplicates can be collapsed before they reach the caller's `onError`. Keyed on
-/// `String(describing:)`: connectivity failures against the same host produce
-/// equal `RequestError.other` values (identical description), so a server-wide
-/// outage dedupes to a single entry, while distinct failures keep distinct keys.
+/// duplicates can be collapsed before they reach the caller's `onError`.
+///
+/// Repositories normalize transport failures into `RequestError`, which is
+/// `Equatable`: an unreachable server fails every request in the pass with the
+/// same value, so they collapse to one entry. Genuinely different failures (a
+/// permission error on a single endpoint, say) stay distinct and each still show.
+///
+/// This deliberately compares errors rather than their descriptions. It cannot
+/// be done on what `URLSession` throws directly: a bridged `URLError` carries the
+/// failing URL and a per-request task id in its `NSError.userInfo`, so no two are
+/// ever equal — not even two failures against the same endpoint — and their
+/// descriptions differ for the same reason. Normalizing upstream is what makes
+/// the comparison here meaningful.
 @MainActor
 private final class LoadErrorCollector {
-  private var seen: Set<String> = []
   private(set) var distinct: [any Error] = []
 
   func add(_ error: any Error) {
-    if seen.insert(String(describing: error)).inserted {
-      distinct.append(error)
+    guard !distinct.contains(where: { Self.isDuplicate($0, error) }) else { return }
+    distinct.append(error)
+  }
+
+  private static func isDuplicate(_ lhs: any Error, _ rhs: any Error) -> Bool {
+    // Via `Any`: casting an `any Error` straight to `any Equatable` draws a
+    // spurious "always succeeds" warning, though at runtime it correctly fails
+    // for an error type that doesn't conform.
+    guard let lhsEquatable = lhs as Any as? any Equatable,
+      let rhsEquatable = rhs as Any as? any Equatable
+    else {
+      // Nothing better to go on for an error that can't be compared.
+      return String(describing: lhs) == String(describing: rhs)
     }
+    return isEqual(lhsEquatable, rhsEquatable)
+  }
+
+  /// Open the existentials to recover the concrete type and use its `==`.
+  /// Errors of different types are never duplicates.
+  private static func isEqual(_ lhs: any Equatable, _ rhs: any Equatable) -> Bool {
+    func compare<T: Equatable>(_ lhs: T) -> Bool { (rhs as? T) == lhs }
+    return compare(lhs)
   }
 }
 
