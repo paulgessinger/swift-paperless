@@ -483,7 +483,9 @@ extension ApiRepository: Repository {
     var request = try request(.createDocument())
 
     let mp = MultiPartFormDataRequest()
-    mp.add(name: "title", string: document.title)
+    if !document.title.isEmpty {
+      mp.add(name: "title", string: document.title)
+    }
 
     if let corr = document.correspondent {
       mp.add(name: "correspondent", string: String(corr))
