@@ -66,6 +66,11 @@ beta-notes ref='HEAD':
 changelog-archive:
   scripts/changelog.py archive
 
+# Trigger the one-off GitHub workflow that imports translations already stored
+# in the multilingual String Catalogs. Crowdin credentials stay in GitHub.
+crowdin-push-translations:
+  gh workflow run crowdin-upload-translations.yml
+
 # Attach/fix TestFlight "What to Test" notes on an existing build (no rebuild).
 # Sends header + current_changelog.txt (emoji stripped) as the whatsNew for the
 # given build. Override `version` (default: Version.xcconfig) and/or `notes` file
