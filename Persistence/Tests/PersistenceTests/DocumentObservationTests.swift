@@ -118,9 +118,9 @@ struct DocumentObservationTests {
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
     ) {
       try database.upsertDocument(
-        self.doc(1, "A-edited"), serverID: server, projectionLevel: .metadata)
+        self.doc(1, "A-edited"), serverID: server)
     }
-    #expect(updated.first(where: { $0.id == 1 })?.title == "A-edited")
+    #expect(updated.first(where: { $0.id == 1 })?.document?.title == "A-edited")
   }
 
   @Test("observeDocumentPrefix re-emits with the gap invisible after a delete")
@@ -174,14 +174,39 @@ struct DocumentObservationTests {
     #expect(cold == nil)
 
     let appeared = try await value(from: database.observeDocument(serverID: server, id: 1)) {
-      try database.upsertDocument(self.doc(1, "A"), serverID: server, projectionLevel: .metadata)
+      try database.upsertDocument(self.doc(1, "A"), serverID: server)
     }
     #expect(appeared?.title == "A")
 
     let edited = try await value(from: database.observeDocument(serverID: server, id: 1)) {
       try database.upsertDocument(
-        self.doc(1, "A-edited"), serverID: server, projectionLevel: .metadata)
+        self.doc(1, "A-edited"), serverID: server)
     }
     #expect(edited?.title == "A-edited")
+  }
+
+  // MARK: - observeDocumentCount
+
+  @Test("observeDocumentCount emits the current count, then re-emits on write")
+  func documentCount() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server)
+
+    let cold = try await firstValue(from: database.observeDocumentCount(serverID: server))
+    #expect(cold == 0)
+
+    let afterUpsert = try await value(
+      from: database.observeDocumentCount(serverID: server)
+    ) {
+      try database.upsertDocuments([self.doc(1, "A"), self.doc(2, "B")], serverID: server)
+    }
+    #expect(afterUpsert == 2)
+
+    let afterDelete = try await value(
+      from: database.observeDocumentCount(serverID: server)
+    ) {
+      try database.deleteDocuments(serverID: server, removedIDs: [1])
+    }
+    #expect(afterDelete == 1)
   }
 }

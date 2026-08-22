@@ -64,14 +64,26 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   func documents(filter: FilterState) throws -> Documents
 
-  /// The complete ordered list of document IDs matching a query — backs the
-  /// remote-delete reconcile and the saved-view membership sweep.
+  /// The complete set of document IDs matching a query, in *id* order — backs
+  /// the remote-delete reconcile, which consumes it as a set.
+  ///
+  /// The ordering is not the query's own: see ``pagedDocumentIDs(filter:)``.
+  /// A caller that keeps the order wants ``orderedDocumentIDs(filter:)``.
   ///
   /// Deliberately has no default: only the API layer can express the cheap
   /// `fields=id` projection, and a default would let a conformer silently
   /// inherit the expensive full-list paging instead. Conformers that can't do
   /// better spell that out by calling `pagedDocumentIDs(filter:)`.
   func documentIDs(filter: FilterState) async throws -> [UInt]
+
+  /// The complete list of document IDs matching a query **in the query's own
+  /// sort order** — backs the saved-view membership sweep, which writes them
+  /// straight into `query_order` as positions.
+  ///
+  /// Same projection concern as ``documentIDs(filter:)``, hence no default;
+  /// conformers that can't project server-side call
+  /// ``pagedOrderedDocumentIDs(filter:)``.
+  func orderedDocumentIDs(filter: FilterState) async throws -> [UInt]
 
   func nextAsn() async throws -> UInt
 
@@ -213,6 +225,23 @@ extension Repository {
     var filter = filter
     filter.sortField = .other("id")
     filter.sortOrder = .ascending
+    return try await pageIDs(filter: filter)
+  }
+
+  /// Fallback for `orderedDocumentIDs(filter:)`. Same expensive full-list paging
+  /// as ``pagedDocumentIDs(filter:)``, but keeps the query's own sort — the
+  /// caller is writing positions, so re-sorting would corrupt them.
+  ///
+  /// The ordering still has to be *unique* to page safely, which the id-order
+  /// variant gets for free and this one cannot: every sort field the UI offers
+  /// is non-unique. `ApiRepository` adds `id` as a secondary key; a conformer
+  /// paging locally has no equivalent, so it sorts the assembled result by
+  /// `(sortField, id)` only insofar as the backend already did.
+  public func pagedOrderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    try await pageIDs(filter: filter)
+  }
+
+  private func pageIDs(filter: FilterState) async throws -> [UInt] {
     let source = try documents(filter: filter)
     var ids: [UInt] = []
     while true {

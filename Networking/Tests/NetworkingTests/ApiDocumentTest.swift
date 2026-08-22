@@ -47,8 +47,6 @@ struct ApiDocumentTest {
     #expect(document.originalFileName == "original.pdf")
     #expect(document.archivedFileName == "archived.pdf")
 
-    #expect(document.userCanChange == true)
-
     // No permissions by default
     #expect(document.permissions == nil)
   }
@@ -81,8 +79,6 @@ struct ApiDocumentTest {
     #expect(document.asn == 666)
     #expect(document.owner == Owner.user(2))
     #expect(document.notes.count == 1)
-
-    #expect(document.userCanChange == true)
 
     // No permissions by default
     #expect(document.permissions == nil)
@@ -131,17 +127,21 @@ struct ApiDocumentTest {
   }
 
   @Test("Tests that the user_can_change field is correctly decoded, even if not present")
-  func testUserCanChangeDefault() throws {
+  func testDecodesWithoutUserCanChange() throws {
+    // `full_perms=true` responses omit `user_can_change` entirely; the domain no
+    // longer models it, but the payload must still decode.
     let data = try #require(testData("Data/Document/full_no_user_can_change.json"))
     let document = try decoder.decode(ApiDocument.self, from: data).domain
-    #expect(document.userCanChange == true)
+    #expect(document.id != 0)
   }
 
   @Test("Tests that the user_can_change field is correctly decoded, even if it is false")
-  func testUserCanChangeIsFalse() throws {
+  func testDecodesWithUserCanChangePresent() throws {
+    // Backends without `full_perms` still send the field. It is an unknown key
+    // now, which must be ignored rather than fail the decode.
     let data = try #require(testData("Data/Document/full_no_user_can_change_false.json"))
     let document = try decoder.decode(ApiDocument.self, from: data).domain
-    #expect(document.userCanChange == false)
+    #expect(document.id != 0)
   }
 
   @Test
@@ -318,7 +318,6 @@ struct ApiDocumentTest {
         datetime(year: 1990, month: 10, day: 21, hour: 0, minute: 0, second: 0, tz: .current)))
     #expect(document.asn == nil)
     #expect(document.owner == Owner.user(3))
-    #expect(document.userCanChange == true)
     #expect(document.customFields.isEmpty)
     #expect(document.notes.count == 0)
     #expect(document.pageCount == 1)

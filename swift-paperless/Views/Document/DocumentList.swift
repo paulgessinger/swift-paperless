@@ -13,6 +13,21 @@ import Nuke
 import SwiftUI
 import os
 
+extension Document {
+  /// A throwaway document used only to render a redacted skeleton row for a
+  /// `DocumentEntry.skeleton` (the real object isn't cached). Never stored; the
+  /// redaction hides the placeholder text.
+  fileprivate static func skeletonPlaceholder(id: UInt) -> Document {
+    // Deliberately unlocalized: `.redacted(reason: .placeholder)` masks the text
+    // and the date, so nothing here reaches the user. A fixed date rather than
+    // `.now` because the value is re-derived on every render and no one can see
+    // it anyway.
+    Document(
+      id: id, title: "Loading document title",
+      created: Date(timeIntervalSince1970: 0), tags: [])
+  }
+}
+
 struct LoadingDocumentList: View {
   @State private var documents: [Document] = []
   @State private var store = DocumentStore.preview()
@@ -196,8 +211,8 @@ struct DocumentList: View {
     switch event {
     case .deleted, .changed, .changeReceived:
       // Source-of-truth: a mutation write-throughs to the DB and the document
-      // observation repaints the list in place (a delete cascades out of every
-      // query_order). Nothing to do here.
+      // observation repaints the list in place (a delete is explicitly pruned
+      // out of every query_order — no FK cascade does this). Nothing to do here.
       break
     case .repositoryWillChange:
       filterModel.ready = false
@@ -256,17 +271,35 @@ struct DocumentList: View {
           ScrollViewReader { proxy in
             List {
               Section {
-                ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, document in
-                  Cell(
-                    store: store,
-                    document: document,
-                    onSelect: onSelect,
-                    documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                    documentToDelete: $documentToDelete,
-                    viewModel: viewModel,
-                    isSelected: document.id == selectedDocumentID
-                  )
-                  .id(document.id)
+                ForEach(Array(zip(documents.indices, documents)), id: \.1.id) { idx, entry in
+                  Group {
+                    switch entry {
+                    case .loaded(let document):
+                      Cell(
+                        store: store,
+                        document: document,
+                        onSelect: onSelect,
+                        documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
+                        documentToDelete: $documentToDelete,
+                        viewModel: viewModel,
+                        isSelected: document.id == selectedDocumentID
+                      )
+                    case .skeleton(let id):
+                      // Membership is known but the object isn't cached yet
+                      // (offline, or pending the next delta). A non-interactive
+                      // redacted placeholder. `listRowInsets` matches what
+                      // `Cell` sets on the loaded branch — without it a skeleton
+                      // keeps List's default insets *on top of* its own padding
+                      // and sits visibly narrower than its neighbours, which is
+                      // the normal state of a list mid-fill.
+                      DocumentCell(document: .skeletonPlaceholder(id: id), store: store)
+                        .padding(.horizontal)
+                        .padding(.vertical)
+                        .redacted(reason: .placeholder)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    }
+                  }
+                  .id(entry.id)
 
                   .alignmentGuide(.listRowSeparatorLeading) { _ in 15 }
 

@@ -21,6 +21,9 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var user: User
   public var identity: String?
   public var friendlyName: String? = nil
+  public var offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
+  /// Whether this server's *proactive* sweeps may run on a metered link.
+  public var syncOverCellular: Bool = false
 
   public init(
     id: UUID = .init(),
@@ -28,7 +31,9 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     extraHeaders: [Connection.HeaderValue],
     user: User,
     identity: String? = nil,
-    friendlyName: String? = nil
+    friendlyName: String? = nil,
+    offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed,
+    syncOverCellular: Bool = false
   ) {
     self.id = id
     self.url = url
@@ -36,6 +41,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.user = user
     self.identity = identity
     self.friendlyName = friendlyName
+    self.offlineBrowsingMode = offlineBrowsingMode
+    self.syncOverCellular = syncOverCellular
   }
 
   public var token: String? {
@@ -515,6 +522,97 @@ public final class ConnectionManager {
     connections[stored.id] = stored
   }
 
+  /// The active server's offline browsing mode (per-server config). Defaults to
+  /// `.recentlyBrowsed` when there's no active connection.
+  public var activeOfflineBrowsingMode: OfflineBrowsingMode {
+    guard let activeConnectionId, let stored = connections[activeConnectionId] else {
+      return .recentlyBrowsed
+    }
+    return stored.offlineBrowsingMode
+  }
+
+  /// Whether the active server may run its proactive sweeps on a metered link.
+  /// `false` without an active connection, matching the conservative default.
+  public var activeSyncOverCellular: Bool {
+    guard let activeConnectionId, let stored = connections[activeConnectionId] else {
+      return false
+    }
+    return stored.syncOverCellular
+  }
+
+  public func setSyncOverCellular(_ enabled: Bool) {
+    guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+      Logger.api.warning("Tried to set sync-over-cellular but have no active connection")
+      return
+    }
+    guard stored.syncOverCellular != enabled else { return }
+    stored.syncOverCellular = enabled
+    connections[activeConnectionId] = stored
+    do {
+      try database.upsertConnection(
+        stored.toRecord(needsAuth: needsAuthIds.contains(stored.id)))
+    } catch {
+      Logger.api.error("setSyncOverCellular DB write failed: \(error)")
+    }
+  }
+
+  public func setOfflineBrowsingMode(_ mode: OfflineBrowsingMode) {
+    guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+      Logger.api.warning("Tried to set offline browsing mode but have no active connection")
+      return
+    }
+    let previousMode = stored.offlineBrowsingMode
+    guard previousMode != mode else { return }
+    Logger.api.info("Updating offline browsing mode on connection \(stored.id) to \(mode.rawValue)")
+    stored.offlineBrowsingMode = mode
+    // Write through to the in-memory dict immediately so the UI (and the
+    // CachingRepository's live record read) see it without waiting for the
+    // observeConnections tick.
+    connections[activeConnectionId] = stored
+    let record = stored.toRecord(needsAuth: needsAuthIds.contains(stored.id))
+    var persisted = true
+    do {
+      try database.upsertConnection(record)
+    } catch {
+      persisted = false
+      Logger.api.error("setOfflineBrowsingMode DB write failed: \(error)")
+    }
+
+    // Only reclaim once the new mode is actually on disk. The reclaim is
+    // destructive and irreversible; running it after a failed write would gut
+    // the cache and then come back at `.entireLibrary` on the next launch,
+    // which is the one combination the user can neither see nor undo.
+    if persisted, previousMode == .entireLibrary, mode == .recentlyBrowsed {
+      runDowngradeGC(serverID: stored.id)
+    }
+  }
+
+  /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`.
+  /// Turning the mode off doesn't by itself orphan anything — `query_order`
+  /// rows persist until something replaces them — so an orphan prune alone
+  /// finds nothing to reclaim. `reclaimAfterDowngrade` does the two steps that
+  /// make room first (drop every tracked query except the default list, then
+  /// cap that list), prunes, and clears the coverage marker, all in one
+  /// transaction so a suspended app can't leave the cache half-reclaimed.
+  ///
+  /// Off the main actor because a server filled at `.entireLibrary` can have a
+  /// lot of rows to sweep and this is reached from a Settings picker binding.
+  /// `Database` is `Sendable`, so a detached task is enough.
+  private func runDowngradeGC(serverID: UUID) {
+    let database = database
+    Task.detached(priority: .utility) {
+      do {
+        let removed = try database.reclaimAfterDowngrade(
+          serverID: serverID,
+          defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
+          keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
+        Logger.api.info("Downgrade GC removed \(removed) unreferenced documents")
+      } catch {
+        Logger.api.error("Downgrade GC failed: \(error)")
+      }
+    }
+  }
+
   public func setFriendlyName(_ name: String?) {
     guard let activeConnectionId, var stored = connections[activeConnectionId] else {
       Logger.api.warning("Tried to set friendly name but have no active connection")
@@ -544,6 +642,8 @@ public final class ConnectionManager {
       Logger.api.info("Clearing connection with ID \(activeConnectionId)")
       // No clearNeedsAuth() here — it would UPDATE a row this DELETE removes.
       do {
+        // Deleting the server row also drops its offline_browsing_mode and
+        // cascade-clears its document cache + sync state.
         try database.deleteConnection(id: activeConnectionId)
       } catch {
         Logger.api.error("logout DB delete failed: \(error)")

@@ -61,3 +61,17 @@ public final class NetworkMonitor {
     monitor.cancel()
   }
 }
+
+extension NetworkMonitor {
+  /// Whether the *proactive* sweeps (library fill, detail fill) may run right
+  /// now. Interactive work the user asked for is never gated on this.
+  ///
+  /// Low Data Mode (`isConstrained`) always wins: it is an explicit instruction
+  /// from the user to the whole system, not a guess about the link, so a
+  /// per-server "sync over cellular" opt-in does not override it. `isExpensive`
+  /// — cellular, or a personal hotspot — is what the opt-in is for.
+  public func allowsProactiveSync(syncOverCellular: Bool) -> Bool {
+    if isConstrained { return false }
+    return syncOverCellular || !isExpensive
+  }
+}

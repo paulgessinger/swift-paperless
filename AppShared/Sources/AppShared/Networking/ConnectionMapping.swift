@@ -31,7 +31,10 @@ extension StoredConnection {
         username: record.user.username,
         groups: record.user.groups),
       identity: record.identity,
-      friendlyName: record.friendlyName)
+      friendlyName: record.friendlyName,
+      offlineBrowsingMode: OfflineBrowsingMode(rawValue: record.offlineBrowsingMode)
+        ?? .recentlyBrowsed,
+      syncOverCellular: record.syncOverCellular)
   }
 
   /// Project a `StoredConnection` into a record for write-through to GRDB.
@@ -55,6 +58,8 @@ extension StoredConnection {
         ConnectionRecord.StoredHeader(
           id: header.id, key: header.key, value: header.value)
       },
-      needsAuth: needsAuth)
+      needsAuth: needsAuth,
+      offlineBrowsingMode: offlineBrowsingMode.rawValue,
+      syncOverCellular: syncOverCellular)
   }
 }

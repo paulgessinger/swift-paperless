@@ -735,12 +735,19 @@ class LoginViewModel {
       }
     }()
 
+    // Offline browsing is opt-in: a new server starts at `.recentlyBrowsed`
+    // whatever its size. Downloading a whole library — and the per-document
+    // notes and file-metadata behind it — is a decision that belongs to the
+    // user, not to a size heuristic that fires before they have seen the
+    // setting exists. The Offline & Sync screen recommends *Entire library*
+    // for a small library instead.
     let stored = StoredConnection(
       url: baseUrl,
       extraHeaders: extraHeaders,
       user: currentUser,
       identity: selectedIdentity?.name,
-      friendlyName: friendlyName)
+      friendlyName: friendlyName,
+      offlineBrowsingMode: .initial)
     if let token = connection.token {
       Logger.api.info("Have token for connection, storing")
       do throws(Keychain.KeychainError) {

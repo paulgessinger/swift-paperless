@@ -39,7 +39,6 @@ public struct ApiDocument: Codable, Sendable {
   var custom_fields: CustomFieldRawEntryList?
   // Read-only on the wire; absent on backends predating multi-version support.
   var versions: [ApiDocumentVersion]?
-  var user_can_change: Bool?
   var permissions: Permissions?
 }
 
@@ -62,8 +61,7 @@ extension ApiDocument {
       pageCount: page_count,
       notes: notes?.domain ?? NotesPayload(),
       customFields: custom_fields ?? CustomFieldRawEntryList(),
-      versions: versions?.map(\.domain) ?? [],
-      userCanChange: user_can_change ?? true
+      versions: versions?.map(\.domain) ?? []
     )
     doc.permissions = permissions
     return doc

@@ -1,5 +1,6 @@
 - Changing the default sort field, sort order or search mode in Preferences now applies to the document list right away, instead of only after a restart
 - Document notes and file metadata are cached when viewed, so they remain available offline
+- With "Entire library" offline browsing, notes and file metadata are now downloaded for your whole library in the background, so every document's details are available offline even if you never opened it
 - Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version
 - Title search and title and content search now use the new search API on Paperless-ngx v3.0 and later, matching what the web interface does. The same search now returns the same documents in both. Older servers are unaffected.
 - The content-only search mode is no longer offered, following the Paperless-ngx web interface, which has dropped it. Existing filters, saved views and links that use it keep working.
@@ -9,3 +10,11 @@
 - Permission errors now say which operation was refused, e.g. "Delete not permitted" instead of a generic access error, and name the affected item in the error details
 - Pulling to refresh on a document now also refreshes permissions, so a permission change on the server takes effect without restarting the app
 - Starting the app before your permissions have loaded, for example while offline, no longer looks like you have no permissions: lists and documents stay usable instead of showing "Insufficient permissions"
+- New "Offline browsing" setting: choose "Entire library" to keep every saved view and your full document list available offline, downloaded in the background over Wi-Fi
+- Turning off "Entire library" offline browsing now asks first, and says that the documents downloaded for that server will be removed
+- New "Offline & Sync" settings screen showing sync status and how much data the app has transferred
+- New per-server "Sync over cellular" setting: offline downloads stay on Wi-Fi unless you turn it on, and Low Data Mode always pauses them
+- The Offline & Sync screen now shows which stage the offline download is in and how far along it is, instead of only "Idle" or a spinner
+- Documents that belong to a list but aren't downloaded yet appear as placeholder rows instead of being missing
+- A saved view that can't be downloaded for offline use no longer blocks the rest of the offline sync; the Offline & Sync screen now lists any views that failed to sync
+- Opening a document while the server is unreachable no longer removes it from your document list

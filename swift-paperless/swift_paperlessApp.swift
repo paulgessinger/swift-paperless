@@ -47,6 +47,8 @@ struct MainView: View {
 
   init(database: Database) {
     _ = AppSettings.shared
+    // Route network byte counts into the persisted transfer meter.
+    TransferStatistics.install()
     self.database = database
     _manager = State(wrappedValue: ConnectionManager(database: database))
     let errorController = ErrorController()
@@ -142,6 +144,24 @@ struct MainView: View {
     }
   }
 
+  /// The gate for the heavy proactive fills (cheap reconcile sweeps run
+  /// regardless). Wi‑Fi‑ish by default, unless the active server has been opted
+  /// in to cellular; Low Data Mode always wins. See
+  /// `NetworkMonitor.allowsProactiveSync(syncOverCellular:)`.
+  private var isUnmetered: Bool {
+    networkMonitor.allowsProactiveSync(syncOverCellular: manager.activeSyncOverCellular)
+  }
+
+  /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
+  /// metered, or already covered). Used after the initial-launch sync; the
+  /// scenePhase path chains it after `sync()` directly.
+  private func kickLibraryFill(_ store: DocumentStore, force: Bool = false) {
+    Task {
+      await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force)
+      await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+    }
+  }
+
   private func refreshConnection(animated: Bool) async {
     Logger.api.info("Connection info changed, reloading!")
     if let conn = manager.connection {
@@ -172,6 +192,7 @@ struct MainView: View {
         storeReady = true
         try? await store.sync()
         store.startTaskPolling()
+        kickLibraryFill(store)
         await sleep(.seconds(0.3))
         showLoadingScreen = false
       } else {
@@ -181,6 +202,7 @@ struct MainView: View {
         storeReady = true
         try? await newStore.sync()
         newStore.startTaskPolling()
+        kickLibraryFill(newStore)
         showLoadingScreen = false
       }
       showLoginScreen = false
@@ -304,6 +326,7 @@ struct MainView: View {
         SettingsView(database: database)
           .environment(manager)
           .environment(store)
+          .environment(networkMonitor)
           .environmentObject(errorController)
           .environmentObject(biometricLockManager)
       }
@@ -340,16 +363,23 @@ struct MainView: View {
       case .background:
         Logger.shared.notice("App goes to background")
         biometricLockManager.lockIfEnabled()
+        TransferStatistics.shared.persist()
 
       case .active:
         store?.startTaskPolling()
 
         Logger.shared.notice("App becomes active")
 
-        // Cache-first: foreground refresh syncs the element cache silently.
-        // The initial launch sync is handled by refreshConnection.
+        // Cache-first: foreground refresh syncs the element cache silently, then
+        // (when "Entire library" is on) tops up the proactive fill — a no-op once
+        // the coverage marker is fresh. The initial launch sync is handled by
+        // refreshConnection.
         if !initialDisplay, let store {
-          Task { try? await store.sync() }
+          Task {
+            try? await store.sync()
+            await store.fillLibraryIfEnabled(unmetered: isUnmetered)
+            await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+          }
         }
 
         Task { await biometricLockManager.unlockIfEnabled() }

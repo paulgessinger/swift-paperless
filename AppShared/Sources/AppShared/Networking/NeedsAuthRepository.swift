@@ -106,6 +106,10 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try await intercept { try await wrapped.documentIDs(filter: filter) }
   }
 
+  public func orderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    try await intercept { try await wrapped.orderedDocumentIDs(filter: filter) }
+  }
+
   public func nextAsn() async throws -> UInt {
     try await intercept { try await wrapped.nextAsn() }
   }

@@ -390,6 +390,10 @@ public class PreviewRepository: Repository {
     try await pagedDocumentIDs(filter: filter)
   }
 
+  public func orderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    try await pagedOrderedDocumentIDs(filter: filter)
+  }
+
   public func trash() async -> [Document] {
     []
   }

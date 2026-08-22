@@ -357,9 +357,21 @@ public class ApiRepository {
     )
     request.cachePolicy = cachePolicy
 
+    // Captured *here*, while still inside the caller's task-local scope. The
+    // metrics callback below fires on a URLSession delegate queue, outside this
+    // task, where `NetworkTransfer.category` reads its `.other` default — which
+    // silently collapsed the whole breakdown into "Other".
+    let transferCategory = NetworkTransfer.category
+
     let result: (Data, URLResponse)
     do {
-      result = try await urlSession.getData(for: request, progress: progress)
+      result = try await urlSession.getData(for: request, progress: progress) { sent, received in
+        // Best-effort data-transfer accounting. Wire bytes from the task
+        // metrics, not `data.count`: the API gzips well, so the decoded length
+        // overstated actual traffic several-fold, and a `URLCache` hit counted
+        // as if it had been fetched.
+        NetworkTransfer.record(bytes: Int(sent + received), category: transferCategory)
+      }
     } catch let error where error.isCancellationError {
       Logger.networking.info(
         "Fetch request task for \(request.httpMethod ?? "??", privacy: .public) \(sanitizedUrl, privacy: .public) was cancelled"
@@ -471,9 +483,12 @@ public class ApiRepository {
 
 extension ApiRepository: Repository {
   public func update(document: Document) async throws -> Document {
+    // Request full_perms so the PATCH response carries permissions/custom fields:
+    // the cache writes the result at `.full`, which replaces the row outright, so
+    // a permission-less response would otherwise drop them.
     let api: ApiDocument = try await update(
       element: ApiDocumentUpdate(from: document),
-      endpoint: .document(id: document.id, fullPerms: false),
+      endpoint: .document(id: document.id, fullPerms: true),
       returns: ApiDocument.self)
     return api.domain
   }
@@ -544,14 +559,21 @@ extension ApiRepository: Repository {
 
   public func documents(filter: FilterState) throws -> ApiPagedSource<ApiDocument, Document> {
     Logger.networking.notice("Getting document sequence for filter")
+    // The full list shape always carries object detail (`full_perms`), so every
+    // cached row is renderable offline without a per-document round-trip.
+    // `stableOrdering` because every consumer of this source *pages* it, and
+    // page-offset paging over a non-unique ordering (which every sort field the
+    // UI offers is) can drop or repeat rows across page boundaries. It only
+    // disambiguates rows whose sort keys are equal, so no visible order changes.
     let cursor = try PageCursor<ApiDocument>(
       repository: self,
-      initialURL: url(.documents(page: 1, filter: filter, searchApi: searchApi)))
+      initialURL: url(
+        .documents(page: 1, filter: filter, searchApi: searchApi, stableOrdering: true)))
     return ApiPagedSource<ApiDocument, Document>(cursor: cursor, map: { $0.domain })
   }
 
   /// Cheap id-only projection (`fields=id`) in a few very large pages — the
-  /// authoritative ordered id set for the remote-delete reconcile.
+  /// authoritative id set for the remote-delete reconcile.
   public func documentIDs(filter: FilterState) async throws -> [UInt] {
     Logger.networking.notice("Getting document id set for filter")
     // Page over a *unique* ordering: the result is consumed as a set, and paging
@@ -560,11 +582,28 @@ extension ApiRepository: Repository {
     var filter = filter
     filter.sortField = .other("id")
     filter.sortOrder = .ascending
+    return try await pageDocumentIDs(filter: filter, stableOrdering: false)
+  }
+
+  /// Same cheap projection, but in the *query's* order — the membership sweep
+  /// writes these as `query_order` positions, so re-sorting them would rewrite
+  /// every cached list to id order. Paging stays safe because `stableOrdering`
+  /// appends `id` as a secondary key, which is what `documentIDs` gets by
+  /// sorting on `id` outright.
+  public func orderedDocumentIDs(filter: FilterState) async throws -> [UInt] {
+    Logger.networking.notice("Getting ordered document id list for filter")
+    return try await pageDocumentIDs(filter: filter, stableOrdering: true)
+  }
+
+  private func pageDocumentIDs(
+    filter: FilterState, stableOrdering: Bool
+  ) async throws -> [UInt] {
     let cursor = try PageCursor<ApiDocumentID>(
       repository: self,
       initialURL: url(
         .documents(
-          page: 1, filter: filter, pageSize: 25000, searchApi: searchApi, fields: ["id"])))
+          page: 1, filter: filter, pageSize: 25000, searchApi: searchApi, fields: ["id"],
+          stableOrdering: stableOrdering)))
     return try await cursor.collectAll().map(\.id)
   }
 
@@ -848,7 +887,7 @@ extension ApiRepository: Repository {
     Logger.networking.notice("Getting next ASN with legacy compatibility method")
 
     let decoded = try await send(
-      endpoint: .documents(page: 1, filter: .empty, pageSize: 1),
+      endpoint: .documents(page: 1, filter: .empty, pageSize: 1, fullPerms: false),
       returns: ListResponse<ApiDocument>.self)
     return (decoded.results.first?.archive_serial_number ?? 0) + 1
   }
