@@ -751,9 +751,51 @@
     "cacheCleared" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached data cleared"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached data cleared"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Cached data cleared"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached data cleared"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached data cleared"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached data cleared"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached data cleared"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Cached data cleared"
           }
         }
@@ -1027,9 +1069,51 @@
     "clearCache" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Cached Data"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Cached Data"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Clear Cached Data"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Cached Data"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Cached Data"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Cached Data"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Cached Data"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Clear Cached Data"
           }
         }
@@ -1038,9 +1122,51 @@
     "clearCacheConfirmation" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "This removes cached document lists, images, and downloaded files. Your server connections are kept; everything re-downloads as needed."
           }
         }
@@ -1049,9 +1175,51 @@
     "clearCacheConfirmationTitle" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all cached data?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all cached data?"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Clear all cached data?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all cached data?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all cached data?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all cached data?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all cached data?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Clear all cached data?"
           }
         }
@@ -2120,9 +2288,51 @@
     "localStorage" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local Storage"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local Storage"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Local Storage"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local Storage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local Storage"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local Storage"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Local Storage"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Local Storage"
           }
         }
@@ -2131,9 +2341,51 @@
     "localStorageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Cached document lists, images, and downloaded files. Your servers and settings are kept."
           }
         }
@@ -2461,9 +2713,51 @@
       "comment" : "Destructive confirm button that turns off whole-library offline browsing and deletes the downloaded documents",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove Downloaded Documents"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Remove Downloaded Documents"
           }
         }
@@ -2473,9 +2767,51 @@
       "comment" : "Body of the confirmation dialog explaining what is deleted when whole-library offline browsing is turned off",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
           }
         }
@@ -2485,9 +2821,51 @@
       "comment" : "Title of the confirmation dialog shown when the user turns off whole-library offline browsing, which deletes downloaded documents",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to Recently browsed?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Switch to Recently browsed?"
           }
         }
@@ -2497,9 +2875,51 @@
       "comment" : "Footer under the Offline browsing picker, explaining what Entire library downloads and that leaving it deletes the downloads",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
           }
         }
@@ -2509,9 +2929,51 @@
       "comment" : "Offline browsing option: cache the whole library up front. Contrast with 'Recently browsed'",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entire library"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entire library"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Entire library"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entire library"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entire library"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entire library"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Entire library"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Entire library"
           }
         }
@@ -2521,9 +2983,51 @@
       "comment" : "Section header on the Offline & Sync screen for the offline browsing scope setting",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Offline"
           }
         }
@@ -2533,9 +3037,51 @@
       "comment" : "Picker label for how much of the library is kept available offline",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline browsing"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline browsing"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Offline browsing"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline browsing"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline browsing"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline browsing"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline browsing"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Offline browsing"
           }
         }
@@ -2545,9 +3091,51 @@
       "comment" : "Offline browsing option: cache only what the user has actually opened. Contrast with 'Entire library'",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recently browsed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recently browsed"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Recently browsed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recently browsed"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recently browsed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recently browsed"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recently browsed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Recently browsed"
           }
         }
@@ -2557,9 +3145,51 @@
       "comment" : "Hint under the Offline browsing picker suggesting the Entire library option, shown when the server has few documents",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This library is small enough to keep on your device in full."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "This library is small enough to keep on your device in full."
           }
         }
@@ -2569,9 +3199,51 @@
       "comment" : "Row label on the Offline & Sync screen whose value says what the sync is doing right now",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Activity"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Activity"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Activity"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Activity"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Activity"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Activity"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Activity"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Activity"
           }
         }
@@ -2581,9 +3253,51 @@
       "comment" : "Row label for how many documents are currently stored on the device for offline use",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached documents"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached documents"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Cached documents"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached documents"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached documents"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached documents"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cached documents"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Cached documents"
           }
         }
@@ -2593,9 +3307,51 @@
       "comment" : "Footer explaining the Sync over cellular toggle on the Offline & Sync screen",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Allow this server's offline downloads to use cellular data. Low Data Mode always pauses them."
           }
         }
@@ -2605,9 +3361,51 @@
       "comment" : "Toggle on the Offline & Sync screen letting the proactive offline download use cellular data for this server",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync over cellular"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync over cellular"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Sync over cellular"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync over cellular"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync over cellular"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync over cellular"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync over cellular"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Sync over cellular"
           }
         }
@@ -2617,9 +3415,51 @@
       "comment" : "Section header for how much network data the app has used. Covers API requests only, not file downloads",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Data transferred"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Data transferred"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Data transferred"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Data transferred"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Data transferred"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Data transferred"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Data transferred"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Data transferred"
           }
         }
@@ -2629,9 +3469,51 @@
       "comment" : "Footer under the data-transferred figures. %@ is a formatted date and time when counting started",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Since %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Since %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Since %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Since %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Since %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Since %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Since %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Since %@"
           }
         }
@@ -2641,9 +3523,51 @@
       "comment" : "Label for the default document list, used both in the offline sync failure list and as the progress caption while the library fill is working on it",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default view"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default view"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Default view"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default view"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default view"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default view"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default view"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Default view"
           }
         }
@@ -2653,9 +3577,51 @@
       "comment" : "Activity label on the Offline & Sync screen while per-document notes and file metadata are downloading",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document details…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document details…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Downloading document details…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document details…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document details…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document details…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document details…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Downloading document details…"
           }
         }
@@ -2665,9 +3631,51 @@
       "comment" : "Activity status while the whole-library download is running",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading library…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading library…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Downloading library…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading library…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading library…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading library…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading library…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Downloading library…"
           }
         }
@@ -2677,9 +3685,51 @@
       "comment" : "Activity status when no synchronization is running",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Idle"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Idle"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Idle"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Idle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Idle"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Idle"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Idle"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Idle"
           }
         }
@@ -2689,9 +3739,51 @@
       "comment" : "Row label for when the whole library was last downloaded in full",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last full sync"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last full sync"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Last full sync"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last full sync"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last full sync"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last full sync"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last full sync"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Last full sync"
           }
         }
@@ -2701,9 +3793,51 @@
       "comment" : "Row label for when the app last successfully checked the server for changes",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last refreshed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last refreshed"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Last refreshed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last refreshed"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last refreshed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last refreshed"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last refreshed"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Last refreshed"
           }
         }
@@ -2713,9 +3847,51 @@
       "comment" : "Value shown in place of a date when the thing has not happened yet",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Never"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Never"
           }
         }
@@ -2725,9 +3901,51 @@
       "comment" : "Button on the Offline & Sync screen that forces an immediate synchronization",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync now"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync now"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Sync now"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync now"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync now"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync now"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync now"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Sync now"
           }
         }
@@ -2737,9 +3955,51 @@
       "comment" : "Footer explaining the offline sync problems section",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "These views couldn't be downloaded for offline use. This could be a bug or an incompatibility with the server version"
           }
         }
@@ -2749,9 +4009,51 @@
       "comment" : "Header for the section listing views that failed to sync for offline use",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync problems"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync problems"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Sync problems"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync problems"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync problems"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync problems"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sync problems"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Sync problems"
           }
         }
@@ -2761,9 +4063,51 @@
       "comment" : "Progress counter under the sync progress bar. %1$lld is the number of items finished, %2$lld the total",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "%1$lld of %2$lld"
           }
         }
@@ -2773,9 +4117,51 @@
       "comment" : "Progress counter under the sync progress bar while checking for server-side changes. %1$lld is the number of changes found so far, %2$lld the total changes to check",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld changes"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "%1$lld of %2$lld changes"
           }
         }
@@ -2785,9 +4171,51 @@
       "comment" : "Activity label on the Offline & Sync screen while the app reconciles server-side changes into the offline cache",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking for changes…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking for changes…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Checking for changes…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking for changes…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking for changes…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking for changes…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking for changes…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Checking for changes…"
           }
         }
@@ -2797,9 +4225,51 @@
       "comment" : "Activity status while the app is refreshing data from the server",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing attributes…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing attributes…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Refreshing attributes…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing attributes…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing attributes…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing attributes…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing attributes…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Refreshing attributes…"
           }
         }
@@ -2809,9 +4279,51 @@
       "comment" : "Destructive button that sets the data-transferred counters back to zero",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset statistics"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset statistics"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Reset statistics"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset statistics"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset statistics"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset statistics"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reset statistics"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Reset statistics"
           }
         }
@@ -2821,9 +4333,51 @@
       "comment" : "Section header on the Offline & Sync screen for the current sync status",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Status"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Status"
           }
         }
@@ -2833,9 +4387,51 @@
       "comment" : "Title of the settings screen for offline storage and synchronization",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline & Sync"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline & Sync"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Offline & Sync"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline & Sync"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline & Sync"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline & Sync"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Offline & Sync"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Offline & Sync"
           }
         }
@@ -2845,9 +4441,51 @@
       "comment" : "Row label for the sum of all data-transfer categories",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Total"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Total"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Total"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Total"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Total"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Total"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Total"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Total"
           }
         }
@@ -2857,9 +4495,51 @@
       "comment" : "Activity label on the Offline & Sync screen when the offline download is paused because the connection is metered",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for Wi-Fi"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Waiting for Wi-Fi"
           }
         }
@@ -4155,9 +5835,51 @@
       "comment" : "Data-transfer category: downloading document lists for offline use",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Library fill"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Library fill"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Library fill"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Library fill"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Library fill"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Library fill"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Library fill"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Library fill"
           }
         }
@@ -4167,9 +5889,51 @@
       "comment" : "Data-transfer category: everything not covered by the named categories",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Other"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Other"
           }
         }
@@ -4179,9 +5943,51 @@
       "comment" : "Data-transfer category: checking the server for changes to already-cached documents",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reconcile"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reconcile"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Reconcile"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reconcile"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reconcile"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reconcile"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reconcile"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Reconcile"
           }
         }
@@ -4191,9 +5997,51 @@
       "comment" : "Data-transfer category: syncing tags, correspondents, saved views and similar",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element sync"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element sync"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Element sync"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element sync"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element sync"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element sync"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Element sync"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
             "value" : "Element sync"
           }
         }
