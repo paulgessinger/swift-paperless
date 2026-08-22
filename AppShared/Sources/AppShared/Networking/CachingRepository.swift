@@ -169,6 +169,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public let database: Database
   public let serverID: UUID
 
+  /// The in-flight fill per `QueryKey` — page 1 included, not only the
+  /// background continuation. Every writer of a key's `query_order` consults
+  /// this: a new fill drains the current owner before touching the key, and the
+  /// membership sweep steps over a key that is mid-fill. Main-actor isolated
+  /// like the rest of this class, so claiming and clearing never interleave.
+  private var activeFills: [QueryKey: Task<Void, Never>] = [:]
+
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
     self.database = database
@@ -288,32 +295,61 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// library fill.
   public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
+
+    // Two fills on one key used to interleave: the newcomer's page-1
+    // `replaceAll: true` deletes every `query_order` row for the key, and the
+    // older fill then keeps appending from its own position counter, leaving a
+    // hole only a later full fill repairs. Neither write errors — the primary
+    // key is ON CONFLICT REPLACE and the unique key ON CONFLICT IGNORE — so
+    // nothing notices. Routine rather than hypothetical since the foreground
+    // library fill started paging `[(nil, .default)] + savedViews`, the very
+    // keys an open list is filling.
+    await drainFill(for: key)
+
     let source = try wrapped.documents(filter: filter)
     let pageSize = Endpoint.defaultDocumentPageSize
-
-    // Page 1 awaited: first window on screen + the exact total for the count pill.
-    let firstPage = try await NetworkTransfer.$category.withValue(.fill) {
-      try await source.fetch(limit: pageSize)
-    }
-    let total = await source.totalCount
-    try database.writeQueryPage(
-      queryKey: key, serverID: serverID, documents: firstPage,
-      startPosition: 0, totalCount: total, replaceAll: true)
-
-    // Background-page the rest to disk (append). When this completes the whole
-    // view is local; scrolling then needs no network (v1). Detached tasks don't
-    // inherit the task-local, so re-establish the `.fill` transfer category here.
     let database = database
     let serverID = serverID
-    let firstCount = firstPage.count
+
+    // Page 1 is still awaited by the caller (first window on screen + the exact
+    // total for the count pill) but is written from inside the fill's own task,
+    // so the key has a single owner from its very first write. Written from the
+    // caller's context it was unclaimed until the background task existed, and
+    // the membership sweep's whole-key `replaceQueryOrder` could land in that
+    // gap — after which the fill appended page 2 onto a different ordering.
+    // Detached tasks inherit no task-local, so re-establish `.fill` here.
+    let (firstPage, pageOne) = AsyncThrowingStream<UInt?, any Error>.makeStream()
     let task = Task.detached(priority: .utility) {
       await NetworkTransfer.$category.withValue(.fill) {
-        var position = firstCount
+        var position = 0
+        do {
+          let batch = try await source.fetch(limit: pageSize)
+          let total = await source.totalCount
+          try database.writeQueryPage(
+            queryKey: key, serverID: serverID, documents: batch,
+            startPosition: 0, totalCount: total, replaceAll: true)
+          position = batch.count
+          pageOne.yield(total)
+          pageOne.finish()
+        } catch {
+          // The caller's problem, not the background's: offline on open means
+          // the list falls back to whatever is already cached.
+          pageOne.finish(throwing: error)
+          return
+        }
+
+        // Background-page the rest to disk (append). When this completes the
+        // whole view is local; scrolling then needs no network (v1).
         do {
           while !Task.isCancelled {
             if await source.isExhausted { break }
             let batch = try await source.fetch(limit: pageSize)
             if batch.isEmpty { break }
+            // Re-check between the fetch returning and the write. Cancellation
+            // is how a newer fill takes the key over, and by now its page-1
+            // replace may already have landed — writing here would graft our
+            // stale positions onto its rows.
+            try Task.checkCancellation()
             try database.writeQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
               startPosition: position, totalCount: await source.totalCount,
@@ -326,8 +362,43 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         }
       }
     }
+
+    activeFills[key] = task
+    Task { [weak self] in
+      await task.value
+      // Retract only our own registration: a newer fill may have drained and
+      // replaced us while this was waiting.
+      guard let self, activeFills[key] == task else { return }
+      activeFills[key] = nil
+    }
+
+    // A cancelled caller takes the whole fill with it — the task is detached,
+    // so nothing else would — and still reports the cancellation, as it did
+    // when page 1 ran in the caller's own context.
+    let total = try await withTaskCancellationHandler {
+      var total: UInt?
+      for try await value in firstPage { total = value }
+      return total
+    } onCancel: {
+      task.cancel()
+    }
+    try Task.checkCancellation()
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
+
+  /// Stop the fill that currently owns `key` and wait for it to actually stop.
+  /// Cancellation is cooperative — the loop only checks between pages — so
+  /// returning without the await would leave a writer alive across the caller's
+  /// own write, which is the whole problem being fixed.
+  private func drainFill(for key: QueryKey) async {
+    guard let owner = activeFills[key] else { return }
+    owner.cancel()
+    await owner.value
+    if activeFills[key] == owner { activeFills[key] = nil }
+  }
+
+  /// Whether a fill currently owns this key's `query_order`.
+  private func isFilling(_ key: QueryKey) -> Bool { activeFills[key] != nil }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
     guard force || !LibraryCoverage.isFresh(try? database.libraryCoverageAt(serverID: serverID))
@@ -953,11 +1024,30 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     for (name, filter) in views {
       try Task.checkCancellation()
       let key = QueryKey(serverID: serverID, filter: filter)
+      // A fill owning this key is writing the same `query_order` rows page by
+      // page, and it writes a strictly better ordering than this Tier-0
+      // projection — it carries full document detail, and its page-1 replace has
+      // already re-baselined the key. Interleaving `replaceQueryOrder`'s
+      // delete-all-and-reinsert with the fill's appends silently merges two
+      // orderings into a garbled one, so leave the key to the fill; the next
+      // sweep picks it up.
+      guard !isFilling(key) else {
+        Logger.sync.info(
+          "Membership sweep: '\(name ?? "default", privacy: .public)' is mid-fill; skipping")
+        continue
+      }
       do {
         // Ordered, not the id-set projection: these ids become `query_order`
         // positions verbatim, so the query's own sort has to survive the round
         // trip or the sweep rewrites every cached list to id order.
         let ids = try await wrapped.orderedDocumentIDs(filter: filter)
+        // Re-check after the fetch: that suspension is exactly the window a
+        // fill can start in, and the guard above would then be stale.
+        guard !isFilling(key) else {
+          Logger.sync.info(
+            "Membership sweep: '\(name ?? "default", privacy: .public)' began filling; skipping")
+          continue
+        }
         try database.replaceQueryOrder(queryKey: key, serverID: serverID, orderedIDs: ids)
         try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
