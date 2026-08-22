@@ -138,6 +138,10 @@ public final class SyncEngine {
       "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (unmetered: \(unmetered), userInitiated: \(userInitiated))"
     )
     for action in actions {
+      // Re-read per iteration: the action list was computed before the first
+      // `await`, so a server the user switched to mid-sweep would otherwise be
+      // swept here while `DocumentStore` drives it on the same server.
+      guard action.serverID != manager.activeConnectionId else { continue }
       guard let stored = manager.connections[action.serverID] else { continue }
       await runAction(action, stored: stored)
     }
