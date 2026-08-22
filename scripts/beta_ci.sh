@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
 # Build, sign, and upload a TestFlight beta — a fastlane-free replacement for the
-# Fastfile `beta_ci` lane. It uses plain xcodebuild for archive/export (automatic
-# signing via `-allowProvisioningUpdates` + an App Store Connect API key, so no
-# `match`) and `asc` (App Store Connect CLI, `brew install asc`) for the upload.
+# Fastfile `beta_ci` lane. It uses plain xcodebuild for archive/export with the
+# explicitly installed App Store signing assets (so no `match`) and `asc` (App
+# Store Connect CLI, `brew install asc`) for the upload.
 #
 # The build number is assigned here, not committed: it comes from App Store
 # Connect (`asc builds next-build-number`) and is written into Version.xcconfig
@@ -36,6 +36,7 @@ BUILD_DIR="build"
 ARCHIVE_PATH="$BUILD_DIR/$SCHEME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS="scripts/ExportOptions.plist"
+ARCHIVE_SIGNING_CONFIG="scripts/CIArchiveSigning.xcconfig"
 CHANGELOG="scripts/changelog.py"
 
 # App Store provisioning profiles referenced (by name) in ExportOptions.plist.
@@ -99,12 +100,10 @@ run_xcodebuild() {
   fi
 }
 
-_tmp_key=""
 _tmp_keychain=""
 _version_backup=""
 _notes_file=""
 cleanup() {
-  [ -n "$_tmp_key" ] && rm -f "$_tmp_key"
   [ -n "$_notes_file" ] && rm -f "$_notes_file"
   [ -n "$_tmp_keychain" ] && security delete-keychain "$_tmp_keychain" 2>/dev/null
   # Restore Version.xcconfig if the assigned build number was written into it.
@@ -121,15 +120,10 @@ trap cleanup EXIT
 [ -n "${APP_STORE_CONNECT_KEY_FILEPATH:-}" ] && export ASC_PRIVATE_KEY_PATH="${ASC_PRIVATE_KEY_PATH:-$APP_STORE_CONNECT_KEY_FILEPATH}"
 [ -n "${APP_STORE_CONNECT_KEY_CONTENT:-}" ]  && export ASC_PRIVATE_KEY="${ASC_PRIVATE_KEY:-$APP_STORE_CONNECT_KEY_CONTENT}"
 
-# xcodebuild's -allowProvisioningUpdates needs the key as a file on disk plus the
-# key/issuer IDs. Materialise a .p8 from KEY_CONTENT when only that is provided.
-KEY_ID="${APP_STORE_CONNECT_API_KEY_ID:-${ASC_KEY_ID:-}}"
-ISSUER_ID="${APP_STORE_CONNECT_ISSUER_ID:-${ASC_ISSUER_ID:-}}"
 KEY_PATH="${APP_STORE_CONNECT_KEY_FILEPATH:-${ASC_PRIVATE_KEY_PATH:-}}"
 if [ -n "$KEY_PATH" ]; then
-  # xcodebuild -authenticationKeyPath requires an absolute path to an existing
-  # file, but we've cd'd to the repo root — expand ~ and resolve relatives
-  # against the invocation dir.
+  # We've cd'd to the repo root — expand ~ and resolve relative paths against
+  # the invocation directory before handing the path to asc.
   case "$KEY_PATH" in
     "~")   KEY_PATH="$HOME" ;;
     "~/"*) KEY_PATH="$HOME/${KEY_PATH#\~/}" ;;
@@ -144,20 +138,6 @@ if [ -n "$KEY_PATH" ]; then
     exit 1
   }
   export ASC_PRIVATE_KEY_PATH="$KEY_PATH"
-elif [ -n "${APP_STORE_CONNECT_KEY_CONTENT:-}" ]; then
-  # Materialise a .p8 from KEY_CONTENT when only that is provided.
-  _tmp_key="$(mktemp -t asc_key.XXXXXX).p8"
-  printf '%s' "$APP_STORE_CONNECT_KEY_CONTENT" > "$_tmp_key"
-  KEY_PATH="$_tmp_key"
-fi
-
-auth_args=(-allowProvisioningUpdates)
-if [ -n "$KEY_ID" ] && [ -n "$ISSUER_ID" ] && [ -n "$KEY_PATH" ]; then
-  auth_args+=(-authenticationKeyID "$KEY_ID"
-              -authenticationKeyIssuerID "$ISSUER_ID"
-              -authenticationKeyPath "$KEY_PATH")
-else
-  echo "note: no ASC API key in env — relying on locally cached signing assets" >&2
 fi
 
 # --- CI signing certificate ------------------------------------------------
@@ -285,10 +265,10 @@ run_xcodebuild \
   -project "$SCHEME.xcodeproj" \
   -scheme "$SCHEME" \
   -configuration Release \
+  -xcconfig "$ARCHIVE_SIGNING_CONFIG" \
   -destination 'generic/platform=iOS' \
   -archivePath "$ARCHIVE_PATH" \
   -skipPackagePluginValidation -skipMacroValidation \
-  "${auth_args[@]}" \
   clean archive
 
 echo "==> Exporting IPA"
