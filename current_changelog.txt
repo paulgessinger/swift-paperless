@@ -3,3 +3,4 @@
 - Fix the "What's New" screen failing to load when a release was published without release notes
 - Sharing a document link now shares the web interface URL, which opens in a browser, instead of the API URL that did not
 - Fix saved views failing to load when a filter rule has a null value (e.g. a "does not have tag" rule)
+- Pulling to refresh on a document now also refreshes permissions, so a permission change on the server takes effect without restarting the app
