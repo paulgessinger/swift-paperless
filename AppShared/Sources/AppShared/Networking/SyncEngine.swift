@@ -179,7 +179,8 @@ public final class SyncEngine {
       let action = SyncServerAction(
         serverID: stored.id,
         needsAuthOnly: !hasToken(stored),
-        runHeavyFill: condition.allowsProactiveSync && stored.offlineBrowsingMode == .entireLibrary)
+        phases: condition.allowsProactiveSync && stored.offlineBrowsingMode == .entireLibrary
+          ? .full : .cheap)
       Task { @MainActor [weak self] in await self?.runAction(action, stored: stored) }
     }
   }
@@ -192,7 +193,7 @@ public final class SyncEngine {
       session.markNeedsAuth(stored)
       return
     }
-    await session.sync(stored: stored, runHeavyFill: action.runHeavyFill)
+    await session.sync(stored: stored, phases: action.phases)
   }
 
   // MARK: - Helpers

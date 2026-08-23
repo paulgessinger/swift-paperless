@@ -482,8 +482,11 @@ public final class ServerSession {
   /// sequence needs that distinction to decide whether the server is fully
   /// synced; the store's callers discard it.
   @discardableResult
-  public func fillLibrary(unmetered: Bool, force: Bool = false) async -> Bool {
-    guard unmetered, let backend = current, backend.offlineBrowsingMode == .entireLibrary
+  public func fillLibrary(force: Bool = false) async -> Bool {
+    // No network gate here: whether this link may carry a fill is the planner's
+    // call, expressed by including `.fill` in the phase set. What remains is the
+    // server's own mode, which is a property of the server, not the decision.
+    guard let backend = current, backend.offlineBrowsingMode == .entireLibrary
     else { return true }
 
     // Join an in-flight fill rather than starting a second pass over the same
@@ -519,8 +522,8 @@ public final class ServerSession {
   /// to walk are already on disk. Idempotent and resumable (driven off what's
   /// still missing), so it needs no `force`. Soft-fail.
   @discardableResult
-  public func fillDocumentDetails(unmetered: Bool) async -> Bool {
-    guard unmetered, let backend = current, backend.offlineBrowsingMode == .entireLibrary
+  public func fillDocumentDetails() async -> Bool {
+    guard let backend = current, backend.offlineBrowsingMode == .entireLibrary
     else { return true }
     if let detailFillTask {
       return await detailFillTask.value
@@ -556,14 +559,16 @@ public final class ServerSession {
   /// of it. Nothing throws out: a per-server failure (offline, a rethrown 401)
   /// is this server's problem alone and must never affect its siblings.
   ///
-  /// `runHeavyFill` is `SyncPlan`'s decision, not this type's.
-  public func sync(stored: StoredConnection, runHeavyFill: Bool) async {
+  /// Which phases to run is `SyncPlan`'s decision, not this type's — the
+  /// session receives a decision, never the inputs to one — and the order they
+  /// run in is `SyncPhases`'s, not either party's.
+  public func sync(stored: StoredConnection, phases: SyncPhases) async {
     if let syncTask {
       return await syncTask.value
     }
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
-      await runSync(stored: stored, runHeavyFill: runHeavyFill)
+      await runSync(stored: stored, phases: phases)
     }
     syncTask = task
     await task.value
@@ -593,27 +598,34 @@ public final class ServerSession {
     }
   }
 
-  private func runSync(stored: StoredConnection, runHeavyFill: Bool) async {
+  private func runSync(stored: StoredConnection, phases: SyncPhases) async {
     Logger.sync.info(
-      "Syncing server \(stored.logLabel, privacy: .public) (heavyFill: \(runHeavyFill))")
+      "Syncing server \(stored.logLabel, privacy: .public) (phases: \(phases.ordered.count))")
     do {
       _ = try await prepareRepository(for: stored)
       state = .ready
 
-      // Cheap tier (always, regardless of metered-ness): element sync + the
-      // reconcile sweeps (the last two self-gate on *Entire library*).
-      try await syncElements()
-
-      // The scheduler applied its own, much longer throttle before asking, so
-      // the reconcile's 300 s sub-throttle — which exists to keep the *active*
-      // server's on-appear flurry off the wire — must not veto this pass.
-      let reconcile = await reconcileDocuments(force: true)
-
-      // Heavy tier: only on an unmetered *Entire library* server (SyncPlan gate).
+      // Walk the phases in `SyncPhases`'s canonical order, so the executor
+      // cannot run one before something it depends on even if a future planner
+      // hands them over in a different shape.
+      var reconcile = ReconcileResult()
       var filled = true
-      if runHeavyFill, !reconcile.cancelled {
-        filled = await fillLibrary(unmetered: true, force: false)
-        filled = await fillDocumentDetails(unmetered: true) && filled
+      for phase in phases.ordered {
+        switch phase {
+        case .elements:
+          try await syncElements()
+        case .reconcile:
+          // The scheduler applied its own, much longer throttle before asking,
+          // so the reconcile's 300 s sub-throttle — which exists to keep the
+          // *active* server's on-appear flurry off the wire — must not veto it.
+          reconcile = await reconcileDocuments(force: true)
+        case .fill:
+          // A reconcile that was called off means the pass as a whole is
+          // unwanted; don't start paging the library behind it.
+          guard !reconcile.cancelled else { continue }
+          filled = await fillLibrary(force: false)
+          filled = await fillDocumentDetails() && filled
+        }
       }
 
       // Advance the stamp only on a *fully* successful pass — a pass that failed

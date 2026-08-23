@@ -828,14 +828,19 @@ extension DocumentStore {
   /// marker (e.g. the user just enabled the setting). A no-op when the setting is
   /// *Recently browsed*, the link is metered, or there is no active server.
   public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
-    await session?.fillLibrary(unmetered: unmetered, force: force)
+    // The link gate lives here, at the boundary, rather than inside the session:
+    // the session runs phases it is told to run. Views keep passing `unmetered`
+    // because that is the fact they have to hand.
+    guard unmetered else { return }
+    await session?.fillLibrary(force: force)
   }
 
   /// Proactive *Entire library* per-document detail fill (notes + file-metadata)
   /// on the active server, run by its session. Run after `fillLibraryIfEnabled`
   /// so the document rows to walk are already on disk. Soft-fail.
   public func fillDocumentDetailsIfEnabled(unmetered: Bool) async {
-    await session?.fillDocumentDetails(unmetered: unmetered)
+    guard unmetered else { return }
+    await session?.fillDocumentDetails()
   }
 
   /// The server's total for the default document list, from the cached query

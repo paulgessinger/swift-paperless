@@ -74,7 +74,7 @@ struct SyncPlanTests {
       lastSweep: [Self.a: now],
       now: now, throttle: throttle, isExpensive: false, isConstrained: false)
     #expect(
-      actions == [SyncServerAction(serverID: Self.a, needsAuthOnly: true, runHeavyFill: false)])
+      actions == [SyncServerAction(serverID: Self.a, needsAuthOnly: true, phases: .nothing)])
   }
 
   @Test("Heavy fill requires both an allowed link and entireLibrary")
@@ -84,7 +84,7 @@ struct SyncPlanTests {
         connections: [snapshot(Self.a, isEntireLibrary: entire)],
         activeID: nil, lastSweep: [:], now: now, throttle: throttle,
         isExpensive: isExpensive, isConstrained: false
-      ).first!.runHeavyFill
+      ).first!.phases.contains(.fill)
     }
     #expect(heavy(isExpensive: false, entire: true))
     #expect(!heavy(isExpensive: false, entire: false))
@@ -103,8 +103,8 @@ struct SyncPlanTests {
       ],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
       isExpensive: true, isConstrained: false)
-    #expect(actions.first(where: { $0.serverID == Self.a })?.runHeavyFill == true)
-    #expect(actions.first(where: { $0.serverID == Self.b })?.runHeavyFill == false)
+    #expect(actions.first(where: { $0.serverID == Self.a })?.phases.contains(.fill) == true)
+    #expect(actions.first(where: { $0.serverID == Self.b })?.phases.contains(.fill) == false)
   }
 
   @Test("Low Data Mode blocks the heavy fill even for a server opted into cellular")
@@ -113,7 +113,7 @@ struct SyncPlanTests {
       connections: [snapshot(Self.a, isEntireLibrary: true, syncOverCellular: true)],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
       isExpensive: true, isConstrained: true)
-    #expect(actions.first?.runHeavyFill == false)
+    #expect(actions.first?.phases.contains(.fill) == false)
   }
 
   @Test("Metered entireLibrary still runs the cheap tier (action present, heavy off)")
@@ -124,7 +124,7 @@ struct SyncPlanTests {
       isExpensive: true, isConstrained: false)
     #expect(actions.count == 1)
     #expect(actions.first?.needsAuthOnly == false)
-    #expect(actions.first?.runHeavyFill == false)
+    #expect(actions.first?.phases.contains(.fill) == false)
   }
 
   @Test("newlyAdded returns only genuinely new, non-active ids")
@@ -138,5 +138,23 @@ struct SyncPlanTests {
   func newlyAddedExcludesActive() {
     let added = SyncPlan.newlyAdded(current: [Self.a], known: [], activeID: Self.a)
     #expect(added.isEmpty)
+  }
+}
+
+@Suite("Sync phases")
+struct SyncPhasesTests {
+  @Test("ordered is dependency order regardless of how the set was built")
+  func orderedIsCanonical() {
+    #expect(SyncPhases([.fill, .elements, .reconcile]).ordered == [.elements, .reconcile, .fill])
+    #expect(SyncPhases([.fill, .elements]).ordered == [.elements, .fill])
+  }
+
+  @Test("cheap omits the fill, full includes it")
+  func presets() {
+    #expect(!SyncPhases.cheap.contains(.fill))
+    #expect(SyncPhases.cheap.contains(.elements))
+    #expect(SyncPhases.cheap.contains(.reconcile))
+    #expect(SyncPhases.full.contains(.fill))
+    #expect(SyncPhases.nothing.isEmpty)
   }
 }
