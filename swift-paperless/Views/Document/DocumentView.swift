@@ -469,6 +469,14 @@ struct DocumentView: View {
         isFetching: $isFetching
       )
 
+      .apply {
+        if #available(iOS 26.0, *) {
+          $0.scrollEdgeEffectHidden(true, for: .top)
+        } else {
+          $0
+        }
+      }
+
       .safeAreaInset(edge: .top) {
         filterAssemblyView(showsBackdrop: true)
       }
@@ -540,6 +548,13 @@ struct DocumentView: View {
       isFetching: $isFetching,
       selectedDocumentID: selectedDocument?.id
     )
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0.scrollEdgeEffectHidden(true, for: .top)
+      } else {
+        $0
+      }
+    }
     .safeAreaInset(edge: .top) {
       filterAssemblyView(showsBackdrop: false)
     }
