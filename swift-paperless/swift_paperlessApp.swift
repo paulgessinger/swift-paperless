@@ -167,16 +167,21 @@ struct MainView: View {
     }
   }
 
-  /// The gate for the *active* server's heavy proactive fill (cheap reconcile
-  /// sweeps run regardless). Wi‑Fi‑ish by default, unless the active server has
-  /// been opted in to cellular; Low Data Mode always wins. See `SyncCondition`.
-  /// The inactive-server sweep resolves this per-server itself — pass it raw
-  /// path cost (`networkMonitor.isExpensive`/`.isConstrained`), not this.
-  private var isUnmetered: Bool {
-    SyncCondition(
-      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
-      syncOverCellular: manager.activeSyncOverCellular
-    ).allowsProactiveSync
+  /// What a proactive pass on the *active* server should run right now — asked
+  /// of `SyncPlan`, the same way the inactive-server sweep asks it, so the
+  /// server on screen is planned by the same rule as the ones that aren't.
+  /// The cheap phases are always in; `.fill` depends on the link and this
+  /// server's own cellular opt-in (Low Data Mode always wins — see
+  /// `SyncCondition`).
+  ///
+  /// The sweep resolves its servers' conditions itself — hand it raw path cost
+  /// (`networkMonitor.isExpensive`/`.isConstrained`), not this.
+  private var activePhases: SyncPhases {
+    SyncPlan.phases(
+      isEntireLibrary: manager.activeOfflineBrowsingMode == .entireLibrary,
+      condition: SyncCondition(
+        isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
+        syncOverCellular: manager.activeSyncOverCellular))
   }
 
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
@@ -184,8 +189,7 @@ struct MainView: View {
   /// scenePhase path chains it after `sync()` directly.
   private func kickLibraryFill(_ store: DocumentStore, force: Bool = false) {
     Task {
-      await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force)
-      await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+      await store.fillIfEnabled(phases: activePhases, force: force)
     }
   }
 
@@ -435,8 +439,7 @@ struct MainView: View {
           if let store {
             Task {
               try? await store.sync()
-              await store.fillLibraryIfEnabled(unmetered: isUnmetered)
-              await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+              await store.fillIfEnabled(phases: activePhases)
             }
           }
           // Warm the inactive servers alongside the active refresh.

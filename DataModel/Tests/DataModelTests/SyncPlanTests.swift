@@ -139,6 +139,61 @@ struct SyncPlanTests {
     let added = SyncPlan.newlyAdded(current: [Self.a], known: [], activeID: Self.a)
     #expect(added.isEmpty)
   }
+
+  // MARK: - The shared phase rule
+
+  // `phases` is what both drivers ask: the sweep through `inactiveActions`, the
+  // active server directly from the store's callers. These pin the rule itself,
+  // so a change to it can't quietly apply to only one of them.
+
+  @Test("Both gates must pass for the fill to be planned")
+  func fillNeedsModeAndLink() {
+    let unmetered = SyncCondition(
+      isExpensive: false, isConstrained: false, syncOverCellular: false)
+    let metered = SyncCondition(
+      isExpensive: true, isConstrained: false, syncOverCellular: false)
+
+    #expect(SyncPlan.phases(isEntireLibrary: true, condition: unmetered) == .full)
+    #expect(SyncPlan.phases(isEntireLibrary: true, condition: metered) == .cheap)
+    #expect(SyncPlan.phases(isEntireLibrary: false, condition: unmetered) == .cheap)
+    #expect(SyncPlan.phases(isEntireLibrary: false, condition: metered) == .cheap)
+  }
+
+  @Test("A server's own cellular opt-in reinstates the fill on a metered link")
+  func cellularOptInPlansTheFill() {
+    let opted = SyncCondition(isExpensive: true, isConstrained: false, syncOverCellular: true)
+    #expect(SyncPlan.phases(isEntireLibrary: true, condition: opted) == .full)
+  }
+
+  @Test("The cheap phases are never dropped, however hostile the link")
+  func cheapPhasesAlwaysRun() {
+    let worst = SyncCondition(isExpensive: true, isConstrained: true, syncOverCellular: true)
+    let phases = SyncPlan.phases(isEntireLibrary: true, condition: worst)
+    #expect(phases.contains(.elements))
+    #expect(phases.contains(.reconcile))
+    #expect(!phases.contains(.fill))
+  }
+
+  @Test("The sweep plans each server by the same rule the active server uses")
+  func sweepAgreesWithTheSharedRule() {
+    let actions = SyncPlan.inactiveActions(
+      connections: [
+        snapshot(Self.a, isEntireLibrary: true),
+        snapshot(Self.b, isEntireLibrary: true, syncOverCellular: true),
+        snapshot(Self.c, isEntireLibrary: false),
+      ],
+      activeID: nil, lastSweep: [:], now: now, throttle: throttle,
+      isExpensive: true, isConstrained: false)
+
+    for action in actions {
+      let server = [Self.a: false, Self.b: true, Self.c: false][action.serverID]!
+      let expected = SyncPlan.phases(
+        isEntireLibrary: action.serverID != Self.c,
+        condition: SyncCondition(
+          isExpensive: true, isConstrained: false, syncOverCellular: server))
+      #expect(action.phases == expected)
+    }
+  }
 }
 
 @Suite("Sync phases")

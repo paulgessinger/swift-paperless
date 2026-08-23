@@ -94,14 +94,30 @@ public enum SyncPlan {
         if let last = lastSweep[server.id], now.timeIntervalSince(last) < throttle {
           return nil  // still fresh — skip the network sweep
         }
-        let condition = SyncCondition(
-          isExpensive: isExpensive, isConstrained: isConstrained,
-          syncOverCellular: server.syncOverCellular)
         return SyncServerAction(
           serverID: server.id,
           needsAuthOnly: false,
-          phases: condition.allowsProactiveSync && server.isEntireLibrary ? .full : .cheap)
+          phases: phases(
+            isEntireLibrary: server.isEntireLibrary,
+            condition: SyncCondition(
+              isExpensive: isExpensive, isConstrained: isConstrained,
+              syncOverCellular: server.syncOverCellular)))
       }
+  }
+
+  /// The phases one credentialed server should run.
+  ///
+  /// Shared by both drivers: the sweep reaches it through ``inactiveActions``,
+  /// and the active server — which `DocumentStore` drives directly, outside any
+  /// sweep — calls it itself. One function means the server the user is looking
+  /// at cannot drift onto a different rule than its siblings, which is exactly
+  /// what a `Bool` computed afresh at each call site invited.
+  ///
+  /// The mode gate is here as well as in the executor (which re-reads the
+  /// server's mode from the database before filling) on purpose: this is the
+  /// copy that is unit-tested, and the executor's is a guard, not a decision.
+  public static func phases(isEntireLibrary: Bool, condition: SyncCondition) -> SyncPhases {
+    condition.allowsProactiveSync && isEntireLibrary ? .full : .cheap
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an

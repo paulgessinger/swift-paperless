@@ -823,23 +823,27 @@ extension DocumentStore {
     await session?.reconcileDocuments(force: userInitiated)
   }
 
-  /// Proactive *Entire library* fill on the active server, run by its session.
-  /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
-  /// marker (e.g. the user just enabled the setting). A no-op when the setting is
-  /// *Recently browsed*, the link is metered, or there is no active server.
-  public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
-    // The link gate lives here, at the boundary, rather than inside the session:
-    // the session runs phases it is told to run. Views keep passing `unmetered`
-    // because that is the fact they have to hand.
-    guard unmetered else { return }
+  /// Run the active server's proactive *Entire library* fill — every query's
+  /// pages, then the per-document details — when `phases` calls for it.
+  /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the
+  /// freshness marker (e.g. the user just enabled the setting).
+  ///
+  /// Takes the planner's decision rather than an `unmetered` flag. The flag was
+  /// the last survivor of the vocabulary ``SyncPhases`` replaced: every caller
+  /// held a raw fact about the link, re-derived the fill rule from it, and
+  /// passed the answer down — the same shape, one layer lower, that the sweep
+  /// stopped doing when `SyncPlan` began emitting phases. Callers now ask
+  /// ``SyncPlan/phases(isEntireLibrary:condition:)`` the question the sweep
+  /// asks, and a caller that means "everything, the user said so" says `.full`
+  /// instead of lying about the network.
+  ///
+  /// The two fills are one call because they are one decision: `.fill` covers
+  /// both, and the details must be walked *after* the pages that put their rows
+  /// on disk. Every caller already paired them — except the one that forgot,
+  /// leaving notes and file metadata to wait for the next launch.
+  public func fillIfEnabled(phases: SyncPhases, force: Bool = false) async {
+    guard phases.contains(.fill) else { return }
     await session?.fillLibrary(force: force)
-  }
-
-  /// Proactive *Entire library* per-document detail fill (notes + file-metadata)
-  /// on the active server, run by its session. Run after `fillLibraryIfEnabled`
-  /// so the document rows to walk are already on disk. Soft-fail.
-  public func fillDocumentDetailsIfEnabled(unmetered: Bool) async {
-    guard unmetered else { return }
     await session?.fillDocumentDetails()
   }
 

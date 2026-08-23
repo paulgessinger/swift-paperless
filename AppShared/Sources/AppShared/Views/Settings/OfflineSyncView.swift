@@ -37,12 +37,18 @@ public struct OfflineSyncView: View {
   // on the connection record). The setting is per-server.
   private var mode: OfflineBrowsingMode { connectionManager.activeOfflineBrowsingMode }
 
-  private var unmetered: Bool {
-    guard let networkMonitor else { return true }
-    return SyncCondition(
-      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
-      syncOverCellular: connectionManager.activeSyncOverCellular
-    ).allowsProactiveSync
+  /// What a proactive pass on the active server would run right now — the same
+  /// question `SyncPlan` answers for every other server, asked here rather than
+  /// re-derived, so this screen can't disagree with the sweep about its own
+  /// server. Absent monitor (the SettingsView preview injects none) reads as an
+  /// unmetered link.
+  private var plannedPhases: SyncPhases {
+    SyncPlan.phases(
+      isEntireLibrary: mode == .entireLibrary,
+      condition: SyncCondition(
+        isExpensive: networkMonitor?.isExpensive ?? false,
+        isConstrained: networkMonitor?.isConstrained ?? false,
+        syncOverCellular: connectionManager.activeSyncOverCellular))
   }
 
   /// Suggest the greedy mode only when it is actually cheap. A new server starts
@@ -60,7 +66,7 @@ public struct OfflineSyncView: View {
   /// difference between "nothing to do" and "not now", which the screen used to
   /// render identically as Idle.
   private var waitingForNetwork: Bool {
-    mode == .entireLibrary && !unmetered && !store.isSyncing
+    mode == .entireLibrary && !plannedPhases.contains(.fill) && !store.isSyncing
   }
 
   public var body: some View {
@@ -81,7 +87,7 @@ public struct OfflineSyncView: View {
               } else {
                 connectionManager.setOfflineBrowsingMode(newMode)
                 if newMode == .entireLibrary {
-                  Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
+                  Task { await store.fillIfEnabled(phases: plannedPhases, force: true) }
                 }
               }
             })
@@ -185,7 +191,7 @@ public struct OfflineSyncView: View {
         Button {
           Task {
             // Explicit user action: bypass the reconcile throttle and the
-            // unmetered gate, and force a re-fill ignoring the freshness marker.
+            // link gate, and force a re-fill ignoring the freshness marker.
             //
             // `userInitiated` exists precisely so this rethrows instead of
             // failing soft into `lastSyncError`; swallowing it here left a
@@ -197,11 +203,11 @@ public struct OfflineSyncView: View {
             } catch {
               errorController.push(error: error)
             }
-            await store.fillLibraryIfEnabled(unmetered: true, force: true)
-            // Both lifecycle paths pair the library fill with the detail fill;
-            // without this, notes and file metadata could only ever be filled by
-            // backgrounding and foregrounding the app.
-            await store.fillDocumentDetailsIfEnabled(unmetered: true)
+            // `.full` rather than the planned phases: this is the user asking
+            // for the work outright, so the link gate doesn't apply. Saying so
+            // in the phase set beats claiming the network is unmetered when it
+            // isn't.
+            await store.fillIfEnabled(phases: .full, force: true)
           }
         } label: {
           // Explicit `foregroundStyle`, not just `.disabled`: a `Label`'s icon

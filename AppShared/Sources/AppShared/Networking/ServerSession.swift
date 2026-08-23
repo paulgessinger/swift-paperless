@@ -473,9 +473,9 @@ public final class ServerSession {
     return result
   }
 
-  /// Proactive *Entire library* fill, gated by the setting and an unmetered
-  /// link. Soft-fail (offline-tolerant). `force` ignores the freshness marker
-  /// (e.g. the user just enabled the setting).
+  /// Proactive *Entire library* fill, gated by the server's own mode. Soft-fail
+  /// (offline-tolerant). `force` ignores the freshness marker (e.g. the user
+  /// just enabled the setting).
   ///
   /// Returns whether the pass finished — `true` also when there was legitimately
   /// nothing to do, `false` only when it errored or was called off. The composed
@@ -518,7 +518,7 @@ public final class ServerSession {
   }
 
   /// Proactive *Entire library* per-document detail fill (notes + file
-  /// metadata). Run after ``fillLibrary(unmetered:force:)`` so the document rows
+  /// metadata). Run after ``fillLibrary(force:)`` so the document rows
   /// to walk are already on disk. Idempotent and resumable (driven off what's
   /// still missing), so it needs no `force`. Soft-fail.
   @discardableResult
