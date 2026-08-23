@@ -245,6 +245,17 @@ public final class ServerSession {
       if built != nil {
         Logger.sync.info(
           "Server \(stored.logLabel, privacy: .public) connection changed; rebuilding stack")
+        // Everything still running belongs to the *outgoing* repository: the
+        // phase tasks captured it by value when they started, so they would go
+        // on writing through a stack built from credentials the server has
+        // since rejected — and, worse, a follow-up `sync()` would *join* that
+        // stale element task and report success without ever exercising the new
+        // token. (`ConnectionsView.updateExtraHeaders` and re-auth both land
+        // here.) The store used to cancel this on every repository swap; that
+        // guard was doing two jobs and only the server-switch half became
+        // unnecessary when sessions took ownership — a rebuild is the same
+        // session, so this half still has to be done by hand.
+        retirePhases()
       }
       // No suspension between the loop exiting and this assignment, and the
       // session is main-actor, so the slot cannot be claimed twice.
@@ -264,11 +275,14 @@ public final class ServerSession {
     }
   }
 
-  /// Drop the retained stack. Used when the server row goes away — the row
-  /// delete FK-cascades the cache, so there is nothing else to clean up.
-  public func invalidate() {
-    syncTask?.cancel()
-    syncTask = nil
+  /// Cancel and clear every phase slot, leaving the composed ``sync`` slot
+  /// alone.
+  ///
+  /// Deliberately not the composed slot: `runSync` calls `prepareRepository`
+  /// *before* its own phases, so a rebuild discovered there would otherwise
+  /// cancel the very task doing the discovering. Retiring the phases is enough
+  /// — the composed pass then sees them fail out and ends on its own.
+  private func retirePhases() {
     elementSyncTask?.cancel()
     elementSyncTask = nil
     reconcileTask?.cancel()
@@ -277,6 +291,14 @@ public final class ServerSession {
     libraryFillTask = nil
     detailFillTask?.cancel()
     detailFillTask = nil
+  }
+
+  /// Drop the retained stack. Used when the server row goes away — the row
+  /// delete FK-cascades the cache, so there is nothing else to clean up.
+  public func invalidate() {
+    syncTask?.cancel()
+    syncTask = nil
+    retirePhases()
     built = nil
     state = .idle
   }
@@ -560,6 +582,14 @@ public final class ServerSession {
       lastSuccessfulSync = Date()
       Logger.sync.info("Server \(stored.logLabel, privacy: .public) synced")
     } catch {
+      // A pass retired by a rebuild (or by the caller going away) was called
+      // off, not failed: leaving `state` alone keeps a connection edit from
+      // showing the server as broken, and the next trigger picks it up.
+      guard !error.isCancellationError else {
+        Logger.sync.debug(
+          "Sync cancelled for \(stored.logLabel, privacy: .public)")
+        return
+      }
       state = .failed
       Logger.sync.info(
         "Sync failed for \(stored.logLabel, privacy: .public) (suppressed): \(error)")
