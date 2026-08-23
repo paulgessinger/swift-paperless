@@ -121,14 +121,33 @@ public final class ServerSession {
   /// (much longer) throttle before asking.
   @ObservationIgnored private let reconcileThrottle: TimeInterval = 300
 
-  /// Where a running phase reports progress, installed by the store that is
-  /// showing this server. An inactive server leaves it `nil` and reports
-  /// nothing — exactly what the engine's sweeps did when it ran them itself.
-  @ObservationIgnored
-  public var progress: (@MainActor (SyncActivity?, SyncActivity.Stage) -> Void)?
+  /// Every sync stage running right now *for this server*, in a fixed order;
+  /// empty when idle. The Offline & Sync screen renders the active server's,
+  /// through its store.
+  ///
+  /// A list rather than one "current" stage because they genuinely overlap: the
+  /// store's `sync()` starts the reconcile in its own task and returns, so a
+  /// reconcile is usually still running when the library fill begins. Publishing
+  /// one of them meant whichever finished first blanked the screen to "Idle"
+  /// while the other carried on — and, because progress is reported coarsely, it
+  /// stayed blank until the survivor reached its next checkpoint.
+  ///
+  /// Living on the session rather than the store is what makes an *inactive*
+  /// server's progress observable at all: the engine's sweeps used to report
+  /// nowhere, because the only reporter belonged to the active server's store.
+  public private(set) var syncActivities: [SyncActivity] = []
 
+  // One entry per sweep currently running. Keyed by stage because each sweep
+  // owns exactly one, and because a sweep reporting "done" says only *that* —
+  // it can't say which stage it was, so the key has to come from the call site.
+  @ObservationIgnored
+  private var activeStages: [SyncActivity.Stage: SyncActivity] = [:]
+
+  /// Fold one sweep's progress into the published activity. `nil` retires the
+  /// stage; the list keeps showing whatever else is still running.
   private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
-    progress?(activity, stage)
+    activeStages[stage] = activity
+    syncActivities = activeStages.values.sortedForDisplay
   }
 
   public init(
