@@ -92,7 +92,6 @@ public struct ConnectionSelectionMenu: View {
 
 public struct ConnectionsView: View {
   private var connectionManager: ConnectionManager
-  private let database: Database
   @Binding public var showLoginSheet: Bool
 
   @ScaledMetric(relativeTo: .title) private var plusIconSize = 18.0
@@ -108,11 +107,8 @@ public struct ConnectionsView: View {
 
   @Environment(DocumentStore.self) private var store
 
-  public init(
-    connectionManager: ConnectionManager, database: Database, showLoginSheet: Binding<Bool>
-  ) {
+  public init(connectionManager: ConnectionManager, showLoginSheet: Binding<Bool>) {
     self.connectionManager = connectionManager
-    self.database = database
     _extraHeaders = State(initialValue: connectionManager.storedConnection?.extraHeaders ?? [])
     _showLoginSheet = showLoginSheet
   }
@@ -131,11 +127,11 @@ public struct ConnectionsView: View {
           // flipping the flag (and 401s are suppressed on the assumption the
           // connection banner covers them), and the caching wrapper because the
           // store detaches its ElementStore projection from any repository that
-          // fronts no database. `activate` owns that assembly, so this call site
-          // can no longer get it wrong.
+          // fronts no database. The server's session owns that assembly, so this
+          // call site can no longer get it wrong — and the header edit reaches the
+          // *same* repository the SyncEngine drives, rather than a second one.
           do {
-            try await store.activate(
-              connection: stored, database: database, manager: connectionManager)
+            try await store.activate(connection: stored)
           } catch {
             Logger.shared.error(
               "Could not rebuild repository after extra header change: \(error)")
