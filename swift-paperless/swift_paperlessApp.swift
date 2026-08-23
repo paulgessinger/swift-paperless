@@ -63,19 +63,17 @@ struct MainView: View {
     _manager = State(wrappedValue: manager)
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
-    // Raw path cost, read live so the engine's observation-driven initial
-    // sync gates on the current link — same source `isUnmetered` below reads,
-    // combined per-server via `SyncCondition` rather than folded here.
     let sessionRegistry = ServerSessionRegistry(database: database, manager: manager)
     _sessionRegistry = State(wrappedValue: sessionRegistry)
     _syncEngine = State(
       wrappedValue: SyncEngine(
         registry: sessionRegistry,
         manager: manager,
-        pathCost: { [weak networkMonitor] in
-          guard let networkMonitor else { return (isExpensive: true, isConstrained: true) }
-          return (networkMonitor.isExpensive, networkMonitor.isConstrained)
-        }))
+        // Read live, per sweep, so the engine gates on the link as it is when
+        // the work starts rather than when the app launched. Each server
+        // combines it with its own opt-in via `SyncCondition`; the engine never
+        // folds it into a single answer for all of them.
+        linkCost: { [weak networkMonitor] in networkMonitor?.cost ?? .unknown }))
     errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
     _networkMonitor = State(initialValue: networkMonitor)
@@ -174,14 +172,13 @@ struct MainView: View {
   /// server's own cellular opt-in (Low Data Mode always wins — see
   /// `SyncCondition`).
   ///
-  /// The sweep resolves its servers' conditions itself — hand it raw path cost
-  /// (`networkMonitor.isExpensive`/`.isConstrained`), not this.
+  /// The sweep resolves its servers' conditions itself, from its own live cost
+  /// read — it needs nothing from here.
   private var activePhases: SyncPhases {
     SyncPlan.phases(
       isEntireLibrary: manager.activeOfflineBrowsingMode == .entireLibrary,
       condition: SyncCondition(
-        isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
-        syncOverCellular: manager.activeSyncOverCellular))
+        cost: networkMonitor.cost, syncOverCellular: manager.activeSyncOverCellular))
   }
 
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
@@ -397,8 +394,7 @@ struct MainView: View {
       // inactive server's cache (the active server was just synced above).
       syncEngine.start()
       Task {
-        await syncEngine.syncInactiveServers(
-          isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+        await syncEngine.syncInactiveServers()
       }
     }
 
@@ -408,8 +404,7 @@ struct MainView: View {
         Task {
           await refreshConnection(animated: animated)
           // The just-deactivated server is now inactive: sweep it (and the rest).
-          await syncEngine.syncInactiveServers(
-            isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+          await syncEngine.syncInactiveServers()
         }
       case .logout:
         showLoginScreen = true
@@ -444,8 +439,7 @@ struct MainView: View {
           }
           // Warm the inactive servers alongside the active refresh.
           Task {
-            await syncEngine.syncInactiveServers(
-              isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+            await syncEngine.syncInactiveServers()
           }
         }
 

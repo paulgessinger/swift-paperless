@@ -32,7 +32,7 @@ struct SyncPlanTests {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.a), snapshot(Self.b)],
       activeID: Self.a, lastSweep: [:], now: now, throttle: throttle,
-      isExpensive: false, isConstrained: false)
+      cost: .unrestricted)
     #expect(actions.map(\.serverID) == [Self.b])
   }
 
@@ -41,7 +41,7 @@ struct SyncPlanTests {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.c), snapshot(Self.a), snapshot(Self.b)],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
-      isExpensive: false, isConstrained: false)
+      cost: .unrestricted)
     #expect(actions.map(\.serverID) == [Self.a, Self.b, Self.c])
   }
 
@@ -51,7 +51,7 @@ struct SyncPlanTests {
       connections: [snapshot(Self.a), snapshot(Self.b)],
       activeID: nil,
       lastSweep: [Self.a: now.addingTimeInterval(-(throttle - 1))],
-      now: now, throttle: throttle, isExpensive: false, isConstrained: false)
+      now: now, throttle: throttle, cost: .unrestricted)
     #expect(actions.map(\.serverID) == [Self.b])
   }
 
@@ -61,7 +61,7 @@ struct SyncPlanTests {
       connections: [snapshot(Self.a)],
       activeID: nil,
       lastSweep: [Self.a: now.addingTimeInterval(-(throttle + 1))],
-      now: now, throttle: throttle, isExpensive: false, isConstrained: false)
+      now: now, throttle: throttle, cost: .unrestricted)
     #expect(actions.map(\.serverID) == [Self.a])
   }
 
@@ -72,7 +72,7 @@ struct SyncPlanTests {
       activeID: nil,
       // Even "recently swept" it must re-emit so a freshly-arrived token is caught.
       lastSweep: [Self.a: now],
-      now: now, throttle: throttle, isExpensive: false, isConstrained: false)
+      now: now, throttle: throttle, cost: .unrestricted)
     #expect(
       actions == [SyncServerAction(serverID: Self.a, needsAuthOnly: true, phases: .nothing)])
   }
@@ -83,7 +83,7 @@ struct SyncPlanTests {
       SyncPlan.inactiveActions(
         connections: [snapshot(Self.a, isEntireLibrary: entire)],
         activeID: nil, lastSweep: [:], now: now, throttle: throttle,
-        isExpensive: isExpensive, isConstrained: false
+        cost: LinkCost(isExpensive: isExpensive, isConstrained: false)
       ).first!.phases.contains(.fill)
     }
     #expect(heavy(isExpensive: false, entire: true))
@@ -102,7 +102,7 @@ struct SyncPlanTests {
         snapshot(Self.b, isEntireLibrary: true, syncOverCellular: false),
       ],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
-      isExpensive: true, isConstrained: false)
+      cost: LinkCost(isExpensive: true, isConstrained: false))
     #expect(actions.first(where: { $0.serverID == Self.a })?.phases.contains(.fill) == true)
     #expect(actions.first(where: { $0.serverID == Self.b })?.phases.contains(.fill) == false)
   }
@@ -112,7 +112,7 @@ struct SyncPlanTests {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.a, isEntireLibrary: true, syncOverCellular: true)],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
-      isExpensive: true, isConstrained: true)
+      cost: LinkCost(isExpensive: true, isConstrained: true))
     #expect(actions.first?.phases.contains(.fill) == false)
   }
 
@@ -121,7 +121,7 @@ struct SyncPlanTests {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.a, isEntireLibrary: true)],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
-      isExpensive: true, isConstrained: false)
+      cost: LinkCost(isExpensive: true, isConstrained: false))
     #expect(actions.count == 1)
     #expect(actions.first?.needsAuthOnly == false)
     #expect(actions.first?.phases.contains(.fill) == false)
@@ -149,9 +149,11 @@ struct SyncPlanTests {
   @Test("Both gates must pass for the fill to be planned")
   func fillNeedsModeAndLink() {
     let unmetered = SyncCondition(
-      isExpensive: false, isConstrained: false, syncOverCellular: false)
+      cost: .unrestricted,
+      syncOverCellular: false)
     let metered = SyncCondition(
-      isExpensive: true, isConstrained: false, syncOverCellular: false)
+      cost: LinkCost(isExpensive: true, isConstrained: false),
+      syncOverCellular: false)
 
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: unmetered) == .full)
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: metered) == .cheap)
@@ -161,13 +163,17 @@ struct SyncPlanTests {
 
   @Test("A server's own cellular opt-in reinstates the fill on a metered link")
   func cellularOptInPlansTheFill() {
-    let opted = SyncCondition(isExpensive: true, isConstrained: false, syncOverCellular: true)
+    let opted = SyncCondition(
+      cost: LinkCost(isExpensive: true, isConstrained: false),
+      syncOverCellular: true)
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: opted) == .full)
   }
 
   @Test("The cheap phases are never dropped, however hostile the link")
   func cheapPhasesAlwaysRun() {
-    let worst = SyncCondition(isExpensive: true, isConstrained: true, syncOverCellular: true)
+    let worst = SyncCondition(
+      cost: LinkCost(isExpensive: true, isConstrained: true), syncOverCellular: true
+    )
     let phases = SyncPlan.phases(isEntireLibrary: true, condition: worst)
     #expect(phases.contains(.elements))
     #expect(phases.contains(.reconcile))
@@ -183,14 +189,15 @@ struct SyncPlanTests {
         snapshot(Self.c, isEntireLibrary: false),
       ],
       activeID: nil, lastSweep: [:], now: now, throttle: throttle,
-      isExpensive: true, isConstrained: false)
+      cost: LinkCost(isExpensive: true, isConstrained: false))
 
     for action in actions {
       let server = [Self.a: false, Self.b: true, Self.c: false][action.serverID]!
       let expected = SyncPlan.phases(
         isEntireLibrary: action.serverID != Self.c,
         condition: SyncCondition(
-          isExpensive: true, isConstrained: false, syncOverCellular: server))
+          cost: LinkCost(isExpensive: true, isConstrained: false),
+          syncOverCellular: server))
       #expect(action.phases == expected)
     }
   }

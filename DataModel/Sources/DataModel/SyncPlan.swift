@@ -80,8 +80,7 @@ public enum SyncPlan {
     lastSweep: [UUID: Date],
     now: Date,
     throttle: TimeInterval,
-    isExpensive: Bool,
-    isConstrained: Bool
+    cost: LinkCost
   ) -> [SyncServerAction] {
     connections
       .filter { $0.id != activeID }
@@ -100,8 +99,7 @@ public enum SyncPlan {
           phases: phases(
             isEntireLibrary: server.isEntireLibrary,
             condition: SyncCondition(
-              isExpensive: isExpensive, isConstrained: isConstrained,
-              syncOverCellular: server.syncOverCellular)))
+              cost: cost, syncOverCellular: server.syncOverCellular)))
       }
   }
 

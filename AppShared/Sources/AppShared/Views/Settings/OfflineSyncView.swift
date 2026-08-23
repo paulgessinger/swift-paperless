@@ -41,13 +41,13 @@ public struct OfflineSyncView: View {
   /// question `SyncPlan` answers for every other server, asked here rather than
   /// re-derived, so this screen can't disagree with the sweep about its own
   /// server. Absent monitor (the SettingsView preview injects none) reads as an
-  /// unmetered link.
+  /// unrestricted link, so the preview renders the ordinary state rather than
+  /// the "waiting for Wi-Fi" one.
   private var plannedPhases: SyncPhases {
     SyncPlan.phases(
       isEntireLibrary: mode == .entireLibrary,
       condition: SyncCondition(
-        isExpensive: networkMonitor?.isExpensive ?? false,
-        isConstrained: networkMonitor?.isConstrained ?? false,
+        cost: networkMonitor?.cost ?? .unrestricted,
         syncOverCellular: connectionManager.activeSyncOverCellular))
   }
 

@@ -38,12 +38,16 @@ import os
 @Observable
 public final class SyncEngine {
   @ObservationIgnored private let manager: ConnectionManager
-  /// Live raw path cost read for the observation-driven initial-sync path (the
-  /// lifecycle-triggered sweep receives it as a parameter instead). Raw, not a
-  /// decision — each server combines it with its own `syncOverCellular` via
-  /// `SyncCondition`.
-  @ObservationIgnored private let pathCost:
-    @MainActor () -> (isExpensive: Bool, isConstrained: Bool)
+  /// The current link cost, read live at the moment a sweep runs.
+  ///
+  /// A supplier rather than a parameter on ``syncInactiveServers(userInitiated:)``:
+  /// the engine used to accept the cost from its caller *and* hold this closure
+  /// for the observation-driven path, which meant four call sites each reaching
+  /// into the same monitor to hand back what the engine could already read —
+  /// and two sources that could disagree. Injecting it also keeps the engine
+  /// off `NetworkMonitor` directly, so a headless caller can supply a cost that
+  /// was measured some other way.
+  @ObservationIgnored private let linkCost: @MainActor () -> LinkCost
 
   /// Where the per-server sessions live. The engine borrows them; it does not
   /// own them, and it no longer keeps any per-server state of its own.
@@ -61,11 +65,11 @@ public final class SyncEngine {
   public init(
     registry: ServerSessionRegistry,
     manager: ConnectionManager,
-    pathCost: @escaping @MainActor () -> (isExpensive: Bool, isConstrained: Bool)
+    linkCost: @escaping @MainActor () -> LinkCost
   ) {
     self.registry = registry
     self.manager = manager
-    self.pathCost = pathCost
+    self.linkCost = linkCost
   }
 
   deinit {
@@ -108,16 +112,13 @@ public final class SyncEngine {
   /// failure never affects the others. Coalesces concurrent callers.
   ///
   /// `userInitiated` bypasses the per-server throttle (explicit "sync now").
-  public func syncInactiveServers(
-    isExpensive: Bool, isConstrained: Bool, userInitiated: Bool = false
-  ) async {
+  public func syncInactiveServers(userInitiated: Bool = false) async {
     if let sweepTask {
       return await sweepTask.value
     }
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
-      await runSweep(
-        isExpensive: isExpensive, isConstrained: isConstrained, userInitiated: userInitiated)
+      await runSweep(cost: linkCost(), userInitiated: userInitiated)
     }
     sweepTask = task
     await task.value
@@ -126,7 +127,7 @@ public final class SyncEngine {
 
   // MARK: - Sweep
 
-  private func runSweep(isExpensive: Bool, isConstrained: Bool, userInitiated: Bool) async {
+  private func runSweep(cost: LinkCost, userInitiated: Bool) async {
     let snapshots = manager.connections.values.map { conn in
       SyncPlan.ServerSnapshot(
         id: conn.id,
@@ -140,11 +141,10 @@ public final class SyncEngine {
       lastSweep: userInitiated ? [:] : registry.lastSuccessfulSyncs(),
       now: Date(),
       throttle: inactiveThrottle,
-      isExpensive: isExpensive,
-      isConstrained: isConstrained)
+      cost: cost)
 
     Logger.sync.info(
-      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (isExpensive: \(isExpensive), isConstrained: \(isConstrained), userInitiated: \(userInitiated))"
+      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (expensive: \(cost.isExpensive), constrained: \(cost.isConstrained), userInitiated: \(userInitiated))"
     )
     for action in actions {
       // No "skip the server that went active mid-sweep" guard any more: sweeping
@@ -172,15 +172,13 @@ public final class SyncEngine {
     for id in added {
       guard let stored = manager.connections[id] else { continue }
       // Throttle-exempt initial sync for a freshly-appeared server.
-      let cost = pathCost()
-      let condition = SyncCondition(
-        isExpensive: cost.isExpensive, isConstrained: cost.isConstrained,
-        syncOverCellular: stored.syncOverCellular)
       let action = SyncServerAction(
         serverID: stored.id,
         needsAuthOnly: !hasToken(stored),
-        phases: condition.allowsProactiveSync && stored.offlineBrowsingMode == .entireLibrary
-          ? .full : .cheap)
+        phases: SyncPlan.phases(
+          isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary,
+          condition: SyncCondition(
+            cost: linkCost(), syncOverCellular: stored.syncOverCellular)))
       Task { @MainActor [weak self] in await self?.runAction(action, stored: stored) }
     }
   }

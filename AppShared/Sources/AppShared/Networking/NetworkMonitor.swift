@@ -11,6 +11,7 @@
 //  positives — used here as the source of the "device offline" signal only.
 //
 
+import DataModel
 import Foundation
 import Network
 import os
@@ -32,8 +33,9 @@ public final class NetworkMonitor {
   // without disrupting the device's actual network.
   public var debugForceOffline: Bool = false
 
-  public private(set) var isExpensive: Bool = false
-  public private(set) var isConstrained: Bool = false
+  /// What the current path costs. One value, published as one value: the two
+  /// facts are only meaningful together, and every consumer wants both.
+  public private(set) var cost: LinkCost = .unrestricted
 
   @ObservationIgnored private let monitor = NWPathMonitor()
   @ObservationIgnored private let queue = DispatchQueue(label: "NetworkMonitor.queue")
@@ -41,8 +43,7 @@ public final class NetworkMonitor {
   public init() {
     monitor.pathUpdateHandler = { [weak self] path in
       let online = path.status == .satisfied
-      let expensive = path.isExpensive
-      let constrained = path.isConstrained
+      let cost = LinkCost(isExpensive: path.isExpensive, isConstrained: path.isConstrained)
       Task { @MainActor [weak self] in
         guard let self else { return }
         if self.interfaceOnline != online {
@@ -50,8 +51,7 @@ public final class NetworkMonitor {
             "NetworkMonitor: interfaceOnline \(self.interfaceOnline) -> \(online)")
           self.interfaceOnline = online
         }
-        if self.isExpensive != expensive { self.isExpensive = expensive }
-        if self.isConstrained != constrained { self.isConstrained = constrained }
+        if self.cost != cost { self.cost = cost }
       }
     }
     monitor.start(queue: queue)
