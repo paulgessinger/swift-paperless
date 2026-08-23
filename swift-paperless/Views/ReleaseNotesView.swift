@@ -80,6 +80,18 @@ class ReleaseNotesViewModel {
     let prerelease: Bool
     let published_at: String
     let html_url: String
+
+    // GitHub sends `null` for `name` and `body` on releases published without a
+    // title or release notes, which would otherwise fail the whole array decode.
+    init(from decoder: any Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      tag_name = try container.decode(String.self, forKey: .tag_name)
+      name = try container.decodeIfPresent(String.self, forKey: .name) ?? tag_name
+      body = try container.decodeIfPresent(String.self, forKey: .body) ?? ""
+      prerelease = try container.decode(Bool.self, forKey: .prerelease)
+      published_at = try container.decode(String.self, forKey: .published_at)
+      html_url = try container.decode(String.self, forKey: .html_url)
+    }
   }
 
   private struct ReleasesCache: Codable {
