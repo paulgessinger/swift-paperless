@@ -118,8 +118,7 @@ public final class ServerSessionRegistry {
     if let existing = sessions[id] {
       return existing
     }
-    let session = ServerSession(
-      serverID: id, database: database, manager: manager, mode: mode)
+    let session = ServerSession(serverID: id, database: database, mode: mode)
     sessions[id] = session
     return session
   }

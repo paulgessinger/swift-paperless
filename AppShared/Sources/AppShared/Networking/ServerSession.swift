@@ -51,7 +51,9 @@ public final class ServerSession {
   private enum Source {
     /// Production: assembled from the server's stored connection through
     /// ``makeCachingRepository``, and rebuilt whenever that connection changes.
-    case stored(database: Database, manager: ConnectionManager, mode: ApiRepository.Mode)
+    /// Carries no `ConnectionManager`: the only thing a session used it for was
+    /// flagging needs-auth, which is a column on the `server` row.
+    case stored(database: Database, mode: ApiRepository.Mode)
     /// Previews and tests: handed in ready-made, and never rebuilt. This is what
     /// keeps "every store is driven by a session" true without dragging a
     /// `ConnectionManager` and a real connection record into a fixture — the
@@ -203,11 +205,10 @@ public final class ServerSession {
   public init(
     serverID: UUID,
     database: Database,
-    manager: ConnectionManager,
     mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode
   ) {
     self.serverID = serverID
-    source = .stored(database: database, manager: manager, mode: mode)
+    source = .stored(database: database, mode: mode)
   }
 
   /// A session around a repository that already exists, for previews and tests.
@@ -259,7 +260,7 @@ public final class ServerSession {
     switch source {
     case .fixed(let repository):
       return repository
-    case .stored(let database, let manager, let mode):
+    case .stored(let database, let mode):
       // At most one build in flight per session. A caller that arrives while
       // one is running waits for it and then re-evaluates, rather than starting
       // a second: it usually finds `built` already matching — the same
@@ -298,8 +299,7 @@ public final class ServerSession {
       // No suspension between the loop exiting and this assignment, and the
       // session is main-actor, so the slot cannot be claimed twice.
       let task = Task { @MainActor () throws -> any Repository & CachingBackend in
-        try await makeCachingRepository(
-          for: stored, database: database, manager: manager, mode: mode)
+        try await makeCachingRepository(for: stored, database: database, mode: mode)
       }
       building = (connection, task)
       defer {
@@ -580,11 +580,18 @@ public final class ServerSession {
   /// cheap, and the next trigger picks the server up once a token lands. The 401
   /// path stays a backstop for a token the server rejects.
   public func markNeedsAuth(_ stored: StoredConnection) {
-    guard case .stored(_, let manager, _) = source else { return }
+    guard case .stored(let database, _) = source else { return }
     Logger.sync.info(
       "Server \(stored.logLabel, privacy: .public) uncredentialed; marking needs-auth (no sync)")
     state = .needsAuth
-    manager.markNeedsAuth(for: serverID)
+    // Straight to the column, like the 401 path in `NeedsAuthRepository`: the
+    // `ConnectionManager` rebuilds its in-memory set from the observer, so it
+    // does not need telling — and the session stays free of it.
+    do {
+      try database.setNeedsAuth(true, forConnection: serverID)
+    } catch {
+      Logger.sync.error("Needs-auth write failed: \(error)")
+    }
   }
 
   private func runSync(stored: StoredConnection, runHeavyFill: Bool) async {
