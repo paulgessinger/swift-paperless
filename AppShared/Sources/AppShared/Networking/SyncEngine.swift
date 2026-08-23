@@ -111,14 +111,20 @@ public final class SyncEngine {
   /// active is excluded and driven by the store), each isolated so one server's
   /// failure never affects the others. Coalesces concurrent callers.
   ///
-  /// `userInitiated` bypasses the per-server throttle (explicit "sync now").
-  public func syncInactiveServers(userInitiated: Bool = false) async {
+  /// There is deliberately no throttle-bypassing "user initiated" sweep. The
+  /// only explicit sync control in the app is Offline & Sync's *Sync now*, and
+  /// that screen is per-server — it sits directly under that server's mode
+  /// picker and cellular toggle — so a button there reaching out to touch the
+  /// *other* servers would be the surprising reading. The flag that used to be
+  /// here was never passed by anyone, and a caller that had passed it would
+  /// have silently lost its intent by joining an in-flight automatic sweep.
+  public func syncInactiveServers() async {
     if let sweepTask {
       return await sweepTask.value
     }
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
-      await runSweep(cost: linkCost(), userInitiated: userInitiated)
+      await runSweep(cost: linkCost())
     }
     sweepTask = task
     await task.value
@@ -127,7 +133,7 @@ public final class SyncEngine {
 
   // MARK: - Sweep
 
-  private func runSweep(cost: LinkCost, userInitiated: Bool) async {
+  private func runSweep(cost: LinkCost) async {
     let snapshots = manager.connections.values.map { conn in
       SyncPlan.ServerSnapshot(
         id: conn.id,
@@ -138,13 +144,13 @@ public final class SyncEngine {
     let actions = SyncPlan.inactiveActions(
       connections: snapshots,
       activeID: manager.activeConnectionId,
-      lastSweep: userInitiated ? [:] : registry.lastSuccessfulSyncs(),
+      lastSweep: registry.lastSuccessfulSyncs(),
       now: Date(),
       throttle: inactiveThrottle,
       cost: cost)
 
     Logger.sync.info(
-      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (expensive: \(cost.isExpensive), constrained: \(cost.isConstrained), userInitiated: \(userInitiated))"
+      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (expensive: \(cost.isExpensive), constrained: \(cost.isConstrained))"
     )
     for action in actions {
       // No "skip the server that went active mid-sweep" guard any more: sweeping
