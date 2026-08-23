@@ -25,6 +25,12 @@ public struct OfflineSyncView: View {
   /// status. Only used to decide whether to suggest *Entire library*.
   @State private var libraryTotal: UInt?
 
+  /// Whether *this* button's action is still running. `store.isSyncing` covers
+  /// work the session has in flight, but there are brief moments between the
+  /// phases this action drives where no slot is occupied; without this the
+  /// button would blink back to enabled part-way through its own run.
+  @State private var syncNowRunning = false
+
   public init() {}
 
   // The active server's mode, read/written through ConnectionManager (persisted
@@ -42,6 +48,10 @@ public struct OfflineSyncView: View {
   /// Suggest the greedy mode only when it is actually cheap. A new server starts
   /// at *Recently browsed* whatever its size — downloading a whole library is
   /// the user's call — so this is where the size heuristic earns its keep.
+  /// Work is running — this button's own action, or anything else driving the
+  /// active server's session (a lifecycle sweep, a background run).
+  private var syncNowBusy: Bool { syncNowRunning || store.isSyncing }
+
   private var recommendsEntireLibrary: Bool {
     mode == .recentlyBrowsed && OfflineLibrarySize.isSmall(documentCount: libraryTotal)
   }
@@ -50,7 +60,7 @@ public struct OfflineSyncView: View {
   /// difference between "nothing to do" and "not now", which the screen used to
   /// render identically as Idle.
   private var waitingForNetwork: Bool {
-    mode == .entireLibrary && !unmetered && store.syncActivities.isEmpty
+    mode == .entireLibrary && !unmetered && !store.isSyncing
   }
 
   public var body: some View {
@@ -180,6 +190,8 @@ public struct OfflineSyncView: View {
             // `userInitiated` exists precisely so this rethrows instead of
             // failing soft into `lastSyncError`; swallowing it here left a
             // "Sync now" that looked identical whether it worked or not.
+            syncNowRunning = true
+            defer { syncNowRunning = false }
             do {
               try await store.sync(userInitiated: true)
             } catch {
@@ -192,11 +204,16 @@ public struct OfflineSyncView: View {
             await store.fillDocumentDetailsIfEnabled(unmetered: true)
           }
         } label: {
+          // Explicit `foregroundStyle`, not just `.disabled`: a `Label`'s icon
+          // in a `Form` row button doesn't pick up the row's disabled dimming
+          // the way its text does, so a disabled row otherwise reads as a
+          // grayed-out title next to a still-accent-coloured icon.
           Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
+            .foregroundStyle(syncNowBusy ? Color.secondary : Color.accentColor)
         }
-        // Any sweep, not just the library fill: the detail fill left this
-        // enabled, so a second pass could be stacked on a running one.
-        .disabled(!store.syncActivities.isEmpty)
+        // Any work on this server, not just the library fill: the detail fill
+        // left this enabled, so a second pass could be stacked on a running one.
+        .disabled(syncNowBusy)
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }

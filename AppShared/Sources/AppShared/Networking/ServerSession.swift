@@ -105,11 +105,49 @@ public final class ServerSession {
   // callers hit the same session concurrently and coalesce — which in turn is
   // what let the engine's "skip the active server" guard go away, since there
   // is no longer a second owner to stay out of the way of.
-  @ObservationIgnored private var syncTask: Task<Void, Never>?
-  @ObservationIgnored private var elementSyncTask: Task<Void, Error>?
-  @ObservationIgnored private var reconcileTask: Task<ReconcileResult, Never>?
-  @ObservationIgnored private var libraryFillTask: Task<Bool, Never>?
-  @ObservationIgnored private var detailFillTask: Task<Bool, Never>?
+  //
+  // The slots stay unobserved — `deinit` cancels them, and an observed
+  // property can't be read from a nonisolated deinit — so `didSet` mirrors
+  // them into ``isSyncing`` instead. Doing it in `didSet` rather than at each
+  // mutation site is what keeps the flag from drifting: there is no assignment
+  // that can forget to update it.
+  @ObservationIgnored private var syncTask: Task<Void, Never>? {
+    didSet { refreshIsSyncing() }
+  }
+  @ObservationIgnored private var elementSyncTask: Task<Void, Error>? {
+    didSet { refreshIsSyncing() }
+  }
+  @ObservationIgnored private var reconcileTask: Task<ReconcileResult, Never>? {
+    didSet { refreshIsSyncing() }
+  }
+  @ObservationIgnored private var libraryFillTask: Task<Bool, Never>? {
+    didSet { refreshIsSyncing() }
+  }
+  @ObservationIgnored private var detailFillTask: Task<Bool, Never>? {
+    didSet { refreshIsSyncing() }
+  }
+
+  /// Whether any work is running for this server.
+  ///
+  /// Tracks the task slots rather than ``syncActivities``, because the activity
+  /// list is a *progress* channel and answers a different question. It is
+  /// legitimately empty between phases, and while a phase is in flight but has
+  /// not yet reported its first checkpoint — the element sync clears its stage
+  /// the moment it finishes, and the reconcile that follows is kicked detached,
+  /// so there is a window in every pass where work is plainly running and
+  /// nothing is being reported. Gating a control on "no stage is reporting"
+  /// made the Offline & Sync screen's Sync now button flick back to enabled
+  /// mid-pass.
+  public private(set) var isSyncing: Bool = false
+
+  private func refreshIsSyncing() {
+    let busy =
+      syncTask != nil || elementSyncTask != nil || reconcileTask != nil
+      || libraryFillTask != nil || detailFillTask != nil
+    if busy != isSyncing {
+      isSyncing = busy
+    }
+  }
 
   public private(set) var state: State = .idle
 

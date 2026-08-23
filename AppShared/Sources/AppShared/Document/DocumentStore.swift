@@ -84,6 +84,11 @@ public final class DocumentStore: Sendable {
   /// while the only reporter was this store.
   public var syncActivities: [SyncActivity] { session?.syncActivities ?? [] }
 
+  /// Whether the active server has any sync work in flight. Distinct from
+  /// ``syncActivities`` being non-empty, which only says whether a stage is
+  /// currently *reporting* — see ``ServerSession/isSyncing``.
+  public var isSyncing: Bool { session?.isSyncing ?? false }
+
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
   /// `nil` until the first successful reconcile this session.
   ///
