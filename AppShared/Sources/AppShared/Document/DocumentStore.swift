@@ -486,7 +486,7 @@ public final class DocumentStore: Sendable {
 
   /// Network → DB via the caching backend; the live element observation repaints
   /// the projection. Concurrent calls coalesce onto a single in-flight
-  /// `syncElements` (see `syncTask`); each caller still applies its own
+  /// `syncElements` (the session's `elementSyncTask`); each caller still applies its own
   /// `userInitiated` policy to the shared outcome — automatic syncs fail soft
   /// into `lastSyncError`, user-initiated syncs rethrow so the caller can
   /// surface the failure (toast). So a user-initiated call joining a background
@@ -494,14 +494,20 @@ public final class DocumentStore: Sendable {
   /// appear, and what pull-to-refresh calls with `userInitiated: true`.
   public func sync(userInitiated: Bool = false) async throws {
     Logger.sync.notice("Sync store (userInitiated: \(userInitiated))")
+    // Pinned for the whole call, not re-read after the await. A server switch
+    // during the element sync would otherwise sync one server's elements and
+    // then reconcile a *different* server — harmless (each session owns its own
+    // repository, and the outgoing one's work is meant to run on) but
+    // incoherent, and a pull-to-refresh on A would force-reconcile B.
+    guard let session else { return }
     do {
-      try await session?.syncElements()
+      try await session.syncElements()
       lastSyncError = nil
       Logger.sync.info("Sync store complete")
       // Reconcile remote deletes alongside the element sync (throttled,
       // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
-      Task { [weak self] in await self?.session?.reconcileDocuments(force: userInitiated) }
+      Task { await session.reconcileDocuments(force: userInitiated) }
     } catch {
       // A cancellation is never the user's problem to see: the caller's own task
       // went away. (A connection switch no longer retires it — that sync belongs
@@ -843,8 +849,11 @@ extension DocumentStore {
   /// leaving notes and file metadata to wait for the next launch.
   public func fillIfEnabled(phases: SyncPhases, force: Bool = false) async {
     guard phases.contains(.fill) else { return }
-    await session?.fillLibrary(force: force)
-    await session?.fillDocumentDetails()
+    // One session for both halves: re-reading it between them would page one
+    // server's library and then walk a different server's details.
+    guard let session else { return }
+    await session.fillLibrary(force: force)
+    await session.fillDocumentDetails()
   }
 
   /// The server's total for the default document list, from the cached query
