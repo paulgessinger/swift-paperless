@@ -84,6 +84,18 @@ public final class ServerSession {
   @ObservationIgnored private var built:
     (connection: Connection, repository: any Repository & CachingBackend)?
 
+  /// The build currently in flight, if any.
+  ///
+  /// `prepareRepository` has an `await` between "is `built` still good?" and
+  /// committing the answer, so without this two callers could both miss the
+  /// check and each construct a repository — one of which would be handed to
+  /// its caller while the *other* sat in `built`. Two live repositories for one
+  /// server is precisely the state this type exists to make unrepresentable,
+  /// and deleting the engine's active-server guard is what made the race
+  /// reachable: a sweep and an `activate` can now land on the same session.
+  @ObservationIgnored private var building:
+    (connection: Connection, task: Task<any Repository & CachingBackend, Error>)?
+
   // In-flight work, one single-flight per phase.
   //
   // Per *phase* rather than one per session, because the two callers want
@@ -210,6 +222,22 @@ public final class ServerSession {
     case .fixed(let repository):
       return repository
     case .stored(let database, let manager, let mode):
+      // At most one build in flight per session. A caller that arrives while
+      // one is running waits for it and then re-evaluates, rather than starting
+      // a second: it usually finds `built` already matching — the same
+      // connection, so it gets the winner's repository for free — and otherwise
+      // builds the next one itself against config read *after* the wait, so a
+      // re-auth that landed mid-build isn't overwritten by a stale result.
+      //
+      // The failure of someone else's build is not this caller's to inherit;
+      // it just means the slot is free and this caller tries for itself.
+      while let building {
+        _ = try? await building.task.value
+        if self.building?.task == building.task {
+          self.building = nil
+        }
+      }
+
       let connection = try stored.connection
       if let built, built.connection == connection {
         return built.repository
@@ -218,8 +246,19 @@ public final class ServerSession {
         Logger.sync.info(
           "Server \(stored.logLabel, privacy: .public) connection changed; rebuilding stack")
       }
-      let repository = try await makeCachingRepository(
-        for: stored, database: database, manager: manager, mode: mode)
+      // No suspension between the loop exiting and this assignment, and the
+      // session is main-actor, so the slot cannot be claimed twice.
+      let task = Task { @MainActor () throws -> any Repository & CachingBackend in
+        try await makeCachingRepository(
+          for: stored, database: database, manager: manager, mode: mode)
+      }
+      building = (connection, task)
+      defer {
+        if building?.task == task {
+          building = nil
+        }
+      }
+      let repository = try await task.value
       built = (connection, repository)
       return repository
     }
