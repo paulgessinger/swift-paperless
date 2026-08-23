@@ -6,25 +6,24 @@
 //  handlers (app target only — AppShared stays extension-safe and never
 //  imports BackgroundTasks) and the sync machinery.
 //
-//  The invariant this type exists to protect: **at most one
-//  `CachingRepository` per server executes at any time.** A BGTask fires
-//  in-process, and the process may or may not already contain the UI object
-//  graph:
+//  The invariant this type has to respect: **at most one `CachingRepository`
+//  per server executes at any time.** Within a single object graph that is now
+//  structural — every server's repository belongs to its `ServerSession`, and
+//  concurrent callers coalesce onto that session's single-flights — so both
+//  paths below are just "sweep every server with this engine":
 //
 //  - *Warm* (app was foregrounded, then suspended): iOS resumes the same
-//    process, including any suspended in-flight sync tasks. The handler must
-//    therefore drive the *registered* live objects — same instances, so their
-//    single-flight guards coalesce everything and the invariant holds by
-//    identity. The active server goes through the registered `DocumentStore`,
-//    the rest through the registered `SyncEngine` (active excluded, as in the
-//    foreground).
+//    process, so the handler drives the *registered* engine. Its sweep reaches
+//    the active server too; that used to be forbidden, and is now simply the
+//    same session the on-screen store is using.
 //  - *Cold background launch* (nothing registered): no scene connected, no
-//    graph exists — the coordinator builds a headless stack and lets the
-//    engine sweep `scope: .all`, safe because it is provably the process's
-//    only `CachingRepository` owner.
-//  - *Foregrounds mid-headless-run*: `register()` cancels-and-awaits the
-//    headless run before the UI graph's own sync kicks, closing the one
-//    remaining overlap window.
+//    graph exists, so the coordinator builds a headless stack — its own
+//    `Database`, `ConnectionManager` and `ServerSessionRegistry`. That is the
+//    only difference between the two paths.
+//  - *Foregrounds mid-headless-run*: `register()` still cancels-and-awaits the
+//    headless run. Sessions make ownership structural *within* a graph, and a
+//    headless run is a second graph with its own registry — so this is the one
+//    overlap the type still has to close by hand.
 //
 
 import Common
@@ -44,11 +43,13 @@ public final class BackgroundSyncCoordinator {
   /// a run is still in flight).
   public private(set) var isRunning = false
 
+  /// What a background run needs from the live graph: the engine to sweep with,
+  /// and the manager to read scheduling inputs from. Notably *not* the
+  /// `DocumentStore` — the active server is reached through its session like
+  /// every other server, so the store has nothing to contribute here.
   private struct UIGraph {
-    let database: Database
     let manager: ConnectionManager
     let syncEngine: SyncEngine
-    let store: DocumentStore?
   }
 
   @ObservationIgnored private var registered: UIGraph?
@@ -60,15 +61,13 @@ public final class BackgroundSyncCoordinator {
   /// shell whenever the graph (re)wires itself — repeat calls just refresh the
   /// references. Cancels-and-awaits any in-flight headless run first, so two
   /// stacks never execute concurrently.
-  public func register(
-    database: Database, manager: ConnectionManager, syncEngine: SyncEngine, store: DocumentStore?
-  ) async {
+  public func register(manager: ConnectionManager, syncEngine: SyncEngine) async {
     if let headlessTask {
       Logger.sync.info("UI graph registering; cancelling in-flight headless background sync")
       headlessTask.cancel()
       _ = await headlessTask.value
     }
-    registered = UIGraph(database: database, manager: manager, syncEngine: syncEngine, store: store)
+    registered = UIGraph(manager: manager, syncEngine: syncEngine)
   }
 
   public func unregister() {
@@ -109,23 +108,19 @@ public final class BackgroundSyncCoordinator {
     Logger.sync.info(
       "Background run (tier: \(String(describing: tier), privacy: .public), registered graph, isExpensive: \(cost.isExpensive), isConstrained: \(cost.isConstrained))"
     )
-    // Active server first, via its own store (mirrors the foreground order);
-    // `sync()` fire-and-forgets a reconcile, so the explicit call either runs
-    // it or joins-by-throttle — the trailing engine sweep gives it time either
-    // way.
-    if let store = graph.store {
-      try? await store.sync()
-      await store.reconcileDocuments()
-      if tier == .full {
-        let condition = SyncCondition(
-          isExpensive: cost.isExpensive, isConstrained: cost.isConstrained,
-          syncOverCellular: graph.manager.activeSyncOverCellular)
-        await store.runProactiveFill(unmetered: condition.allowsProactiveSync)
-      }
-    }
+    // One sweep over every server, active included. The hand-rolled
+    // active-server pass that used to lead this — `store.sync()`, then an
+    // explicit `reconcileDocuments()`, then a fill gated on the *active*
+    // server's cellular setting — existed only because the store owned the
+    // active server's repository and the engine was forbidden from touching
+    // it. It was a third copy of the sync sequence, with its own ordering and
+    // its own gate. Now the engine reaches that server through the very session
+    // the store uses, `SyncPlan` applies each server's own cellular setting,
+    // and stalest-first ordering puts the servers that actually need the run
+    // ahead of the one already on screen.
     await graph.syncEngine.syncServers(
-      scope: .excludingActive(graph.manager.activeConnectionId),
-      tier: tier, isExpensive: cost.isExpensive, isConstrained: cost.isConstrained)
+      scope: .all, tier: tier, isExpensive: cost.isExpensive,
+      isConstrained: cost.isConstrained)
     let completed = !Task.isCancelled
     Logger.sync.info("Background run finished (completed: \(completed))")
     return completed
