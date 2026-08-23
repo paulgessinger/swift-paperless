@@ -141,8 +141,8 @@ struct DocumentMetadataView: View {
 // - MARK: Preview
 
 #Preview {
-  @Previewable @State var store = DocumentStore(
-    repository: PreviewRepository(downloadDelay: 3.0))
+  @Previewable @State var store = DocumentStore.preview(
+    PreviewRepository(downloadDelay: 3.0))
   @Previewable @StateObject var errorController = ErrorController()
 
   @Previewable @State var document: Document?

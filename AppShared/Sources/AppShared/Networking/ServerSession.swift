@@ -47,13 +47,25 @@ public final class ServerSession {
     case failed
   }
 
+  /// Where this session's repository comes from.
+  private enum Source {
+    /// Production: assembled from the server's stored connection through
+    /// ``makeCachingRepository``, and rebuilt whenever that connection changes.
+    case stored(database: Database, manager: ConnectionManager, mode: ApiRepository.Mode)
+    /// Previews and tests: handed in ready-made, and never rebuilt. This is what
+    /// keeps "every store is driven by a session" true without dragging a
+    /// `ConnectionManager` and a real connection record into a fixture — the
+    /// alternative being a `DocumentStore.init(repository:)` escape hatch that
+    /// would let production code bypass a server's owner too.
+    case fixed(any Repository & CachingBackend)
+  }
+
   public let serverID: UUID
 
-  @ObservationIgnored private let database: Database
-  @ObservationIgnored private let manager: ConnectionManager
-  @ObservationIgnored private let mode: ApiRepository.Mode
+  @ObservationIgnored private let source: Source
 
   /// The retained stack, together with the `Connection` it was assembled from.
+  /// Only ever populated for ``Source/stored``.
   ///
   /// Retaining it is the point — a long-lived repository is what lets
   /// `activeFills` dedupe across sweeps instead of only within one. But the
@@ -70,7 +82,7 @@ public final class ServerSession {
   /// holds for `ConnectionsView.updateExtraHeaders`, which edits headers in
   /// place.
   @ObservationIgnored private var built:
-    (connection: Connection, repository: CachingRepository<NeedsAuthRepository<ApiRepository>>)?
+    (connection: Connection, repository: any Repository & CachingBackend)?
 
   /// In-flight sync, so concurrent callers coalesce onto one pass rather than
   /// running a second one against the same server.
@@ -90,9 +102,16 @@ public final class ServerSession {
     mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode
   ) {
     self.serverID = serverID
-    self.database = database
-    self.manager = manager
-    self.mode = mode
+    source = .stored(database: database, manager: manager, mode: mode)
+  }
+
+  /// A session around a repository that already exists, for previews and tests.
+  /// It consults no connection record and never rebuilds: the repository it is
+  /// handed is the one it keeps, so it is `.ready` from birth.
+  public init(serverID: UUID, repository: any Repository & CachingBackend) {
+    self.serverID = serverID
+    source = .fixed(repository)
+    state = .ready
   }
 
   deinit {
@@ -101,31 +120,50 @@ public final class ServerSession {
 
   // MARK: - Repository access
 
+  /// The live repository, or `nil` before anything has built it.
+  private var current: (any Repository & CachingBackend)? {
+    switch source {
+    case .fixed(let repository): repository
+    case .stored: built?.repository
+    }
+  }
+
   /// The server's repository, or `nil` before anything has built it.
-  public var repository: (any Repository)? { built?.repository }
+  public var repository: (any Repository)? { current }
 
   /// The same instance seen as the cache-backed surface the sync sequence and
   /// the store's projections both drive.
-  public var backend: (any CachingBackend)? { built?.repository }
+  public var backend: (any CachingBackend)? { current }
 
   /// Build the stack, or hand back the retained one when it still matches
   /// `stored`. Assembly goes through ``makeCachingRepository`` so every server's
   /// layering is identical to the app shell's.
-  private func repository(
+  ///
+  /// Public because activating a store on this server has to *await* the build:
+  /// the store publishes `repository` straight off the session, so a lazy build
+  /// would leave it on `NullRepository` — projection detached — for the first
+  /// render after every switch.
+  @discardableResult
+  public func prepareRepository(
     for stored: StoredConnection
-  ) async throws -> CachingRepository<NeedsAuthRepository<ApiRepository>> {
-    let connection = try stored.connection
-    if let built, built.connection == connection {
-      return built.repository
+  ) async throws -> any Repository & CachingBackend {
+    switch source {
+    case .fixed(let repository):
+      return repository
+    case .stored(let database, let manager, let mode):
+      let connection = try stored.connection
+      if let built, built.connection == connection {
+        return built.repository
+      }
+      if built != nil {
+        Logger.sync.info(
+          "Server \(stored.logLabel, privacy: .public) connection changed; rebuilding stack")
+      }
+      let repository = try await makeCachingRepository(
+        for: stored, database: database, manager: manager, mode: mode)
+      built = (connection, repository)
+      return repository
     }
-    if built != nil {
-      Logger.sync.info(
-        "Server \(stored.logLabel, privacy: .public) connection changed; rebuilding stack")
-    }
-    let repository = try await makeCachingRepository(
-      for: stored, database: database, manager: manager, mode: mode)
-    built = (connection, repository)
-    return repository
   }
 
   /// Drop the retained stack. Used when the server row goes away — the row
@@ -169,6 +207,7 @@ public final class ServerSession {
   /// cheap, and the next trigger picks the server up once a token lands. The 401
   /// path stays a backstop for a token the server rejects.
   public func markNeedsAuth(_ stored: StoredConnection) {
+    guard case .stored(_, let manager, _) = source else { return }
     Logger.sync.info(
       "Server \(stored.logLabel, privacy: .public) uncredentialed; marking needs-auth (no sync)")
     state = .needsAuth
@@ -179,7 +218,7 @@ public final class ServerSession {
     Logger.sync.info(
       "Syncing server \(stored.logLabel, privacy: .public) (heavyFill: \(runHeavyFill))")
     do {
-      let backend = try await repository(for: stored)
+      let backend = try await prepareRepository(for: stored)
       state = .ready
 
       // Cheap tier (always, regardless of metered-ness): element sync + the

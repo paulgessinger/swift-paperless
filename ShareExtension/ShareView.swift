@@ -14,16 +14,8 @@ import os
 struct ShareView: View {
   @ObservedObject var attachmentManager: AttachmentManager
 
-  // The extension process's own Database (app-group SQLite, WAL). The same DB
-  // backs the `ConnectionManager` and — wrapped in a `CachingRepository` in
-  // `refreshConnection` — the element cache, so the store's `ElementStore`
-  // projection observes the extension's own writes. Cross-process live
-  // notification isn't delivered (the extension syncs at launch), but the
-  // extension's in-process writes drive its own observation normally.
-  private let database: Database
-
   @State private var connectionManager: ConnectionManager
-  @State private var store = DocumentStore(repository: NullRepository())
+  @State private var store: DocumentStore
   @State private var storeReady = false
 
   @StateObject private var errorController = ErrorController()
@@ -35,9 +27,22 @@ struct ShareView: View {
   init(attachmentManager: AttachmentManager, callback: @escaping () -> Void) {
     self.attachmentManager = attachmentManager
     self.callback = callback
+    // The extension process's own Database (app-group SQLite, WAL). The same DB
+    // backs the `ConnectionManager` and — through the session's
+    // `CachingRepository` — the element cache, so the store's `ElementStore`
+    // projection observes the extension's own writes. Cross-process live
+    // notification isn't delivered (the extension syncs at launch), but the
+    // extension's in-process writes drive its own observation normally.
     let database = Self.bootstrapDatabase()
-    self.database = database
-    _connectionManager = State(initialValue: ConnectionManager(database: database))
+    let connectionManager = ConnectionManager(database: database)
+    _connectionManager = State(initialValue: connectionManager)
+    // The extension keeps the same one-session-per-server rule as the app, in a
+    // process that has no `SyncEngine` to share those sessions with. The registry
+    // is retained by the store; it is never `start()`ed, because an extension has
+    // no reason to react to connection edits made elsewhere.
+    _store = State(
+      initialValue: DocumentStore(
+        registry: ServerSessionRegistry(database: database, manager: connectionManager)))
   }
 
   // Open the app-group SQLite file. If the bootstrap fails (corrupt file,
@@ -94,11 +99,10 @@ struct ShareView: View {
         store.events.emit(.repositoryWillChange)
         // Caching outermost, over the extension's own DB, so the store's
         // ElementStore projection observes the writes its sync performs. The
-        // store owns that assembly (see `DocumentStore.activate`), so the
-        // extension can't drift from the app's layering.
+        // server's session owns that assembly (see `DocumentStore.activate`), so
+        // the extension can't drift from the app's layering.
         do {
-          try await store.activate(
-            connection: stored, database: database, manager: connectionManager)
+          try await store.activate(connection: stored)
         } catch {
           Logger.api.error("Could not build repository for active connection: \(error)")
           return

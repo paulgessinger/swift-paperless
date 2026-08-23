@@ -212,13 +212,13 @@ struct MainView: View {
         return
       }
 
-      // The store assembles the active server's stack itself (identical to the
-      // per-server stacks the SyncEngine builds for inactive servers), so both the
-      // reuse and the first-launch path go through one entry point. A fresh store
-      // starts on `NullRepository` and is only published once `activate` succeeds —
-      // otherwise a failed login would leave a detached store installed.
+      // The store activates onto the *same* session the SyncEngine sweeps this
+      // server with, so the active and inactive paths share one repository rather
+      // than racing two. A fresh store starts serverless (`NullRepository`) and is
+      // only published once `activate` succeeds — otherwise a failed login would
+      // leave a detached store installed.
       let isNewStore = store == nil
-      let target = store ?? DocumentStore(repository: NullRepository())
+      let target = store ?? DocumentStore(registry: sessionRegistry)
 
       if !isNewStore {
         await sleep(.seconds(0.1))
@@ -227,7 +227,7 @@ struct MainView: View {
       }
 
       do {
-        try await target.activate(connection: stored, database: database, manager: manager)
+        try await target.activate(connection: stored)
       } catch {
         Logger.api.error("Could not build repository for active connection: \(error)")
         storeReady = false
@@ -367,7 +367,7 @@ struct MainView: View {
 
     .sheet(isPresented: $showSettings) {
       if let store {
-        SettingsView(database: database)
+        SettingsView()
           .environment(manager)
           .environment(store)
           .environment(networkMonitor)

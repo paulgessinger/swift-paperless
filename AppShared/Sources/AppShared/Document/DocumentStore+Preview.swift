@@ -48,7 +48,10 @@ extension DocumentStore {
       preconditionFailure("Preview database seed failed: \(error)")
     }
     let caching = CachingRepository(wrapping: wrapped, database: database, serverID: serverID)
-    let store = DocumentStore(repository: caching)
+    // Wrapped in a session like every other store: previews exercise the same
+    // ownership path production does, and there is no `init(repository:)` for
+    // production code to reach for.
+    let store = DocumentStore(session: ServerSession(serverID: serverID, repository: caching))
     store.elementStore.refreshUISettings(from: database, serverID: serverID)
     Task { try? await store.sync() }
     return store
