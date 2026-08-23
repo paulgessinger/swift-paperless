@@ -50,6 +50,9 @@ public final class SyncEngine {
   @ObservationIgnored private let registry: ServerSessionRegistry
   /// Whole-sweep single-flight, coalescing concurrent lifecycle triggers.
   @ObservationIgnored private var sweepTask: Task<Void, Never>?
+  @ObservationIgnored private var observationTask: Task<Void, Never>?
+  /// Servers this engine has already accounted for, diffed to spot additions.
+  @ObservationIgnored private var knownServerIDs: Set<UUID> = []
 
   /// Background warmth cadence for inactive servers — deliberately looser than
   /// the active path's 300 s reconcile throttle; these servers aren't on screen.
@@ -65,19 +68,39 @@ public final class SyncEngine {
     self.pathCost = pathCost
   }
 
+  deinit {
+    observationTask?.cancel()
+  }
+
   // MARK: - Public API
 
   /// Start reacting to the server table: a newly-appeared, non-active server
   /// gets a throttle-exempt initial sync.
   ///
-  /// The observation itself belongs to ``ServerSessionRegistry`` — it owns
-  /// session lifetime, and one observer of that table is the whole point. The
-  /// engine only supplies the *policy* for what an addition deserves.
+  /// The registry owns session lifetime and remains the sole observer of the
+  /// `server` table; the engine observes the set the registry *publishes*, and
+  /// supplies only the policy for what an addition deserves. `knownServerIDs`
+  /// is the engine's own state — "which servers have I already given an initial
+  /// sync" — not a second copy of lifecycle.
   public func start() {
-    registry.onServersChanged = { [weak self] current, previous in
-      self?.handleServersChanged(current: current, previous: previous)
-    }
     registry.start()
+    guard observationTask == nil else { return }
+    // Seed from what is already configured: servers present at launch are
+    // covered by the caller's explicit sweep, not by the newly-added path.
+    knownServerIDs = registry.serverIDs
+    observationTask = Task { @MainActor [weak self] in
+      while !Task.isCancelled {
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        withObservationTracking {
+          _ = self?.registry.serverIDs
+        } onChange: {
+          continuation.yield()
+          continuation.finish()
+        }
+        self?.handleServersChanged()
+        for await _ in stream { break }
+      }
+    }
   }
 
   /// Sweep every inactive server once, sequentially (active-first is implicit —
@@ -138,9 +161,11 @@ public final class SyncEngine {
   /// Policy for a server that just appeared. Session creation and teardown
   /// already happened in the registry; all that is left is deciding what the
   /// addition deserves, which is `SyncPlan`'s call.
-  private func handleServersChanged(current: Set<UUID>, previous: Set<UUID>) {
+  private func handleServersChanged() {
+    let current = registry.serverIDs
     let added = SyncPlan.newlyAdded(
-      current: current, known: previous, activeID: manager.activeConnectionId)
+      current: current, known: knownServerIDs, activeID: manager.activeConnectionId)
+    knownServerIDs = current
     if !added.isEmpty {
       Logger.sync.info("Observed \(added.count) new server(s); kicking initial sync")
     }

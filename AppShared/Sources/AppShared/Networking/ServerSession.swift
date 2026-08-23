@@ -171,7 +171,7 @@ public final class ServerSession {
   /// Keeps the active server's on-appear triggers off the wire. Bypassed by
   /// pull-to-refresh and by the scheduler, which has already applied its own
   /// (much longer) throttle before asking.
-  @ObservationIgnored private let reconcileThrottle: TimeInterval = 300
+  private static let reconcileThrottle: TimeInterval = 300
 
   /// Every sync stage running right now *for this server*, in a fixed order;
   /// empty when idle. The Offline & Sync screen renders the active server's,
@@ -187,19 +187,18 @@ public final class ServerSession {
   /// Living on the session rather than the store is what makes an *inactive*
   /// server's progress observable at all: the engine's sweeps used to report
   /// nowhere, because the only reporter belonged to the active server's store.
-  public private(set) var syncActivities: [SyncActivity] = []
+  public var syncActivities: [SyncActivity] { activeStages.values.sortedForDisplay }
 
   // One entry per sweep currently running. Keyed by stage because each sweep
   // owns exactly one, and because a sweep reporting "done" says only *that* —
   // it can't say which stage it was, so the key has to come from the call site.
-  @ObservationIgnored
+  // Observed, so the derived list above tracks it without a stored mirror.
   private var activeStages: [SyncActivity.Stage: SyncActivity] = [:]
 
   /// Fold one sweep's progress into the published activity. `nil` retires the
   /// stage; the list keeps showing whatever else is still running.
   private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
     activeStages[stage] = activity
-    syncActivities = activeStages.values.sortedForDisplay
   }
 
   public init(
@@ -405,7 +404,7 @@ public final class ServerSession {
     }
     guard let backend = current else { return ReconcileResult() }
     if !force, let last = lastReconcileAttempt,
-      Date().timeIntervalSince(last) < reconcileThrottle
+      Date().timeIntervalSince(last) < Self.reconcileThrottle
     {
       return ReconcileResult()
     }

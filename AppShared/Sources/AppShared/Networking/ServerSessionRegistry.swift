@@ -39,19 +39,16 @@ public final class ServerSessionRegistry {
   /// server's state, not just the active one's.
   public private(set) var sessions: [UUID: ServerSession] = [:]
 
-  /// Server IDs seen at the last observation tick, diffed to spot additions and
-  /// removals.
-  @ObservationIgnored private var knownServerIDs: Set<UUID> = []
-  @ObservationIgnored private var observationTask: Task<Void, Never>?
-
-  /// Called after each observation tick with the current set and the set as it
-  /// was before, so a scheduler can decide what a newly-appeared server deserves.
+  /// The configured servers, as of the last observation tick.
   ///
-  /// The registry deliberately does not make that decision itself: whether a new
-  /// server is synced immediately, and whether the active one is excluded, is
-  /// `SyncPlan`'s call, not lifecycle.
-  @ObservationIgnored
-  public var onServersChanged: (@MainActor (_ current: Set<UUID>, _ previous: Set<UUID>) -> Void)?
+  /// Published rather than pushed: a scheduler that wants to react to a new
+  /// server observes this like any other state, instead of the registry holding
+  /// a callback into it. The registry still makes no *policy* decision — whether
+  /// a new server is synced immediately, and whether the active one is excluded,
+  /// is `SyncPlan`'s call, not lifecycle's.
+  public private(set) var serverIDs: Set<UUID> = []
+
+  @ObservationIgnored private var observationTask: Task<Void, Never>?
 
   public init(
     database: Database,
@@ -78,7 +75,7 @@ public final class ServerSessionRegistry {
     guard observationTask == nil else { return }
     // Seed with the current set so the first tick reports no spurious additions;
     // servers present at launch are handled by the caller's explicit sweep.
-    knownServerIDs = Set(manager.connections.keys)
+    serverIDs = Set(manager.connections.keys)
     observationTask = Task { @MainActor [weak self] in
       while !Task.isCancelled {
         let (stream, continuation) = AsyncStream<Void>.makeStream()
@@ -96,15 +93,15 @@ public final class ServerSessionRegistry {
 
   private func handleConnectionsChanged() {
     let current = Set(manager.connections.keys)
-    let previous = knownServerIDs
     // A vanished row has already FK-cascaded its whole cache, so there is no
     // cache work here — just stop and release the session.
-    for id in previous.subtracting(current) {
+    for id in serverIDs.subtracting(current) {
       sessions.removeValue(forKey: id)?.invalidate()
       Logger.sync.info("Server row removed; dropped its session")
     }
-    knownServerIDs = current
-    onServersChanged?(current, previous)
+    if serverIDs != current {
+      serverIDs = current
+    }
   }
 
   // MARK: - Access
