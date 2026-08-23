@@ -102,10 +102,11 @@ public final class DocumentStore: Sendable {
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
   /// `nil` until the first successful reconcile this session.
   ///
-  /// Observed (not `@ObservationIgnored`) because the Offline & Sync screen
-  /// renders it: untracked storage would leave the row reading "Never" until
-  /// some other observed property happened to fire.
-  public private(set) var lastReconcileAt: Date?
+  /// Owned by the session, not mirrored into stored state here: the session's
+  /// own stamp is observed, so a view reading this through the store still
+  /// repaints when a sweep lands — including a sweep the *scheduler* ran, which
+  /// the store used never to hear about.
+  public var lastReconcileAt: Date? { session?.lastReconcileSuccess }
 
   /// When the active server's library was last fully filled (`nil` if never).
   /// A stored, observed mirror of `server_sync_state.library_coverage_at` —
@@ -175,20 +176,6 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var taskUpdateTask: Task<Void, Never>?
 
-  // The in-flight element sync, if any. Concurrent `sync` callers join this one
-  // task instead of each firing their own `syncElements` (the launch flurry of
-  // sync / fetchUISettings / scenePhase triggers shares a single network
-  // pass). Only ever touched on the main actor.
-  @ObservationIgnored
-  private var syncTask: Task<Void, Error>?
-
-  // The in-flight proactive library fill. Held so it can be cancelled when the
-  // repository is replaced, and so a second request joins it rather than
-  // starting a parallel pass over the same queries. Only touched on the main
-  // actor.
-  @ObservationIgnored
-  private var libraryFillTask: Task<Void, Never>?
-
   // Observes the active server's `library_coverage_at` into `libraryCoverageAt`.
   // Re-pointed alongside the element projection whenever the repository changes.
   @ObservationIgnored
@@ -201,14 +188,6 @@ public final class DocumentStore: Sendable {
   // Observes the active server's cached document count into `cachedDocumentCount`.
   @ObservationIgnored
   private var documentCountObservationTask: Task<Void, Never>?
-
-  // When the reconcile last *ran*, which is what the throttle needs — it has to
-  // advance on every attempt or a failing server would re-sweep its whole id set
-  // on every foreground. `lastReconcileAt` is the separate, user-facing stamp and
-  // only advances on success.
-  @ObservationIgnored
-  private var lastDocumentReconcile: Date?
-  private let reconcileThrottle: TimeInterval = 300
 
   // MARK: Methods
 
@@ -231,10 +210,12 @@ public final class DocumentStore: Sendable {
     self.session = session
     imagePipeline = Self.makeImagePipeline(delegate: session?.repository?.delegate)
     wireElementStore()
+    session?.progress = { [weak self] activity, stage in
+      self?.report(activity, for: stage)
+    }
   }
 
   deinit {
-    libraryFillTask?.cancel()
     taskUpdateTask?.cancel()
     coverageObservationTask?.cancel()
     syncErrorObservationTask?.cancel()
@@ -366,21 +347,24 @@ public final class DocumentStore: Sendable {
   /// that needs to swap repositories should route through here so the invariant
   /// below keeps covering it.
   private func install(session: ServerSession, reload: Bool) {
-    // The backstop against installing a non-caching repository is gone because
-    // it is now unrepresentable: a session only ever yields a `CachingBackend`.
+    // Nothing is cancelled here any more, and that is the point.
     //
-    // The cancel-on-swap below, however, is still load-bearing *in this commit*.
-    // The store — not the session — still owns the element sync and the fill, so
-    // an in-flight one belongs to the outgoing backend: it writes the old
-    // server's rows, and `runSyncElements` would let the caller's follow-up sync
-    // join it (both `activate` callers do `activate` → `sync()`) and return
-    // without ever fetching the new server's cache. Once the sequence moves onto
-    // the session, that work is simply an *inactive* session's work and should
-    // keep running, and this goes away.
-    syncTask?.cancel()
-    syncTask = nil
-    libraryFillTask?.cancel()
-    libraryFillTask = nil
+    // The store used to cancel the in-flight element sync and library fill on
+    // every swap, because it owned them: they wrote the *outgoing* server's rows
+    // and a follow-up `sync()` would join them and return without ever fetching
+    // the new server's cache. Now that work belongs to the outgoing *session* —
+    // it is simply an inactive server's work, keyed to that server, and there is
+    // no way for the incoming server's sync to join it. So it keeps running, and
+    // switching servers mid-fill no longer throws away the pages already paid
+    // for.
+    //
+    // The progress hook does move, though: the outgoing session must stop
+    // reporting into this store's `syncActivities`, or the Offline & Sync screen
+    // would show the previous server's stages.
+    self.session?.progress = nil
+    session.progress = { [weak self] activity, stage in
+      self?.report(activity, for: stage)
+    }
     self.session = session
     imagePipeline = Self.makeImagePipeline(delegate: session.repository?.delegate)
     wireElementStore()
@@ -528,18 +512,18 @@ public final class DocumentStore: Sendable {
   public func sync(userInitiated: Bool = false) async throws {
     Logger.sync.notice("Sync store (userInitiated: \(userInitiated))")
     do {
-      try await runSyncElements()
+      try await session?.syncElements()
       lastSyncError = nil
       Logger.sync.info("Sync store complete")
       // Reconcile remote deletes alongside the element sync (throttled,
       // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
-      Task { [weak self] in await self?.reconcileDocuments(userInitiated: userInitiated) }
+      Task { [weak self] in await self?.session?.reconcileDocuments(force: userInitiated) }
     } catch {
-      // A cancellation is never the user's problem to see: either the caller's
-      // own task went away, or `install(session:)` retired this sync on a
-      // connection switch. Drop it before the userInitiated rethrow so neither
-      // case toasts.
+      // A cancellation is never the user's problem to see: the caller's own task
+      // went away. (A connection switch no longer retires it — that sync belongs
+      // to the outgoing session and runs on.) Drop it before the userInitiated
+      // rethrow so it doesn't toast.
       if error.isCancellationError {
         Logger.sync.debug("Element sync cancelled")
         return
@@ -553,38 +537,6 @@ public final class DocumentStore: Sendable {
       }
       Logger.sync.error("Background sync failed (suppressed): \(error)")
     }
-  }
-
-  /// Run (or join) the single in-flight `syncElements`. Returns when it
-  /// completes; throws its error to every joined caller (who each decide what to
-  /// do with it). A no-op without a caching backend.
-  private func runSyncElements() async throws {
-    if let syncTask {
-      Logger.sync.debug("Joining in-flight element sync")
-      return try await syncTask.value
-    }
-    guard let backend = session?.backend else {
-      // No DB-backed repository (e.g. NullRepository before login). Nothing to
-      // sync; the projection is empty until a caching repository is set.
-      Logger.sync.info("Sync skipped: repository is not a caching backend")
-      return
-    }
-    Logger.sync.debug("Starting element sync")
-    let task = Task { [weak self] in
-      try await NetworkTransfer.$category.withValue(.sync) {
-        try await backend.syncElements { self?.report($0, for: .elementSync) }
-      }
-    }
-    syncTask = task
-    defer {
-      // Retract only what we installed. `install(session:)` can retire this sync
-      // mid-flight and a replacement can already own `syncTask` by the time we
-      // resume; clearing it blindly would break the replacement's coalescing.
-      if syncTask == task {
-        syncTask = nil
-      }
-    }
-    try await task.value
   }
 
   public func document(id: UInt) async throws -> Document? {
@@ -879,123 +831,28 @@ extension DocumentStore {
     return backend.database.observeQueryStatus(queryKey: queryKey, serverID: backend.serverID)
   }
 
-  /// Throttled remote-delete reconcile: drop cached documents that no longer
-  /// exist on the server (so they disappear from every offline list). Soft-fail
-  /// (background); kicked from `sync()`. `userInitiated` bypasses the throttle.
+  /// Throttled remote-delete reconcile on the active server, run by its session:
+  /// drop cached documents that no longer exist on the server (so they disappear
+  /// from every offline list), fold in the changed-metadata delta, then rebuild
+  /// saved-view membership. Soft-fail (background); kicked from `sync()`.
+  /// `userInitiated` bypasses the throttle.
   public func reconcileDocuments(userInitiated: Bool = false) async {
-    guard let backend = session?.backend else { return }
-    if !userInitiated, let last = lastDocumentReconcile,
-      Date().timeIntervalSince(last) < reconcileThrottle
-    {
-      return
-    }
-    lastDocumentReconcile = Date()
-    report(SyncActivity(stage: .reconcile), for: .reconcile)
-    defer { report(nil, for: .reconcile) }
-
-    // Each sweep carries its own catch. The delete sweep is the most
-    // failure-prone of the three — it fetches the server's entire live id set —
-    // and under one shared `do` its failure took the freshness delta *and* the
-    // membership rebuild down with it, so a single flaky request cost the whole
-    // reconcile. Cancellation is the exception: it means the pass as a whole is
-    // unwanted (a repository swap, a background time budget running out), so it
-    // stops the remaining sweeps instead of being logged and stepped over.
-    var succeeded = 0
-    var cancelled = false
-
-    func sweep(_ label: String, _ body: () async throws -> Void) async {
-      guard !cancelled else { return }
-      do {
-        try await body()
-        succeeded += 1
-      } catch {
-        guard !error.isCancellationError else {
-          Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
-          cancelled = true
-          return
-        }
-        Logger.sync.info("Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
-      }
-    }
-
-    // Deletes first (correctness), then the changed-metadata delta (freshness),
-    // then the saved-view membership sweep (so newly-matched docs — now landed
-    // at detail by the delta — appear in every offline list). The last two are
-    // no-ops unless *Entire library* is enabled.
-    await NetworkTransfer.$category.withValue(.reconcile) {
-      await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
-      await sweep("changes") {
-        try await backend.reconcileDocumentChanges { [weak self] in
-          // The delta finishing doesn't end the reconcile — the membership
-          // sweep runs after it — so fall back to the bare stage.
-          self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
-        }
-      }
-      await sweep("membership") { try await backend.reconcileSavedViewMembership() }
-    }
-
-    // A pass in which *something* refreshed counts: a server that fails every
-    // sweep must not display a fresh "last refreshed" while nothing is actually
-    // being refreshed, but one failing sweep shouldn't erase the two that
-    // worked. Same policy as `fillLibrary`'s coverage marker. A cancelled pass
-    // stamps nothing — it didn't finish, it was called off.
-    if succeeded > 0, !cancelled {
-      lastReconcileAt = Date()
-    }
+    await session?.reconcileDocuments(force: userInitiated)
   }
 
-  /// Proactive *Entire library* fill, gated by the setting and an unmetered link.
+  /// Proactive *Entire library* fill on the active server, run by its session.
   /// Foreground-only; soft-fail (offline-tolerant). `force` ignores the freshness
   /// marker (e.g. the user just enabled the setting). A no-op when the setting is
-  /// *Recently browsed*, the link is metered, or there's no caching backend.
+  /// *Recently browsed*, the link is metered, or there is no active server.
   public func fillLibraryIfEnabled(unmetered: Bool, force: Bool = false) async {
-    guard unmetered, let backend = session?.backend,
-      backend.offlineBrowsingMode == .entireLibrary
-    else { return }
-
-    // Join an in-flight fill rather than starting a second pass over the same
-    // queries. Nothing dedupes these otherwise, and there are five triggers —
-    // launch, foreground, the mode picker, Sync now, and the background run.
-    // `force` is not lost by joining: a fill only runs at all when the coverage
-    // marker is stale or forced, so one is already doing the work.
-    if let existing = libraryFillTask {
-      await existing.value
-      return
-    }
-
-    let task = Task { [weak self] in
-      do {
-        try await backend.fillLibrary(force: force) { [weak self] in
-          self?.report($0, for: .libraryFill)
-        }
-      } catch is CancellationError {
-        Logger.sync.info("Proactive library fill cancelled")
-      } catch {
-        Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
-      }
-    }
-    libraryFillTask = task
-    await task.value
-    // Only clear our own: a cancel-and-restart may have installed a newer one
-    // while we were awaiting.
-    if libraryFillTask == task {
-      libraryFillTask = nil
-    }
+    await session?.fillLibrary(unmetered: unmetered, force: force)
   }
 
-  /// Proactive *Entire library* per-document detail fill (notes + file-metadata),
-  /// gated by the setting and an unmetered link. Run after `fillLibraryIfEnabled`
-  /// so the document rows to walk are already on disk. Idempotent and resumable
-  /// (driven off what's still missing), so it needs no `force`. Soft-fail.
+  /// Proactive *Entire library* per-document detail fill (notes + file-metadata)
+  /// on the active server, run by its session. Run after `fillLibraryIfEnabled`
+  /// so the document rows to walk are already on disk. Soft-fail.
   public func fillDocumentDetailsIfEnabled(unmetered: Bool) async {
-    guard unmetered, let backend = session?.backend,
-      backend.offlineBrowsingMode == .entireLibrary
-    else { return }
-    do {
-      try await backend.fillDocumentDetails { [weak self] in self?.report($0, for: .detailFill) }
-    } catch {
-      Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
-    }
+    await session?.fillDocumentDetails(unmetered: unmetered)
   }
 
   /// The server's total for the default document list, from the cached query

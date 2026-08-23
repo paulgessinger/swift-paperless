@@ -2,13 +2,16 @@
 //  SyncEngine.swift
 //  AppShared
 //
-//  Stage 10 (multi-server sync): keeps every *inactive* configured server's
-//  offline cache warm. The active server is deliberately NOT touched here — it
-//  is driven by `DocumentStore` (its own `CachingRepository` instance), so the
-//  engine skips `activeConnectionId` to avoid two instances racing the same
-//  `query_order` rows. "Active-first" therefore falls out for free: the store
-//  syncs the active server on the same lifecycle trigger, and the engine sweeps
-//  the rest.
+//  Stage 10 (multi-server sync): keeps every configured server's offline cache
+//  warm. The sweep still *selects* the inactive ones — the active server is
+//  driven by `DocumentStore` on the same lifecycle trigger, so "active-first"
+//  falls out for free — but that is now an ordering choice, not a safety
+//  requirement. It used to be both: the store and the engine each built their
+//  own `CachingRepository`, so sweeping the active server meant two instances
+//  racing the same `query_order` rows, and the engine had to re-check
+//  `activeConnectionId` on every iteration to narrow the window. Servers now
+//  own their repositories through `ServerSession`, so a sweep that reaches the
+//  active server coalesces onto the session the store is already using.
 //
 //  Scheduling stays on app-lifecycle triggers (launch / foreground /
 //  active-change); true `BGProcessingTask` execution is Stage 11's.
@@ -18,6 +21,10 @@
 //  server's repository and runs the sequence. The interesting decisions (active
 //  exclusion, throttle, uncredentialed degrade, heavy-fill gating, new-server
 //  diff) live in the pure, unit-tested `DataModel.SyncPlan`.
+//
+//  It keeps no per-server state of its own: freshness stamps and in-flight work
+//  live on the sessions, which is what lets a background sweep and the on-screen
+//  store agree about a server without either consulting the other.
 //
 
 import Common
@@ -117,10 +124,11 @@ public final class SyncEngine {
       "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (isExpensive: \(isExpensive), isConstrained: \(isConstrained), userInitiated: \(userInitiated))"
     )
     for action in actions {
-      // Re-read per iteration: the action list was computed before the first
-      // `await`, so a server the user switched to mid-sweep would otherwise be
-      // swept here while `DocumentStore` drives it on the same server.
-      guard action.serverID != manager.activeConnectionId else { continue }
+      // No "skip the server that went active mid-sweep" guard any more: sweeping
+      // it now means driving the *same* `ServerSession` the store drives, which
+      // coalesces onto that session's per-phase single-flights instead of racing
+      // a second `CachingRepository`. The guard only ever narrowed that window;
+      // one owner per server closes it.
       guard let stored = manager.connections[action.serverID] else { continue }
       await runAction(action, stored: stored)
     }

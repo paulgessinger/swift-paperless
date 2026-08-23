@@ -84,9 +84,20 @@ public final class ServerSession {
   @ObservationIgnored private var built:
     (connection: Connection, repository: any Repository & CachingBackend)?
 
-  /// In-flight sync, so concurrent callers coalesce onto one pass rather than
-  /// running a second one against the same server.
+  // In-flight work, one single-flight per phase.
+  //
+  // Per *phase* rather than one per session, because the two callers want
+  // different things: the store drives phases individually (pull-to-refresh
+  // wants the element sync back, not a full server sweep), while the scheduler
+  // runs the composed sequence. Sharing the per-phase tasks is what lets both
+  // callers hit the same session concurrently and coalesce — which in turn is
+  // what let the engine's "skip the active server" guard go away, since there
+  // is no longer a second owner to stay out of the way of.
   @ObservationIgnored private var syncTask: Task<Void, Never>?
+  @ObservationIgnored private var elementSyncTask: Task<Void, Error>?
+  @ObservationIgnored private var reconcileTask: Task<ReconcileResult, Never>?
+  @ObservationIgnored private var libraryFillTask: Task<Bool, Never>?
+  @ObservationIgnored private var detailFillTask: Task<Bool, Never>?
 
   public private(set) var state: State = .idle
 
@@ -94,6 +105,31 @@ public final class ServerSession {
   /// on a clean pass, so an interrupted or partially-failed one retries on the
   /// next trigger rather than being throttled away.
   public private(set) var lastSuccessfulSync: Date?
+
+  /// When the reconcile last *ran*. Advances on every attempt, deliberately —
+  /// it gates the sub-throttle below, and a server that fails every sweep must
+  /// not refetch its whole live id set on each of the seventeen on-appear
+  /// triggers. Distinct from ``lastReconcileSuccess`` for exactly that reason.
+  @ObservationIgnored private var lastReconcileAttempt: Date?
+
+  /// When the reconcile last refreshed *something*. The user-facing "last
+  /// refreshed" stamp the Offline & Sync screen renders, so it is observed.
+  public private(set) var lastReconcileSuccess: Date?
+
+  /// Keeps the active server's on-appear triggers off the wire. Bypassed by
+  /// pull-to-refresh and by the scheduler, which has already applied its own
+  /// (much longer) throttle before asking.
+  @ObservationIgnored private let reconcileThrottle: TimeInterval = 300
+
+  /// Where a running phase reports progress, installed by the store that is
+  /// showing this server. An inactive server leaves it `nil` and reports
+  /// nothing — exactly what the engine's sweeps did when it ran them itself.
+  @ObservationIgnored
+  public var progress: (@MainActor (SyncActivity?, SyncActivity.Stage) -> Void)?
+
+  private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
+    progress?(activity, stage)
+  }
 
   public init(
     serverID: UUID,
@@ -116,6 +152,10 @@ public final class ServerSession {
 
   deinit {
     syncTask?.cancel()
+    elementSyncTask?.cancel()
+    reconcileTask?.cancel()
+    libraryFillTask?.cancel()
+    detailFillTask?.cancel()
   }
 
   // MARK: - Repository access
@@ -171,13 +211,228 @@ public final class ServerSession {
   public func invalidate() {
     syncTask?.cancel()
     syncTask = nil
+    elementSyncTask?.cancel()
+    elementSyncTask = nil
+    reconcileTask?.cancel()
+    reconcileTask = nil
+    libraryFillTask?.cancel()
+    libraryFillTask = nil
+    detailFillTask?.cancel()
+    detailFillTask = nil
     built = nil
     state = .idle
   }
 
-  // MARK: - Sync
+  // MARK: - Phases
 
-  /// Run (or join) this server's sync pass.
+  /// Run (or join) this server's element sync.
+  ///
+  /// Unthrottled by design: every on-appear trigger expects this to reach the
+  /// network, and the single-flight — not a timer — is what keeps the launch
+  /// flurry to one pass. Rethrows to *every* joined caller, so a user-initiated
+  /// pull-to-refresh that lands on an in-flight background sync still sees the
+  /// failure it needs to toast.
+  public func syncElements() async throws {
+    if let elementSyncTask {
+      Logger.sync.debug("Joining in-flight element sync")
+      return try await elementSyncTask.value
+    }
+    guard let backend = current else {
+      // No repository yet (e.g. a store still on `NullRepository` before login).
+      Logger.sync.info("Element sync skipped: session has no repository")
+      return
+    }
+    Logger.sync.debug("Starting element sync")
+    let task = Task { [weak self] in
+      try await NetworkTransfer.$category.withValue(.sync) {
+        try await backend.syncElements { self?.report($0, for: .elementSync) }
+      }
+    }
+    elementSyncTask = task
+    defer {
+      // Retract only our own task: a replacement may already own the slot by the
+      // time we resume, and clearing it blindly would break its coalescing.
+      if elementSyncTask == task {
+        elementSyncTask = nil
+      }
+    }
+    try await task.value
+  }
+
+  /// What one reconcile pass achieved.
+  ///
+  /// Two stamps ask two different questions of the same pass — the scheduler
+  /// wants "fully clean" before it advances a throttle that could hide a broken
+  /// server for fifteen minutes; the Offline & Sync screen wants "did anything
+  /// refresh", because one flaky sweep shouldn't erase the two that worked. One
+  /// pass, both answers.
+  public struct ReconcileResult: Sendable {
+    public var succeeded = 0
+    public var failed = false
+    public var cancelled = false
+
+    /// Neither failed nor called off. Only a clean pass advances the scheduler's
+    /// freshness stamp.
+    public var isClean: Bool { !failed && !cancelled }
+  }
+
+  /// Throttled remote-delete reconcile: drop cached documents that no longer
+  /// exist on the server, fold in the changed-metadata delta, then rebuild
+  /// saved-view membership. Soft-fail throughout. `force` bypasses the 300 s
+  /// sub-throttle.
+  @discardableResult
+  public func reconcileDocuments(force: Bool = false) async -> ReconcileResult {
+    if let reconcileTask {
+      return await reconcileTask.value
+    }
+    guard let backend = current else { return ReconcileResult() }
+    if !force, let last = lastReconcileAttempt,
+      Date().timeIntervalSince(last) < reconcileThrottle
+    {
+      return ReconcileResult()
+    }
+    lastReconcileAttempt = Date()
+    let task = Task { @MainActor [weak self] in
+      guard let self else { return ReconcileResult() }
+      return await runReconcile(backend: backend)
+    }
+    reconcileTask = task
+    let result = await task.value
+    if reconcileTask == task {
+      reconcileTask = nil
+    }
+    return result
+  }
+
+  private func runReconcile(backend: any CachingBackend) async -> ReconcileResult {
+    report(SyncActivity(stage: .reconcile), for: .reconcile)
+    defer { report(nil, for: .reconcile) }
+
+    // Each sweep carries its own catch. The delete sweep is the most
+    // failure-prone of the three — it fetches the server's entire live id set —
+    // and under one shared `do` its failure took the freshness delta *and* the
+    // membership rebuild down with it, so a single flaky request cost the whole
+    // reconcile. Cancellation is the exception: it means the pass as a whole is
+    // unwanted, so it stops the remaining sweeps instead of being stepped over.
+    var result = ReconcileResult()
+    func sweep(_ label: String, _ body: () async throws -> Void) async {
+      guard !result.cancelled else { return }
+      do {
+        try await body()
+        result.succeeded += 1
+      } catch {
+        guard !error.isCancellationError else {
+          Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
+          result.cancelled = true
+          return
+        }
+        Logger.sync.info(
+          "Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
+        result.failed = true
+      }
+    }
+
+    // Deletes first (correctness), then the changed-metadata delta (freshness),
+    // then the saved-view membership sweep (so newly-matched docs — now landed
+    // at detail by the delta — appear in every offline list). The last two are
+    // no-ops unless *Entire library* is enabled.
+    await NetworkTransfer.$category.withValue(.reconcile) {
+      await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
+      await sweep("changes") {
+        try await backend.reconcileDocumentChanges { [weak self] in
+          // The delta finishing doesn't end the reconcile — the membership
+          // sweep runs after it — so fall back to the bare stage.
+          self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
+        }
+      }
+      await sweep("membership") { try await backend.reconcileSavedViewMembership() }
+    }
+
+    // A pass in which *something* refreshed counts. A cancelled pass stamps
+    // nothing — it didn't finish, it was called off.
+    if result.succeeded > 0, !result.cancelled {
+      lastReconcileSuccess = Date()
+    }
+    return result
+  }
+
+  /// Proactive *Entire library* fill, gated by the setting and an unmetered
+  /// link. Soft-fail (offline-tolerant). `force` ignores the freshness marker
+  /// (e.g. the user just enabled the setting).
+  ///
+  /// Returns whether the pass finished — `true` also when there was legitimately
+  /// nothing to do, `false` only when it errored or was called off. The composed
+  /// sequence needs that distinction to decide whether the server is fully
+  /// synced; the store's callers discard it.
+  @discardableResult
+  public func fillLibrary(unmetered: Bool, force: Bool = false) async -> Bool {
+    guard unmetered, let backend = current, backend.offlineBrowsingMode == .entireLibrary
+    else { return true }
+
+    // Join an in-flight fill rather than starting a second pass over the same
+    // queries. `force` is not lost by joining: a fill only runs at all when the
+    // coverage marker is stale or forced, so one is already doing the work.
+    if let libraryFillTask {
+      return await libraryFillTask.value
+    }
+    let task = Task { @MainActor [weak self] in
+      do {
+        try await NetworkTransfer.$category.withValue(.fill) {
+          try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
+        }
+        return true
+      } catch is CancellationError {
+        Logger.sync.info("Proactive library fill cancelled")
+        return false
+      } catch {
+        Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
+        return false
+      }
+    }
+    libraryFillTask = task
+    let completed = await task.value
+    if libraryFillTask == task {
+      libraryFillTask = nil
+    }
+    return completed
+  }
+
+  /// Proactive *Entire library* per-document detail fill (notes + file
+  /// metadata). Run after ``fillLibrary(unmetered:force:)`` so the document rows
+  /// to walk are already on disk. Idempotent and resumable (driven off what's
+  /// still missing), so it needs no `force`. Soft-fail.
+  @discardableResult
+  public func fillDocumentDetails(unmetered: Bool) async -> Bool {
+    guard unmetered, let backend = current, backend.offlineBrowsingMode == .entireLibrary
+    else { return true }
+    if let detailFillTask {
+      return await detailFillTask.value
+    }
+    let task = Task { @MainActor [weak self] in
+      do {
+        try await NetworkTransfer.$category.withValue(.fill) {
+          try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
+        }
+        return true
+      } catch is CancellationError {
+        Logger.sync.info("Proactive detail fill cancelled")
+        return false
+      } catch {
+        Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
+        return false
+      }
+    }
+    detailFillTask = task
+    let completed = await task.value
+    if detailFillTask == task {
+      detailFillTask = nil
+    }
+    return completed
+  }
+
+  // MARK: - Composed sequence
+
+  /// Run (or join) this server's full sync pass.
   ///
   /// The sequence is the one the active path has always run — element sync, the
   /// three reconcile sweeps, then the proactive fills — and is now the only copy
@@ -218,55 +473,28 @@ public final class ServerSession {
     Logger.sync.info(
       "Syncing server \(stored.logLabel, privacy: .public) (heavyFill: \(runHeavyFill))")
     do {
-      let backend = try await prepareRepository(for: stored)
+      _ = try await prepareRepository(for: stored)
       state = .ready
 
       // Cheap tier (always, regardless of metered-ness): element sync + the
       // reconcile sweeps (the last two self-gate on *Entire library*).
-      try await NetworkTransfer.$category.withValue(.sync) {
-        try await backend.syncElements()
-      }
+      try await syncElements()
 
-      // Each reconcile sweep carries its own catch: the deletion sweep is the
-      // most failure-prone of the three — it fetches the server's entire live id
-      // set — and under one shared `try` its failure took the freshness delta,
-      // the membership rebuild *and* the heavy fill down with it. Cancellation is
-      // the exception: it means the pass as a whole is unwanted, so it stops the
-      // remaining sweeps instead of being logged and stepped over.
-      var failed = false
-      var cancelled = false
-      func sweep(_ label: String, _ body: () async throws -> Void) async {
-        guard !cancelled else { return }
-        do {
-          try await body()
-        } catch {
-          guard !error.isCancellationError else {
-            Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
-            cancelled = true
-            return
-          }
-          Logger.sync.info(
-            "Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
-          failed = true
-        }
-      }
-      await NetworkTransfer.$category.withValue(.reconcile) {
-        await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
-        await sweep("changes") { try await backend.reconcileDocumentChanges() }
-        await sweep("membership") { try await backend.reconcileSavedViewMembership() }
-      }
+      // The scheduler applied its own, much longer throttle before asking, so
+      // the reconcile's 300 s sub-throttle — which exists to keep the *active*
+      // server's on-appear flurry off the wire — must not veto this pass.
+      let reconcile = await reconcileDocuments(force: true)
 
       // Heavy tier: only on an unmetered *Entire library* server (SyncPlan gate).
-      if runHeavyFill, !cancelled {
-        try await NetworkTransfer.$category.withValue(.fill) {
-          try await backend.fillLibrary(force: false)
-          try await backend.fillDocumentDetails()
-        }
+      var filled = true
+      if runHeavyFill, !reconcile.cancelled {
+        filled = await fillLibrary(unmetered: true, force: false)
+        filled = await fillDocumentDetails(unmetered: true) && filled
       }
 
       // Advance the stamp only on a *fully* successful pass — a pass that failed
       // or was called off partway retries on the next trigger.
-      guard !failed, !cancelled else {
+      guard reconcile.isClean, filled else {
         Logger.sync.info(
           "Server \(stored.logLabel, privacy: .public) partially synced; stamp not advanced")
         return
