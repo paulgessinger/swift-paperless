@@ -117,6 +117,7 @@ struct TagsEditSheet: View {
 
   private func save() {
     Task {
+      let originalTags = viewModel.document.tags
       do {
         saving = true
         viewModel.document.tags = tagIds
@@ -126,6 +127,7 @@ struct TagsEditSheet: View {
         dismiss()
       } catch {
         saving = false
+        viewModel.document.tags = originalTags
         errorController.push(error: error)
       }
     }
