@@ -68,7 +68,9 @@ struct MultiPartFormDataRequest {
   }
 
   func addTo(request: inout URLRequest) {
-    body.append("\r\n")
+    // Each `add` call already terminates its part with the trailing CRLF
+    // that RFC 2046 requires before the next boundary delimiter, so the
+    // closing boundary must not prepend another one.
     body.append("--\(boundary)--")
 
     request.httpMethod = "POST"
