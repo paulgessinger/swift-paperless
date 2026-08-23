@@ -15,7 +15,7 @@ import Foundation
 /// equally be stuck.
 ///
 /// Several of these run at once, so the store publishes *all* of them rather
-/// than picking one — see `AppShared.DocumentStore.syncActivities`.
+/// than picking one — see `AppShared.ServerSession.syncActivities`.
 ///
 /// In `DataModel` rather than `AppShared` for the same reason as
 /// ``OfflineLibrarySize``: the ordering rule is easy to regress silently and

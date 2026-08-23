@@ -75,29 +75,14 @@ public final class DocumentStore: Sendable {
   /// User-initiated syncs rethrow instead (the caller toasts, as before).
   public private(set) var lastSyncError: (any DisplayableError)?
 
-  /// Every sync stage running right now, in a fixed order; empty when idle.
-  /// Drives the stage rows and progress bars on the Offline & Sync screen.
+  /// Every sync stage running right now on the active server, in a fixed order;
+  /// empty when idle. Drives the stage rows and progress bars on the Offline &
+  /// Sync screen.
   ///
-  /// A list rather than one "current" stage because they genuinely overlap:
-  /// `sync()` starts the reconcile in its own task and returns, so a reconcile
-  /// is usually still running when the library fill begins. Publishing one of
-  /// them meant whichever finished first blanked the screen to "Idle" while the
-  /// other carried on — and, because progress is reported coarsely, it stayed
-  /// blank until the survivor reached its next checkpoint.
-  public private(set) var syncActivities: [SyncActivity] = []
-
-  // One entry per sweep currently running. Keyed by stage because each sweep
-  // owns exactly one, and because a sweep reporting "done" says only *that* —
-  // it can't say which stage it was, so the key has to come from the call site.
-  @ObservationIgnored
-  private var activeStages: [SyncActivity.Stage: SyncActivity] = [:]
-
-  /// Fold one sweep's progress into the published activity. `nil` retires the
-  /// stage; the screen keeps showing whatever else is still running.
-  private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
-    activeStages[stage] = activity
-    syncActivities = activeStages.values.sortedForDisplay
-  }
+  /// Owned by the session, so this is a plain projection: the screen now repaints
+  /// for work the *scheduler* started on this server too, which it could not do
+  /// while the only reporter was this store.
+  public var syncActivities: [SyncActivity] { session?.syncActivities ?? [] }
 
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
   /// `nil` until the first successful reconcile this session.
@@ -210,9 +195,6 @@ public final class DocumentStore: Sendable {
     self.session = session
     imagePipeline = Self.makeImagePipeline(delegate: session?.repository?.delegate)
     wireElementStore()
-    session?.progress = { [weak self] activity, stage in
-      self?.report(activity, for: stage)
-    }
   }
 
   deinit {
@@ -358,13 +340,9 @@ public final class DocumentStore: Sendable {
     // switching servers mid-fill no longer throws away the pages already paid
     // for.
     //
-    // The progress hook does move, though: the outgoing session must stop
-    // reporting into this store's `syncActivities`, or the Offline & Sync screen
-    // would show the previous server's stages.
-    self.session?.progress = nil
-    session.progress = { [weak self] activity, stage in
-      self?.report(activity, for: stage)
-    }
+    // Progress needs no unwiring either: each session publishes its own stages,
+    // so pointing the store at a new one *is* switching which server's progress
+    // the Offline & Sync screen shows.
     self.session = session
     imagePipeline = Self.makeImagePipeline(delegate: session.repository?.delegate)
     wireElementStore()
