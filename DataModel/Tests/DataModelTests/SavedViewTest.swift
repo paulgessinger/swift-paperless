@@ -185,6 +185,45 @@ struct SavedViewTest {
     #expect(first.userCanChange == true)
   }
 
+  // Regression test for a user-reported failure: a saved view ("Inbox")
+  // carries a `does_not_have_tag` rule (rule_type 17, a tag-typed rule) whose
+  // value is `null`. FilterRule's decoder used to try `.tag` (UInt) first,
+  // hit the null, fall into the `catch DecodingError.typeMismatch` recovery,
+  // try to decode the null as a String again, throw a second uncaught
+  // typeMismatch and fail the whole ListResponse decode. The null value is now
+  // captured as `.invalid` so the response decodes.
+  @Test func testDecodingListWithNullValueTagRule() throws {
+    let data = try #require(
+      testData("Data/SavedView/saved_view_does_not_have_tag_null.json"))
+    let result = try decoder.decode(ListResponse<SavedView>.self, from: data)
+
+    #expect(result.count == 7)
+    #expect(result.results.count == 7)
+
+    let inbox = try #require(result.results.first { $0.id == 1 })
+    #expect(inbox.name == "Inbox")
+    #expect(inbox.filterRules.count == 1)
+
+    let rule = try #require(inbox.filterRules.first)
+    #expect(rule.ruleType == .doesNotHaveTag)
+    #expect(rule.value == .invalid(value: ""))
+  }
+
+  // Minimal regression test pinpointing the root cause: a tag-typed rule with
+  // a null value decodes as `.invalid` instead of throwing.
+  @Test func testDecodingTagRuleWithNullValue() throws {
+    let input = """
+      {
+          "rule_type": 17,
+          "value": null
+      }
+      """.data(using: .utf8)!
+
+    let rule = try decoder.decode(FilterRule.self, from: input)
+    #expect(rule.ruleType == .doesNotHaveTag)
+    #expect(rule.value == .invalid(value: ""))
+  }
+
   @Test func testDecodingOwnerNull() throws {
     let input = """
       {
