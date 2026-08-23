@@ -167,7 +167,7 @@ class DocumentDetailModel {
 
   var documentUrl: URL? {
     guard let connection else { return nil }
-    return Endpoint.documentUrl(documentId: document.id).url(url: connection.url)
+    return Endpoint.documentPage(documentId: document.id).url(url: connection.url)
   }
 
   // @TODO: Extract `private var serverURL: URL?` from `(store.repository as? ApiRepository)?.connection.url`,

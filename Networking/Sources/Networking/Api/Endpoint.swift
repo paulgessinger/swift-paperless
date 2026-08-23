@@ -197,8 +197,10 @@ extension Endpoint {
     Endpoint(path: "/api/documents/\(documentId)/share_links")
   }
 
-  public static func documentUrl(documentId: UInt) -> Endpoint {
-    Endpoint(path: "/api/documents/\(documentId)")
+  /// The web UI route for a document, *not* an API endpoint. This is what a user
+  /// gets when sharing the "document link", so it has to be openable in a browser.
+  public static func documentPage(documentId: UInt) -> Endpoint {
+    Endpoint(path: "/documents/\(documentId)")
   }
 }
 

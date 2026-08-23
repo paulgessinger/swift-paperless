@@ -1,3 +1,4 @@
 - Title and content search now uses the new search API on Paperless-ngx v3.0 and later, instead of the parameter that server deprecated. Older servers are unaffected.
 - Fixed uploaded documents being saved with an extra 2 bytes (CRLF), which caused checksum mismatches and failed deduplication in Paperless-ngx
 - Fix the "What's New" screen failing to load when a release was published without release notes
+- Sharing a document link now shares the web interface URL, which opens in a browser, instead of the API URL that did not
