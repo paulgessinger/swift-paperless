@@ -504,8 +504,11 @@ public final class DocumentStore: Sendable {
       try await session.syncElements()
       lastSyncError = nil
       Logger.sync.info("Sync store complete")
-      // Reconcile remote deletes alongside the element sync (throttled,
-      // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
+      // Kick the reconcile alongside the element sync (throttled,
+      // non-blocking). Not just remote deletes, despite the name it used to
+      // carry: it is all three sweeps — deletions, the changed-metadata delta,
+      // then the saved-view membership rebuild. Pull-to-refresh
+      // (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
       Task { await session.reconcileDocuments(force: userInitiated) }
     } catch {
