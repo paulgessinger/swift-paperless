@@ -17,9 +17,9 @@ public struct QueryFillHandle: Sendable {
   /// Server-reported total from page 1 (the count pill's number), if known.
   public let totalCount: UInt?
 
-  private let fillTask: Task<Void, Never>
+  private let fillTask: Task<Void, any Error>
 
-  public init(queryKey: QueryKey, totalCount: UInt?, fillTask: Task<Void, Never>) {
+  public init(queryKey: QueryKey, totalCount: UInt?, fillTask: Task<Void, any Error>) {
     self.queryKey = queryKey
     self.totalCount = totalCount
     self.fillTask = fillTask
@@ -30,9 +30,14 @@ public struct QueryFillHandle: Sendable {
     fillTask.cancel()
   }
 
-  /// Await the background fill completing — primarily for tests and callers that
-  /// want the whole view local before proceeding.
-  public func awaitCompletion() async {
-    await fillTask.value
+  /// Await the background fill completing, rethrowing whatever stopped it early.
+  ///
+  /// A fill that dies partway — a dropped connection on page 2, the app being
+  /// suspended, a newer fill taking the key over — leaves the cached order
+  /// truncated. Swallowing that here is what let a caller treat a 250-row order
+  /// as the whole 3000-row query, so the error reaches the caller's own
+  /// handling instead.
+  public func awaitCompletion() async throws {
+    try await fillTask.value
   }
 }

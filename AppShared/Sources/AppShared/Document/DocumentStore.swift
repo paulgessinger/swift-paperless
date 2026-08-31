@@ -299,14 +299,36 @@ public final class DocumentStore: Sendable {
     lastSyncError = nil
   }
 
-  public func set(repository: some Repository, reload: Bool = true) {
-    // A repository that doesn't front the DB detaches the element projection
-    // (see `wireElementStore()`), which blanks every element read site until the
-    // next relaunch. That is legitimate before login, but only via `init` —
-    // anything *replacing* a live repository is expected to assemble a caching
-    // stack, so a bare one here is a caller bug. Be loud instead of silently
-    // emptying the UI: this exact mistake shipped once already, from
-    // `ConnectionsView.updateExtraHeaders`.
+  /// Point the store at `connection` — the only supported way to put it on a server.
+  ///
+  /// The store assembles the stack itself, through ``makeCachingRepository``, so a
+  /// caller cannot hand it a bare uncached repository. That mistake detaches the
+  /// element projection and blanks every element read site until the next relaunch,
+  /// and it shipped once already from `ConnectionsView.updateExtraHeaders`; keeping
+  /// the assembly in here is what makes it unrepresentable rather than merely
+  /// discouraged.
+  public func activate(
+    connection: StoredConnection,
+    database: Database,
+    manager: ConnectionManager,
+    mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
+    reload: Bool = true
+  ) async throws {
+    let repository = try await makeCachingRepository(
+      for: connection, database: database, manager: manager, mode: mode)
+    install(repository: repository, reload: reload)
+  }
+
+  /// The single chokepoint for swapping the live repository. Private on purpose:
+  /// see ``activate(connection:database:manager:mode:reload:)``. Any future path
+  /// that needs to swap repositories should route through here so the invariant
+  /// below keeps covering it.
+  private func install(repository: some Repository, reload: Bool) {
+    // A repository that doesn't front the DB detaches the element projection (see
+    // `wireElementStore()`). That is legitimate before login, but only via `init`;
+    // replacing a *live* repository with a bare one is always a bug. Unreachable
+    // today — `activate` is the only caller — so this is a backstop, not a guard
+    // against anything currently in the tree.
     if !(repository is any CachingBackend) {
       Logger.shared.fault(
         "Installing non-caching repository \(String(describing: type(of: repository)), privacy: .public) on a live store; element projection will stay detached until relaunch"
@@ -314,7 +336,7 @@ public final class DocumentStore: Sendable {
     }
     // An element sync in flight belongs to the *outgoing* backend: it writes the
     // old server's rows, and `runSyncElements` would let the caller's follow-up
-    // sync join it (both callers do `set(repository:)` → `sync()`) and return
+    // sync join it (both `activate` callers do `activate` → `sync()`) and return
     // without ever fetching the new server's cache. Nothing here is worth
     // keeping, so cancel rather than detach.
     syncTask?.cancel()
@@ -469,11 +491,11 @@ public final class DocumentStore: Sendable {
   /// sync still sees the error. This is what entry views call eagerly on
   /// appear, and what pull-to-refresh calls with `userInitiated: true`.
   public func sync(userInitiated: Bool = false) async throws {
-    Logger.shared.notice("Sync store (userInitiated: \(userInitiated))")
+    Logger.sync.notice("Sync store (userInitiated: \(userInitiated))")
     do {
       try await runSyncElements()
       lastSyncError = nil
-      Logger.shared.info("Sync store complete")
+      Logger.sync.info("Sync store complete")
       // Reconcile remote deletes alongside the element sync (throttled,
       // non-blocking). Pull-to-refresh (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
@@ -484,7 +506,7 @@ public final class DocumentStore: Sendable {
       // connection switch. Drop it before the userInitiated rethrow so neither
       // case toasts.
       if error.isCancellationError {
-        Logger.shared.debug("Element sync cancelled")
+        Logger.sync.debug("Element sync cancelled")
         return
       }
       if userInitiated { throw error }
@@ -494,7 +516,7 @@ public final class DocumentStore: Sendable {
       if let displayable = error as? any DisplayableError {
         lastSyncError = displayable
       }
-      Logger.shared.error("Background sync failed (suppressed): \(error)")
+      Logger.sync.error("Background sync failed (suppressed): \(error)")
     }
   }
 
@@ -503,16 +525,16 @@ public final class DocumentStore: Sendable {
   /// do with it). A no-op without a caching backend.
   private func runSyncElements() async throws {
     if let syncTask {
-      Logger.shared.debug("Joining in-flight element sync")
+      Logger.sync.debug("Joining in-flight element sync")
       return try await syncTask.value
     }
     guard let backend = repository as? any CachingBackend else {
       // No DB-backed repository (e.g. NullRepository before login). Nothing to
       // sync; the projection is empty until a caching repository is set.
-      Logger.shared.info("Sync skipped: repository is not a caching backend")
+      Logger.sync.info("Sync skipped: repository is not a caching backend")
       return
     }
-    Logger.shared.debug("Starting element sync")
+    Logger.sync.debug("Starting element sync")
     let task = Task { [weak self] in
       try await NetworkTransfer.$category.withValue(.sync) {
         try await backend.syncElements { self?.report($0, for: .elementSync) }
@@ -835,25 +857,55 @@ extension DocumentStore {
     lastDocumentReconcile = Date()
     report(SyncActivity(stage: .reconcile), for: .reconcile)
     defer { report(nil, for: .reconcile) }
-    do {
-      // Deletes first (correctness), then the changed-metadata delta (freshness),
-      // then the saved-view membership sweep (so newly-matched docs — now landed
-      // at detail by the delta — appear in every offline list). The last two are
-      // no-ops unless *Entire library* is enabled.
-      try await NetworkTransfer.$category.withValue(.reconcile) {
-        try await backend.reconcileDocumentDeletions()
+
+    // Each sweep carries its own catch. The delete sweep is the most
+    // failure-prone of the three — it fetches the server's entire live id set —
+    // and under one shared `do` its failure took the freshness delta *and* the
+    // membership rebuild down with it, so a single flaky request cost the whole
+    // reconcile. Cancellation is the exception: it means the pass as a whole is
+    // unwanted (a repository swap, a background time budget running out), so it
+    // stops the remaining sweeps instead of being logged and stepped over.
+    var succeeded = 0
+    var cancelled = false
+
+    func sweep(_ label: String, _ body: () async throws -> Void) async {
+      guard !cancelled else { return }
+      do {
+        try await body()
+        succeeded += 1
+      } catch {
+        guard !error.isCancellationError else {
+          Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
+          cancelled = true
+          return
+        }
+        Logger.sync.info("Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
+      }
+    }
+
+    // Deletes first (correctness), then the changed-metadata delta (freshness),
+    // then the saved-view membership sweep (so newly-matched docs — now landed
+    // at detail by the delta — appear in every offline list). The last two are
+    // no-ops unless *Entire library* is enabled.
+    await NetworkTransfer.$category.withValue(.reconcile) {
+      await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
+      await sweep("changes") {
         try await backend.reconcileDocumentChanges { [weak self] in
           // The delta finishing doesn't end the reconcile — the membership
           // sweep runs after it — so fall back to the bare stage.
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
-        try await backend.reconcileSavedViewMembership()
       }
-      // Only on success: a server that fails every sweep must not display a
-      // fresh "last refreshed" while nothing is actually being refreshed.
+      await sweep("membership") { try await backend.reconcileSavedViewMembership() }
+    }
+
+    // A pass in which *something* refreshed counts: a server that fails every
+    // sweep must not display a fresh "last refreshed" while nothing is actually
+    // being refreshed, but one failing sweep shouldn't erase the two that
+    // worked. Same policy as `fillLibrary`'s coverage marker. A cancelled pass
+    // stamps nothing — it didn't finish, it was called off.
+    if succeeded > 0, !cancelled {
       lastReconcileAt = Date()
-    } catch {
-      Logger.shared.info("Document reconcile failed (suppressed): \(error)")
     }
   }
 
@@ -882,9 +934,9 @@ extension DocumentStore {
           self?.report($0, for: .libraryFill)
         }
       } catch is CancellationError {
-        Logger.shared.info("Proactive library fill cancelled")
+        Logger.sync.info("Proactive library fill cancelled")
       } catch {
-        Logger.shared.info("Proactive library fill failed (suppressed): \(error)")
+        Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
       }
     }
     libraryFillTask = task
@@ -907,7 +959,7 @@ extension DocumentStore {
     do {
       try await backend.fillDocumentDetails { [weak self] in self?.report($0, for: .detailFill) }
     } catch {
-      Logger.shared.info("Proactive detail fill failed (suppressed): \(error)")
+      Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
     }
   }
 

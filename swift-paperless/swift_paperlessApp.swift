@@ -24,6 +24,10 @@ struct MainView: View {
 
   @State private var manager: ConnectionManager
 
+  // Keeps every *inactive* server's offline cache warm (Stage 10). The active
+  // server stays on the DocumentStore path; the engine skips it.
+  @State private var syncEngine: SyncEngine
+
   // Shared GRDB database, threaded into each connection's CachingRepository.
   private let database: Database
 
@@ -50,9 +54,21 @@ struct MainView: View {
     // Route network byte counts into the persisted transfer meter.
     TransferStatistics.install()
     self.database = database
-    _manager = State(wrappedValue: ConnectionManager(database: database))
+    let manager = ConnectionManager(database: database)
+    _manager = State(wrappedValue: manager)
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
+    // Raw path cost, read live so the engine's observation-driven initial
+    // sync gates on the current link — same source `isUnmetered` below reads,
+    // combined per-server via `SyncCondition` rather than folded here.
+    _syncEngine = State(
+      wrappedValue: SyncEngine(
+        database: database,
+        manager: manager,
+        pathCost: { [weak networkMonitor] in
+          guard let networkMonitor else { return (isExpensive: true, isConstrained: true) }
+          return (networkMonitor.isExpensive, networkMonitor.isConstrained)
+        }))
     errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
     _networkMonitor = State(initialValue: networkMonitor)
@@ -144,12 +160,16 @@ struct MainView: View {
     }
   }
 
-  /// The gate for the heavy proactive fills (cheap reconcile sweeps run
-  /// regardless). Wi‑Fi‑ish by default, unless the active server has been opted
-  /// in to cellular; Low Data Mode always wins. See
-  /// `NetworkMonitor.allowsProactiveSync(syncOverCellular:)`.
+  /// The gate for the *active* server's heavy proactive fill (cheap reconcile
+  /// sweeps run regardless). Wi‑Fi‑ish by default, unless the active server has
+  /// been opted in to cellular; Low Data Mode always wins. See `SyncCondition`.
+  /// The inactive-server sweep resolves this per-server itself — pass it raw
+  /// path cost (`networkMonitor.isExpensive`/`.isConstrained`), not this.
   private var isUnmetered: Bool {
-    networkMonitor.allowsProactiveSync(syncOverCellular: manager.activeSyncOverCellular)
+    SyncCondition(
+      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
+      syncOverCellular: manager.activeSyncOverCellular
+    ).allowsProactiveSync
   }
 
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
@@ -177,34 +197,51 @@ struct MainView: View {
       }
 
       Logger.api.info("Valid connection from connection manager: \(String(describing: conn))")
-      let api = await ApiRepository(connection: conn, mode: Bundle.main.appConfiguration.mode)
-      let needsAuth = NeedsAuthRepository(
-        wrapping: api, serverID: conn.serverID, connectionManager: manager)
-      // Caching outermost: reads come from the GRDB cache, while sync's network
-      // calls still flow through the needs-auth 401 interception.
-      let repository = CachingRepository(
-        wrapping: needsAuth, database: database, serverID: conn.serverID)
-      if let store {
-        await sleep(.seconds(0.1))
-        store.events.emit(.repositoryWillChange)
-        await sleep(.seconds(0.3))
-        store.set(repository: repository)
-        storeReady = true
-        try? await store.sync()
-        store.startTaskPolling()
-        kickLibraryFill(store)
-        await sleep(.seconds(0.3))
+      guard let stored = manager.storedConnection else {
+        Logger.api.error("Active connection has no stored connection record")
+        storeReady = false
+        showLoginScreen = true
         showLoadingScreen = false
-      } else {
-        let newStore = DocumentStore(repository: repository)
-        store = newStore
-        observeFriendlyName(on: newStore)
-        storeReady = true
-        try? await newStore.sync()
-        newStore.startTaskPolling()
-        kickLibraryFill(newStore)
-        showLoadingScreen = false
+        return
       }
+
+      // The store assembles the active server's stack itself (identical to the
+      // per-server stacks the SyncEngine builds for inactive servers), so both the
+      // reuse and the first-launch path go through one entry point. A fresh store
+      // starts on `NullRepository` and is only published once `activate` succeeds —
+      // otherwise a failed login would leave a detached store installed.
+      let isNewStore = store == nil
+      let target = store ?? DocumentStore(repository: NullRepository())
+
+      if !isNewStore {
+        await sleep(.seconds(0.1))
+        target.events.emit(.repositoryWillChange)
+        await sleep(.seconds(0.3))
+      }
+
+      do {
+        try await target.activate(connection: stored, database: database, manager: manager)
+      } catch {
+        Logger.api.error("Could not build repository for active connection: \(error)")
+        storeReady = false
+        showLoginScreen = true
+        showLoadingScreen = false
+        return
+      }
+
+      if isNewStore {
+        store = target
+        observeFriendlyName(on: target)
+      }
+
+      storeReady = true
+      try? await target.sync()
+      target.startTaskPolling()
+      kickLibraryFill(target)
+      if !isNewStore {
+        await sleep(.seconds(0.3))
+      }
+      showLoadingScreen = false
       showLoginScreen = false
     } else {
       storeReady = false
@@ -344,12 +381,25 @@ struct MainView: View {
       Logger.shared.notice("Checking login status")
       await refreshConnection(animated: initialDisplay)
       initialDisplay = false
+
+      // Begin observing the server table for newly-added servers, and warm every
+      // inactive server's cache (the active server was just synced above).
+      syncEngine.start()
+      Task {
+        await syncEngine.syncInactiveServers(
+          isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+      }
     }
 
     .onEvent(from: manager.events) { event in
       switch event {
       case .connectionChange(let animated):
-        Task { await refreshConnection(animated: animated) }
+        Task {
+          await refreshConnection(animated: animated)
+          // The just-deactivated server is now inactive: sweep it (and the rest).
+          await syncEngine.syncInactiveServers(
+            isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+        }
       case .logout:
         showLoginScreen = true
       }
@@ -374,11 +424,18 @@ struct MainView: View {
         // (when "Entire library" is on) tops up the proactive fill — a no-op once
         // the coverage marker is fresh. The initial launch sync is handled by
         // refreshConnection.
-        if !initialDisplay, let store {
+        if !initialDisplay {
+          if let store {
+            Task {
+              try? await store.sync()
+              await store.fillLibraryIfEnabled(unmetered: isUnmetered)
+              await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+            }
+          }
+          // Warm the inactive servers alongside the active refresh.
           Task {
-            try? await store.sync()
-            await store.fillLibraryIfEnabled(unmetered: isUnmetered)
-            await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+            await syncEngine.syncInactiveServers(
+              isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
           }
         }
 

@@ -281,6 +281,74 @@ struct DocumentCacheTests {
       ])
   }
 
+  // MARK: - Fill completion
+
+  @Test("a fill is not complete until it says so, and page 1 un-completes the key")
+  func fillCompletionStamp() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "fill")
+
+    // Page 1 truncated the key's order down to what it just wrote, so the key
+    // is incomplete no matter what it was before.
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 4, replaceAll: true)
+    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
+
+    // An appended page is still not a completed fill — this is the case that
+    // used to be indistinguishable from one.
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B")],
+      startPosition: 1, totalCount: 4, replaceAll: false)
+    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
+
+    try database.markQueryFillComplete(queryKey: key, serverID: server)
+    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) != nil)
+
+    // A new fill's page 1 wipes the order, so the completion goes with it.
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(3, "C")],
+      startPosition: 0, totalCount: 9, replaceAll: true)
+    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
+  }
+
+  @Test("marking a fill complete keeps the recorded total and stale flag")
+  func fillCompletionPreservesMeta() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "fill")
+
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 7, replaceAll: true)
+    try database.markQueriesOrderStale(containing: 1, serverID: server)
+    try database.markQueryFillComplete(queryKey: key, serverID: server)
+
+    let status = try database.queryStatus(queryKey: key, serverID: server)
+    #expect(status.totalCount == 7)
+    #expect(status.orderStale)
+  }
+
+  @Test("a membership rewrite leaves the completion stamp alone")
+  func replaceQueryOrderKeepsFillStamp() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+    try database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
+
+    try database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+    try database.markQueryFillComplete(queryKey: key, serverID: server)
+    let stamped = try #require(try database.queryFillCompletedAt(queryKey: key, serverID: server))
+
+    // The sweep writes a complete ordering of its own, so it neither claims nor
+    // revokes the fill's completion.
+    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
+    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == stamped)
+  }
+
   // MARK: - Order staleness
 
   @Test("markQueriesOrderStale flips the flag only for queries containing the doc")
