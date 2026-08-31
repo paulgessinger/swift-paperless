@@ -25,13 +25,12 @@ import Persistence
 public func makeCachingRepository(
   for stored: StoredConnection,
   database: Database,
-  manager: ConnectionManager,
   mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode
 ) async throws -> CachingRepository<NeedsAuthRepository<ApiRepository>> {
   let connection = try stored.connection
   let api = await ApiRepository(connection: connection, mode: mode)
   let needsAuth = NeedsAuthRepository(
-    wrapping: api, serverID: stored.id, connectionManager: manager)
+    wrapping: api, serverID: stored.id, database: database)
   // Caching outermost: reads come from the GRDB cache, while sync's network
   // calls still flow through the needs-auth 401 interception.
   return CachingRepository(wrapping: needsAuth, database: database, serverID: stored.id)

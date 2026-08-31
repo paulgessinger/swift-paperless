@@ -3,8 +3,8 @@
 //  AppShared
 //
 //  A `Repository` decorator that watches outgoing calls for
-//  `RequestError.unauthorized` (HTTP 401) and flips the wrapped connection's
-//  `needsAuth` flag on `ConnectionManager`. The original error is always
+//  `RequestError.unauthorized` (HTTP 401) and sets the wrapped connection's
+//  `needs_auth` column. The original error is always
 //  re-thrown so call sites still see the failure — the flag drives the
 //  user-visible recovery UI (banner + re-auth sheet); silent swallowing is
 //  not the goal.
@@ -20,6 +20,7 @@
 import DataModel
 import Foundation
 import Networking
+import Persistence
 import SwiftUI
 import os
 
@@ -27,16 +28,50 @@ import os
 public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
   private let wrapped: Wrapped
   private let serverID: UUID
-  private let connectionManager: ConnectionManager
+  private let database: Database
+
+  /// Whether this instance has already recorded a rejection.
+  ///
+  /// `ConnectionManager.markNeedsAuth` used to dedupe against its in-memory
+  /// set; writing the column directly needs its own guard, or a sync doing
+  /// dozens of calls against a dead token would issue an `UPDATE` per 401. One
+  /// write per instance is the right scope: a repository instance *is* one
+  /// connection configuration, and a new credential rebuilds the stack (the
+  /// session compares `Connection`s), which re-arms this.
+  private var marked = false
 
   public init(
     wrapping: Wrapped,
     serverID: UUID,
-    connectionManager: ConnectionManager
+    database: Database
   ) {
     self.wrapped = wrapping
     self.serverID = serverID
-    self.connectionManager = connectionManager
+    self.database = database
+  }
+
+  /// Record that this server's credential was rejected.
+  ///
+  /// Writes the column rather than calling `ConnectionManager`: `needs_auth` is
+  /// source-of-truth state on the `server` row, and the manager's own
+  /// `markNeedsAuth` is a thin wrapper over this same write whose in-memory set
+  /// is rebuilt by the connection observer either way. Going straight to the
+  /// database is what keeps an app-level object out of the repository stack.
+  private func markNeedsAuth() {
+    guard !marked else { return }
+    marked = true
+    Self.recordNeedsAuth(serverID: serverID, database: database)
+  }
+
+  fileprivate static func recordNeedsAuth(serverID: UUID, database: Database) {
+    Logger.api.info(
+      "Marking connection \(serverID, privacy: .private(mask: .hash)) as needing re-authentication"
+    )
+    do {
+      try database.setNeedsAuth(true, forConnection: serverID)
+    } catch {
+      Logger.api.error("Needs-auth write failed: \(error)")
+    }
   }
 
   private func intercept<T>(_ op: () async throws -> T) async throws -> T {
@@ -44,7 +79,7 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
       return try await op()
     } catch let error as RequestError {
       if case .unauthorized = error {
-        connectionManager.markNeedsAuth(for: serverID)
+        markNeedsAuth()
       }
       throw error
     }
@@ -55,18 +90,21 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
       return try op()
     } catch let error as RequestError {
       if case .unauthorized = error {
-        connectionManager.markNeedsAuth(for: serverID)
+        markNeedsAuth()
       }
       throw error
     }
   }
 
+  /// The paged sources outlive this decorator's call stack, so they carry the
+  /// write rather than a reference back to it — and therefore without the
+  /// per-instance dedupe, which is fine: paging 401s once and stops.
   private var sourceCallback: @Sendable () -> Void {
-    let manager = connectionManager
+    let database = self.database
     let id = serverID
     return {
       Task { @MainActor in
-        manager.markNeedsAuth(for: id)
+        NeedsAuthRepository.recordNeedsAuth(serverID: id, database: database)
       }
     }
   }

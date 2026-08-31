@@ -212,5 +212,5 @@ private func tag(_ id: UInt, _ name: String, _ color: Color) -> Tag {
 #Preview("Placeholder") {
   TagsView()
     .redacted(reason: .placeholder)
-    .environment(DocumentStore(repository: NullRepository()))
+    .environment(DocumentStore.preview())
 }

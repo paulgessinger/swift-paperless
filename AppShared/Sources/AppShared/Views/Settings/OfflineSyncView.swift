@@ -25,23 +25,39 @@ public struct OfflineSyncView: View {
   /// status. Only used to decide whether to suggest *Entire library*.
   @State private var libraryTotal: UInt?
 
+  /// Whether *this* button's action is still running. `store.isSyncing` covers
+  /// work the session has in flight, but there are brief moments between the
+  /// phases this action drives where no slot is occupied; without this the
+  /// button would blink back to enabled part-way through its own run.
+  @State private var syncNowRunning = false
+
   public init() {}
 
   // The active server's mode, read/written through ConnectionManager (persisted
   // on the connection record). The setting is per-server.
   private var mode: OfflineBrowsingMode { connectionManager.activeOfflineBrowsingMode }
 
-  private var unmetered: Bool {
-    guard let networkMonitor else { return true }
-    return SyncCondition(
-      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
-      syncOverCellular: connectionManager.activeSyncOverCellular
-    ).allowsProactiveSync
+  /// What a proactive pass on the active server would run right now — the same
+  /// question `SyncPlan` answers for every other server, asked here rather than
+  /// re-derived, so this screen can't disagree with the sweep about its own
+  /// server. Absent monitor (the SettingsView preview injects none) reads as an
+  /// unrestricted link, so the preview renders the ordinary state rather than
+  /// the "waiting for Wi-Fi" one.
+  private var plannedPhases: SyncPhases {
+    SyncPlan.phases(
+      isEntireLibrary: mode == .entireLibrary,
+      condition: SyncCondition(
+        cost: networkMonitor?.cost ?? .unrestricted,
+        syncOverCellular: connectionManager.activeSyncOverCellular))
   }
 
   /// Suggest the greedy mode only when it is actually cheap. A new server starts
   /// at *Recently browsed* whatever its size — downloading a whole library is
   /// the user's call — so this is where the size heuristic earns its keep.
+  /// Work is running — this button's own action, or anything else driving the
+  /// active server's session (a lifecycle sweep, a background run).
+  private var syncNowBusy: Bool { syncNowRunning || store.isSyncing }
+
   private var recommendsEntireLibrary: Bool {
     mode == .recentlyBrowsed && OfflineLibrarySize.isSmall(documentCount: libraryTotal)
   }
@@ -50,7 +66,7 @@ public struct OfflineSyncView: View {
   /// difference between "nothing to do" and "not now", which the screen used to
   /// render identically as Idle.
   private var waitingForNetwork: Bool {
-    mode == .entireLibrary && !unmetered && store.syncActivities.isEmpty
+    mode == .entireLibrary && !plannedPhases.contains(.fill) && !store.isSyncing
   }
 
   public var body: some View {
@@ -71,7 +87,7 @@ public struct OfflineSyncView: View {
               } else {
                 connectionManager.setOfflineBrowsingMode(newMode)
                 if newMode == .entireLibrary {
-                  Task { await store.fillLibraryIfEnabled(unmetered: unmetered, force: true) }
+                  Task { await store.fillIfEnabled(phases: plannedPhases, force: true) }
                 }
               }
             })
@@ -175,28 +191,35 @@ public struct OfflineSyncView: View {
         Button {
           Task {
             // Explicit user action: bypass the reconcile throttle and the
-            // unmetered gate, and force a re-fill ignoring the freshness marker.
+            // link gate, and force a re-fill ignoring the freshness marker.
             //
             // `userInitiated` exists precisely so this rethrows instead of
             // failing soft into `lastSyncError`; swallowing it here left a
             // "Sync now" that looked identical whether it worked or not.
+            syncNowRunning = true
+            defer { syncNowRunning = false }
             do {
               try await store.sync(userInitiated: true)
             } catch {
               errorController.push(error: error)
             }
-            await store.fillLibraryIfEnabled(unmetered: true, force: true)
-            // Both lifecycle paths pair the library fill with the detail fill;
-            // without this, notes and file metadata could only ever be filled by
-            // backgrounding and foregrounding the app.
-            await store.fillDocumentDetailsIfEnabled(unmetered: true)
+            // `.full` rather than the planned phases: this is the user asking
+            // for the work outright, so the link gate doesn't apply. Saying so
+            // in the phase set beats claiming the network is unmetered when it
+            // isn't.
+            await store.fillIfEnabled(phases: .full, force: true)
           }
         } label: {
+          // Explicit `foregroundStyle`, not just `.disabled`: a `Label`'s icon
+          // in a `Form` row button doesn't pick up the row's disabled dimming
+          // the way its text does, so a disabled row otherwise reads as a
+          // grayed-out title next to a still-accent-coloured icon.
           Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
+            .foregroundStyle(syncNowBusy ? Color.secondary : Color.accentColor)
         }
-        // Any sweep, not just the library fill: the detail fill left this
-        // enabled, so a second pass could be stacked on a running one.
-        .disabled(!store.syncActivities.isEmpty)
+        // Any work on this server, not just the library fill: the detail fill
+        // left this enabled, so a second pass could be stacked on a running one.
+        .disabled(syncNowBusy)
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }

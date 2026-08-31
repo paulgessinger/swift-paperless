@@ -21,16 +21,20 @@ public struct SyncServerAction: Equatable, Sendable {
   /// network call — never fail the whole engine.
   public let needsAuthOnly: Bool
 
-  /// Run the heavy proactive fill (`fillLibrary` + `fillDocumentDetails`) in
-  /// addition to the always-run cheap tier (`syncElements` + reconcile). Only
-  /// true on an unmetered path for an *Entire library* server. Implies a token
-  /// is present (`needsAuthOnly == false`).
-  public let runHeavyFill: Bool
+  /// The work this server should do, already decided: the fill is present only
+  /// on an unmetered path for an *Entire library* server. Empty when
+  /// `needsAuthOnly` — there is nothing to run without a credential.
+  ///
+  /// A phase set rather than a "heavy fill?" flag so the executor receives a
+  /// *decision* rather than the inputs to one, and so a new kind of work
+  /// (document binaries, OCR content, thumbnails) is a new case here rather
+  /// than another boolean threaded through every layer.
+  public let phases: SyncPhases
 
-  public init(serverID: UUID, needsAuthOnly: Bool, runHeavyFill: Bool) {
+  public init(serverID: UUID, needsAuthOnly: Bool, phases: SyncPhases) {
     self.serverID = serverID
     self.needsAuthOnly = needsAuthOnly
-    self.runHeavyFill = runHeavyFill
+    self.phases = phases
   }
 }
 
@@ -65,7 +69,7 @@ public enum SyncPlan {
   ///   sweep).
   /// - Credentialed servers are dropped while their last successful sweep is
   ///   still within `throttle`; otherwise they yield a sync action whose
-  ///   `runHeavyFill` is gated on `isEntireLibrary &&` that server's own
+  ///   the `.fill` phase is gated on `isEntireLibrary &&` that server's own
   ///   ``SyncCondition/allowsProactiveSync`` — each server's own
   ///   `syncOverCellular` opt-in applies to *that* server only, not the whole
   ///   sweep.
@@ -76,8 +80,7 @@ public enum SyncPlan {
     lastSweep: [UUID: Date],
     now: Date,
     throttle: TimeInterval,
-    isExpensive: Bool,
-    isConstrained: Bool
+    cost: LinkCost
   ) -> [SyncServerAction] {
     connections
       .filter { $0.id != activeID }
@@ -85,19 +88,34 @@ public enum SyncPlan {
       .compactMap { server in
         guard server.hasToken else {
           // Uncredentialed: mark needs-auth every sweep (no network, no throttle).
-          return SyncServerAction(serverID: server.id, needsAuthOnly: true, runHeavyFill: false)
+          return SyncServerAction(serverID: server.id, needsAuthOnly: true, phases: .nothing)
         }
         if let last = lastSweep[server.id], now.timeIntervalSince(last) < throttle {
           return nil  // still fresh — skip the network sweep
         }
-        let condition = SyncCondition(
-          isExpensive: isExpensive, isConstrained: isConstrained,
-          syncOverCellular: server.syncOverCellular)
         return SyncServerAction(
           serverID: server.id,
           needsAuthOnly: false,
-          runHeavyFill: condition.allowsProactiveSync && server.isEntireLibrary)
+          phases: phases(
+            isEntireLibrary: server.isEntireLibrary,
+            condition: SyncCondition(
+              cost: cost, syncOverCellular: server.syncOverCellular)))
       }
+  }
+
+  /// The phases one credentialed server should run.
+  ///
+  /// Shared by both drivers: the sweep reaches it through ``inactiveActions``,
+  /// and the active server — which `DocumentStore` drives directly, outside any
+  /// sweep — calls it itself. One function means the server the user is looking
+  /// at cannot drift onto a different rule than its siblings, which is exactly
+  /// what a `Bool` computed afresh at each call site invited.
+  ///
+  /// The mode gate is here as well as in the executor (which re-reads the
+  /// server's mode from the database before filling) on purpose: this is the
+  /// copy that is unit-tested, and the executor's is a guard, not a decision.
+  public static func phases(isEntireLibrary: Bool, condition: SyncCondition) -> SyncPhases {
+    condition.allowsProactiveSync && isEntireLibrary ? .full : .cheap
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an

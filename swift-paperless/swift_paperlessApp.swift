@@ -24,6 +24,11 @@ struct MainView: View {
 
   @State private var manager: ConnectionManager
 
+  // Owns one ServerSession per configured server, for the lifetime of its row.
+  // Held here rather than inside the engine because it is the process's single
+  // source of per-server repositories, not a scheduling detail.
+  @State private var sessionRegistry: ServerSessionRegistry
+
   // Keeps every *inactive* server's offline cache warm (Stage 10). The active
   // server stays on the DocumentStore path; the engine skips it.
   @State private var syncEngine: SyncEngine
@@ -58,17 +63,17 @@ struct MainView: View {
     _manager = State(wrappedValue: manager)
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
-    // Raw path cost, read live so the engine's observation-driven initial
-    // sync gates on the current link — same source `isUnmetered` below reads,
-    // combined per-server via `SyncCondition` rather than folded here.
+    let sessionRegistry = ServerSessionRegistry(database: database, manager: manager)
+    _sessionRegistry = State(wrappedValue: sessionRegistry)
     _syncEngine = State(
       wrappedValue: SyncEngine(
-        database: database,
+        registry: sessionRegistry,
         manager: manager,
-        pathCost: { [weak networkMonitor] in
-          guard let networkMonitor else { return (isExpensive: true, isConstrained: true) }
-          return (networkMonitor.isExpensive, networkMonitor.isConstrained)
-        }))
+        // Read live, per sweep, so the engine gates on the link as it is when
+        // the work starts rather than when the app launched. Each server
+        // combines it with its own opt-in via `SyncCondition`; the engine never
+        // folds it into a single answer for all of them.
+        linkCost: { [weak networkMonitor] in networkMonitor?.cost ?? .unknown }))
     errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
     _networkMonitor = State(initialValue: networkMonitor)
@@ -160,16 +165,20 @@ struct MainView: View {
     }
   }
 
-  /// The gate for the *active* server's heavy proactive fill (cheap reconcile
-  /// sweeps run regardless). Wi‑Fi‑ish by default, unless the active server has
-  /// been opted in to cellular; Low Data Mode always wins. See `SyncCondition`.
-  /// The inactive-server sweep resolves this per-server itself — pass it raw
-  /// path cost (`networkMonitor.isExpensive`/`.isConstrained`), not this.
-  private var isUnmetered: Bool {
-    SyncCondition(
-      isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained,
-      syncOverCellular: manager.activeSyncOverCellular
-    ).allowsProactiveSync
+  /// What a proactive pass on the *active* server should run right now — asked
+  /// of `SyncPlan`, the same way the inactive-server sweep asks it, so the
+  /// server on screen is planned by the same rule as the ones that aren't.
+  /// The cheap phases are always in; `.fill` depends on the link and this
+  /// server's own cellular opt-in (Low Data Mode always wins — see
+  /// `SyncCondition`).
+  ///
+  /// The sweep resolves its servers' conditions itself, from its own live cost
+  /// read — it needs nothing from here.
+  private var activePhases: SyncPhases {
+    SyncPlan.phases(
+      isEntireLibrary: manager.activeOfflineBrowsingMode == .entireLibrary,
+      condition: SyncCondition(
+        cost: networkMonitor.cost, syncOverCellular: manager.activeSyncOverCellular))
   }
 
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
@@ -177,8 +186,7 @@ struct MainView: View {
   /// scenePhase path chains it after `sync()` directly.
   private func kickLibraryFill(_ store: DocumentStore, force: Bool = false) {
     Task {
-      await store.fillLibraryIfEnabled(unmetered: isUnmetered, force: force)
-      await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+      await store.fillIfEnabled(phases: activePhases, force: force)
     }
   }
 
@@ -205,13 +213,13 @@ struct MainView: View {
         return
       }
 
-      // The store assembles the active server's stack itself (identical to the
-      // per-server stacks the SyncEngine builds for inactive servers), so both the
-      // reuse and the first-launch path go through one entry point. A fresh store
-      // starts on `NullRepository` and is only published once `activate` succeeds —
-      // otherwise a failed login would leave a detached store installed.
+      // The store activates onto the *same* session the SyncEngine sweeps this
+      // server with, so the active and inactive paths share one repository rather
+      // than racing two. A fresh store starts serverless (`NullRepository`) and is
+      // only published once `activate` succeeds — otherwise a failed login would
+      // leave a detached store installed.
       let isNewStore = store == nil
-      let target = store ?? DocumentStore(repository: NullRepository())
+      let target = store ?? DocumentStore(registry: sessionRegistry)
 
       if !isNewStore {
         await sleep(.seconds(0.1))
@@ -220,7 +228,7 @@ struct MainView: View {
       }
 
       do {
-        try await target.activate(connection: stored, database: database, manager: manager)
+        try await target.activate(connection: stored)
       } catch {
         Logger.api.error("Could not build repository for active connection: \(error)")
         storeReady = false
@@ -360,7 +368,7 @@ struct MainView: View {
 
     .sheet(isPresented: $showSettings) {
       if let store {
-        SettingsView(database: database)
+        SettingsView()
           .environment(manager)
           .environment(store)
           .environment(networkMonitor)
@@ -386,8 +394,7 @@ struct MainView: View {
       // inactive server's cache (the active server was just synced above).
       syncEngine.start()
       Task {
-        await syncEngine.syncInactiveServers(
-          isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+        await syncEngine.syncInactiveServers()
       }
     }
 
@@ -397,8 +404,7 @@ struct MainView: View {
         Task {
           await refreshConnection(animated: animated)
           // The just-deactivated server is now inactive: sweep it (and the rest).
-          await syncEngine.syncInactiveServers(
-            isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+          await syncEngine.syncInactiveServers()
         }
       case .logout:
         showLoginScreen = true
@@ -428,14 +434,12 @@ struct MainView: View {
           if let store {
             Task {
               try? await store.sync()
-              await store.fillLibraryIfEnabled(unmetered: isUnmetered)
-              await store.fillDocumentDetailsIfEnabled(unmetered: isUnmetered)
+              await store.fillIfEnabled(phases: activePhases)
             }
           }
           // Warm the inactive servers alongside the active refresh.
           Task {
-            await syncEngine.syncInactiveServers(
-              isExpensive: networkMonitor.isExpensive, isConstrained: networkMonitor.isConstrained)
+            await syncEngine.syncInactiveServers()
           }
         }
 

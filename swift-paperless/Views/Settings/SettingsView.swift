@@ -21,17 +21,9 @@ struct SettingsView: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(NetworkMonitor.self) private var networkMonitor: NetworkMonitor?
 
-  /// Threaded down to ``ConnectionsView`` so it can rebuild the full caching
-  /// repository stack when the active connection's extra headers change.
-  private let database: Database
-
   @State private var feedbackMailRequest: FeedbackMailRequest?
   @State private var showLoginSheet: Bool = false
   @State var identityManager = IdentityManager()
-
-  init(database: Database) {
-    self.database = database
-  }
 
   private func checked(_ fn: @escaping () async throws -> Void) async {
     do {
@@ -237,7 +229,6 @@ struct SettingsView: View {
       Form {
         ConnectionsView(
           connectionManager: connectionManager,
-          database: database,
           showLoginSheet: $showLoginSheet)
 
         Section(String(localized: .settings(.preferences))) {
@@ -300,14 +291,13 @@ struct SettingsView: View {
 #Preview("SettingsView") {
   @Previewable @State var store = DocumentStore.preview()
   @Previewable @StateObject var errorController = ErrorController()
-  @Previewable @State var database = try! Database.inMemory()
   @Previewable @State var connectionManager = ConnectionManager(
     database: try! Database.inMemory())
 
   VStack {
   }
   .sheet(isPresented: .constant(true)) {
-    SettingsView(database: database)
+    SettingsView()
       .environment(store)
       .environment(connectionManager)
   }

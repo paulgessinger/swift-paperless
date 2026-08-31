@@ -23,3 +23,6 @@
 - Background sync and an open document list downloading at the same time no longer leave gaps in a cached list
 - A document you no longer have permission to view is no longer served from the offline cache as though the server were unreachable
 - A failed cleanup of documents deleted on the server no longer stops the rest of the offline refresh
+- Switching to another server no longer throws away the offline download already running for the one you left; it keeps going in the background instead of starting over next time you switch back
+- Data used by the background library download is now counted under its own category in the Offline & Sync transfer statistics, instead of being lumped into "Other"
+- Switching a server to "Entire library" now starts downloading document notes and file metadata straight away, instead of waiting until the next time you reopen the app
