@@ -7094,13 +7094,13 @@
       }
     },
     "errorNotConfirmedOffline" : {
-      "comment" : "Toast shown when a save, edit or delete fails while offline with a connection that dropped mid-request or timed out, so the server may or may not have applied it. Deliberately hedged: unlike errorNotSavedOffline the app cannot tell whether the change landed, and retrying could duplicate it.",
+      "comment" : "Toast shown when a save, edit or delete fails while offline with a connection that dropped mid-request or timed out, so the server may or may not have applied it. Deliberately hedged: unlike errorNotSavedOffline the app cannot tell whether the change landed, and retrying could duplicate it. Keep it as short as errorNotSavedOffline (about 25 characters) — the toast shows one line next to a Details button and truncates anything longer.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't confirm the change was saved — you're offline"
+            "value" : "Maybe not saved — offline"
           }
         }
       }
