@@ -42,7 +42,7 @@ struct DateEditSheet: View {
         dismiss()
       } catch {
         saving = false
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

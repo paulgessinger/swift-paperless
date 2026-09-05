@@ -74,7 +74,7 @@ struct MainView: View {
         // combines it with its own opt-in via `SyncCondition`; the engine never
         // folds it into a single answer for all of them.
         linkCost: { [weak networkMonitor] in networkMonitor?.cost ?? .unknown }))
-    errorController.suppressBannerCoveredErrors(networkMonitor: networkMonitor)
+    errorController.installConnectivityPolicy(networkMonitor: networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
     _networkMonitor = State(initialValue: networkMonitor)
     _biometricLockManager = StateObject(

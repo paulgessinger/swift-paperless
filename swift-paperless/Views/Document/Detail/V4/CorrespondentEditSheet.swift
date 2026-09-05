@@ -30,7 +30,7 @@ struct CorrespondentEditSheet: View {
             onCreated(correspondent)
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       })

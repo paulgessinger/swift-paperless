@@ -59,7 +59,7 @@ struct OwnerEditSheet: View {
         } else {
           let error = RequestError.unexpectedStatusCode(code: code, detail: detail)
           Logger.shared.error("Error updating document: \(error)")
-          errorController.push(error: error)
+          errorController.push(mutationError: error)
         }
         saving = false
       } catch let RequestError.forbidden(body) {
@@ -72,13 +72,13 @@ struct OwnerEditSheet: View {
         } else {
           let error = RequestError.forbidden(detail: body)
           Logger.shared.error("Error updating document: \(error)")
-          errorController.push(error: error)
+          errorController.push(mutationError: error)
         }
         saving = false
       } catch {
         saving = false
         Logger.shared.error("Error updating document: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

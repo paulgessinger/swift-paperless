@@ -370,7 +370,7 @@ where
             document[keyPath: Element.documentPath(D.self)] = created.id
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
 

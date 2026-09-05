@@ -171,7 +171,7 @@ public struct CreateDocumentView: View {
     do {
       try await store.create(document: document, file: sourceUrl, filename: filename)
     } catch {
-      errorController.push(error: error)
+      errorController.push(mutationError: error)
       status = .error
       Task {
         try? await Task.sleep(for: .seconds(3))

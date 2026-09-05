@@ -54,7 +54,7 @@ private struct FilterMenu<Content: View>: View {
         filterModel.filterState = .init(savedView: updated)
       } catch {
         Logger.shared.error("Error saving saved view: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
     Logger.shared.info("Finished saving active saved view \(String(describing: updated))")

@@ -30,7 +30,7 @@ struct StoragePathEditSheet: View {
             onCreated(storagePath)
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       })

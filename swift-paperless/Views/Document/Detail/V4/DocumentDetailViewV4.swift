@@ -163,7 +163,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           navPath.wrappedValue = []
         }
       } catch {
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

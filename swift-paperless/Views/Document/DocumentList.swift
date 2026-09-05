@@ -120,7 +120,7 @@ struct DocumentList: View {
             try await store.deleteDocument(document)
           } catch {
             Logger.shared.error("Error deleting document: \(error)")
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       }
@@ -369,7 +369,7 @@ struct DocumentList: View {
               try await store.deleteDocument(document)
             } catch {
               Logger.shared.error("Error deleting document: \(error)")
-              errorController.push(error: error)
+              errorController.push(mutationError: error)
             }
           }
         } label: {

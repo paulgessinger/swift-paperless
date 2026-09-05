@@ -12,14 +12,14 @@ extension DisplayableError {
   public var documentationLink: URL? { nil }
 }
 
-private struct GenericError: DisplayableError {
+struct GenericError: DisplayableError {
   let message: String
   let details: String?
 }
 
 @MainActor
 public class ErrorController: ObservableObject {
-  private static let defaultTitle = String(localized: .app(.errorDefaultMessage))
+  static let defaultTitle = String(localized: .app(.errorDefaultMessage))
 
   // Installed by the app shell. Returning true drops the error before it
   // becomes a user-visible toast — used for cases where another UI surface
@@ -27,6 +27,12 @@ public class ErrorController: ObservableObject {
   // 401s, and connectivity errors are redundant when the offline banner is
   // already showing).
   public var shouldSuppress: ((any Error) -> Bool)?
+
+  // Installed by the app shell alongside `shouldSuppress`. Lets the
+  // user-initiated entry points (`UserInitiatedErrors.swift`) tell "this
+  // device has no link" from "this server didn't answer" without every call
+  // site having to reach for the NetworkMonitor itself.
+  public var isOffline: (() -> Bool)?
 
   let subject = PassthroughSubject<any DisplayableError, Never>()
 
@@ -41,21 +47,27 @@ public class ErrorController: ObservableObject {
       Logger.shared.debug("Suppressing error: \(String(describing: error))")
       return
     }
+    present(displayable(for: error, message: message))
+  }
+
+  /// The banner an arbitrary error turns into, with no suppression policy
+  /// applied. Shared with the user-initiated entry points, which reuse the
+  /// conversion but not the policy.
+  func displayable(for error: any Error, message: String?) -> any DisplayableError {
     if let de = error as? any DisplayableError {
-      push(error: de)
-      return
+      return de
     }
     if let le = error as? any LocalizedError {
       if let message {
         Logger.shared.error("Presenting error: \(String(describing: error))")
-        push(error: GenericError(message: message, details: error.localizedDescription))
-      } else {
-        push(error: le)
+        return GenericError(message: message, details: error.localizedDescription)
       }
-      return
+      return GenericError(
+        message: le.errorDescription ?? Self.defaultTitle,
+        details: le.failureReason)
     }
     Logger.shared.error("Presenting error: \(String(describing: error))")
-    push(message: message ?? Self.defaultTitle, details: error.localizedDescription)
+    return GenericError(message: message ?? Self.defaultTitle, details: error.localizedDescription)
   }
 
   public func push(error: any Error, message: LocalizedStringResource) {
@@ -74,6 +86,13 @@ public class ErrorController: ObservableObject {
       Logger.shared.debug("Suppressing error: \(String(describing: error))")
       return
     }
+    present(error)
+  }
+
+  /// Hand the error to the display bridge unconditionally. Bypasses
+  /// `shouldSuppress`, so only the entry points above — which have already
+  /// decided the error is worth showing — may call it.
+  func present(_ error: any DisplayableError) {
     Logger.shared.debug("Pushing error: \(String(describing: error))")
     Haptics.shared.notification(.error)
     subject.send(error)

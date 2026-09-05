@@ -38,7 +38,7 @@ struct TitleEditSheet: View {
       } catch {
         saving = false
         viewModel.document.title = origTitle
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

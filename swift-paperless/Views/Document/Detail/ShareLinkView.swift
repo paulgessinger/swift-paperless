@@ -54,7 +54,7 @@ struct ShareLinkView: View {
           try await store.repository.delete(shareLink: link)
         } catch {
           Logger.shared.error("Error deleting share link: \(error)")
-          errorController.push(error: error)
+          errorController.push(mutationError: error)
         }
       }
     }
@@ -200,7 +200,7 @@ private struct CreateShareLinkView: View {
         dismiss()
       } catch {
         Logger.shared.error("Failed to create share link: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

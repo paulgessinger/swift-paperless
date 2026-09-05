@@ -41,7 +41,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             document.tags.append(tag.id)
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       })

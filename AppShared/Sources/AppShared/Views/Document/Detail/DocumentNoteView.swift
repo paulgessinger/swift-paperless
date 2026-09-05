@@ -38,7 +38,7 @@ private struct CreateNoteView: View {
       dismiss()
     } catch {
       Logger.shared.error("Error adding note to document: \(error)")
-      errorController.push(error: error)
+      errorController.push(mutationError: error)
       saving = false
     }
   }
@@ -106,7 +106,7 @@ public struct DocumentNoteView: View {
       } catch let error where error.isCancellationError {
       } catch {
         Logger.shared.error("Error deleting note from document: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

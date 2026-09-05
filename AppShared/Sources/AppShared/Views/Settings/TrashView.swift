@@ -35,7 +35,7 @@ public struct TrashView: View {
         selection.subtract(ids)
       } catch {
         Logger.shared.error("Error restoring documents: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }
@@ -48,7 +48,7 @@ public struct TrashView: View {
         selection.subtract(ids)
       } catch {
         Logger.shared.error("Error restoring documents: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }
