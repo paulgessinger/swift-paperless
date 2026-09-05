@@ -5383,6 +5383,18 @@
         }
       }
     },
+    "documentDetailRefresh" : {
+      "comment" : "Toolbar button on the iPad document detail view that reloads the document from the server.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh"
+          }
+        }
+      }
+    },
     "documentDuplicateAsn" : {
       "extractionState" : "manual",
       "localizations" : {
