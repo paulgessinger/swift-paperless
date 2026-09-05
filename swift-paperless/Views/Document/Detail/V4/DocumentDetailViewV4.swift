@@ -666,6 +666,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .refreshable {
       let model = viewModel
+      // The detail load falls back to the cache while offline instead of
+      // throwing, so the notice comes from the network state, not an error.
+      errorController.noteOfflineIfNeeded()
       async let load: () = model.startLoad(onError: { errorController.push(readError: $0) })
       // Only on pull-to-refresh, not inside `load()`: refreshing permissions
       // means a full element sync, which is not what opening a document should
@@ -761,6 +764,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           Button {
             Task {
               isRefreshing = true
+              errorController.noteOfflineIfNeeded()
               await viewModel.startLoad(onError: { errorController.push(readError: $0) })
               isRefreshing = false
             }

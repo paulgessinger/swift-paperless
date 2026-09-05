@@ -208,6 +208,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
 
     .refreshable {
       Task {
+        errorController.noteOfflineIfNeeded()
         do {
           try await store.sync(userInitiated: true)
         } catch {

@@ -198,6 +198,7 @@ public struct OfflineSyncView: View {
             // "Sync now" that looked identical whether it worked or not.
             syncNowRunning = true
             defer { syncNowRunning = false }
+            errorController.noteOfflineIfNeeded()
             do {
               try await store.sync(userInitiated: true)
             } catch {

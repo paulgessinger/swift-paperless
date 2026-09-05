@@ -31,6 +31,11 @@ struct DocumentMetadataView: View {
   /// refresh split.
   private func load(userInitiated: Bool) async {
     if metadata != nil, !userInitiated { return }
+    // Offline, the cache answers this without throwing, so the notice has to
+    // come from the network state at the gesture, not from a failure.
+    if userInitiated {
+      errorController.noteOfflineIfNeeded()
+    }
     do {
       metadata = try await store.repository.metadata(documentId: document.id)
     } catch let error where error.isCancellationError {

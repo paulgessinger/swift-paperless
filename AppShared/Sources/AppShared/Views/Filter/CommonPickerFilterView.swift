@@ -424,6 +424,7 @@ where
 
     .refreshable {
       await Task {
+        errorController.noteOfflineIfNeeded()
         do {
           try await store.sync(userInitiated: true)
         } catch {

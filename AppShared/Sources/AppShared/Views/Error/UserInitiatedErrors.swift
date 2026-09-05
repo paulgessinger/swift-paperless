@@ -10,9 +10,12 @@
 //  1. Background / automatic failure — stays silent. Keep using
 //     `push(error:)`; the suppression policy is exactly right for it.
 //  2. User-initiated *read* (a pull-to-refresh, a "Sync now") —
-//     `push(readError:)`. Nothing was lost and the cached content is still on
-//     screen, so an error is the wrong shape; while offline this re-shows the
-//     offline indicator instead of saying nothing at all.
+//     `noteOfflineIfNeeded()` when the action starts, plus `push(readError:)`
+//     on the error path. Nothing was lost and the cached content is still on
+//     screen, so an error is the wrong shape; while offline the user gets the
+//     offline indicator instead of silence. Two entry points because most
+//     reads don't fail while offline — they fall back to the cache and
+//     "succeed" — so the notice can't wait for an error to arrive.
 //  3. User-initiated *mutation* (a save, an edit, a delete) —
 //     `push(mutationError:)`. Always surfaces, offline included.
 //
@@ -71,6 +74,26 @@ extension ErrorController {
       return
     }
     present(displayable(for: error, message: nil))
+  }
+
+  /// Tier 2, up front: announce "offline" at the moment the user asks for a
+  /// refresh, before the work runs.
+  ///
+  /// The error path alone isn't enough, because most reads *succeed* while
+  /// offline: `CachingRepository` catches the connectivity failure and serves
+  /// the cached row, so `push(readError:)` never runs and the pull-to-refresh
+  /// looks like it worked. Deciding on network state instead of on an error
+  /// covers both shapes, and the bridge's replace-don't-stack guard keeps the
+  /// two from producing a double notice when a read does throw.
+  ///
+  /// Returns whether the notice was emitted, i.e. whether the device is
+  /// offline; callers are free to ignore it and go on to refresh from cache.
+  @discardableResult
+  public func noteOfflineIfNeeded() -> Bool {
+    guard isOffline?() == true else { return false }
+    Logger.shared.debug("User-initiated read started while offline")
+    offlineNoticeSubject.send()
+    return true
   }
 
   /// Tier 2: surface the failure of a user-initiated **read**.

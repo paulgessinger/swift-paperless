@@ -137,6 +137,12 @@ class DocumentListViewModel {
   func refresh(filter: FilterState? = nil, userInitiated: Bool = false) async {
     if let filter { filterState = filter }
 
+    // Say "offline" up front: the passes below mostly fall back to the cache
+    // rather than throwing, so waiting for an error would say nothing at all.
+    if userInitiated {
+      errorController.noteOfflineIfNeeded()
+    }
+
     var firstError: (any Error)?
     do {
       try await store.sync(userInitiated: userInitiated)
