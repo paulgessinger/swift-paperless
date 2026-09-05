@@ -159,6 +159,13 @@ extension CachingBackend {
 enum CachingRepositoryError: Error {
   /// A pure cache read found nothing for a non-optional resource. The store's
   /// hydrate path tolerates this (cold cache); `sync` then fills it.
+  ///
+  /// Reachable, despite a note in the offline-stack inventory (#656 item 11)
+  /// suggesting otherwise: `currentUser()`, `uiSettings()` and
+  /// `serverConfiguration()` all throw it whenever the `ui_settings` /
+  /// `server_configuration` singleton has not been synced yet — the ordinary
+  /// first-launch state — and `DocumentStore.fillDocumentQuery` reuses it for
+  /// "no caching backend at all". Kept.
   case cacheMiss
 }
 
@@ -172,11 +179,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public let database: Database
   public let serverID: UUID
 
-  /// The in-flight fill per `QueryKey` — page 1 included, not only the
-  /// background continuation. Every writer of a key's `query_order` consults
-  /// this: a new fill drains the current owner before touching the key, and the
-  /// membership sweep steps over a key that is mid-fill. Main-actor isolated
-  /// like the rest of this class, so claiming and clearing never interleave.
+  /// The in-flight writer of each `QueryKey`'s `query_order` — a fill (page 1
+  /// included, not only the background continuation) or the membership sweep's
+  /// rewrite. Every writer of a key consults this: a new fill drains the current
+  /// owner before touching the key, and the membership sweep steps over a key
+  /// that is mid-fill. Main-actor isolated like the rest of this class, and
+  /// claiming/clearing never suspends, so two writers cannot both hold a key.
   private var activeFills: [QueryKey: Task<Void, any Error>] = [:]
 
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
@@ -417,7 +425,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     if activeFills[key] == owner { activeFills[key] = nil }
   }
 
-  /// Whether a fill currently owns this key's `query_order`.
+  /// Whether a fill (or the membership sweep's own rewrite) currently owns this
+  /// key's `query_order`.
   private func isFilling(_ key: QueryKey) -> Bool { activeFills[key] != nil }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
@@ -1092,8 +1101,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             "Membership sweep: '\(name ?? "default", privacy: .public)' began filling; skipping")
           continue
         }
-        try await database.replaceQueryOrder(
-          queryKey: key, serverID: serverID, orderedIDs: ids)
+        guard try await replaceQueryOrderOwningKey(key, orderedIDs: ids) else {
+          Logger.sync.info(
+            "Membership sweep: '\(name ?? "default", privacy: .public)' was taken over mid-write; skipping"
+          )
+          continue
+        }
         try? await database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
         throw CancellationError()
@@ -1105,6 +1118,40 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
           message: Self.syncFailureMessage(error))
       }
+    }
+  }
+
+  /// Rewrite `key`'s membership while *owning* the key, and report whether the
+  /// rewrite stood.
+  ///
+  /// The two `isFilling` guards around the caller used to be enough on their
+  /// own, because the write was a blocking main-actor call: nothing could claim
+  /// the key between the last check and the committed rewrite. Now that the
+  /// write suspends, that window is real — a fill could start inside it and
+  /// interleave its page-1 `replaceAll` with this delete-all-and-reinsert,
+  /// producing exactly the garbled merge the guards exist to prevent. Claiming
+  /// the key for the duration closes it again: a fill starting meanwhile drains
+  /// this write (`drainFill`) instead of racing it, and the drained sweep leaves
+  /// the key to the fill, which writes the better ordering anyway.
+  ///
+  /// - Returns: `false` if a fill took the key over, so the caller skips the
+  ///   view rather than clearing its recorded sync error.
+  private func replaceQueryOrderOwningKey(
+    _ key: QueryKey, orderedIDs: [UInt]
+  ) async throws -> Bool {
+    let database = database
+    let serverID = serverID
+    let write = Task {
+      try await database.replaceQueryOrder(
+        queryKey: key, serverID: serverID, orderedIDs: orderedIDs)
+    }
+    activeFills[key] = write
+    defer { if activeFills[key] == write { activeFills[key] = nil } }
+    do {
+      try await write.value
+      return true
+    } catch is CancellationError {
+      return false
     }
   }
 
