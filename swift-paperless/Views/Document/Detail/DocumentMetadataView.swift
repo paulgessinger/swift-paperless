@@ -37,7 +37,7 @@ struct DocumentMetadataView: View {
     } catch {
       Logger.shared.error("Error loading document metadata: \(error)")
       if userInitiated {
-        errorController.push(error: error)
+        errorController.push(readError: error)
       }
     }
   }

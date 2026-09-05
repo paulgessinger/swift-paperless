@@ -427,7 +427,7 @@ where
         do {
           try await store.sync(userInitiated: true)
         } catch {
-          errorController.push(error: error)
+          errorController.push(readError: error)
         }
       }.value
     }

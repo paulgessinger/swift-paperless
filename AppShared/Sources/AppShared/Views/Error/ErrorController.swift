@@ -36,8 +36,18 @@ public class ErrorController: ObservableObject {
 
   let subject = PassthroughSubject<any DisplayableError, Never>()
 
+  let offlineNoticeSubject = PassthroughSubject<Void, Never>()
+
   public var presentations: AnyPublisher<any DisplayableError, Never> {
     subject.eraseToAnyPublisher()
+  }
+
+  /// Fires when a user-initiated *read* was blocked by being offline. The
+  /// offline toast bridge re-shows the offline indicator in response — nothing
+  /// was lost and cached content is still on screen, so this deliberately
+  /// isn't an error.
+  public var offlineNotices: AnyPublisher<Void, Never> {
+    offlineNoticeSubject.eraseToAnyPublisher()
   }
 
   public init() {}

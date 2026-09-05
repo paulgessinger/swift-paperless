@@ -171,7 +171,7 @@ class DocumentListViewModel {
 
   private func surface(_ error: (any Error)?, userInitiated: Bool) {
     guard userInitiated, let error else { return }
-    errorController.push(error: error)
+    errorController.push(readError: error)
   }
 
   /// Kick the eager fill: page 1 awaited (DB write → observation repaints), the

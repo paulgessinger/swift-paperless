@@ -163,7 +163,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
       }
     } catch {
-      errorController.push(error: error)
+      errorController.push(readError: error)
     }
   }
 

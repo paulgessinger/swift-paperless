@@ -201,7 +201,7 @@ public struct OfflineSyncView: View {
             do {
               try await store.sync(userInitiated: true)
             } catch {
-              errorController.push(error: error)
+              errorController.push(readError: error)
             }
             // `.full` rather than the planned phases: this is the user asking
             // for the work outright, so the link gate doesn't apply. Saying so

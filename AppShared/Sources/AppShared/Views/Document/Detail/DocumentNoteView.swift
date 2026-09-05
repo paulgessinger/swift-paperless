@@ -121,7 +121,7 @@ public struct DocumentNoteView: View {
     } catch let error where error.isCancellationError {} catch {
       Logger.shared.error("Error loading notes for document: \(error)")
       if userInitiated {
-        errorController.push(error: error)
+        errorController.push(readError: error)
       }
     }
   }

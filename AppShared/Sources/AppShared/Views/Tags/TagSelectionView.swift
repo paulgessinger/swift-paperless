@@ -211,7 +211,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
         do {
           try await store.sync(userInitiated: true)
         } catch {
-          errorController.push(error: error)
+          errorController.push(readError: error)
         }
       }
     }

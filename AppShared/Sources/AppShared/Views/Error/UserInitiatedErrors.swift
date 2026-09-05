@@ -9,9 +9,10 @@
 //
 //  1. Background / automatic failure — stays silent. Keep using
 //     `push(error:)`; the suppression policy is exactly right for it.
-//  2. User-initiated *read* (a pull-to-refresh, a "Sync now") — nothing was
-//     lost and the cached content is still on screen, so an error is the
-//     wrong shape. Still on `push(error:)` today.
+//  2. User-initiated *read* (a pull-to-refresh, a "Sync now") —
+//     `push(readError:)`. Nothing was lost and the cached content is still on
+//     screen, so an error is the wrong shape; while offline this re-shows the
+//     offline indicator instead of saying nothing at all.
 //  3. User-initiated *mutation* (a save, an edit, a delete) —
 //     `push(mutationError:)`. Always surfaces, offline included.
 //
@@ -52,5 +53,21 @@ extension ErrorController {
       return
     }
     present(displayable(for: error, message: nil))
+  }
+
+  /// Tier 2: surface the failure of a user-initiated **read**.
+  ///
+  /// While offline this re-shows the offline indicator rather than an error:
+  /// nothing was lost, cached content is still on screen, and the user did ask
+  /// for *something* to happen, so silence is wrong too. Everything else keeps
+  /// the normal policy — a server that is unreachable while the device is
+  /// online is still a real error worth a banner.
+  public func push(readError error: any Error) {
+    if isOffline?() == true, Self.isConnectivityError(error) {
+      Logger.shared.debug("User-initiated read blocked while offline: \(error)")
+      offlineNoticeSubject.send()
+      return
+    }
+    push(error: error)
   }
 }
