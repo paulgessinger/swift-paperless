@@ -14,8 +14,8 @@ import Persistence
 
 extension DocumentStore {
   /// A store backed by an in-memory seeded DB, wrapping `wrapped` in a
-  /// `CachingRepository` so the live `ElementStore` projection and the
-  /// write-through mutations behave exactly as in production.
+  /// `CachingRepository` so the live `ServerProjection` and the write-through
+  /// mutations behave exactly as in production.
   ///
   /// The wrapped repository's element data is copied into the DB by a one-shot
   /// `sync()` (previews are live, so it lands a beat after first render);
@@ -52,7 +52,7 @@ extension DocumentStore {
     // ownership path production does, and there is no `init(repository:)` for
     // production code to reach for.
     let store = DocumentStore(session: ServerSession(serverID: serverID, repository: caching))
-    store.elementStore.refreshUISettings(from: database, serverID: serverID)
+    store.projection?.refreshUISettings()
     Task { try? await store.sync() }
     return store
   }
