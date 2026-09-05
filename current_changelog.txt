@@ -30,5 +30,5 @@
 - Pulling to refresh an open document now picks up a new version added on the server, instead of continuing to show the previous one until you close and reopen it
 - Pulling to refresh a document that has a new version on the server now finishes refreshing its notes, metadata and suggestions, instead of stopping partway and showing an "Unexpected error"
 - On iPad you can now refresh an open document from the toolbar, picking up a new version or changed details without closing and reopening it
-- Saving, editing or deleting something while offline now tells you the change was not saved, instead of failing silently and leaving your edit looking like it was queued
+- Saving, editing or deleting something while offline now tells you the change was not saved, instead of failing silently and leaving your edit looking like it was queued. If the connection dropped mid-request, so the change may or may not have gone through, it says that instead of guessing.
 - Pulling to refresh while offline now shows the offline indicator instead of doing nothing at all, and repeated pulls no longer stack up notices

@@ -43,28 +43,50 @@ extension ErrorController {
     return isConnectivityError(error)
   }
 
-  /// Transport failures that mean "the request never reached the server".
+  /// How much a connectivity-class transport failure tells us about whether
+  /// the request reached the server. The distinction only matters for writes:
+  /// for a read, either way nothing was lost.
+  enum ConnectivityFailure {
+    /// The request never left the device, so the server did not see it.
+    case neverSent
+    /// The link died or the wait expired mid-flight. The server may well have
+    /// processed the request before the connection went away — a retry can
+    /// duplicate a note, a tag or a share link.
+    case unconfirmed
+  }
+
+  /// Classify a transport failure, or `nil` if it isn't connectivity-class.
   /// Note this cannot distinguish device-offline from server-unreachable on
   /// its own (see #667) — callers pair it with the NetworkMonitor's verdict.
-  static func isConnectivityError(_ error: any Error) -> Bool {
-    if let url = error as? URLError {
-      switch url.code {
-      case .notConnectedToInternet, .networkConnectionLost,
-        .dataNotAllowed, .timedOut:
-        return true
-      default: break
+  ///
+  /// The single list of codes lives here: `isConnectivityError` is just "did
+  /// this classify at all", so the two can't drift apart.
+  static func connectivityFailure(_ error: any Error) -> ConnectivityFailure? {
+    func classify(_ code: Int) -> ConnectivityFailure? {
+      switch code {
+      case NSURLErrorNotConnectedToInternet, NSURLErrorDataNotAllowed:
+        .neverSent
+      case NSURLErrorNetworkConnectionLost, NSURLErrorTimedOut:
+        .unconfirmed
+      default:
+        nil
       }
+    }
+
+    if let url = error as? URLError, let failure = classify(url.code.rawValue) {
+      return failure
     }
 
     if let ns = error as NSError?, ns.domain == NSURLErrorDomain {
-      switch ns.code {
-      case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost,
-        NSURLErrorDataNotAllowed, NSURLErrorTimedOut:
-        return true
-      default: break
-      }
+      return classify(ns.code)
     }
 
-    return false
+    return nil
+  }
+
+  /// Transport failures that mean "the request did not complete over the
+  /// network" — the union of both `ConnectivityFailure` cases.
+  static func isConnectivityError(_ error: any Error) -> Bool {
+    connectivityFailure(error) != nil
   }
 }

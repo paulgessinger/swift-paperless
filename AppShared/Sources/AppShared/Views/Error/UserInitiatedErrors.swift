@@ -22,6 +22,9 @@
 //  up — so a rejected write is *gone*. Silence is then indistinguishable from
 //  "pending", and the user walks away believing their edit is queued.
 //
+//  What tier 3 may *claim*, though, is bounded by what the transport error
+//  proves: see `OfflineMutationFailure`.
+//
 
 import Foundation
 import Networking
@@ -33,10 +36,24 @@ import os
 /// offline" invites the inference "it'll sync later", which is wrong here.
 /// Given no offline mutations are planned, that wording is permanent rather
 /// than interim.
+///
+/// How definite the outcome is depends on the failure. Only a request that
+/// never left the device is provably unsaved; a connection that dropped or
+/// timed out mid-flight may have been processed by the server already, and
+/// claiming "not saved" there would push the user into a retry that
+/// duplicates a note, a tag or a share link. That case gets hedged wording
+/// instead — the honest answer is that the app cannot tell.
 struct OfflineMutationFailure: DisplayableError {
   let underlying: any Error
+  let outcome: ErrorController.ConnectivityFailure
 
-  var message: String { String(localized: .app(.errorNotSavedOffline)) }
+  var message: String {
+    switch outcome {
+    case .neverSent: String(localized: .app(.errorNotSavedOffline))
+    case .unconfirmed: String(localized: .app(.errorNotConfirmedOffline))
+    }
+  }
+
   var details: String? { underlying.localizedDescription }
 }
 
@@ -47,9 +64,10 @@ extension ErrorController {
   /// nothing about a write having been dropped, and the offline toast it names
   /// only fires on the *transition* offline, not for the rest of the session.
   public func push(mutationError error: any Error) {
-    if isOffline?() == true, Self.isConnectivityError(error) {
-      Logger.shared.error("User-initiated mutation rejected while offline: \(error)")
-      present(OfflineMutationFailure(underlying: error))
+    if isOffline?() == true, let outcome = Self.connectivityFailure(error) {
+      Logger.shared.error(
+        "User-initiated mutation failed while offline (\(String(describing: outcome))): \(error)")
+      present(OfflineMutationFailure(underlying: error, outcome: outcome))
       return
     }
     present(displayable(for: error, message: nil))
