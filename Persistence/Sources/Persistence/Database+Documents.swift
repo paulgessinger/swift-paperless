@@ -10,28 +10,35 @@ import GRDB
 /// `fillQuery`/`sync`). Writes are either a query fill (`writeQueryPage`, the
 /// network → DB replay materialization) or a single pessimistic-mutation
 /// write-through (`upsertDocument`, `deleteDocuments`).
+///
+/// Async only, like every cache table — see the rule in `Database+Connections`.
+/// The `static` bodies taking a `GRDB.Database` handle are what in-package
+/// seeding and the multi-step transactions (`reclaimAfterDowngrade`) compose
+/// from; nothing outside the package can reach the blocking form.
 extension Database {
   // MARK: - Writes
 
   /// Upsert a batch of documents. Every stored row is the complete object (the
   /// list carries `full_perms`), so this is a straight replace — there is no
   /// projection level to preserve.
-  public func upsertDocuments(_ domains: [Document], serverID: UUID) throws(DatabaseError) {
-    try wrapping("upsertDocuments") {
-      try writer.write { db in
-        for domain in domains {
-          try writeDocumentRow(db, domain, serverID: serverID)
-        }
-      }
+  public func upsertDocuments(_ domains: [Document], serverID: UUID) async throws {
+    try await wrappingAsync("upsertDocuments") {
+      try await writer.write { try Self.writeDocumentRows($0, domains, serverID: serverID) }
+    }
+  }
+
+  static func writeDocumentRows(
+    _ db: GRDB.Database, _ domains: [Document], serverID: UUID
+  ) throws {
+    for domain in domains {
+      try writeDocumentRow(db, domain, serverID: serverID)
     }
   }
 
   /// Single-row write-through (pessimistic mutation).
-  public func upsertDocument(_ domain: Document, serverID: UUID) throws(DatabaseError) {
-    try wrapping("upsertDocument") {
-      try writer.write { db in
-        try writeDocumentRow(db, domain, serverID: serverID)
-      }
+  public func upsertDocument(_ domain: Document, serverID: UUID) async throws {
+    try await wrappingAsync("upsertDocument") {
+      try await writer.write { try Self.writeDocumentRow($0, domain, serverID: serverID) }
     }
   }
 
@@ -45,27 +52,36 @@ extension Database {
   public func writeQueryPage(
     queryKey: QueryKey, serverID: UUID, documents: [Document],
     startPosition: Int, totalCount: UInt?, replaceAll: Bool
-  ) throws(DatabaseError) {
-    try wrapping("writeQueryPage") {
-      try writer.write { db in
-        if replaceAll {
-          try QueryOrderRow
-            .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-            .deleteAll(db)
-        }
-        for (offset, domain) in documents.enumerated() {
-          try writeDocumentRow(db, domain, serverID: serverID)
-          try QueryOrderRow(
-            serverId: serverID, queryKey: queryKey.rawValue,
-            position: startPosition + offset, remoteId: domain.id
-          ).insert(db)
-        }
-        try setQueryMeta(
-          db, serverID: serverID, queryKey: queryKey,
-          totalCount: totalCount, orderStale: false,
-          stamp: replaceAll ? .cleared : .unchanged)
+  ) async throws {
+    try await wrappingAsync("writeQueryPage") {
+      try await writer.write {
+        try Self.writeQueryPage(
+          $0, queryKey: queryKey, serverID: serverID, documents: documents,
+          startPosition: startPosition, totalCount: totalCount, replaceAll: replaceAll)
       }
     }
+  }
+
+  private static func writeQueryPage(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, documents: [Document],
+    startPosition: Int, totalCount: UInt?, replaceAll: Bool
+  ) throws {
+    if replaceAll {
+      try QueryOrderRow
+        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+        .deleteAll(db)
+    }
+    for (offset, domain) in documents.enumerated() {
+      try writeDocumentRow(db, domain, serverID: serverID)
+      try QueryOrderRow(
+        serverId: serverID, queryKey: queryKey.rawValue,
+        position: startPosition + offset, remoteId: domain.id
+      ).insert(db)
+    }
+    try setQueryMeta(
+      db, serverID: serverID, queryKey: queryKey,
+      totalCount: totalCount, orderStale: false,
+      stamp: replaceAll ? .cleared : .unchanged)
   }
 
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
@@ -76,42 +92,53 @@ extension Database {
   /// `totalCount` records the server's full count for the scrollbar extent.
   public func replaceQueryOrder(
     queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
-  ) throws(DatabaseError) {
-    try wrapping("replaceQueryOrder") {
-      try writer.write { db in
-        try QueryOrderRow
-          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-          .deleteAll(db)
-        for (position, id) in orderedIDs.enumerated() {
-          try QueryOrderRow(
-            serverId: serverID, queryKey: queryKey.rawValue,
-            position: position, remoteId: id
-          ).insert(db)
-        }
-        try setQueryMeta(
-          db, serverID: serverID, queryKey: queryKey,
-          totalCount: UInt(orderedIDs.count), orderStale: false, stamp: .unchanged)
+  ) async throws {
+    try await wrappingAsync("replaceQueryOrder") {
+      try await writer.write {
+        try Self.replaceQueryOrder(
+          $0, queryKey: queryKey, serverID: serverID, orderedIDs: orderedIDs)
       }
     }
+  }
+
+  private static func replaceQueryOrder(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
+  ) throws {
+    try QueryOrderRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .deleteAll(db)
+    for (position, id) in orderedIDs.enumerated() {
+      try QueryOrderRow(
+        serverId: serverID, queryKey: queryKey.rawValue,
+        position: position, remoteId: id
+      ).insert(db)
+    }
+    try setQueryMeta(
+      db, serverID: serverID, queryKey: queryKey,
+      totalCount: UInt(orderedIDs.count), orderStale: false, stamp: .unchanged)
   }
 
   /// Mark every cached query containing `remoteID` order-stale under its active
   /// sort. v1 over-marks (any query the doc is a member of); the ordering
   /// corrects on the next fill / delta.
-  public func markQueriesOrderStale(containing remoteID: UInt, serverID: UUID)
-    throws(DatabaseError)
-  {
-    try wrapping("markQueriesOrderStale") {
-      try writer.write { db in
-        let containing =
-          QueryOrderRow
-          .select(Column("query_key"), as: String.self)
-          .filter(Column("server_id") == serverID && Column("remote_id") == remoteID)
-        try QueryMetaRow
-          .filter(Column("server_id") == serverID && containing.contains(Column("query_key")))
-          .updateAll(db, Column("order_stale").set(to: true))
+  public func markQueriesOrderStale(containing remoteID: UInt, serverID: UUID) async throws {
+    try await wrappingAsync("markQueriesOrderStale") {
+      try await writer.write {
+        try Self.markOrderStale($0, containing: remoteID, serverID: serverID)
       }
     }
+  }
+
+  private static func markOrderStale(
+    _ db: GRDB.Database, containing remoteID: UInt, serverID: UUID
+  ) throws {
+    let containing =
+      QueryOrderRow
+      .select(Column("query_key"), as: String.self)
+      .filter(Column("server_id") == serverID && Column("remote_id") == remoteID)
+    try QueryMetaRow
+      .filter(Column("server_id") == serverID && containing.contains(Column("query_key")))
+      .updateAll(db, Column("order_stale").set(to: true))
   }
 
   /// Delete documents absent from the server's authoritative id set (the
@@ -119,21 +146,27 @@ extension Database {
   /// cached list. There is no FK from `query_order` to `document` (a row may be a
   /// skeleton), so the prune is explicit — a removed id must not linger as a
   /// permanent skeleton.
-  public func deleteDocuments(serverID: UUID, removedIDs: [UInt]) throws(DatabaseError) {
+  public func deleteDocuments(serverID: UUID, removedIDs: [UInt]) async throws {
     guard !removedIDs.isEmpty else { return }
-    try wrapping("deleteDocuments") {
-      try writer.write { db in
-        try Self.pruneDocumentDetail(db, serverID: serverID, documentIDs: removedIDs)
-        _ =
-          try DocumentRecord
-          .filter(Column("server_id") == serverID && removedIDs.contains(Column("id")))
-          .deleteAll(db)
-        _ =
-          try QueryOrderRow
-          .filter(Column("server_id") == serverID && removedIDs.contains(Column("remote_id")))
-          .deleteAll(db)
+    try await wrappingAsync("deleteDocuments") {
+      try await writer.write {
+        try Self.removeDocuments($0, serverID: serverID, removedIDs: removedIDs)
       }
     }
+  }
+
+  private static func removeDocuments(
+    _ db: GRDB.Database, serverID: UUID, removedIDs: [UInt]
+  ) throws {
+    try pruneDocumentDetail(db, serverID: serverID, documentIDs: removedIDs)
+    _ =
+      try DocumentRecord
+      .filter(Column("server_id") == serverID && removedIDs.contains(Column("id")))
+      .deleteAll(db)
+    _ =
+      try QueryOrderRow
+      .filter(Column("server_id") == serverID && removedIDs.contains(Column("remote_id")))
+      .deleteAll(db)
   }
 
   /// Deletes every `document` row for `serverID` no longer referenced by any
@@ -145,9 +178,9 @@ extension Database {
   /// membership — pinning (a second future exemption) doesn't exist yet.
   /// Returns the number of documents removed (for logging/tests).
   @discardableResult
-  public func pruneUnreferencedDocuments(serverID: UUID) throws(DatabaseError) -> Int {
-    try wrapping("pruneUnreferencedDocuments") {
-      try writer.write { db in try Self.pruneUnreferenced(db, serverID: serverID) }
+  public func pruneUnreferencedDocuments(serverID: UUID) async throws -> Int {
+    try await wrappingAsync("pruneUnreferencedDocuments") {
+      try await writer.write { try Self.pruneUnreferenced($0, serverID: serverID) }
     }
   }
 
@@ -179,11 +212,10 @@ extension Database {
   /// what `.recentlyBrowsed` already does for any other saved view. Returns
   /// the number of `query_order` rows removed.
   @discardableResult
-  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) throws(DatabaseError) -> Int
-  {
-    try wrapping("dropQueryOrder") {
-      try writer.write { db in
-        try Self.dropQueries(db, serverID: serverID, exceptQueryKey: exceptQueryKey)
+  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) async throws -> Int {
+    try await wrappingAsync("dropQueryOrder") {
+      try await writer.write {
+        try Self.dropQueries($0, serverID: serverID, exceptQueryKey: exceptQueryKey)
       }
     }
   }
@@ -220,10 +252,11 @@ extension Database {
   @discardableResult
   public func truncateQueryOrder(
     serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
-  ) throws(DatabaseError) -> Int {
-    try wrapping("truncateQueryOrder") {
-      try writer.write { db in
-        try Self.truncateQuery(db, serverID: serverID, queryKey: queryKey, keepingFirst: limit)
+  ) async throws -> Int {
+    try await wrappingAsync("truncateQueryOrder") {
+      try await writer.write {
+        try Self.truncateQuery(
+          $0, serverID: serverID, queryKey: queryKey, keepingFirst: limit)
       }
     }
   }
@@ -259,44 +292,58 @@ extension Database {
   @discardableResult
   public func reclaimAfterDowngrade(
     serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
-  ) throws(DatabaseError) -> Int {
-    try wrapping("reclaimAfterDowngrade") {
-      try writer.write { db in
-        try Self.dropQueries(db, serverID: serverID, exceptQueryKey: defaultQueryKey)
-        try Self.truncateQuery(
-          db, serverID: serverID, queryKey: defaultQueryKey, keepingFirst: limit)
-        let removed = try Self.pruneUnreferenced(db, serverID: serverID)
-        try Self.updateSyncState(db, serverID: serverID) { $0.libraryCoverageAt = nil }
-        return removed
+  ) async throws -> Int {
+    try await wrappingAsync("reclaimAfterDowngrade") {
+      try await writer.write {
+        try Self.reclaim(
+          $0, serverID: serverID, defaultQueryKey: defaultQueryKey, keepingFirst: limit)
       }
     }
+  }
+
+  private static func reclaim(
+    _ db: GRDB.Database, serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
+  ) throws -> Int {
+    try dropQueries(db, serverID: serverID, exceptQueryKey: defaultQueryKey)
+    try truncateQuery(db, serverID: serverID, queryKey: defaultQueryKey, keepingFirst: limit)
+    let removed = try pruneUnreferenced(db, serverID: serverID)
+    try updateSyncState(db, serverID: serverID) { $0.libraryCoverageAt = nil }
+    return removed
   }
 
   // MARK: - Reads (one-shot; observations live in Database+Observe)
 
   /// A single cached document by `(server, id)`, or `nil` if not cached.
-  public func document(serverID: UUID, id: UInt) throws(DatabaseError) -> Document? {
-    try wrapping("document(id:)") {
-      try writer.read { db in
-        try DocumentRecord
-          .filter(Column("server_id") == serverID && Column("id") == id)
-          .fetchOne(db)?
-          .domain
-      }
+  public func document(serverID: UUID, id: UInt) async throws -> Document? {
+    try await wrappingAsync("document(id:)") {
+      try await writer.read { try Self.fetchDocument($0, serverID: serverID, id: id) }
     }
+  }
+
+  private static func fetchDocument(
+    _ db: GRDB.Database, serverID: UUID, id: UInt
+  ) throws -> Document? {
+    try DocumentRecord
+      .filter(Column("server_id") == serverID && Column("id") == id)
+      .fetchOne(db)?
+      .domain
   }
 
   /// A single cached document by archive serial number (resolves the ASN
   /// scanner offline via the indexed `asn` column), or `nil` if not cached.
-  public func document(serverID: UUID, asn: UInt) throws(DatabaseError) -> Document? {
-    try wrapping("document(asn:)") {
-      try writer.read { db in
-        try DocumentRecord
-          .filter(Column("server_id") == serverID && Column("asn") == asn)
-          .fetchOne(db)?
-          .domain
-      }
+  public func document(serverID: UUID, asn: UInt) async throws -> Document? {
+    try await wrappingAsync("document(asn:)") {
+      try await writer.read { try Self.fetchDocument($0, serverID: serverID, asn: asn) }
     }
+  }
+
+  private static func fetchDocument(
+    _ db: GRDB.Database, serverID: UUID, asn: UInt
+  ) throws -> Document? {
+    try DocumentRecord
+      .filter(Column("server_id") == serverID && Column("asn") == asn)
+      .fetchOne(db)?
+      .domain
   }
 
   /// A window of a cached query's ordered answer: the `query_order ⟕ document`
@@ -306,35 +353,39 @@ extension Database {
   /// `observeDocumentPrefix`.
   public func queryDocuments(
     queryKey: QueryKey, serverID: UUID, limit: Int, offset: Int = 0
-  ) throws(DatabaseError) -> [DocumentEntry] {
-    try wrapping("queryDocuments") {
-      try writer.read { db in
+  ) async throws -> [DocumentEntry] {
+    try await wrappingAsync("queryDocuments") {
+      try await writer.read {
         try Self.fetchEntries(
-          db, serverID: serverID, queryKey: queryKey.rawValue, limit: limit, offset: offset)
+          $0, serverID: serverID, queryKey: queryKey.rawValue, limit: limit, offset: offset)
       }
     }
   }
 
   /// Every cached document id for a server — the local set the remote-delete
   /// reconcile diffs against the server's authoritative id set.
-  public func allDocumentIDs(serverID: UUID) throws(DatabaseError) -> Set<UInt> {
-    try wrapping("allDocumentIDs") {
-      try writer.read { db in
-        try DocumentRecord
-          .select(Column("id"), as: UInt.self)
-          .filter(Column("server_id") == serverID)
-          .fetchSet(db)
-      }
+  public func allDocumentIDs(serverID: UUID) async throws -> Set<UInt> {
+    try await wrappingAsync("allDocumentIDs") {
+      try await writer.read { try Self.fetchAllDocumentIDs($0, serverID: serverID) }
     }
+  }
+
+  private static func fetchAllDocumentIDs(
+    _ db: GRDB.Database, serverID: UUID
+  ) throws -> Set<UInt> {
+    try DocumentRecord
+      .select(Column("id"), as: UInt.self)
+      .filter(Column("server_id") == serverID)
+      .fetchSet(db)
   }
 
   /// Count of `document` rows cached for a server — a diagnostic surface (the
   /// Offline & Sync screen) so the proactive fill and the downgrade GC's
   /// effect are visible without a debugger.
-  public func documentCount(serverID: UUID) throws(DatabaseError) -> Int {
-    try wrapping("documentCount") {
-      try writer.read { db in
-        try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db)
+  public func documentCount(serverID: UUID) async throws -> Int {
+    try await wrappingAsync("documentCount") {
+      try await writer.read {
+        try DocumentRecord.filter(Column("server_id") == serverID).fetchCount($0)
       }
     }
   }
@@ -346,41 +397,49 @@ extension Database {
   /// The absence of the stamp is what tells the next pass the order is truncated
   /// and has to be redone; without it an interrupted fill was silently
   /// indistinguishable from a complete one.
-  public func markQueryFillComplete(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) {
-    try wrapping("markQueryFillComplete") {
-      try writer.write { db in
-        let meta =
-          try QueryMetaRow
-          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-          .fetchOne(db)
-        try setQueryMeta(
-          db, serverID: serverID, queryKey: queryKey,
-          totalCount: meta?.totalCount, orderStale: meta?.orderStale ?? false,
-          stamp: .completed)
+  public func markQueryFillComplete(queryKey: QueryKey, serverID: UUID) async throws {
+    try await wrappingAsync("markQueryFillComplete") {
+      try await writer.write {
+        try Self.stampFillComplete($0, queryKey: queryKey, serverID: serverID)
       }
     }
+  }
+
+  private static func stampFillComplete(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
+  ) throws {
+    let meta =
+      try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .fetchOne(db)
+    try setQueryMeta(
+      db, serverID: serverID, queryKey: queryKey,
+      totalCount: meta?.totalCount, orderStale: meta?.orderStale ?? false,
+      stamp: .completed)
   }
 
   /// When this query's order was last filled to completion, or `nil` if it never
   /// was (or was truncated since by a page-1 replace).
-  public func queryFillCompletedAt(queryKey: QueryKey, serverID: UUID) throws(DatabaseError)
-    -> Date?
-  {
-    try wrapping("queryFillCompletedAt") {
-      try writer.read { db in
-        try QueryMetaRow
-          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-          .fetchOne(db)?.filledAt
-      }
+  public func queryFillCompletedAt(queryKey: QueryKey, serverID: UUID) async throws -> Date? {
+    try await wrappingAsync("queryFillCompletedAt") {
+      try await writer.read { try Self.fetchFilledAt($0, queryKey: queryKey, serverID: serverID) }
     }
+  }
+
+  private static func fetchFilledAt(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
+  ) throws -> Date? {
+    try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .fetchOne(db)?.filledAt
   }
 
   /// Server total, locally-present count (reflects deletion gaps), and
   /// order-stale flag for a cached query.
-  public func queryStatus(queryKey: QueryKey, serverID: UUID) throws(DatabaseError) -> QueryStatus {
-    try wrapping("queryStatus") {
-      try writer.read { db in
-        try Self.fetchQueryStatus(db, queryKey: queryKey, serverID: serverID)
+  public func queryStatus(queryKey: QueryKey, serverID: UUID) async throws -> QueryStatus {
+    try await wrappingAsync("queryStatus") {
+      try await writer.read {
+        try Self.fetchQueryStatus($0, queryKey: queryKey, serverID: serverID)
       }
     }
   }
@@ -433,7 +492,7 @@ extension Database {
 
   /// Upsert one document row. Every write is the complete object (the list
   /// carries `full_perms`), so this is a straight replace — no merge, no level.
-  private func writeDocumentRow(
+  private static func writeDocumentRow(
     _ db: GRDB.Database, _ domain: Document, serverID: UUID
   ) throws {
     try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
@@ -487,7 +546,7 @@ extension Database {
     case completed
   }
 
-  private func setQueryMeta(
+  private static func setQueryMeta(
     _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey,
     totalCount: UInt?, orderStale: Bool, stamp: FillStamp
   ) throws {

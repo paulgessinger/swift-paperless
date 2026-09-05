@@ -7,8 +7,23 @@ import os
 ///
 /// These are the only entry points `ConnectionManager` uses to read or
 /// mutate `server` rows; GRDB stays hidden from AppShared and the rest of
-/// the app. Element and document records have analogous APIs under the same
-/// principle ("GRDB is sealed inside Persistence").
+/// the app, under the same principle that governs the element and document
+/// caches ("GRDB is sealed inside Persistence").
+///
+/// **These are the only blocking accessors in the package**, and the rule is
+/// one line: *blocking database access is allowed for the `server` table and
+/// nothing else.* Every cache table (`Database+Elements`, `+Documents`,
+/// `+DocumentDetail`, `+QuerySyncError`, `+SyncState`, `+Maintenance`) is
+/// `async` only, because a main-actor caller that blocks there can stall the UI
+/// for the full 5 s `busy_timeout` while another process holds the writer lock.
+///
+/// `server` is exempt on its own merits, not by omission. It is a handful of
+/// rows; its writes are single-row updates driven from Login and Settings
+/// flows, not from a sync loop; and `ConnectionManager.init` has to hydrate it
+/// synchronously so SwiftUI's first frame sees the configured servers — an
+/// initializer cannot await. Making these `async` would push `async` through
+/// `ConnectionManager`'s whole synchronous API and into the views, buying
+/// nothing measurable.
 extension Database {
   /// Fetch every connection row currently in the table.
   public func allConnections() throws(DatabaseError) -> [ConnectionRecord] {

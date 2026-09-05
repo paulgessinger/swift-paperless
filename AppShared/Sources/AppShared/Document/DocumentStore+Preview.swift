@@ -52,8 +52,13 @@ extension DocumentStore {
     // ownership path production does, and there is no `init(repository:)` for
     // production code to reach for.
     let store = DocumentStore(session: ServerSession(serverID: serverID, repository: caching))
-    store.projection?.refreshUISettings()
-    Task { try? await store.sync() }
+    // Both awaits, so both go in the task: a preview builds its store in a
+    // property initializer and cannot await. The projection repaints as soon as
+    // the read lands, which for an in-memory seed is immediate.
+    Task {
+      await store.projection?.refreshUISettings()
+      try? await store.sync()
+    }
     return store
   }
 

@@ -46,9 +46,9 @@ struct DebugMenuView: View {
     }
   }
 
-  private func clearCache() {
+  private func clearCache() async {
     do {
-      try store.wipeLocalCache()
+      try await store.wipeLocalCache()
       showCacheClearedConfirmation = true
     } catch {
       Logger.shared.error("Failed to clear local cache: \(error)")
@@ -129,7 +129,7 @@ struct DebugMenuView: View {
           titleVisibility: .visible
         ) {
           Button(role: .destructive) {
-            clearCache()
+            Task { await clearCache() }
           } label: {
             Text(.settings(.clearCache))
           }

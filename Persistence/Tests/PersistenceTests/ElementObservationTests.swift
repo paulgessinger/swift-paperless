@@ -129,7 +129,7 @@ struct ElementObservationTests {
     let updated = try await value(
       from: database.observeElements(CorrespondentRecord.self, serverID: server)
     ) {
-      try database.upsertElement(
+      try await database.upsertElement(
         self.correspondent(2, "Beta"), of: CorrespondentRecord.self, serverID: server)
     }
     #expect(updated.map(\.id) == [1, 2])
@@ -144,7 +144,7 @@ struct ElementObservationTests {
     let remaining = try await value(
       from: database.observeElements(CorrespondentRecord.self, serverID: server)
     ) {
-      try database.deleteElement(CorrespondentRecord.self, serverID: server, id: 1)
+      try await database.deleteElement(CorrespondentRecord.self, serverID: server, id: 1)
     }
     #expect(remaining.map(\.id) == [2])
   }
@@ -162,7 +162,7 @@ struct ElementObservationTests {
       settings: UISettingsSettings(),
       permissions: .empty)
     let resolved = try await value(from: database.observeUISettings(serverID: server)) {
-      try database.setUISettings(settings, serverID: server)
+      try await database.setUISettings(settings, serverID: server)
     }
     #expect(resolved?.user.id == 7)
     #expect(resolved?.user.username == "alice")
@@ -179,7 +179,7 @@ struct ElementObservationTests {
     let resolved = try await value(
       from: database.observeServerConfiguration(serverID: server)
     ) {
-      try database.setServerConfiguration(
+      try await database.setServerConfiguration(
         ServerConfiguration(id: 1, barcodeAsnPrefix: "ASN"), serverID: server)
     }
     #expect(resolved?.barcodeAsnPrefix == "ASN")
@@ -190,7 +190,7 @@ struct ElementObservationTests {
     let serverA = UUID()
     let database = try Database.seeded(serverID: serverA, correspondents: [correspondent(1, "A")])
     let serverB = try addServer(to: database, host: "b")
-    try database.replaceElements(
+    try await database.replaceElements(
       [correspondent(2, "B")], of: CorrespondentRecord.self, serverID: serverB)
 
     let aOnly = try await firstValue(
@@ -209,12 +209,12 @@ struct ElementObservationTests {
     let next = try await valueSkippingForeignWrite(
       from: database.observeElements(CorrespondentRecord.self, serverID: serverA),
       foreignWrite: {
-        try database.replaceElements(
+        try await database.replaceElements(
           [self.correspondent(50, "Foreign")], of: CorrespondentRecord.self, serverID: serverB)
-        try database.deleteElement(CorrespondentRecord.self, serverID: serverB, id: 50)
+        try await database.deleteElement(CorrespondentRecord.self, serverID: serverB, id: 50)
       },
       ownWrite: {
-        try database.upsertElement(
+        try await database.upsertElement(
           self.correspondent(2, "Beta"), of: CorrespondentRecord.self, serverID: serverA)
       })
     #expect(next.map(\.id) == [1, 2])
@@ -229,11 +229,11 @@ struct ElementObservationTests {
       from: database.observeElements(CorrespondentRecord.self, serverID: serverA),
       foreignWrite: {
         // Same rows, written again: a fresh transaction, an identical result.
-        try database.replaceElements(
+        try await database.replaceElements(
           [self.correspondent(1, "A")], of: CorrespondentRecord.self, serverID: serverA)
       },
       ownWrite: {
-        try database.upsertElement(
+        try await database.upsertElement(
           self.correspondent(2, "Beta"), of: CorrespondentRecord.self, serverID: serverA)
       })
     #expect(next.map(\.id) == [1, 2])
@@ -247,8 +247,11 @@ struct ElementObservationTests {
 
     let next = try await valueSkippingForeignWrite(
       from: database.observeUISettings(serverID: serverA),
-      foreignWrite: { try database.setUISettings(self.uiSettings(9, "bob"), serverID: serverB) },
-      ownWrite: { try database.setUISettings(self.uiSettings(7, "alice"), serverID: serverA) })
+      foreignWrite: {
+        try await database.setUISettings(self.uiSettings(9, "bob"), serverID: serverB)
+      },
+      ownWrite: { try await database.setUISettings(self.uiSettings(7, "alice"), serverID: serverA) }
+    )
     #expect(next?.user.username == "alice")
   }
 
@@ -261,11 +264,11 @@ struct ElementObservationTests {
     let next = try await valueSkippingForeignWrite(
       from: database.observeServerConfiguration(serverID: serverA),
       foreignWrite: {
-        try database.setServerConfiguration(
+        try await database.setServerConfiguration(
           ServerConfiguration(id: 1, barcodeAsnPrefix: "FOREIGN"), serverID: serverB)
       },
       ownWrite: {
-        try database.setServerConfiguration(
+        try await database.setServerConfiguration(
           ServerConfiguration(id: 1, barcodeAsnPrefix: "ASN"), serverID: serverA)
       })
     #expect(next?.barcodeAsnPrefix == "ASN")

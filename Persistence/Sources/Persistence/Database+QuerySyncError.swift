@@ -24,31 +24,49 @@ public struct QuerySyncError: Sendable, Equatable, Identifiable {
 /// Per-query sync-failure tracking (`query_sync_error`). The proactive fill and
 /// membership sweep record a row when a view is rejected and delete it on the
 /// next success; the Offline & Sync screen observes the active server's set.
+///
+/// Async only, like every cache table — see the rule in `Database+Connections`.
 extension Database {
   /// Record (upsert) the latest sync failure for a query.
   public func recordQuerySyncError(
     serverID: UUID, queryKey: String, savedViewName: String?, message: String,
     at date: Date = Date()
-  ) throws(DatabaseError) {
-    try wrapping("recordQuerySyncError") {
-      try writer.write { db in
-        try QuerySyncErrorRecord(
-          serverId: serverID, queryKey: queryKey, savedViewName: savedViewName,
-          message: message, failedAt: date.timeIntervalSinceReferenceDate
-        ).upsert(db)
+  ) async throws {
+    try await wrappingAsync("recordQuerySyncError") {
+      try await writer.write {
+        try Self.writeQuerySyncError(
+          $0, serverID: serverID, queryKey: queryKey, savedViewName: savedViewName,
+          message: message, at: date)
       }
     }
   }
 
+  private static func writeQuerySyncError(
+    _ db: GRDB.Database, serverID: UUID, queryKey: String, savedViewName: String?,
+    message: String, at date: Date
+  ) throws {
+    try QuerySyncErrorRecord(
+      serverId: serverID, queryKey: queryKey, savedViewName: savedViewName,
+      message: message, failedAt: date.timeIntervalSinceReferenceDate
+    ).upsert(db)
+  }
+
   /// Clear a query's recorded failure (called when it next syncs successfully).
-  public func clearQuerySyncError(serverID: UUID, queryKey: String) throws(DatabaseError) {
-    try wrapping("clearQuerySyncError") {
-      _ = try writer.write { db in
-        try QuerySyncErrorRecord
-          .filter(Column("server_id") == serverID && Column("query_key") == queryKey)
-          .deleteAll(db)
+  public func clearQuerySyncError(serverID: UUID, queryKey: String) async throws {
+    try await wrappingAsync("clearQuerySyncError") {
+      try await writer.write {
+        try Self.removeQuerySyncError($0, serverID: serverID, queryKey: queryKey)
       }
     }
+  }
+
+  private static func removeQuerySyncError(
+    _ db: GRDB.Database, serverID: UUID, queryKey: String
+  ) throws {
+    _ =
+      try QuerySyncErrorRecord
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey)
+      .deleteAll(db)
   }
 
   /// Observe this server's recorded sync failures (newest first), emitting the

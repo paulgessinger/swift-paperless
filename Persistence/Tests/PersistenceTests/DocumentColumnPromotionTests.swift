@@ -56,8 +56,8 @@ struct DocumentColumnPromotionTests {
     try migrator.migrate(queue)
   }
 
-  private func columns(_ queue: DatabaseQueue, id: Int) throws -> (notes: Int, version: Int) {
-    try queue.read { db in
+  private func columns(_ reader: any DatabaseReader, id: Int) throws -> (notes: Int, version: Int) {
+    try reader.read { db in
       let row = try Row.fetchOne(
         db, sql: "SELECT notes_count, current_version_id FROM document WHERE id = ?",
         arguments: [id])!
@@ -95,7 +95,7 @@ struct DocumentColumnPromotionTests {
   }
 
   @Test("the promoted columns match what a freshly written record stores")
-  func backfillMatchesRecordWrite() throws {
+  func backfillMatchesRecordWrite() async throws {
     // The backfill reproduces `Document.currentVersionID` in SQL, so the two
     // paths have to agree — otherwise an upgraded install and a fresh one
     // disagree about which documents still need a metadata fetch.
@@ -112,13 +112,13 @@ struct DocumentColumnPromotionTests {
         DocumentVersion(
           id: $0, added: Date(timeIntervalSince1970: 0), label: nil, checksum: nil, isRoot: false)
       })
-    try database.upsertDocuments([document], serverID: server)
-    let written = try database.writer.read { db in
-      try Row.fetchOne(
-        db, sql: "SELECT notes_count, current_version_id FROM document WHERE id = 30")!
-    }
+    try await database.upsertDocuments([document], serverID: server)
+    // Through the synchronous helper on purpose: inside an `async` test, a bare
+    // `writer.read` resolves to a different GRDB overload on Swift 6.2 than on
+    // 6.3, so one toolchain demands `await` and the other warns about it.
+    let written = try columns(database.writer, id: 30)
 
-    #expect(backfilled.version == written["current_version_id"])
+    #expect(backfilled.version == written.version)
     #expect(backfilled.version == 99)
   }
 }

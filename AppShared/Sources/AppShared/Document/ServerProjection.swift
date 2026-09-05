@@ -129,13 +129,13 @@ public final class ServerProjection {
     observationTasks.cancelAll()
   }
 
-  /// Synchronously pull the `ui_settings` singleton from the DB into the
-  /// projection, for the one caller (`DocumentStore.fetchUISettings`) that reads
-  /// `permissions` immediately after a refresh and cannot wait for the
-  /// observation's runloop hop. The observation will re-emit the same values
-  /// harmlessly.
-  func refreshUISettings() {
-    guard let uiSettings = try? database.uiSettings(serverID: serverID) else { return }
+  /// Pull the `ui_settings` singleton from the DB into the projection, for the
+  /// one caller (`DocumentStore.fetchUISettings`) that reads `permissions`
+  /// immediately after a refresh and cannot wait for the observation's runloop
+  /// hop. The observation will re-emit the same values harmlessly. Awaits rather
+  /// than blocks: `ui_settings` is a cache table (see `Database+Connections`).
+  func refreshUISettings() async {
+    guard let uiSettings = try? await database.uiSettings(serverID: serverID) else { return }
     apply(uiSettings)
   }
 
