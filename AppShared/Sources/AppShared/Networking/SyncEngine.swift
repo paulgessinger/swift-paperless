@@ -2,7 +2,7 @@
 //  SyncEngine.swift
 //  AppShared
 //
-//  Stage 10 (multi-server sync): keeps every configured server's offline cache
+//  Multi-server sync: keeps every configured server's offline cache
 //  warm. The sweep still *selects* the inactive ones — the active server is
 //  driven by `DocumentStore` on the same lifecycle trigger, so "active-first"
 //  falls out for free — but that is now an ordering choice, not a safety
@@ -14,7 +14,8 @@
 //  active server coalesces onto the session the store is already using.
 //
 //  Scheduling stays on app-lifecycle triggers (launch / foreground /
-//  active-change); true `BGProcessingTask` execution is Stage 11's.
+//  active-change); true `BGProcessingTask` execution is not implemented yet
+//  (see #697).
 //
 //  This type is now purely the *scheduler*: it decides which servers to sync and
 //  in what order, and hands each one to its ``ServerSession``, which owns that

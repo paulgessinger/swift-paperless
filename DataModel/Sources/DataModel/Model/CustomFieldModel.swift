@@ -77,7 +77,8 @@ public enum CustomFieldDataType: RawRepresentable, Codable, Equatable, Hashable,
 }
 
 // Wire-symmetric leaf value type — round-tripped by ApiCustomFieldExtraData
-// and the (future) storage layer. Stays Codable per the Stage 3 principle.
+// and the (future) storage layer. Stays Codable: wire, storage and domain
+// shapes coincide here.
 public struct CustomFieldSelectOption: Codable, Identifiable, Hashable, Sendable {
   public var id: String
   public var label: String

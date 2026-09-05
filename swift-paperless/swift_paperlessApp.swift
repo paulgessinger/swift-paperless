@@ -29,7 +29,7 @@ struct MainView: View {
   // source of per-server repositories, not a scheduling detail.
   @State private var sessionRegistry: ServerSessionRegistry
 
-  // Keeps every *inactive* server's offline cache warm (Stage 10). The active
+  // Keeps every *inactive* server's offline cache warm. The active
   // server stays on the DocumentStore path; the engine skips it.
   @State private var syncEngine: SyncEngine
 

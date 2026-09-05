@@ -9,7 +9,7 @@ import GRDB
 /// always returns the full list, and create/delete return the updated full list,
 /// so a cache write is a row *replace*, never a per-note merge. `DocumentNote`
 /// isn't `Codable`, so the long tail is an explicit storage `NotePayload` mapped
-/// by hand (the Stage 3 principle: storage shape ≠ wire shape ≠ domain shape).
+/// by hand (storage shape ≠ wire shape ≠ domain shape).
 public struct DocumentNoteRecord:
   FetchableRecord, PersistableRecord, TableRecord, Codable, Sendable, Equatable
 {

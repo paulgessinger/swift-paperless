@@ -9,7 +9,7 @@ import Foundation
 /// How aggressively the offline cache fills a given server's documents.
 ///
 /// - `recentlyBrowsed`: only queries the user actually opens are cached
-///   (Stage 8 on-open fill).
+///   (the on-open eager fill).
 /// - `entireLibrary`: a proactive fill caches every saved view and the default
 ///   list, so the whole library browses offline even if never opened.
 ///

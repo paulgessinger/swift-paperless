@@ -8,9 +8,10 @@ import DataModel
 // MARK: - Wire type for reading saved views
 //
 // `filter_rules: [FilterRule]`, `owner: Owner?`, `permissions: Permissions?`
-// embed leaf wire-symmetric value types straight from DataModel — see the
-// Stage 3 plan for the rule. Each domain type carries its own JSON shape and
-// is round-tripped as-is.
+// embed leaf wire-symmetric value types straight from DataModel — the rule
+// being that a type crosses the boundary as-is only where wire, storage and
+// domain shapes coincide. Each domain type carries its own JSON shape and is
+// round-tripped as-is.
 
 struct ApiSavedView: Codable, Sendable {
   var id: UInt
