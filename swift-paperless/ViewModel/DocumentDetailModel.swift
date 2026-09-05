@@ -49,17 +49,17 @@ enum DocumentDownloadState: Equatable {
 /// Accumulates the errors thrown across one `DocumentDetailModel.load()` pass so
 /// duplicates can be collapsed before they reach the caller's `onError`.
 ///
-/// Repositories normalize transport failures into `RequestError`, which is
-/// `Equatable`: an unreachable server fails every request in the pass with the
-/// same value, so they collapse to one entry. Genuinely different failures (a
-/// permission error on a single endpoint, say) stay distinct and each still show.
+/// An unreachable server fails every request in the pass the same way, so
+/// those should collapse to one entry, while genuinely different failures (a
+/// permission error on a single endpoint, say) stay distinct and each still
+/// show.
 ///
-/// This deliberately compares errors rather than their descriptions. It cannot
-/// be done on what `URLSession` throws directly: a bridged `URLError` carries the
-/// failing URL and a per-request task id in its `NSError.userInfo`, so no two are
-/// ever equal — not even two failures against the same endpoint — and their
-/// descriptions differ for the same reason. Normalizing upstream is what makes
-/// the comparison here meaningful.
+/// Transport failures arrive here raw: `ApiRepository.fetchData` rethrows what
+/// `URLSession` threw, and a bridged `URLError` carries the failing URL and a
+/// per-request task id in its `NSError.userInfo`, so no two are ever equal by
+/// value — not even two failures against the same endpoint. Those are compared
+/// by code. Everything else (`RequestError` and other `Equatable` errors) is
+/// compared by value, which is what keeps distinct failures distinct.
 @MainActor
 private final class LoadErrorCollector {
   private(set) var distinct: [any Error] = []
@@ -70,6 +70,15 @@ private final class LoadErrorCollector {
   }
 
   private static func isDuplicate(_ lhs: any Error, _ rhs: any Error) -> Bool {
+    // Transport failures: same code means the same outage, whatever the URL.
+    if let lhs = lhs as? URLError, let rhs = rhs as? URLError {
+      return lhs.code == rhs.code
+    }
+    let lhsNS = lhs as NSError
+    let rhsNS = rhs as NSError
+    if lhsNS.domain == NSURLErrorDomain, rhsNS.domain == NSURLErrorDomain {
+      return lhsNS.code == rhsNS.code
+    }
     // Via `Any`: casting an `any Error` straight to `any Equatable` draws a
     // spurious "always succeeds" warning, though at runtime it correctly fails
     // for an error type that doesn't conform.
