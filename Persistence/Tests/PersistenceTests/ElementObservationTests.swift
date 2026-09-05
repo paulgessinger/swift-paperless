@@ -38,6 +38,35 @@ struct ElementObservationTests {
     }
   }
 
+  /// Per-server narrowing probe: subscribe, run `foreignWrite` (a write for
+  /// *another* server, which the observation's table region cannot exclude),
+  /// give the observation time to process it, then run `ownWrite` and return
+  /// the next emission.
+  ///
+  /// If the foreign write leaked an emission, that stale value — not the one
+  /// `ownWrite` produced — is what comes back, so the caller's expectation on
+  /// the returned value is the assertion. Sequencing the own write behind the
+  /// foreign one also proves the stream is still live, i.e. the silence was
+  /// narrowing and not a dead subscription.
+  private func valueSkippingForeignWrite<T: Sendable>(
+    from stream: AsyncThrowingStream<T, Error>,
+    foreignWrite: @escaping @Sendable () async throws -> Void,
+    ownWrite: @escaping @Sendable () async throws -> Void
+  ) async throws -> T {
+    try await withTimeout {
+      var iterator = stream.makeAsyncIterator()
+      _ = try await iterator.next()
+      try await foreignWrite()
+      // Long enough for the observation to have fetched and (had it not been
+      // de-duplicated) emitted before the own write lands, so the two writes
+      // cannot be coalesced into one notification.
+      try await Task.sleep(for: .milliseconds(250))
+      try await ownWrite()
+      guard let value = try await iterator.next() else { throw TimeoutError() }
+      return value
+    }
+  }
+
   private func withTimeout<T: Sendable>(
     seconds: Double = 3,
     _ operation: @escaping @Sendable () async throws -> T
@@ -52,6 +81,24 @@ struct ElementObservationTests {
       group.cancelAll()
       return result
     }
+  }
+
+  /// Registers a second server so its rows satisfy the `server_id` foreign key.
+  @discardableResult
+  private func addServer(to database: Database, host: String) throws -> UUID {
+    let id = UUID()
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: id, url: URL(string: "https://\(host).example.com/")!,
+        user: .init(id: 1, isSuperUser: false, username: host)))
+    return id
+  }
+
+  private func uiSettings(_ id: UInt, _ username: String) -> UISettings {
+    UISettings(
+      user: User(id: id, isSuperUser: false, username: username, groups: []),
+      settings: UISettingsSettings(),
+      permissions: .empty)
   }
 
   private func correspondent(_ id: UInt, _ name: String) -> Correspondent {
@@ -142,16 +189,85 @@ struct ElementObservationTests {
   func scopedPerServer() async throws {
     let serverA = UUID()
     let database = try Database.seeded(serverID: serverA, correspondents: [correspondent(1, "A")])
-    let serverB = UUID()
-    try database.upsertConnection(
-      ConnectionRecord(
-        id: serverB, url: URL(string: "https://b.example.com/")!,
-        user: .init(id: 1, isSuperUser: false, username: "bob")))
+    let serverB = try addServer(to: database, host: "b")
     try database.replaceElements(
       [correspondent(2, "B")], of: CorrespondentRecord.self, serverID: serverB)
 
     let aOnly = try await firstValue(
       from: database.observeElements(CorrespondentRecord.self, serverID: serverA))
     #expect(aOnly.map(\.id) == [1])
+  }
+
+  // MARK: - Per-server narrowing (#696)
+
+  @Test("observeElements does not emit for another server's write")
+  func elementsIgnoreForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA, correspondents: [correspondent(1, "A")])
+    let serverB = try addServer(to: database, host: "b")
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeElements(CorrespondentRecord.self, serverID: serverA),
+      foreignWrite: {
+        try database.replaceElements(
+          [self.correspondent(50, "Foreign")], of: CorrespondentRecord.self, serverID: serverB)
+        try database.deleteElement(CorrespondentRecord.self, serverID: serverB, id: 50)
+      },
+      ownWrite: {
+        try database.upsertElement(
+          self.correspondent(2, "Beta"), of: CorrespondentRecord.self, serverID: serverA)
+      })
+    #expect(next.map(\.id) == [1, 2])
+  }
+
+  @Test("observeElements does not re-emit an identical own-server write")
+  func elementsIgnoreIdenticalWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA, correspondents: [correspondent(1, "A")])
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeElements(CorrespondentRecord.self, serverID: serverA),
+      foreignWrite: {
+        // Same rows, written again: a fresh transaction, an identical result.
+        try database.replaceElements(
+          [self.correspondent(1, "A")], of: CorrespondentRecord.self, serverID: serverA)
+      },
+      ownWrite: {
+        try database.upsertElement(
+          self.correspondent(2, "Beta"), of: CorrespondentRecord.self, serverID: serverA)
+      })
+    #expect(next.map(\.id) == [1, 2])
+  }
+
+  @Test("observeUISettings does not emit for another server's write")
+  func uiSettingsIgnoreForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA)
+    let serverB = try addServer(to: database, host: "b")
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeUISettings(serverID: serverA),
+      foreignWrite: { try database.setUISettings(self.uiSettings(9, "bob"), serverID: serverB) },
+      ownWrite: { try database.setUISettings(self.uiSettings(7, "alice"), serverID: serverA) })
+    #expect(next?.user.username == "alice")
+  }
+
+  @Test("observeServerConfiguration does not emit for another server's write")
+  func serverConfigurationIgnoresForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA)
+    let serverB = try addServer(to: database, host: "b")
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeServerConfiguration(serverID: serverA),
+      foreignWrite: {
+        try database.setServerConfiguration(
+          ServerConfiguration(id: 1, barcodeAsnPrefix: "FOREIGN"), serverID: serverB)
+      },
+      ownWrite: {
+        try database.setServerConfiguration(
+          ServerConfiguration(id: 1, barcodeAsnPrefix: "ASN"), serverID: serverA)
+      })
+    #expect(next?.barcodeAsnPrefix == "ASN")
   }
 }
