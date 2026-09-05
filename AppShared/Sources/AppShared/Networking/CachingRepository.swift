@@ -572,6 +572,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           serverID: serverID, excluding: detailFillFailures)) ?? []
         : []
 
+      // Both discovery reads swallow their error, and a cancelled read is an
+      // error — so a pass cancelled here would come back with two empty lists,
+      // skip both loops (and the `checkCancellation` inside them), and return
+      // normally, which `ServerSession` records as a completed detail fill. Ask
+      // once, explicitly, before the emptiness can be mistaken for "nothing
+      // left to do".
+      try Task.checkCancellation()
+
       // The pass is uncapped: a first cold fill of a large library is meant to
       // run to completion, and the Offline & Sync screen reports it rather than
       // a per-pass budget hiding how much is left. Cancellation (backgrounding,
@@ -696,6 +704,46 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     !isSkippable(error)
   }
 
+  // MARK: - Write-through shield
+
+  /// Run a cache write that follows an *already committed* remote mutation, on
+  /// a task of its own so the caller's cancellation cannot abandon it.
+  ///
+  /// The mutation methods here are pessimistic: they forward to the server and
+  /// write through only once it has accepted the change. The blocking accessors
+  /// these replaced always ran to completion, and that is what the pattern
+  /// silently depended on. The `async` accessors are cancellation-aware — GRDB
+  /// throws `CancellationError` if the task is cancelled before the access
+  /// starts, and interrupts one already running — which is right for a sweep
+  /// and wrong here: a caller cancelled in the window between the two (a
+  /// dismissed sheet, a view that went away, a server switch) would leave the
+  /// server changed and the cache holding the old value, with nothing scheduled
+  /// to reconcile the two. A delete is the worst case — the row stays cached,
+  /// keeps appearing in lists and is served offline as though it still existed,
+  /// until the next `reconcileDocumentDeletions` happens to notice.
+  ///
+  /// An unstructured `Task` inherits actor isolation but *not* cancellation, so
+  /// the write runs to completion; awaiting its value keeps the method's
+  /// contract (it still returns only once the cache agrees with the server) and
+  /// still propagates a genuine write failure to the caller.
+  ///
+  /// Only for writes behind a committed remote mutation. Reads and sweep writes
+  /// stay cancellable: stopping those loses work, not consistency.
+  private func commitCache(
+    _ operation: String, _ body: @escaping @Sendable () async throws -> Void
+  ) async throws {
+    do {
+      try await Task { try await body() }.value
+    } catch {
+      // The caller sees this as a plain failure; only the log can say that the
+      // server already accepted the change and it is the cache that is behind.
+      Logger.shared.error(
+        "Cache write '\(operation, privacy: .public)' failed after the server accepted the change; the cache is stale until the next reconcile: \(error)"
+      )
+      throw error
+    }
+  }
+
   // MARK: - Element reads (cache)
 
   public func tags() async throws -> [Tag] {
@@ -786,89 +834,117 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func create(tag: ProtoTag) async throws -> Tag {
     let created = try await wrapped.create(tag: tag)
-    try await database.upsertElement(created, of: TagRecord.self, serverID: serverID)
+    try await commitCache("create(tag:)") { [database, serverID] in
+      try await database.upsertElement(created, of: TagRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(tag: Tag) async throws -> Tag {
     let updated = try await wrapped.update(tag: tag)
-    try await database.upsertElement(updated, of: TagRecord.self, serverID: serverID)
+    try await commitCache("update(tag:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: TagRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(tag: Tag) async throws {
     try await wrapped.delete(tag: tag)
-    try await database.deleteElement(TagRecord.self, serverID: serverID, id: tag.id)
+    try await commitCache("delete(tag:)") { [database, serverID, id = tag.id] in
+      try await database.deleteElement(TagRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
     let created = try await wrapped.create(correspondent: correspondent)
-    try await database.upsertElement(created, of: CorrespondentRecord.self, serverID: serverID)
+    try await commitCache("create(correspondent:)") { [database, serverID] in
+      try await database.upsertElement(created, of: CorrespondentRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(correspondent: Correspondent) async throws -> Correspondent {
     let updated = try await wrapped.update(correspondent: correspondent)
-    try await database.upsertElement(updated, of: CorrespondentRecord.self, serverID: serverID)
+    try await commitCache("update(correspondent:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: CorrespondentRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(correspondent: Correspondent) async throws {
     try await wrapped.delete(correspondent: correspondent)
-    try await database.deleteElement(
-      CorrespondentRecord.self, serverID: serverID, id: correspondent.id)
+    try await commitCache("delete(correspondent:)") { [database, serverID, id = correspondent.id] in
+      try await database.deleteElement(CorrespondentRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
     let created = try await wrapped.create(documentType: documentType)
-    try await database.upsertElement(created, of: DocumentTypeRecord.self, serverID: serverID)
+    try await commitCache("create(documentType:)") { [database, serverID] in
+      try await database.upsertElement(created, of: DocumentTypeRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(documentType: DocumentType) async throws -> DocumentType {
     let updated = try await wrapped.update(documentType: documentType)
-    try await database.upsertElement(updated, of: DocumentTypeRecord.self, serverID: serverID)
+    try await commitCache("update(documentType:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: DocumentTypeRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(documentType: DocumentType) async throws {
     try await wrapped.delete(documentType: documentType)
-    try await database.deleteElement(
-      DocumentTypeRecord.self, serverID: serverID, id: documentType.id)
+    try await commitCache("delete(documentType:)") { [database, serverID, id = documentType.id] in
+      try await database.deleteElement(DocumentTypeRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
     let created = try await wrapped.create(storagePath: storagePath)
-    try await database.upsertElement(created, of: StoragePathRecord.self, serverID: serverID)
+    try await commitCache("create(storagePath:)") { [database, serverID] in
+      try await database.upsertElement(created, of: StoragePathRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(storagePath: StoragePath) async throws -> StoragePath {
     let updated = try await wrapped.update(storagePath: storagePath)
-    try await database.upsertElement(updated, of: StoragePathRecord.self, serverID: serverID)
+    try await commitCache("update(storagePath:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: StoragePathRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(storagePath: StoragePath) async throws {
     try await wrapped.delete(storagePath: storagePath)
-    try await database.deleteElement(StoragePathRecord.self, serverID: serverID, id: storagePath.id)
+    try await commitCache("delete(storagePath:)") { [database, serverID, id = storagePath.id] in
+      try await database.deleteElement(StoragePathRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(savedView: ProtoSavedView) async throws -> SavedView {
     let created = try await wrapped.create(savedView: savedView)
-    try await database.upsertElement(created, of: SavedViewRecord.self, serverID: serverID)
+    try await commitCache("create(savedView:)") { [database, serverID] in
+      try await database.upsertElement(created, of: SavedViewRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(savedView: SavedView) async throws -> SavedView {
     let updated = try await wrapped.update(savedView: savedView)
-    try await database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
+    try await commitCache("update(savedView:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(savedView: SavedView) async throws {
     try await wrapped.delete(savedView: savedView)
-    try await database.deleteElement(SavedViewRecord.self, serverID: serverID, id: savedView.id)
+    try await commitCache("delete(savedView:)") { [database, serverID, id = savedView.id] in
+      try await database.deleteElement(SavedViewRecord.self, serverID: serverID, id: id)
+    }
   }
 
   // MARK: - Documents (pessimistic write-through + cache fallback)
@@ -880,8 +956,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // response carries permissions/custom fields — a `.full` write replaces the
     // row completely without dropping them. Ordering under the active sort isn't
     // recomputed offline — mark affected queries stale.
-    try await database.upsertDocument(updated, serverID: serverID)
-    try await database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
+    //
+    // Both writes are shielded together: the stale-marking is what tells the
+    // list its cached ordering no longer reflects the edit, so landing the row
+    // without it is its own kind of divergence.
+    try await commitCache("update(document:)") { [database, serverID] in
+      try await database.upsertDocument(updated, serverID: serverID)
+      try await database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
+    }
     return updated
   }
 
@@ -889,7 +971,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.delete(document: document)
     // Explicitly prunes every cached query_order referencing it too — no FK
     // cascade does this (dropped in migration V6).
-    try await database.deleteDocuments(serverID: serverID, removedIDs: [document.id])
+    try await commitCache("delete(document:)") { [database, serverID, id = document.id] in
+      try await database.deleteDocuments(serverID: serverID, removedIDs: [id])
+    }
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -1051,6 +1135,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // row for free when the count is 0, or re-fetches when it's > 0. We can't
         // tell a note change from any other field change, so this may re-fetch a
         // few docs whose notes didn't actually change.
+        //
+        // `try?` swallows cancellation along with everything else, so a pass
+        // stopped here leaves those documents' notes stale — the row survives
+        // next to a refreshed `notesCount`, and the detail fill sees a cached
+        // row and doesn't re-fetch. Accepted: the next reconcile that touches
+        // these documents invalidates them again, and note text going a pass
+        // stale is not worth holding an interrupted sweep open for.
         try? await database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
         applied += toUpsert.count
       }
@@ -1223,13 +1314,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Pessimistic: the server returns the updated full list, which we write
     // through so the cached notes stay consistent without a re-fetch.
     let updated = try await wrapped.createNote(documentId: documentId, note: note)
-    try await database.setNotes(updated, serverID: serverID, documentID: documentId)
+    try await commitCache("createNote(documentId:)") { [database, serverID] in
+      try await database.setNotes(updated, serverID: serverID, documentID: documentId)
+    }
     return updated
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
     let updated = try await wrapped.deleteNote(id: id, documentId: documentId)
-    try await database.setNotes(updated, serverID: serverID, documentID: documentId)
+    try await commitCache("deleteNote(id:documentId:)") { [database, serverID] in
+      try await database.setNotes(updated, serverID: serverID, documentID: documentId)
+    }
     return updated
   }
 
@@ -1291,10 +1386,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Write the new settings through to the cached `ui_settings` singleton (the
     // server returns no body), merging onto the cached user/permissions, so the
     // live observation repaints `settings` (e.g. saved-view visibility).
-    if let current = try await database.uiSettings(serverID: serverID) {
-      let merged = UISettings(
-        user: current.user, settings: settings, permissions: current.permissions)
-      try await database.setUISettings(merged, serverID: serverID)
+    // Read-modify-write, shielded as a unit: cancelled between the read and the
+    // write, the server would be holding settings the cached singleton denies.
+    try await commitCache("update(settings:)") { [database, serverID] in
+      if let current = try await database.uiSettings(serverID: serverID) {
+        let merged = UISettings(
+          user: current.user, settings: settings, permissions: current.permissions)
+        try await database.setUISettings(merged, serverID: serverID)
+      }
     }
   }
 
