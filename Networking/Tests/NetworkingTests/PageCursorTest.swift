@@ -143,4 +143,51 @@ private let initial = URL(string: "https://example.com/api/items/?page=1")!
     _ = try await cursor.collectAll()
     #expect(await recorder.urls == [initial, expectedFixed])
   }
+
+  // A 403 from the server is rewritten into `ResourceForbidden<Element>`, which
+  // deliberately is *not* a `RequestError`: callers that want to skip a
+  // forbidden resource must match on `ResourceForbiddenError`, not on
+  // `RequestError`. Regression guard for
+  // https://github.com/paulgessinger/swift-paperless/issues/661.
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/661", id: 661))
+  func forbiddenIsRewrittenToResourceForbidden() async throws {
+    let cursor = PageCursor<Int>(
+      initialURL: initial,
+      fetch: { _ in
+        throw RequestError.forbidden(detail: "Insufficient permissions")
+      })
+
+    do {
+      _ = try await cursor.nextPage()
+      Issue.record("nextPage() must throw for a forbidden response")
+    } catch let error {
+      // The rewrite target, carrying the server detail through.
+      let forbidden = try #require(error as? ResourceForbidden<Int>)
+      #expect(forbidden.response == "Insufficient permissions")
+      // Recognisable without knowing the element type.
+      #expect(error is any ResourceForbiddenError)
+      // The whole point of the rewrite: it is no longer a `RequestError`, so
+      // `catch let error as RequestError` never sees it.
+      #expect(!(error is RequestError))
+    }
+  }
+
+  // The rewrite also applies on later pages, i.e. it is not tied to the first
+  // request, and `collectAll` propagates it rather than ending the sequence.
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/661", id: 661))
+  func forbiddenOnLaterPagePropagatesThroughCollectAll() async throws {
+    let second = URL(string: "https://example.com/api/items/?page=2")!
+    let cursor = PageCursor<Int>(
+      initialURL: initial,
+      fetch: { url in
+        if url == initial {
+          return ListResponse(count: 4, next: second, previous: nil, results: [1, 2])
+        }
+        throw RequestError.forbidden(detail: nil)
+      })
+
+    await #expect(throws: ResourceForbidden<Int>.self) {
+      _ = try await cursor.collectAll()
+    }
+  }
 }
