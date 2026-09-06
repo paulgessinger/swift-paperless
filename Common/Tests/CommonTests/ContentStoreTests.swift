@@ -169,4 +169,123 @@ struct ContentStoreTests {
     try store.delete(Self.key())
     try store.delete(Self.key())
   }
+
+  // MARK: - Reclamation
+
+  /// Every reclaim test writes its blobs "now" and then sweeps with a clock two
+  /// grace periods ahead, rather than backdating files: it exercises the same
+  /// comparison without depending on the filesystem's timestamp granularity.
+  private static var aged: Date {
+    Date().addingTimeInterval(2 * ContentStore.reclaimGracePeriod)
+  }
+
+  private static func write(_ store: ContentStore, _ key: ContentStore.Key) throws -> URL {
+    try store.store(
+      key, movingFrom: writeTempFile(Data("payload".utf8)),
+      modified: Date(timeIntervalSince1970: 1000))
+  }
+
+  @Test("Reclaim keeps the blob of a version the database still references")
+  func reclaimKeepsLiveVersion() throws {
+    let (store, _) = try Self.makeStore()
+    let live = Self.key(version: 9)
+    let url = try Self.write(store, live)
+
+    let report = store.reclaim(
+      retaining: [Self.serverA: [9]], now: Self.aged)
+
+    #expect(report.removedFiles == 0)
+    #expect(report.examinedVersions == 1)
+    #expect(FileManager.default.fileExists(atPath: url.path))
+    #expect(store.read(live, freshAgainst: Date(timeIntervalSince1970: 1000)) == url)
+  }
+
+  @Test("Reclaim drops a superseded version, its sidecar and its directory")
+  func reclaimRemovesSupersededVersion() throws {
+    let (store, _) = try Self.makeStore()
+    let superseded = Self.key(version: 4)
+    let current = Self.key(version: 9)
+    let old = try Self.write(store, superseded)
+    let new = try Self.write(store, current)
+
+    let report = store.reclaim(retaining: [Self.serverA: [9]], now: Self.aged)
+
+    // Blob + sidecar for the one dead version.
+    #expect(report.removedFiles == 2)
+    #expect(report.reclaimedBytes > 0)
+    #expect(report.examinedVersions == 2)
+    #expect(!FileManager.default.fileExists(atPath: old.path))
+    #expect(!FileManager.default.fileExists(atPath: old.deletingLastPathComponent().path))
+    #expect(FileManager.default.fileExists(atPath: new.path))
+  }
+
+  @Test("Reclaim drops content of a document, and a server, the database no longer knows")
+  func reclaimRemovesDeletedDocumentAndServer() throws {
+    let (store, _) = try Self.makeStore()
+    let deletedDocument = try Self.write(store, Self.key(version: 4))
+    let removedServer = try Self.write(store, Self.key(server: Self.serverB, version: 7))
+    let kept = try Self.write(store, Self.key(version: 9))
+
+    // Server A still has one document (version 9); server B's connection is
+    // gone entirely, so it appears in the map not at all.
+    let report = store.reclaim(retaining: [Self.serverA: [9]], now: Self.aged)
+
+    #expect(report.removedFiles == 4)
+    #expect(!FileManager.default.fileExists(atPath: deletedDocument.path))
+    #expect(!FileManager.default.fileExists(atPath: removedServer.path))
+    // The whole server directory goes, not just its contents.
+    #expect(
+      !FileManager.default.fileExists(
+        atPath: removedServer.deletingLastPathComponent().deletingLastPathComponent().path))
+    #expect(FileManager.default.fileExists(atPath: kept.path))
+  }
+
+  @Test("Reclaim leaves an unreferenced blob alone while it is inside the grace period")
+  func reclaimKeepsFreshBlob() throws {
+    let (store, _) = try Self.makeStore()
+    let fresh = try Self.write(store, Self.key(version: 4))
+
+    // Default clock: the file was written moments ago, so it is inside the
+    // window in which a concurrent writer may still be about to reference it.
+    let report = store.reclaim(retaining: [:])
+
+    #expect(report.removedFiles == 0)
+    #expect(report.keptRecent == 1)
+    #expect(FileManager.default.fileExists(atPath: fresh.path))
+
+    // The same sweep with an aged clock does remove it, so the retention above
+    // is the grace period and nothing else.
+    #expect(store.reclaim(retaining: [:], now: Self.aged).removedFiles == 2)
+    #expect(!FileManager.default.fileExists(atPath: fresh.path))
+  }
+
+  @Test("Reclaim tolerates a file that vanishes before it gets there")
+  func reclaimToleratesMissingFile() throws {
+    let (store, _) = try Self.makeStore()
+    let key = Self.key(version: 4)
+    let url = try Self.write(store, key)
+    // Stands in for another process (or a `purge()`) removing the blob between
+    // the directory listing and the unlink; the orphaned sidecar must still go.
+    try FileManager.default.removeItem(at: url)
+
+    let report = store.reclaim(retaining: [:], now: Self.aged)
+
+    #expect(report.removedFiles == 1)
+    #expect(!FileManager.default.fileExists(atPath: url.deletingLastPathComponent().path))
+  }
+
+  @Test("Reclaim never touches files it did not write")
+  func reclaimIgnoresForeignEntries() throws {
+    let (store, root) = try Self.makeStore()
+    _ = try Self.write(store, Self.key(version: 4))
+    let contentRoot = root.appendingPathComponent("Caches/ContentStore", isDirectory: true)
+    let foreign = contentRoot.appendingPathComponent("not-a-uuid", isDirectory: true)
+    try FileManager.default.createDirectory(at: foreign, withIntermediateDirectories: true)
+    let foreignFile = foreign.appendingPathComponent("keep.txt")
+    try Data("keep".utf8).write(to: foreignFile)
+
+    _ = store.reclaim(retaining: [:], now: Self.aged)
+
+    #expect(FileManager.default.fileExists(atPath: foreignFile.path))
+  }
 }
