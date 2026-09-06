@@ -207,7 +207,10 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
     .animation(.spring, value: store.permissions[.tag])
 
     .refreshable {
-      Task {
+      // Awaited: a fire-and-forget Task returned immediately, ending the
+      // refresh session in the same frame it started, so the control
+      // retracted while the pull was still settling.
+      await Task {
         let announcedOffline = errorController.noteOfflineIfNeeded()
         do {
           try await store.sync(userInitiated: true)
@@ -216,7 +219,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             errorController.push(readError: error)
           }
         }
-      }
+      }.value
     }
 
     .navigationTitle(Text(.app(.tags)))
