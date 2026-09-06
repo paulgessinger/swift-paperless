@@ -47,19 +47,55 @@ enum DocumentDownloadState: Equatable {
 }
 
 /// Accumulates the errors thrown across one `DocumentDetailModel.load()` pass so
-/// duplicates can be collapsed before they reach the caller's `onError`. Keyed on
-/// `String(describing:)`: connectivity failures against the same host produce
-/// equal `RequestError.other` values (identical description), so a server-wide
-/// outage dedupes to a single entry, while distinct failures keep distinct keys.
+/// duplicates can be collapsed before they reach the caller's `onError`.
+///
+/// An unreachable server fails every request in the pass the same way, so
+/// those should collapse to one entry, while genuinely different failures (a
+/// permission error on a single endpoint, say) stay distinct and each still
+/// show.
+///
+/// Transport failures arrive here raw: `ApiRepository.fetchData` rethrows what
+/// `URLSession` threw, and a bridged `URLError` carries the failing URL and a
+/// per-request task id in its `NSError.userInfo`, so no two are ever equal by
+/// value — not even two failures against the same endpoint. Those are compared
+/// by code. Everything else (`RequestError` and other `Equatable` errors) is
+/// compared by value, which is what keeps distinct failures distinct.
 @MainActor
 private final class LoadErrorCollector {
-  private var seen: Set<String> = []
   private(set) var distinct: [any Error] = []
 
   func add(_ error: any Error) {
-    if seen.insert(String(describing: error)).inserted {
-      distinct.append(error)
+    guard !distinct.contains(where: { Self.isDuplicate($0, error) }) else { return }
+    distinct.append(error)
+  }
+
+  private static func isDuplicate(_ lhs: any Error, _ rhs: any Error) -> Bool {
+    // Transport failures: same code means the same outage, whatever the URL.
+    if let lhs = lhs as? URLError, let rhs = rhs as? URLError {
+      return lhs.code == rhs.code
     }
+    let lhsNS = lhs as NSError
+    let rhsNS = rhs as NSError
+    if lhsNS.domain == NSURLErrorDomain, rhsNS.domain == NSURLErrorDomain {
+      return lhsNS.code == rhsNS.code
+    }
+    // Via `Any`: casting an `any Error` straight to `any Equatable` draws a
+    // spurious "always succeeds" warning, though at runtime it correctly fails
+    // for an error type that doesn't conform.
+    guard let lhsEquatable = lhs as Any as? any Equatable,
+      let rhsEquatable = rhs as Any as? any Equatable
+    else {
+      // Nothing better to go on for an error that can't be compared.
+      return String(describing: lhs) == String(describing: rhs)
+    }
+    return isEqual(lhsEquatable, rhsEquatable)
+  }
+
+  /// Open the existentials to recover the concrete type and use its `==`.
+  /// Errors of different types are never duplicates.
+  private static func isEqual(_ lhs: any Equatable, _ rhs: any Equatable) -> Bool {
+    func compare<T: Equatable>(_ lhs: T) -> Bool { (rhs as? T) == lhs }
+    return compare(lhs)
   }
 }
 
