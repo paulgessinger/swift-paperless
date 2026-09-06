@@ -160,7 +160,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       } catch {
         viewModel.document[keyPath: keyPath] = previous
         saving = false
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }
@@ -199,7 +199,7 @@ struct SingleSelectPickerSheet<Item: Model & Named & Hashable & Sendable, Create
       } catch {
         viewModel.document[keyPath: keyPath] = previous
         saving = false
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

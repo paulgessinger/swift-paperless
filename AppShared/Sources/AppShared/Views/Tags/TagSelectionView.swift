@@ -41,7 +41,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
             document.tags.append(tag.id)
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       })
@@ -208,10 +208,13 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
 
     .refreshable {
       Task {
+        let announcedOffline = errorController.noteOfflineIfNeeded()
         do {
           try await store.sync(userInitiated: true)
         } catch {
-          errorController.push(error: error)
+          if !announcedOffline {
+            errorController.push(readError: error)
+          }
         }
       }
     }

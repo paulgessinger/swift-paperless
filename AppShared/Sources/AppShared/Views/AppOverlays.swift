@@ -8,7 +8,10 @@
 //  - `errorOverlay` bridges `ErrorController` push events into toasts.
 //  - `offlineToast` bridges `NetworkMonitor` online/offline *transitions*
 //    into toasts — no persistent UI for the offline state, just a brief
-//    announcement when the state flips.
+//    announcement when the state flips. It also re-shows that indicator when
+//    a user-initiated read is blocked by being offline
+//    (`ErrorController.offlineNotices`), so the announcement is available for
+//    the whole offline session and not just the moment the link drops.
 //  - `SchemaChangeEraseToastBridge` surfaces a DEBUG-only database erase
 //    (see `Database.didEraseForSchemaChangeAtLaunch`) once, at launch.
 //
@@ -39,7 +42,9 @@ extension View {
       // see env values set by their parents, not by siblings/children
       // further out in the chain.
       .errorOverlay(errorController: errorController)
-      .modifier(OfflineToastBridge(networkMonitor: networkMonitor))
+      .modifier(
+        OfflineToastBridge(networkMonitor: networkMonitor, errorController: errorController)
+      )
       .modifier(SchemaChangeEraseToastBridge(database: database))
       .installToast(position: .top)
   }

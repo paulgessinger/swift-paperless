@@ -38,7 +38,7 @@ private struct CreateNoteView: View {
       dismiss()
     } catch {
       Logger.shared.error("Error adding note to document: \(error)")
-      errorController.push(error: error)
+      errorController.push(mutationError: error)
       saving = false
     }
   }
@@ -106,7 +106,7 @@ public struct DocumentNoteView: View {
       } catch let error where error.isCancellationError {
       } catch {
         Logger.shared.error("Error deleting note from document: \(error)")
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }
@@ -116,12 +116,16 @@ public struct DocumentNoteView: View {
   /// stays silent — it isn't user-initiated, and an offline open falls back to
   /// whatever the cache holds.
   private func loadNotes(userInitiated: Bool) async {
+    // Offline, the cache answers this without throwing, so the notice has to
+    // come from the network state at the gesture, not from a failure.
+    // Remembered, so the error path doesn't say it a second time.
+    let announcedOffline = userInitiated && errorController.noteOfflineIfNeeded()
     do {
       notes = try await store.notes(for: document)
     } catch let error where error.isCancellationError {} catch {
       Logger.shared.error("Error loading notes for document: \(error)")
-      if userInitiated {
-        errorController.push(error: error)
+      if userInitiated, !announcedOffline {
+        errorController.push(readError: error)
       }
     }
   }

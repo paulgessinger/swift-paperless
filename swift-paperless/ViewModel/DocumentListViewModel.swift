@@ -137,6 +137,11 @@ class DocumentListViewModel {
   func refresh(filter: FilterState? = nil, userInitiated: Bool = false) async {
     if let filter { filterState = filter }
 
+    // Say "offline" up front: the passes below mostly fall back to the cache
+    // rather than throwing, so waiting for an error would say nothing at all.
+    // Remembered, so the error path below doesn't say it a second time.
+    let announcedOffline = userInitiated && errorController.noteOfflineIfNeeded()
+
     var firstError: (any Error)?
     do {
       try await store.sync(userInitiated: userInitiated)
@@ -147,13 +152,13 @@ class DocumentListViewModel {
 
     guard hasViewPermission() else {
       noPermissions = true
-      surface(firstError, userInitiated: userInitiated)
+      surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
     }
     noPermissions = false
 
     guard let key = store.documentQueryKey(filter: filterState) else {
-      surface(firstError, userInitiated: userInitiated)
+      surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
     }
     if key != queryKey {
@@ -166,12 +171,12 @@ class DocumentListViewModel {
       if firstError == nil { firstError = error }
     }
 
-    surface(firstError, userInitiated: userInitiated)
+    surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
   }
 
-  private func surface(_ error: (any Error)?, userInitiated: Bool) {
-    guard userInitiated, let error else { return }
-    errorController.push(error: error)
+  private func surface(_ error: (any Error)?, userInitiated: Bool, announcedOffline: Bool) {
+    guard userInitiated, !announcedOffline, let error else { return }
+    errorController.push(readError: error)
   }
 
   /// Kick the eager fill: page 1 awaited (DB write → observation repaints), the

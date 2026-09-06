@@ -368,7 +368,7 @@ private struct TaskList: View {
       viewModel?.remove(ids: Set(ids))
     } catch {
       Logger.shared.error("Error acknowledging \(ids.count) task(s): \(error)")
-      errorController.push(error: error)
+      errorController.push(mutationError: error)
     }
   }
 

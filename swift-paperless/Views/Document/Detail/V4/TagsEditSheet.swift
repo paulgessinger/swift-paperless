@@ -53,7 +53,7 @@ struct TagsEditSheet: View {
             onCreated(tag)
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       })
@@ -128,7 +128,7 @@ struct TagsEditSheet: View {
       } catch {
         saving = false
         viewModel.document.tags = originalTags
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }
@@ -176,7 +176,7 @@ struct TagsEditSheet: View {
         searchText = ""
         add(tag.id)
       } catch {
-        errorController.push(error: error)
+        errorController.push(mutationError: error)
       }
     }
   }

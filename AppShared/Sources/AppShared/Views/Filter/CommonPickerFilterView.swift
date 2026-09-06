@@ -370,7 +370,7 @@ where
             document[keyPath: Element.documentPath(D.self)] = created.id
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
 
@@ -424,10 +424,13 @@ where
 
     .refreshable {
       await Task {
+        let announcedOffline = errorController.noteOfflineIfNeeded()
         do {
           try await store.sync(userInitiated: true)
         } catch {
-          errorController.push(error: error)
+          if !announcedOffline {
+            errorController.push(readError: error)
+          }
         }
       }.value
     }

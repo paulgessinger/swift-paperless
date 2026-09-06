@@ -30,7 +30,7 @@ struct DocumentTypeEditSheet: View {
             onCreated(documentType)
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
       })

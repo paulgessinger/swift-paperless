@@ -109,7 +109,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
           dismiss()
         } catch {
           Logger.shared.error("Failed to save \(Element.self): \(error)")
-          errorController.push(error: error)
+          errorController.push(mutationError: error)
         }
       }
     }
@@ -135,7 +135,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
             onSave()
             dismiss()
           } catch {
-            errorController.push(error: error)
+            errorController.push(mutationError: error)
           }
         }
 
@@ -154,6 +154,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
   }
 
   private func refresh() async {
+    let announcedOffline = errorController.noteOfflineIfNeeded()
     do {
       try await store.sync(userInitiated: true)
       if let model {
@@ -163,7 +164,9 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
       }
     } catch {
-      errorController.push(error: error)
+      if !announcedOffline {
+        errorController.push(readError: error)
+      }
     }
   }
 
@@ -203,7 +206,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
           try await model?.delete(element)
         } catch {
           Logger.shared.error("Error deleting element: \(error)")
-          errorController.push(error: error)
+          errorController.push(mutationError: error)
         }
       }
     }
@@ -243,7 +246,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
               await MainActor.run { reloadElements() }
             } catch {
               Logger.shared.error("Error deleting element: \(error)")
-              errorController.push(error: error)
+              errorController.push(mutationError: error)
             }
           }
         } label: {

@@ -7093,6 +7093,30 @@
         }
       }
     },
+    "errorNotConfirmedOffline" : {
+      "comment" : "Toast shown when a save, edit or delete fails while offline with a connection that dropped mid-request or timed out, so the server may or may not have applied it. Deliberately hedged: unlike errorNotSavedOffline the app cannot tell whether the change landed, and retrying could duplicate it. Keep it as short as errorNotSavedOffline (about 25 characters) — the toast shows one line next to a Details button and truncates anything longer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maybe not saved — offline"
+          }
+        }
+      }
+    },
+    "errorNotSavedOffline" : {
+      "comment" : "Toast shown when a save, edit or delete fails because the device is offline. The app cannot queue changes, so the change is lost: the wording must say it was not saved, not merely that the device is offline (which would suggest it will sync later).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not saved — you're offline"
+          }
+        }
+      }
+    },
     "excludeElement" : {
       "comment" : "Common element selection mode (include/exclude",
       "extractionState" : "manual",
