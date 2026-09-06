@@ -33,3 +33,4 @@
 - Saving, editing or deleting something while offline now tells you the change was not saved, instead of failing silently and leaving your edit looking like it was queued. If the connection dropped mid-request, so the change may or may not have gone through, it says that instead of guessing.
 - Pulling to refresh while offline now shows the offline indicator instead of doing nothing at all
 - The app no longer freezes briefly while it reads or writes its offline cache; this was most noticeable when opening the app with a large library, or while the share extension was saving a document at the same time
+- The Offline & Sync transfer statistics now count data used by opening and switching document lists separately from the background library download, and say that the figures cover API data only, not thumbnails or downloaded files

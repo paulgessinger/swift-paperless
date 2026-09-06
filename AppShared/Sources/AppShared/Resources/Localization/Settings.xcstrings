@@ -3249,6 +3249,18 @@
         }
       }
     },
+    "offlineSyncApiDataHeader" : {
+      "comment" : "Section header for how much network data the app has used. Covers API requests only, not thumbnails or downloaded files",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API data transferred"
+          }
+        }
+      }
+    },
     "offlineSyncCachedDocuments" : {
       "comment" : "Row label for how many documents are currently stored on the device for offline use",
       "extractionState" : "manual",
@@ -3411,56 +3423,14 @@
         }
       }
     },
-    "offlineSyncDataHeader" : {
-      "comment" : "Section header for how much network data the app has used. Covers API requests only, not file downloads",
+    "offlineSyncDataScope" : {
+      "comment" : "Footer under the data-transferred figures, stating what the meter does and does not count",
       "extractionState" : "manual",
       "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overførte data"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Übertragene Daten"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Data transferred"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Données transférées"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dati trasferiti"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overgedragen gegevens"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przesłane dane"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktarılan veri"
+            "value" : "Counts API data only — document lists, details, notes and element sync. Thumbnails and downloaded files are not included."
           }
         }
       }
@@ -5832,7 +5802,7 @@
       }
     },
     "transferCategoryFill" : {
-      "comment" : "Data-transfer category: downloading document lists for offline use",
+      "comment" : "Data-transfer category: downloading document lists in the background for offline use",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -5881,6 +5851,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kitaplık doldurma"
+          }
+        }
+      }
+    },
+    "transferCategoryList" : {
+      "comment" : "Data-transfer category: document lists loaded because the user opened, switched or refreshed a view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browsing lists"
           }
         }
       }
