@@ -14,7 +14,6 @@ import SwiftUI
 @available(iOS 26.0, *)
 struct FilterAssembly: View {
   var filterModel: FilterModel
-  var isFetching: Bool = false
   // Caller-controlled. Inside a NavigationSplitView column the column
   // itself reports a compact horizontalSizeClass to children, so we can't
   // detect iPad layout from inside this view — the parent has to tell us.
@@ -51,7 +50,7 @@ struct FilterAssembly: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      SearchBarView(text: $searchText, isLoading: searchPending || isFetching) {
+      SearchBarView(text: $searchText, isLoading: searchPending || filterModel.isFetching) {
         searchModeMenu
       }
       .padding(.horizontal)

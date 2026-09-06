@@ -91,14 +91,19 @@ public struct DocumentCell: View {
     self.store = store
   }
 
-  public static var dateFormatter: DateFormatter {
+  // Built once: a computed property here allocated a fresh DateFormatter on
+  // every cell body evaluation, and every visible row pays that on each list
+  // re-render. `autoupdatingCurrent` so a region-format change while the app
+  // is alive still reaches it, as the per-render formatter used to.
+  @MainActor
+  public static let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
-    formatter.locale = Locale.current
+    formatter.locale = Locale.autoupdatingCurrent
     formatter.doesRelativeDateFormatting = false
     formatter.dateStyle = .medium
     formatter.timeStyle = .none
     return formatter
-  }
+  }()
 
   public typealias Aspect = DocumentCellAspect
 

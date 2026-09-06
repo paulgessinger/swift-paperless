@@ -65,7 +65,6 @@ struct DocumentView: View {
   @Environment(NetworkMonitor.self) private var networkMonitor
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @State private var filterModel = FilterModel()
-  @State private var isFetching: Bool = false
 
   // MARK: State
 
@@ -463,11 +462,9 @@ struct DocumentView: View {
   @ViewBuilder
   private func filterAssemblyView(showsBackdrop: Bool) -> some View {
     if #available(iOS 26.0, *) {
-      FilterAssembly(
-        filterModel: filterModel, isFetching: isFetching, showsBackdrop: showsBackdrop)
+      FilterAssembly(filterModel: filterModel, showsBackdrop: showsBackdrop)
     } else {
-      FilterAssemblyiOS18(
-        filterModel: filterModel, isFetching: isFetching, showsBackdrop: showsBackdrop)
+      FilterAssemblyiOS18(filterModel: filterModel, showsBackdrop: showsBackdrop)
     }
   }
 
@@ -480,8 +477,7 @@ struct DocumentView: View {
         store: store,
         onSelect: { navPath.append(.detail(document: $0)) },
         filterModel: filterModel,
-        errorController: errorController,
-        isFetching: $isFetching
+        errorController: errorController
       )
 
       .apply {
@@ -560,7 +556,6 @@ struct DocumentView: View {
       onSelect: { selectedDocument = $0 },
       filterModel: filterModel,
       errorController: errorController,
-      isFetching: $isFetching,
       selectedDocumentID: selectedDocument?.id
     )
     .apply {
