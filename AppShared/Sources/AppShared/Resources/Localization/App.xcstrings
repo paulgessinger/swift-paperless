@@ -15302,6 +15302,61 @@
         }
       }
     },
+    "uploadDocumentIntentLoadOptionsError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not load options from Paperless: %@"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentNoConnectionError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentPrepareFileError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The document file could not be prepared for upload: %@"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentSuccess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploaded document to Paperless."
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentUploadError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload failed: %@"
+          }
+        }
+      }
+    },
     "yes" : {
       "extractionState" : "manual",
       "localizations" : {
