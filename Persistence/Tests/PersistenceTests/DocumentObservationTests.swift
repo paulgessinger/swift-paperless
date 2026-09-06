@@ -35,6 +35,35 @@ struct DocumentObservationTests {
     }
   }
 
+  /// Per-server narrowing probe: subscribe, run `foreignWrite` (a write for
+  /// *another* server, which the observation's table region cannot exclude),
+  /// give the observation time to process it, then run `ownWrite` and return
+  /// the next emission.
+  ///
+  /// If the foreign write leaked an emission, that stale value — not the one
+  /// `ownWrite` produced — is what comes back, so the caller's expectation on
+  /// the returned value is the assertion. Sequencing the own write behind the
+  /// foreign one also proves the stream is still live, i.e. the silence was
+  /// narrowing and not a dead subscription.
+  private func valueSkippingForeignWrite<T: Sendable>(
+    from stream: AsyncThrowingStream<T, Error>,
+    foreignWrite: @escaping @Sendable () async throws -> Void,
+    ownWrite: @escaping @Sendable () async throws -> Void
+  ) async throws -> T {
+    try await withTimeout {
+      var iterator = stream.makeAsyncIterator()
+      _ = try await iterator.next()
+      try await foreignWrite()
+      // Long enough for the observation to have fetched and (had it not been
+      // de-duplicated) emitted before the own write lands, so the two writes
+      // cannot be coalesced into one notification.
+      try await Task.sleep(for: .milliseconds(250))
+      try await ownWrite()
+      guard let value = try await iterator.next() else { throw TimeoutError() }
+      return value
+    }
+  }
+
   private func withTimeout<T: Sendable>(
     seconds: Double = 3,
     _ operation: @escaping @Sendable () async throws -> T
@@ -49,6 +78,16 @@ struct DocumentObservationTests {
       group.cancelAll()
       return result
     }
+  }
+
+  /// Registers a second server so its rows satisfy the `server_id` foreign key.
+  private func addServer(to database: Database, host: String) throws -> UUID {
+    let id = UUID()
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: id, url: URL(string: "https://\(host).example.com/")!,
+        user: .init(id: 1, isSuperUser: false, username: host)))
+    return id
   }
 
   private func doc(_ id: UInt, _ title: String) -> Document {
@@ -208,5 +247,100 @@ struct DocumentObservationTests {
       try database.deleteDocuments(serverID: server, removedIDs: [1])
     }
     #expect(afterDelete == 1)
+  }
+
+  // MARK: - Per-server narrowing (#696)
+
+  @Test("observeDocumentPrefix does not emit for another server's write")
+  func prefixIgnoresForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA)
+    let serverB = try addServer(to: database, host: "b")
+    let key = QueryKey(sentinel: "q")
+    try database.writeQueryPage(
+      queryKey: key, serverID: serverA, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeDocumentPrefix(queryKey: key, serverID: serverA, limit: 10),
+      foreignWrite: {
+        // Same query key, other server — the sweep's shape exactly.
+        try database.writeQueryPage(
+          queryKey: key, serverID: serverB, documents: [self.doc(1, "B-1"), self.doc(2, "B-2")],
+          startPosition: 0, totalCount: 2, replaceAll: true)
+      },
+      ownWrite: {
+        try database.writeQueryPage(
+          queryKey: key, serverID: serverA, documents: [self.doc(2, "B")],
+          startPosition: 1, totalCount: 2, replaceAll: false)
+      })
+    #expect(next.map(\.id) == [1, 2])
+  }
+
+  @Test("observeQueryStatus does not emit for another server's write")
+  func queryStatusIgnoresForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA)
+    let serverB = try addServer(to: database, host: "b")
+    let key = QueryKey(sentinel: "q")
+    try database.writeQueryPage(
+      queryKey: key, serverID: serverA, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeQueryStatus(queryKey: key, serverID: serverA),
+      foreignWrite: {
+        try database.writeQueryPage(
+          queryKey: key, serverID: serverB, documents: [self.doc(9, "B-9")],
+          startPosition: 0, totalCount: 9, replaceAll: true)
+      },
+      ownWrite: {
+        try database.writeQueryPage(
+          queryKey: key, serverID: serverA, documents: [self.doc(2, "B")],
+          startPosition: 1, totalCount: 2, replaceAll: false)
+      })
+    #expect(next == QueryStatus(totalCount: 2, localCount: 2, orderStale: false))
+  }
+
+  @Test("observeDocument does not emit for another server's write of the same id")
+  func documentIgnoresForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA, documents: [doc(1, "A")])
+    let serverB = try addServer(to: database, host: "b")
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeDocument(serverID: serverA, id: 1),
+      foreignWrite: { try database.upsertDocument(self.doc(1, "B-1"), serverID: serverB) },
+      ownWrite: { try database.upsertDocument(self.doc(1, "A-edited"), serverID: serverA) })
+    #expect(next?.title == "A-edited")
+  }
+
+  @Test("observeDocument does not re-emit an identical own-server write")
+  func documentIgnoresIdenticalWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA, documents: [doc(1, "A")])
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeDocument(serverID: serverA, id: 1),
+      // Same object, written again: a fresh transaction, an identical row.
+      foreignWrite: { try database.upsertDocument(self.doc(1, "A"), serverID: serverA) },
+      ownWrite: { try database.upsertDocument(self.doc(1, "A-edited"), serverID: serverA) })
+    #expect(next?.title == "A-edited")
+  }
+
+  @Test("observeDocumentCount does not emit for another server's write")
+  func documentCountIgnoresForeignServerWrite() async throws {
+    let serverA = UUID()
+    let database = try Database.seeded(serverID: serverA, documents: [doc(1, "A")])
+    let serverB = try addServer(to: database, host: "b")
+
+    let next = try await valueSkippingForeignWrite(
+      from: database.observeDocumentCount(serverID: serverA),
+      foreignWrite: {
+        try database.upsertDocuments(
+          [self.doc(1, "B-1"), self.doc(2, "B-2")], serverID: serverB)
+      },
+      ownWrite: { try database.upsertDocument(self.doc(2, "B"), serverID: serverA) })
+    #expect(next == 2)
   }
 }

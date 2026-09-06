@@ -17,23 +17,23 @@ import GRDB
 /// flag as `false`. Inserting one in the middle shifts every raw value and
 /// makes already-cached rows decode as the wrong permissions, which fails
 /// silently. Such a change needs a migration that clears `ui_settings`.
-public struct UISettingsRecord: Codable, Sendable {
+public struct UISettingsRecord: Codable, Sendable, Equatable {
   public var serverId: UUID
   public var payload: Payload
 
-  public struct Payload: Codable, Sendable {
+  public struct Payload: Codable, Sendable, Equatable {
     public var user: UserData
     public var settings: SettingsData
     public var permissions: [String: [Bool]]
 
-    public struct UserData: Codable, Sendable {
+    public struct UserData: Codable, Sendable, Equatable {
       public var id: UInt
       public var isSuperUser: Bool
       public var username: String
       public var groups: [UInt]
     }
 
-    public struct SettingsData: Codable, Sendable {
+    public struct SettingsData: Codable, Sendable, Equatable {
       public var removeInboxTags: Bool
       public var defaultOwner: UInt?
       public var defaultViewUsers: [UInt]
