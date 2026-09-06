@@ -61,7 +61,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// resource the user lacks permission for is skipped, not fatal.
   func syncElements(progress: SyncProgressReporter?) async throws
 
-  /// Eager full-fill of a document list (Stage 8 v1): await page 1 (so the first
+  /// Eager full-fill of a document list: await page 1 (so the first
   /// window + an exact count land synchronously), write it as the query's order,
   /// then background-page the rest of the query to the cache. The returned
   /// ``QueryFillHandle`` carries the `QueryKey` the list observes and a cancel
@@ -75,7 +75,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// cap; until users ask for it, every opened view eager-fills in full.
   func fillQuery(filter: FilterState) async throws -> QueryFillHandle
 
-  /// Proactive one-time coverage fill (Stage 9, *Entire library*): page the
+  /// Proactive one-time coverage fill (*Entire library*): page the
   /// default list and every saved view, stamping rows `.full`, so the whole
   /// active-server library browses offline even if never opened. Sequential
   /// (one query's background paging completes before the next starts). Guarded by
@@ -86,7 +86,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// failed advances nothing, so it retries.
   func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws
 
-  /// Proactive per-document detail fill (Stage 9, *Entire library*): give every
+  /// Proactive per-document detail fill (*Entire library*): give every
   /// cached document its notes and file-metadata so it's fully renderable
   /// offline even if never opened. Zero-note documents are seeded from the
   /// list payload's notes *count* for free (no request); only documents that

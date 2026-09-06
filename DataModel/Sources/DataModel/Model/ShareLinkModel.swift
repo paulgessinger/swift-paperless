@@ -2,7 +2,8 @@ import Foundation
 
 public struct ShareLink: Sendable, Equatable {
   // Wire-symmetric leaf enum; round-tripped as-is by the wire type and (future)
-  // storage layer. Stays Codable per the Stage 3 principle.
+  // storage layer. Stays Codable: wire, storage and domain shapes coincide
+  // here.
   public enum FileVersion: String, Codable, Sendable {
     case original
     case archive

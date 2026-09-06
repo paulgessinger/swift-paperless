@@ -40,7 +40,8 @@ public struct DocumentNote: Identifiable, Equatable, Sendable, Hashable {
   }
 
   // Wire-symmetric leaf value type — round-tripped by ApiDocumentNote and
-  // the (future) storage layer. Stays Codable per the Stage 3 principle.
+  // the (future) storage layer. Stays Codable: wire, storage and domain
+  // shapes coincide here.
   public struct User: Codable, Equatable, Sendable, Hashable {
     public var id: UInt
     public var username: String

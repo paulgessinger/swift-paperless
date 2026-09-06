@@ -9,8 +9,7 @@ import Foundation
 /// Same shape as Combine's `PassthroughSubject` (drop-on-floor for late
 /// subscribers, no replay), but consumed as an `AsyncSequence`. Used here to
 /// observe GRDB table changes; also backs the discrete-event channels on
-/// `DocumentStore` / `ConnectionManager` (Stage 6) and will back the
-/// `CacheChange` signal in later offline-cache stages.
+/// `DocumentStore` / `ConnectionManager`.
 ///
 /// For SwiftUI consumers, prefer AppShared's `.onEvent(from:perform:)` — or
 /// ``sink(_:)`` directly, holding the returned ``Subscription`` in `@State` —

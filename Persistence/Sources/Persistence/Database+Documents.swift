@@ -175,7 +175,7 @@ extension Database {
   /// list). Called ahead of ``pruneUnreferencedDocuments(serverID:)`` on a
   /// `.entireLibrary` → `.recentlyBrowsed` downgrade: saved views proactively
   /// filled while `.entireLibrary` was active should no longer be tracked at
-  /// all — they eager-fill again from scratch if reopened (Stage 8), matching
+  /// all — they eager-fill again from scratch if reopened, matching
   /// what `.recentlyBrowsed` already does for any other saved view. Returns
   /// the number of `query_order` rows removed.
   @discardableResult

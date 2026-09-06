@@ -22,7 +22,7 @@ import Foundation
 ///   independent of dictionary iteration order and of the transient
 ///   `FilterState.modified` flag (which is not a query parameter).
 ///
-/// Virtual / client-defined views (e.g. Stage 14's pinned "Downloaded" list) use
+/// Virtual / client-defined views (e.g. a pinned "Downloaded" list) use
 /// a ``init(sentinel:)`` well-known key instead of a hash, since they have no
 /// server query to replay.
 public struct QueryKey: Hashable, Sendable {

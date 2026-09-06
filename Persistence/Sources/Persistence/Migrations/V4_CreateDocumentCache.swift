@@ -1,6 +1,6 @@
 import GRDB
 
-/// Document-metadata cache tables (Stage 8).
+/// Document-metadata cache tables.
 ///
 /// Three tables, three jobs:
 ///
