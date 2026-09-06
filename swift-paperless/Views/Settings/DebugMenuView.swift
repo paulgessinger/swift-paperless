@@ -166,7 +166,6 @@ struct DebugMenuView: View {
         } label: {
           Label {
             Text(verbatim: "Reclaim unused document files")
-              .accentColor(.primary)
           } icon: {
             Image(systemName: "arrow.up.trash")
           }
