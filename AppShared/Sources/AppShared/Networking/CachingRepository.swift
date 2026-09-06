@@ -1079,7 +1079,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let localIDs = try await database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
 
-    guard let watermark = await deltaWatermark() else {
+    guard let watermark = try await deltaWatermark() else {
       // First run: establish the baseline from the newest doc; subsequent passes
       // delta against it. (Avoids re-paging the whole library on cold start.)
       var newestFirst = FilterState.empty
@@ -1289,11 +1289,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return stood
   }
 
-  // Per-server delta watermark (newest `modified` applied), in `server_sync_state`
-  // keyed by serverID. Regenerable sync state — `clearCache` resets it, and
-  // losing it just re-baselines on the next pass.
-  private func deltaWatermark() async -> Date? {
-    try? await database.deltaWatermark(serverID: serverID)
+  /// Per-server delta watermark (newest `modified` applied), in
+  /// `server_sync_state` keyed by serverID. Regenerable sync state —
+  /// `clearCache` resets it, and an *absent* row just re-baselines on the next
+  /// pass.
+  ///
+  /// An *unreadable* row is a different thing entirely and must not be reported
+  /// as absent: the caller reads `nil` as "first run" and re-baselines from the
+  /// newest document, which moves the cursor past every change the real
+  /// watermark had not applied yet — and a high-water mark only moves up, so
+  /// those documents are unreachable forever. So the failure propagates: the
+  /// pass ends without touching the cursor and `ServerSession`'s sweep records
+  /// it, leaving the stored watermark intact for the next attempt.
+  private func deltaWatermark() async throws -> Date? {
+    try await database.deltaWatermark(serverID: serverID)
   }
 
   /// Commit the cursor, swallowing an ordinary persistence failure (the pass
