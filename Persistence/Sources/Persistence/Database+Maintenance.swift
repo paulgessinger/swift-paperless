@@ -1,3 +1,4 @@
+import Foundation
 import GRDB
 
 /// Cache-maintenance operations that span the element *and* document caches.
@@ -27,6 +28,44 @@ extension Database {
         for table in tables {
           try db.execute(sql: "DELETE FROM \(table)")
         }
+      }
+    }
+  }
+
+  /// Every `(server, version)` pair the cached documents still point at — the
+  /// reachable set for a `ContentStore` blob sweep.
+  ///
+  /// Across *all* servers in one read, deliberately: the blob store is a single
+  /// app-group directory shared by every connection, so a per-server answer
+  /// could not tell a removed server's leftovers (which are garbage) from
+  /// another server's live files (which are not).
+  ///
+  /// Async only, like every cache table — see the rule in `Database+Connections`.
+  public func retainedContentVersions() async throws -> [UUID: Set<UInt>] {
+    try await wrappingAsync("retainedContentVersions") {
+      try await writer.read { db in
+        // Only the *current* version is reachable: downloads are always issued
+        // for `Document.currentVersionID` (see `ApiRepository.streamDownload`),
+        // so every other version's blob is superseded by definition — including
+        // the root version, whose id equals the document id.
+        //
+        // `NULLIF`/`COALESCE` covers the column's `NOT NULL DEFAULT 0`: a row
+        // that somehow carries 0 falls back to the document id, which is the
+        // right answer for a document with no versions and a conservative one
+        // otherwise (it retains a blob rather than dropping a live file).
+        let rows = try Row.fetchAll(
+          db,
+          sql: """
+            SELECT server_id, COALESCE(NULLIF(current_version_id, 0), id) AS version_id
+            FROM document
+            """)
+        var retained: [UUID: Set<UInt>] = [:]
+        for row in rows {
+          let serverID: UUID = row["server_id"]
+          let versionID: UInt = row["version_id"]
+          retained[serverID, default: []].insert(versionID)
+        }
+        return retained
       }
     }
   }
