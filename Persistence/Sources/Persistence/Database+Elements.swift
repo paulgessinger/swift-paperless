@@ -145,6 +145,33 @@ extension Database {
     try UISettingsRecord(serverId: serverID, domain: value).upsert(db)
   }
 
+  /// Read-modify-write the `ui_settings` singleton inside **one** transaction,
+  /// and report whether there was a row to transform.
+  ///
+  /// The alternative — read through one accessor, merge, write through another
+  /// — is two transactions with a suspension between them, so an element sync
+  /// writing a freshly-fetched row in the gap is overwritten by a merge built
+  /// on the row as it was *before* that sync, silently reverting the user and
+  /// permission matrix to a stale copy. On the main actor the two calls used to
+  /// be adjacent and this could not happen; they are not adjacent any more.
+  ///
+  /// `transform` runs inside the write transaction and must stay pure — it is
+  /// handed the current value and returns the one to store.
+  @discardableResult
+  public func updateUISettings(
+    serverID: UUID, _ transform: @escaping @Sendable (UISettings) -> UISettings
+  ) async throws -> Bool {
+    try await wrappingAsync("updateUISettings") {
+      try await writer.write { db in
+        guard let current = try UISettingsRecord.fetchOne(db, key: serverID)?.domain else {
+          return false
+        }
+        try Self.writeUISettings(transform(current), serverID: serverID, db)
+        return true
+      }
+    }
+  }
+
   public func serverConfiguration(serverID: UUID) async throws -> ServerConfiguration? {
     try await wrappingAsync("serverConfiguration") {
       try await writer.read { try ServerConfigurationRecord.fetchOne($0, key: serverID)?.domain }

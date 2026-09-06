@@ -222,6 +222,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       gate?.test(.view, for: resource) ?? true
     }
 
+    // Each collection reconciles in its own transaction, and they now run
+    // genuinely concurrently rather than serialized behind the main actor.
+    // That is the point, and it is safe: no invariant spans two collections,
+    // and each `replaceElements` is a whole-set replace for one server.
+    //
     // Counted as the group is built, so the total is final before the first
     // completion is awaited. Collections the user can't view are never added,
     // so the bar measures the work actually being done rather than a nominal
@@ -376,6 +381,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // membership, and only here is that recorded. Page 1's `replaceAll`
         // cleared the stamp, so anything that stopped us short leaves the key
         // marked incomplete for the next pass to redo.
+        //
+        // The pages and this stamp are separate transactions, which is safe
+        // because `activeFills` makes this fill the key's sole writer for the
+        // whole run: another fill drains us first, and the membership sweep
+        // steps over an owned key.
         try await database.markQueryFillComplete(queryKey: key, serverID: serverID)
       }
     }
@@ -959,7 +969,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     //
     // Both writes are shielded together: the stale-marking is what tells the
     // list its cached ordering no longer reflects the edit, so landing the row
-    // without it is its own kind of divergence.
+    // without it is its own kind of divergence. Two transactions rather than
+    // one, and deliberately so: anything that can land between them either
+    // rebuilds the affected key's order (a fill page, which clears the flag it
+    // has just earned the right to clear) or removes the document from it (a
+    // delete reconcile, after which there is nothing left to mark). Neither
+    // leaves a wrong state behind.
     try await commitCache("update(document:)") { [database, serverID] in
       try await database.upsertDocument(updated, serverID: serverID)
       try await database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
@@ -1124,29 +1139,33 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       // *Entire library*: keep every changed/new doc. *Recently browsed*: only
       // refresh rows already cached. Either way the row is written at `.full`.
+      //
+      // `localIDs` is a snapshot taken before the paging began, so a document
+      // cached mid-pass is skipped here even though the cursor moves past it.
+      // Harmless: whatever cached it did so by fetching it from the network,
+      // which is strictly fresher than this delta page's copy of it.
       let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
       if !toUpsert.isEmpty {
         Logger.sync.info(
           "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
-        try await database.upsertDocuments(toUpsert, serverID: serverID)
         // Note edits bump `modified`, so a changed doc's cached notes may be
-        // stale. Drop them (cheap, local) — the upsert above just refreshed each
-        // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an empty
-        // row for free when the count is 0, or re-fetches when it's > 0. We can't
-        // tell a note change from any other field change, so this may re-fetch a
-        // few docs whose notes didn't actually change.
+        // stale. Dropping them is cheap and local — the upsert refreshes each
+        // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an
+        // empty row for free when the count is 0, or re-fetches when it's > 0.
+        // We can't tell a note change from any other field change, so this may
+        // re-fetch a few docs whose notes didn't actually change.
         //
-        // `try?` swallows cancellation along with everything else, so a pass
-        // stopped here leaves those documents' notes stale — the row survives
-        // next to a refreshed `notesCount`, and the detail fill sees a cached
-        // row and doesn't re-fetch. Accepted: the next reconcile that touches
-        // these documents invalidates them again, and note text going a pass
-        // stale is not worth holding an interrupted sweep open for.
-        try? await database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
+        // One transaction: a `createNote` / `deleteNote` write-through landing
+        // between an upsert and a separate invalidation would be deleted by it,
+        // and under *Recently browsed* nothing repairs that until the document
+        // is fetched online again.
+        try await database.upsertDocumentsInvalidatingNotes(toUpsert, serverID: serverID)
         applied += toUpsert.count
       }
       // Commit the cursor per page rather than once at the end — this is what
-      // makes an interrupted pass resume instead of restart.
+      // makes an interrupted pass resume instead of restart. A separate
+      // transaction from the page's write, and harmlessly so: losing it only
+      // re-applies the page next time, and the upsert is a straight replace.
       if cursor > watermark {
         await setDeltaWatermark(cursor)
       }
@@ -1238,12 +1257,25 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
     activeFills[key] = write
     defer { if activeFills[key] == write { activeFills[key] = nil } }
+    let stood: Bool
     do {
       try await write.value
-      return true
+      stood = true
     } catch is CancellationError {
-      return false
+      // A fill drained us. That cancellation is the *write task's*, not ours.
+      stood = false
     }
+    // Ours is a separate question, and it has to be asked outside the `catch`
+    // above so it propagates instead of reading as "a fill took the key over".
+    // The write runs on an unstructured `Task`, which inherits isolation but
+    // *not* cancellation — that is what lets it own the key, and it also means
+    // `write.value` returns happily on a sweep cancelled while the rewrite was
+    // in flight. Unasked, the caller would clear the view's recorded sync error
+    // and — on the last view — the loop would simply run out, so
+    // `ServerSession` would count a cancelled membership sweep as a completed
+    // one and advance its freshness stamps on the strength of it.
+    try Task.checkCancellation()
+    return stood
   }
 
   // Per-server delta watermark (newest `modified` applied), in `server_sync_state`
@@ -1386,13 +1418,16 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Write the new settings through to the cached `ui_settings` singleton (the
     // server returns no body), merging onto the cached user/permissions, so the
     // live observation repaints `settings` (e.g. saved-view visibility).
-    // Read-modify-write, shielded as a unit: cancelled between the read and the
-    // write, the server would be holding settings the cached singleton denies.
+    //
+    // `updateUISettings` does the read, the merge and the write in a single
+    // transaction: split across two accessors, an element sync writing a
+    // freshly-fetched row in between would be overwritten by a merge built on
+    // the pre-sync user and permission matrix. `commitCache` covers the other
+    // half — cancelled here, the server would be holding settings the cached
+    // singleton denies.
     try await commitCache("update(settings:)") { [database, serverID] in
-      if let current = try await database.uiSettings(serverID: serverID) {
-        let merged = UISettings(
-          user: current.user, settings: settings, permissions: current.permissions)
-        try await database.setUISettings(merged, serverID: serverID)
+      try await database.updateUISettings(serverID: serverID) { current in
+        UISettings(user: current.user, settings: settings, permissions: current.permissions)
       }
     }
   }

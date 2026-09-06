@@ -35,6 +35,33 @@ extension Database {
     }
   }
 
+  /// Upsert a batch of documents **and** drop their cached notes, in one
+  /// transaction — the changed-metadata delta's write.
+  ///
+  /// A note edit bumps `modified`, so a document the delta refreshes may have
+  /// stale cached notes; the upsert also refreshes its `notesCount`, which is
+  /// what lets the next detail fill re-seed an empty row for free or re-fetch.
+  /// The delta cannot tell a note change from any other field change, so this
+  /// may drop notes that did not actually change.
+  ///
+  /// One transaction rather than an upsert followed by an invalidation,
+  /// because the two are no longer separated by nothing: the `async` accessors
+  /// suspend, and a `createNote` / `deleteNote` write-through landing between
+  /// them would be deleted by the invalidation that follows it. Under
+  /// *Recently browsed* nothing repairs that until the document is fetched
+  /// online again, so the user's just-written note would appear to vanish.
+  public func upsertDocumentsInvalidatingNotes(
+    _ domains: [Document], serverID: UUID
+  ) async throws {
+    guard !domains.isEmpty else { return }
+    try await wrappingAsync("upsertDocumentsInvalidatingNotes") {
+      try await writer.write { db in
+        try Self.writeDocumentRows(db, domains, serverID: serverID)
+        try Self.dropNotes(serverID: serverID, documentIDs: domains.map(\.id), db)
+      }
+    }
+  }
+
   /// Single-row write-through (pessimistic mutation).
   public func upsertDocument(_ domain: Document, serverID: UUID) async throws {
     try await wrappingAsync("upsertDocument") {
