@@ -436,6 +436,13 @@ public final class ServerSession {
       guard !result.cancelled else { return }
       do {
         try await body()
+        // The chokepoint for a whole family of bugs: a sweep whose *last*
+        // `await` swallowed cancellation — `try?` on a bookkeeping write, an
+        // unstructured task that doesn't inherit it — returns normally, and
+        // without this that would be indistinguishable from having finished.
+        // The sweeps close their own windows too; this is the backstop that
+        // catches the next one before it is found.
+        try Task.checkCancellation()
         result.succeeded += 1
       } catch {
         guard !error.isCancellationError else {
@@ -500,6 +507,9 @@ public final class ServerSession {
         try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
         }
+        // `true` here is what tells `runSync` the pass completed; a cancellation
+        // swallowed on the fill's last `await` must not reach it as one.
+        try Task.checkCancellation()
         return true
       } catch is CancellationError {
         Logger.sync.info("Proactive library fill cancelled")
@@ -533,6 +543,8 @@ public final class ServerSession {
         try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
         }
+        // As in `fillLibrary`: `true` is a claim the pass finished.
+        try Task.checkCancellation()
         return true
       } catch is CancellationError {
         Logger.sync.info("Proactive detail fill cancelled")
@@ -635,6 +647,11 @@ public final class ServerSession {
           "Server \(stored.logLabel, privacy: .public) partially synced; stamp not advanced")
         return
       }
+      // Same question as `sweep` asks, for the phases that don't run through
+      // it: a cancelled pass must not advance the stamp that decides when this
+      // server is swept again. The `catch` below turns it back into a quiet
+      // return.
+      try Task.checkCancellation()
       lastSuccessfulSync = Date()
       Logger.sync.info("Server \(stored.logLabel, privacy: .public) synced")
     } catch {

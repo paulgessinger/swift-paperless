@@ -102,7 +102,7 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 3, replaceAll: true)
 
@@ -116,7 +116,7 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: (1...5).map { doc($0, "d\($0)") },
       startPosition: 0, totalCount: 5, replaceAll: true)
 
@@ -130,14 +130,14 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 4, replaceAll: true)
 
     let grown = try await value(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
     ) {
-      try database.writeQueryPage(
+      try await database.writeQueryPage(
         queryKey: key, serverID: server, documents: [self.doc(3, "C"), self.doc(4, "D")],
         startPosition: 2, totalCount: 4, replaceAll: false)
     }
@@ -149,14 +149,14 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
     let updated = try await value(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
     ) {
-      try database.upsertDocument(
+      try await database.upsertDocument(
         self.doc(1, "A-edited"), serverID: server)
     }
     #expect(updated.first(where: { $0.id == 1 })?.document?.title == "A-edited")
@@ -167,14 +167,14 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
       startPosition: 0, totalCount: 3, replaceAll: true)
 
     let remaining = try await value(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
     ) {
-      try database.deleteDocuments(serverID: server, removedIDs: [2])
+      try await database.deleteDocuments(serverID: server, removedIDs: [2])
     }
     #expect(remaining.map(\.id) == [1, 3])
   }
@@ -186,7 +186,7 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 5, replaceAll: true)
 
@@ -197,7 +197,7 @@ struct DocumentObservationTests {
     let stale = try await value(
       from: database.observeQueryStatus(queryKey: key, serverID: server)
     ) {
-      try database.markQueriesOrderStale(containing: 1, serverID: server)
+      try await database.markQueriesOrderStale(containing: 1, serverID: server)
     }
     #expect(stale.orderStale == true)
   }
@@ -213,12 +213,12 @@ struct DocumentObservationTests {
     #expect(cold == nil)
 
     let appeared = try await value(from: database.observeDocument(serverID: server, id: 1)) {
-      try database.upsertDocument(self.doc(1, "A"), serverID: server)
+      try await database.upsertDocument(self.doc(1, "A"), serverID: server)
     }
     #expect(appeared?.title == "A")
 
     let edited = try await value(from: database.observeDocument(serverID: server, id: 1)) {
-      try database.upsertDocument(
+      try await database.upsertDocument(
         self.doc(1, "A-edited"), serverID: server)
     }
     #expect(edited?.title == "A-edited")
@@ -237,14 +237,14 @@ struct DocumentObservationTests {
     let afterUpsert = try await value(
       from: database.observeDocumentCount(serverID: server)
     ) {
-      try database.upsertDocuments([self.doc(1, "A"), self.doc(2, "B")], serverID: server)
+      try await database.upsertDocuments([self.doc(1, "A"), self.doc(2, "B")], serverID: server)
     }
     #expect(afterUpsert == 2)
 
     let afterDelete = try await value(
       from: database.observeDocumentCount(serverID: server)
     ) {
-      try database.deleteDocuments(serverID: server, removedIDs: [1])
+      try await database.deleteDocuments(serverID: server, removedIDs: [1])
     }
     #expect(afterDelete == 1)
   }
@@ -257,7 +257,7 @@ struct DocumentObservationTests {
     let database = try Database.seeded(serverID: serverA)
     let serverB = try addServer(to: database, host: "b")
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: serverA, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
@@ -265,12 +265,12 @@ struct DocumentObservationTests {
       from: database.observeDocumentPrefix(queryKey: key, serverID: serverA, limit: 10),
       foreignWrite: {
         // Same query key, other server — the sweep's shape exactly.
-        try database.writeQueryPage(
+        try await database.writeQueryPage(
           queryKey: key, serverID: serverB, documents: [self.doc(1, "B-1"), self.doc(2, "B-2")],
           startPosition: 0, totalCount: 2, replaceAll: true)
       },
       ownWrite: {
-        try database.writeQueryPage(
+        try await database.writeQueryPage(
           queryKey: key, serverID: serverA, documents: [self.doc(2, "B")],
           startPosition: 1, totalCount: 2, replaceAll: false)
       })
@@ -283,19 +283,19 @@ struct DocumentObservationTests {
     let database = try Database.seeded(serverID: serverA)
     let serverB = try addServer(to: database, host: "b")
     let key = QueryKey(sentinel: "q")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: serverA, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
     let next = try await valueSkippingForeignWrite(
       from: database.observeQueryStatus(queryKey: key, serverID: serverA),
       foreignWrite: {
-        try database.writeQueryPage(
+        try await database.writeQueryPage(
           queryKey: key, serverID: serverB, documents: [self.doc(9, "B-9")],
           startPosition: 0, totalCount: 9, replaceAll: true)
       },
       ownWrite: {
-        try database.writeQueryPage(
+        try await database.writeQueryPage(
           queryKey: key, serverID: serverA, documents: [self.doc(2, "B")],
           startPosition: 1, totalCount: 2, replaceAll: false)
       })
@@ -310,8 +310,8 @@ struct DocumentObservationTests {
 
     let next = try await valueSkippingForeignWrite(
       from: database.observeDocument(serverID: serverA, id: 1),
-      foreignWrite: { try database.upsertDocument(self.doc(1, "B-1"), serverID: serverB) },
-      ownWrite: { try database.upsertDocument(self.doc(1, "A-edited"), serverID: serverA) })
+      foreignWrite: { try await database.upsertDocument(self.doc(1, "B-1"), serverID: serverB) },
+      ownWrite: { try await database.upsertDocument(self.doc(1, "A-edited"), serverID: serverA) })
     #expect(next?.title == "A-edited")
   }
 
@@ -323,8 +323,8 @@ struct DocumentObservationTests {
     let next = try await valueSkippingForeignWrite(
       from: database.observeDocument(serverID: serverA, id: 1),
       // Same object, written again: a fresh transaction, an identical row.
-      foreignWrite: { try database.upsertDocument(self.doc(1, "A"), serverID: serverA) },
-      ownWrite: { try database.upsertDocument(self.doc(1, "A-edited"), serverID: serverA) })
+      foreignWrite: { try await database.upsertDocument(self.doc(1, "A"), serverID: serverA) },
+      ownWrite: { try await database.upsertDocument(self.doc(1, "A-edited"), serverID: serverA) })
     #expect(next?.title == "A-edited")
   }
 
@@ -337,10 +337,10 @@ struct DocumentObservationTests {
     let next = try await valueSkippingForeignWrite(
       from: database.observeDocumentCount(serverID: serverA),
       foreignWrite: {
-        try database.upsertDocuments(
+        try await database.upsertDocuments(
           [self.doc(1, "B-1"), self.doc(2, "B-2")], serverID: serverB)
       },
-      ownWrite: { try database.upsertDocument(self.doc(2, "B"), serverID: serverA) })
+      ownWrite: { try await database.upsertDocument(self.doc(2, "B"), serverID: serverA) })
     #expect(next == 2)
   }
 }

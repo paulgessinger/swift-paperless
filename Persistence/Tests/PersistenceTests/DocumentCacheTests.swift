@@ -52,8 +52,8 @@ struct DocumentCacheTests {
     // which also sets setPermissions via didSet) so equality holds round-trip.
     input.permissions = Permissions { $0.view = .init(users: [1, 2]) }
 
-    try database.upsertDocument(input, serverID: server)
-    let output = try database.document(serverID: server, id: 1)
+    try await database.upsertDocument(input, serverID: server)
+    let output = try await database.document(serverID: server, id: 1)
 
     #expect(output == input)
     #expect(output?.currentVersionID == 9)  // newest by `added`
@@ -64,12 +64,12 @@ struct DocumentCacheTests {
   func resolvesByAsn() async throws {
     let server = UUID()
     let database = try database(server)
-    try database.upsertDocuments(
+    try await database.upsertDocuments(
       [doc(1, "A", asn: 100), doc(2, "B", asn: 200)],
       serverID: server)
 
-    #expect(try database.document(serverID: server, asn: 200)?.id == 2)
-    #expect(try database.document(serverID: server, asn: 999) == nil)
+    #expect(try await database.document(serverID: server, asn: 200)?.id == 2)
+    #expect(try await database.document(serverID: server, asn: 999) == nil)
   }
 
   // MARK: - query_order replay
@@ -81,12 +81,12 @@ struct DocumentCacheTests {
     let key = QueryKey(sentinel: "test")
 
     // Written out of natural id order.
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server,
       documents: [doc(3, "C"), doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 3, replaceAll: true)
 
-    let replayed = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    let replayed = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(replayed.map(\.id) == [3, 1, 2])
   }
 
@@ -96,16 +96,16 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 4, replaceAll: true)
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
       startPosition: 2, totalCount: 4, replaceAll: false)
 
-    let all = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    let all = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(all.map(\.id) == [1, 2, 3, 4])
-    #expect(try database.queryStatus(queryKey: key, serverID: server).totalCount == 4)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).totalCount == 4)
   }
 
   @Test("a document repeated across a page boundary is placed only once")
@@ -114,18 +114,18 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
       startPosition: 0, totalCount: 4, replaceAll: true)
     // Page 2 re-delivers doc 3, as it does when the page offsets shift.
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
       startPosition: 3, totalCount: 4, replaceAll: false)
 
-    let all = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    let all = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(all.map(\.id) == [1, 2, 3, 4])
     // A duplicate would inflate `localCount` as well as duplicating the row.
-    #expect(try database.queryStatus(queryKey: key, serverID: server).localCount == 4)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).localCount == 4)
   }
 
   @Test("a second writer on the same position overwrites instead of throwing")
@@ -134,16 +134,16 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 2, replaceAll: true)
     // A concurrent fill lands on the same positions with different documents.
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
       startPosition: 0, totalCount: 2, replaceAll: false)
 
     // The later write wins, as it did when this used `upsert`.
-    let all = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    let all = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(all.map(\.id) == [3, 4])
   }
 
@@ -154,15 +154,17 @@ struct DocumentCacheTests {
     let a = QueryKey(sentinel: "a")
     let b = QueryKey(sentinel: "b")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: a, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: b, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
 
-    #expect(try database.queryDocuments(queryKey: a, serverID: server, limit: 10).map(\.id) == [1])
-    #expect(try database.queryDocuments(queryKey: b, serverID: server, limit: 10).map(\.id) == [1])
+    #expect(
+      try await database.queryDocuments(queryKey: a, serverID: server, limit: 10).map(\.id) == [1])
+    #expect(
+      try await database.queryDocuments(queryKey: b, serverID: server, limit: 10).map(\.id) == [1])
   }
 
   // MARK: - Windowing + deletion gaps
@@ -173,22 +175,23 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server,
       documents: (10...14).map { doc($0, "d\($0)") },
       startPosition: 0, totalCount: 5, replaceAll: true)
 
     // Delete the doc at position 2 — its query_order row cascades away.
-    try database.deleteDocuments(serverID: server, removedIDs: [12])
+    try await database.deleteDocuments(serverID: server, removedIDs: [12])
 
-    let window = try database.queryDocuments(queryKey: key, serverID: server, limit: 5)
+    let window = try await database.queryDocuments(queryKey: key, serverID: server, limit: 5)
     #expect(window.map(\.id) == [10, 11, 13, 14])  // gap at position 2 is invisible
 
     // Offset windows step by ordered row, not by raw position.
-    let tail = try database.queryDocuments(queryKey: key, serverID: server, limit: 2, offset: 2)
+    let tail = try await database.queryDocuments(
+      queryKey: key, serverID: server, limit: 2, offset: 2)
     #expect(tail.map(\.id) == [13, 14])
 
-    let status = try database.queryStatus(queryKey: key, serverID: server)
+    let status = try await database.queryStatus(queryKey: key, serverID: server)
     #expect(status.localCount == 4)  // one row gone locally
     #expect(status.totalCount == 5)  // server extent unchanged
   }
@@ -200,19 +203,23 @@ struct DocumentCacheTests {
     let keyA = QueryKey(sentinel: "A")
     let keyB = QueryKey(sentinel: "B")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: keyA, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 2, replaceAll: true)
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: keyB, serverID: server, documents: [doc(2, "B"), doc(3, "C")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
-    try database.deleteDocuments(serverID: server, removedIDs: [2])
+    try await database.deleteDocuments(serverID: server, removedIDs: [2])
 
     #expect(
-      try database.queryDocuments(queryKey: keyA, serverID: server, limit: 10).map(\.id) == [1])
+      try await database.queryDocuments(queryKey: keyA, serverID: server, limit: 10).map(\.id) == [
+        1
+      ])
     #expect(
-      try database.queryDocuments(queryKey: keyB, serverID: server, limit: 10).map(\.id) == [3])
+      try await database.queryDocuments(queryKey: keyB, serverID: server, limit: 10).map(\.id) == [
+        3
+      ])
   }
 
   // MARK: - Upsert
@@ -227,11 +234,11 @@ struct DocumentCacheTests {
 
     var first = doc(1, "Doc")
     first.permissions = Permissions { $0.view = .init(users: [9]) }
-    try database.upsertDocument(first, serverID: server)
+    try await database.upsertDocument(first, serverID: server)
 
     var second = doc(1, "Doc")
     second.permissions = Permissions { $0.view = .init(users: [42]) }
-    try database.upsertDocument(second, serverID: server)
+    try await database.upsertDocument(second, serverID: server)
 
     #expect(try record(database, server, 1)?.payload.permissions?.view.users == [42])
   }
@@ -248,16 +255,16 @@ struct DocumentCacheTests {
     let key = QueryKey(sentinel: "view")
 
     // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
-    try database.upsertDocuments([doc(1, "A"), doc(3, "C")], serverID: server)
+    try await database.upsertDocuments([doc(1, "A"), doc(3, "C")], serverID: server)
 
-    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
 
-    let replayed = try database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    let replayed = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(replayed.map(\.id) == [1, 2, 3])  // all ids, order preserved
     #expect(replayed[0].document != nil)  // loaded
     #expect(replayed[1].document == nil)  // id 2 is a skeleton
     #expect(replayed[2].document != nil)  // loaded
-    let status = try database.queryStatus(queryKey: key, serverID: server)
+    let status = try await database.queryStatus(queryKey: key, serverID: server)
     #expect(status.totalCount == 3)
   }
 
@@ -266,17 +273,19 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "view")
-    try database.upsertDocuments(
+    try await database.upsertDocuments(
       [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
 
-    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
     #expect(
-      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [3, 1])
+      try await database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
+        3, 1,
+      ])
 
     // A subsequent sweep with a different membership/order fully replaces it.
-    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 3, 1])
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 3, 1])
     #expect(
-      try database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
+      try await database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
         2, 3, 1,
       ])
   }
@@ -291,26 +300,26 @@ struct DocumentCacheTests {
 
     // Page 1 truncated the key's order down to what it just wrote, so the key
     // is incomplete no matter what it was before.
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 4, replaceAll: true)
-    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
+    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
 
     // An appended page is still not a completed fill — this is the case that
     // used to be indistinguishable from one.
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(2, "B")],
       startPosition: 1, totalCount: 4, replaceAll: false)
-    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
+    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
 
-    try database.markQueryFillComplete(queryKey: key, serverID: server)
-    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) != nil)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) != nil)
 
     // A new fill's page 1 wipes the order, so the completion goes with it.
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C")],
       startPosition: 0, totalCount: 9, replaceAll: true)
-    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
+    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
   }
 
   @Test("marking a fill complete keeps the recorded total and stale flag")
@@ -319,13 +328,13 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "fill")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 7, replaceAll: true)
-    try database.markQueriesOrderStale(containing: 1, serverID: server)
-    try database.markQueryFillComplete(queryKey: key, serverID: server)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
 
-    let status = try database.queryStatus(queryKey: key, serverID: server)
+    let status = try await database.queryStatus(queryKey: key, serverID: server)
     #expect(status.totalCount == 7)
     #expect(status.orderStale)
   }
@@ -335,18 +344,19 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "view")
-    try database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
+    try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
-    try database.markQueryFillComplete(queryKey: key, serverID: server)
-    let stamped = try #require(try database.queryFillCompletedAt(queryKey: key, serverID: server))
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+    let stamped = try #require(
+      try await database.queryFillCompletedAt(queryKey: key, serverID: server))
 
     // The sweep writes a complete ordering of its own, so it neither claims nor
     // revokes the fill's completion.
-    try database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
-    #expect(try database.queryFillCompletedAt(queryKey: key, serverID: server) == stamped)
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
+    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == stamped)
   }
 
   // MARK: - Order staleness
@@ -358,19 +368,19 @@ struct DocumentCacheTests {
     let keyA = QueryKey(sentinel: "A")
     let keyB = QueryKey(sentinel: "B")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: keyA, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: keyB, serverID: server, documents: [doc(2, "B")],
       startPosition: 0, totalCount: 1, replaceAll: true)
 
-    #expect(try database.queryStatus(queryKey: keyA, serverID: server).orderStale == false)
+    #expect(try await database.queryStatus(queryKey: keyA, serverID: server).orderStale == false)
 
-    try database.markQueriesOrderStale(containing: 1, serverID: server)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
-    #expect(try database.queryStatus(queryKey: keyA, serverID: server).orderStale == true)
-    #expect(try database.queryStatus(queryKey: keyB, serverID: server).orderStale == false)
+    #expect(try await database.queryStatus(queryKey: keyA, serverID: server).orderStale == true)
+    #expect(try await database.queryStatus(queryKey: keyB, serverID: server).orderStale == false)
   }
 
   @Test("a fresh fill clears the order-stale flag")
@@ -379,16 +389,16 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "A")
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
-    try database.markQueriesOrderStale(containing: 1, serverID: server)
-    #expect(try database.queryStatus(queryKey: key, serverID: server).orderStale == true)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == true)
 
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
-    #expect(try database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
   }
 
   // MARK: - Reconcile support
@@ -397,13 +407,13 @@ struct DocumentCacheTests {
   func allDocumentIDs() async throws {
     let server = UUID()
     let database = try database(server)
-    try database.upsertDocuments(
+    try await database.upsertDocuments(
       [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
 
-    #expect(try database.allDocumentIDs(serverID: server) == [1, 2, 3])
+    #expect(try await database.allDocumentIDs(serverID: server) == [1, 2, 3])
     // The reconcile diff: local − server.
     let serverIDs: Set<UInt> = [2, 3, 4]
-    let removed = try database.allDocumentIDs(serverID: server).subtracting(serverIDs)
+    let removed = try await database.allDocumentIDs(serverID: server).subtracting(serverIDs)
     #expect(removed == [1])
   }
 
@@ -414,13 +424,13 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
 
-    #expect(try database.documentCount(serverID: server) == 0)
+    #expect(try await database.documentCount(serverID: server) == 0)
 
-    try database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
-    #expect(try database.documentCount(serverID: server) == 3)
+    try await database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
+    #expect(try await database.documentCount(serverID: server) == 3)
 
-    try database.deleteDocuments(serverID: server, removedIDs: [2])
-    #expect(try database.documentCount(serverID: server) == 2)
+    try await database.deleteDocuments(serverID: server, removedIDs: [2])
+    #expect(try await database.documentCount(serverID: server) == 2)
   }
 
   // MARK: - Cache wipe (keeps connections)
@@ -430,11 +440,11 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "A")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
-    try database.clearCache()
+    try await database.clearCache()
 
     let counts = try await database.writer.read { db in
       (
@@ -455,7 +465,7 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "A")
-    try database.writeQueryPage(
+    try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       startPosition: 0, totalCount: 1, replaceAll: true)
 

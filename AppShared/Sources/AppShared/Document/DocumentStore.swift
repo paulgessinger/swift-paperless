@@ -451,8 +451,8 @@ public final class DocumentStore: Sendable {
     await fetchTasks()
   }
 
-  /// Refresh `ui_settings` (permissions/settings) from the network, then
-  /// synchronously pull the singleton into the projection — the one path
+  /// Refresh `ui_settings` (permissions/settings) from the network, then pull
+  /// the singleton into the projection before returning — the one path
   /// (`DocumentListViewModel.load`) that reads `permissions` immediately
   /// afterwards can't wait for the observation's runloop hop. Automatic (not
   /// user-initiated): a sync failure fails soft and we proceed with the cached
@@ -461,7 +461,7 @@ public final class DocumentStore: Sendable {
     try await sync()
     // Re-read after the await: a switch during the sync means the projection to
     // refresh is the new server's, and it reads its own database and serverID.
-    projection?.refreshUISettings()
+    await projection?.refreshUISettings()
   }
 
   /// Network → DB via the caching backend; the live element observation repaints
@@ -878,9 +878,14 @@ extension DocumentStore {
   /// PDF/thumbnail blobs, and the in-memory and on-disk image caches — while
   /// keeping the configured server connections. The live observations repaint
   /// empty immediately; the next sync / list open refills from the network.
-  public func wipeLocalCache() throws {
+  ///
+  /// `async` because `clearCache` is a cache-table write and no longer offers a
+  /// blocking form (see the rule in `Database+Connections`) — a `DELETE` across
+  /// every cache table is exactly the kind of transaction that must not sit on
+  /// the main thread.
+  public func wipeLocalCache() async throws {
     if let backend = session?.backend {
-      try backend.database.clearCache()
+      try await backend.database.clearCache()
     }
     // Downloaded originals/archives/thumbnails (app-group blob store). Rooted at
     // the app group, so a fresh handle addresses the same files the repository

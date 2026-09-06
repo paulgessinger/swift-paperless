@@ -225,11 +225,43 @@ extension Database {
   /// nothing on an accessor that stays untyped-`throws`, so the typed signature
   /// is the part to keep: drop it and raw `GRDB.DatabaseError`s escape the
   /// package again.
+  ///
+  /// Used by the `server`-table accessors, the only blocking ones left (see the
+  /// rule in `Database+Connections`), and by `Database.seeded`, which composes
+  /// the cache tables' `static` query bodies into one in-package transaction.
+  /// Every cache-table accessor uses ``wrappingAsync(_:_:)``.
   func wrapping<T>(_ operation: String, _ body: () throws -> T) throws(DatabaseError) -> T {
     do {
       return try body()
     } catch let error as DatabaseError {
       throw error
+    } catch {
+      Logger.persistence.error(
+        "Database operation '\(operation, privacy: .public)' failed: \(error)")
+      throw DatabaseError.operationFailed(operation: operation, underlying: error)
+    }
+  }
+
+  /// ``wrapping(_:_:)`` for the cache-table accessors — same re-wrapping, with
+  /// one deliberate hole: `CancellationError` passes through untouched.
+  ///
+  /// GRDB's `async` `read` / `write` throw `CancellationError` when the
+  /// surrounding task is cancelled, and callers discriminate on exactly that
+  /// (`catch is CancellationError`) to tell *"we were told to stop"* from
+  /// *"the write failed"* — a cancelled library fill must not be recorded as a
+  /// per-view sync error. Rewrapping it as ``DatabaseError/operationFailed``
+  /// would erase that distinction, and `throws(DatabaseError)` cannot express
+  /// "or a cancellation", which is why the cache tables' accessors are
+  /// untyped-`throws` while the `server` table's keep the typed signature.
+  func wrappingAsync<T>(
+    _ operation: String, _ body: () async throws -> T
+  ) async throws -> T {
+    do {
+      return try await body()
+    } catch let error as DatabaseError {
+      throw error
+    } catch is CancellationError {
+      throw CancellationError()
     } catch {
       Logger.persistence.error(
         "Database operation '\(operation, privacy: .public)' failed: \(error)")

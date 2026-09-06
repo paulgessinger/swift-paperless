@@ -128,9 +128,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   var database: Database { get }
   var serverID: UUID { get }
 
-  /// This server's offline browsing mode (per-server; read live from
-  /// ``OfflineBrowsingModeStore``). The reconcile sweeps and the proactive fill
-  /// branch on it.
+  /// This server's offline browsing mode (per-server; read live from the
+  /// `server` row). The reconcile sweeps and the proactive fill branch on it.
+  ///
+  /// Stays synchronous: `server` is the one table whose accessors may block
+  /// (see the rule in `Database+Connections`), and this is a single-row read of
+  /// a handful of rows.
   var offlineBrowsingMode: OfflineBrowsingMode { get }
 }
 
@@ -156,6 +159,13 @@ extension CachingBackend {
 enum CachingRepositoryError: Error {
   /// A pure cache read found nothing for a non-optional resource. The store's
   /// hydrate path tolerates this (cold cache); `sync` then fills it.
+  ///
+  /// Reachable, despite a note in the offline-stack inventory (#656 item 11)
+  /// suggesting otherwise: `currentUser()`, `uiSettings()` and
+  /// `serverConfiguration()` all throw it whenever the `ui_settings` /
+  /// `server_configuration` singleton has not been synced yet — the ordinary
+  /// first-launch state — and `DocumentStore.fillDocumentQuery` reuses it for
+  /// "no caching backend at all". Kept.
   case cacheMiss
 }
 
@@ -169,11 +179,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public let database: Database
   public let serverID: UUID
 
-  /// The in-flight fill per `QueryKey` — page 1 included, not only the
-  /// background continuation. Every writer of a key's `query_order` consults
-  /// this: a new fill drains the current owner before touching the key, and the
-  /// membership sweep steps over a key that is mid-fill. Main-actor isolated
-  /// like the rest of this class, so claiming and clearing never interleave.
+  /// The in-flight writer of each `QueryKey`'s `query_order` — a fill (page 1
+  /// included, not only the background continuation) or the membership sweep's
+  /// rewrite. Every writer of a key consults this: a new fill drains the current
+  /// owner before touching the key, and the membership sweep steps over a key
+  /// that is mid-fill. Main-actor isolated like the rest of this class, and
+  /// claiming/clearing never suspends, so two writers cannot both hold a key.
   private var activeFills: [QueryKey: Task<Void, any Error>] = [:]
 
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
@@ -211,6 +222,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       gate?.test(.view, for: resource) ?? true
     }
 
+    // Each collection reconciles in its own transaction, and they now run
+    // genuinely concurrently rather than serialized behind the main actor.
+    // That is the point, and it is safe: no invariant spans two collections,
+    // and each `replaceElements` is a whole-set replace for one server.
+    //
     // Counted as the group is built, so the total is final before the first
     // completion is awaited. Collections the user can't view are never added,
     // so the bar measures the work actually being done rather than a nominal
@@ -325,7 +341,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         do {
           let batch = try await source.fetch(limit: pageSize)
           let total = await source.totalCount
-          try database.writeQueryPage(
+          try await database.writeQueryPage(
             queryKey: key, serverID: serverID, documents: batch,
             startPosition: 0, totalCount: total, replaceAll: true)
           position = batch.count
@@ -354,7 +370,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           // may already have landed — writing here would graft our stale
           // positions onto its rows.
           try Task.checkCancellation()
-          try database.writeQueryPage(
+          try await database.writeQueryPage(
             queryKey: key, serverID: serverID, documents: batch,
             startPosition: position, totalCount: await source.totalCount,
             replaceAll: false)
@@ -365,7 +381,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // membership, and only here is that recorded. Page 1's `replaceAll`
         // cleared the stamp, so anything that stopped us short leaves the key
         // marked incomplete for the next pass to redo.
-        try database.markQueryFillComplete(queryKey: key, serverID: serverID)
+        //
+        // The pages and this stamp are separate transactions, which is safe
+        // because `activeFills` makes this fill the key's sole writer for the
+        // whole run: another fill drains us first, and the membership sweep
+        // steps over an owned key.
+        try await database.markQueryFillComplete(queryKey: key, serverID: serverID)
       }
     }
 
@@ -414,12 +435,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     if activeFills[key] == owner { activeFills[key] = nil }
   }
 
-  /// Whether a fill currently owns this key's `query_order`.
+  /// Whether a fill (or the membership sweep's own rewrite) currently owns this
+  /// key's `query_order`.
   private func isFilling(_ key: QueryKey) -> Bool { activeFills[key] != nil }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
-    guard force || !LibraryCoverage.isFresh(try? database.libraryCoverageAt(serverID: serverID))
-    else { return }
+    // Read the marker before the guard rather than inside it: `||`'s right-hand
+    // side is an `@autoclosure`, which cannot be `async`.
+    let coverage = try? await database.libraryCoverageAt(serverID: serverID)
+    guard force || !LibraryCoverage.isFresh(coverage) else { return }
 
     // Claim the stage before the saved-view read, so the setup isn't a gap the
     // screen renders as "Idle".
@@ -430,7 +454,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // just before this in the foreground trigger). Build the *same* FilterState
     // the UI observes so the filled QueryKeys match its subscriptions. A `nil`
     // name denotes the default list (used to label a failure for the UI).
-    let savedViews = try database.elements(SavedViewRecord.self, serverID: serverID)
+    let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
     let views: [(name: String?, filter: FilterState)] =
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
@@ -473,7 +497,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // would stamp the coverage marker and suppress the retry for a day,
         // leaving the list hard-stopped at whatever page it reached — with the
         // count pill still claiming the server's full total.
-        guard (try? database.queryFillCompletedAt(queryKey: key, serverID: serverID)) ?? nil != nil
+        guard
+          (try? await database.queryFillCompletedAt(queryKey: key, serverID: serverID))
+            ?? nil != nil
         else {
           // A backstop, not the main path: the fill throws on every way of
           // stopping short, so reaching here means the stamp and the outcome
@@ -484,7 +510,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           )
           continue
         }
-        try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
+        try? await database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
         succeeded += 1
       } catch is CancellationError {
         throw CancellationError()
@@ -494,7 +520,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // Offline & Sync screen can warn, and carry on.
         Logger.sync.warning(
           "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
-        try? database.recordQuerySyncError(
+        try? await database.recordQuerySyncError(
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
           message: Self.syncFailureMessage(error))
       }
@@ -511,7 +537,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
       return
     }
-    try? database.setLibraryCoverageAt(Date(), serverID: serverID)
+    try? await database.setLibraryCoverageAt(Date(), serverID: serverID)
   }
 
   // Documents whose detail fetch failed this session. Without this, a document
@@ -530,7 +556,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Free step: every zero-note document gets an empty notes row from the list
     // payload's count — no request — so it renders "no notes" offline and drops
     // out of the fetch set below.
-    let seeded = (try? database.seedEmptyNotesForZeroCountDocuments(serverID: serverID)) ?? 0
+    let seeded = (try? await database.seedEmptyNotesForZeroCountDocuments(serverID: serverID)) ?? 0
 
     // Then fetch only what's genuinely missing, capped per pass. `try?` per doc
     // so one failure (or going offline mid-pass) doesn't abort the rest; the
@@ -543,18 +569,26 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // fill asks for every noted document's `/notes/` and takes a 403 each time —
     // one doomed request per document, on every foreground, forever. `nil` (no
     // cached matrix yet) stays optimistic, matching `syncElements`.
-    let permissions = try? database.uiSettings(serverID: serverID)?.permissions
+    let permissions = try? await database.uiSettings(serverID: serverID)?.permissions
     let canViewNotes = permissions?.test(.view, for: .note) ?? true
 
     try await NetworkTransfer.$category.withValue(.fill) {
       let missingMetadata =
-        (try? database.documentIDsMissingFileMetadata(
+        (try? await database.documentIDsMissingFileMetadata(
           serverID: serverID, excluding: detailFillFailures)) ?? []
-      let needsNotes =
+      let needsNotes: [UInt] =
         canViewNotes
-        ? (try? database.documentIDsNeedingNotesFetch(
+        ? (try? await database.documentIDsNeedingNotesFetch(
           serverID: serverID, excluding: detailFillFailures)) ?? []
         : []
+
+      // Both discovery reads swallow their error, and a cancelled read is an
+      // error — so a pass cancelled here would come back with two empty lists,
+      // skip both loops (and the `checkCancellation` inside them), and return
+      // normally, which `ServerSession` records as a completed detail fill. Ask
+      // once, explicitly, before the emptiness can be mistaken for "nothing
+      // left to do".
+      try Task.checkCancellation()
 
       // The pass is uncapped: a first cold fill of a large library is meant to
       // run to completion, and the Offline & Sync screen reports it rather than
@@ -617,7 +651,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   ) async throws {
     do {
       let domains = try await fetch()
-      try database.replaceElements(domains, of: type, serverID: serverID)
+      try await database.replaceElements(domains, of: type, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
       Logger.sync.info(
         "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
@@ -632,19 +666,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private func syncUISettings() async -> UserPermissions? {
     do {
       let settings = try await wrapped.uiSettings()
-      try database.setUISettings(settings, serverID: serverID)
+      try await database.setUISettings(settings, serverID: serverID)
       return settings.permissions
     } catch {
       Logger.sync.info(
         "uiSettings sync failed (\(error)); gating sync on cached permissions")
-      return try? database.uiSettings(serverID: serverID)?.permissions
+      return try? await database.uiSettings(serverID: serverID)?.permissions
     }
   }
 
   private func syncServerConfiguration() async throws {
     do {
       let config = try await wrapped.serverConfiguration()
-      try database.setServerConfiguration(config, serverID: serverID)
+      try await database.setServerConfiguration(config, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
       Logger.sync.info("Skipping serverConfiguration sync: \(error)")
     }
@@ -680,56 +714,96 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     !isSkippable(error)
   }
 
+  // MARK: - Write-through shield
+
+  /// Run a cache write that follows an *already committed* remote mutation, on
+  /// a task of its own so the caller's cancellation cannot abandon it.
+  ///
+  /// The mutation methods here are pessimistic: they forward to the server and
+  /// write through only once it has accepted the change. The blocking accessors
+  /// these replaced always ran to completion, and that is what the pattern
+  /// silently depended on. The `async` accessors are cancellation-aware — GRDB
+  /// throws `CancellationError` if the task is cancelled before the access
+  /// starts, and interrupts one already running — which is right for a sweep
+  /// and wrong here: a caller cancelled in the window between the two (a
+  /// dismissed sheet, a view that went away, a server switch) would leave the
+  /// server changed and the cache holding the old value, with nothing scheduled
+  /// to reconcile the two. A delete is the worst case — the row stays cached,
+  /// keeps appearing in lists and is served offline as though it still existed,
+  /// until the next `reconcileDocumentDeletions` happens to notice.
+  ///
+  /// An unstructured `Task` inherits actor isolation but *not* cancellation, so
+  /// the write runs to completion; awaiting its value keeps the method's
+  /// contract (it still returns only once the cache agrees with the server) and
+  /// still propagates a genuine write failure to the caller.
+  ///
+  /// Only for writes behind a committed remote mutation. Reads and sweep writes
+  /// stay cancellable: stopping those loses work, not consistency.
+  private func commitCache(
+    _ operation: String, _ body: @escaping @Sendable () async throws -> Void
+  ) async throws {
+    do {
+      try await Task { try await body() }.value
+    } catch {
+      // The caller sees this as a plain failure; only the log can say that the
+      // server already accepted the change and it is the cache that is behind.
+      Logger.shared.error(
+        "Cache write '\(operation, privacy: .public)' failed after the server accepted the change; the cache is stale until the next reconcile: \(error)"
+      )
+      throw error
+    }
+  }
+
   // MARK: - Element reads (cache)
 
   public func tags() async throws -> [Tag] {
-    try database.elements(TagRecord.self, serverID: serverID)
+    try await database.elements(TagRecord.self, serverID: serverID)
   }
 
   public func correspondents() async throws -> [Correspondent] {
-    try database.elements(CorrespondentRecord.self, serverID: serverID)
+    try await database.elements(CorrespondentRecord.self, serverID: serverID)
   }
 
   public func documentTypes() async throws -> [DocumentType] {
-    try database.elements(DocumentTypeRecord.self, serverID: serverID)
+    try await database.elements(DocumentTypeRecord.self, serverID: serverID)
   }
 
   public func storagePaths() async throws -> [StoragePath] {
-    try database.elements(StoragePathRecord.self, serverID: serverID)
+    try await database.elements(StoragePathRecord.self, serverID: serverID)
   }
 
   public func savedViews() async throws -> [SavedView] {
-    try database.elements(SavedViewRecord.self, serverID: serverID)
+    try await database.elements(SavedViewRecord.self, serverID: serverID)
   }
 
   public func users() async throws -> [User] {
-    try database.elements(UserRecord.self, serverID: serverID)
+    try await database.elements(UserRecord.self, serverID: serverID)
   }
 
   public func groups() async throws -> [UserGroup] {
-    try database.elements(UserGroupRecord.self, serverID: serverID)
+    try await database.elements(UserGroupRecord.self, serverID: serverID)
   }
 
   public func customFields() async throws -> [CustomField] {
-    try database.elements(CustomFieldRecord.self, serverID: serverID)
+    try await database.elements(CustomFieldRecord.self, serverID: serverID)
   }
 
   public func currentUser() async throws -> User {
-    guard let user = try database.uiSettings(serverID: serverID)?.user else {
+    guard let user = try await database.uiSettings(serverID: serverID)?.user else {
       throw CachingRepositoryError.cacheMiss
     }
     return user
   }
 
   public func uiSettings() async throws -> UISettings {
-    guard let settings = try database.uiSettings(serverID: serverID) else {
+    guard let settings = try await database.uiSettings(serverID: serverID) else {
       throw CachingRepositoryError.cacheMiss
     }
     return settings
   }
 
   public func serverConfiguration() async throws -> ServerConfiguration {
-    guard let config = try database.serverConfiguration(serverID: serverID) else {
+    guard let config = try await database.serverConfiguration(serverID: serverID) else {
       throw CachingRepositoryError.cacheMiss
     }
     return config
@@ -738,29 +812,31 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // MARK: - Single-element getters (cache-first + network fallback + write-through)
 
   public func tag(id: UInt) async throws -> Tag? {
-    if let cached = try database.element(TagRecord.self, serverID: serverID, id: id) {
+    if let cached = try await database.element(TagRecord.self, serverID: serverID, id: id) {
       return cached
     }
     guard let fetched = try await wrapped.tag(id: id) else { return nil }
-    try database.upsertElement(fetched, of: TagRecord.self, serverID: serverID)
+    try await database.upsertElement(fetched, of: TagRecord.self, serverID: serverID)
     return fetched
   }
 
   public func correspondent(id: UInt) async throws -> Correspondent? {
-    if let cached = try database.element(CorrespondentRecord.self, serverID: serverID, id: id) {
+    if let cached = try await database.element(CorrespondentRecord.self, serverID: serverID, id: id)
+    {
       return cached
     }
     guard let fetched = try await wrapped.correspondent(id: id) else { return nil }
-    try database.upsertElement(fetched, of: CorrespondentRecord.self, serverID: serverID)
+    try await database.upsertElement(fetched, of: CorrespondentRecord.self, serverID: serverID)
     return fetched
   }
 
   public func documentType(id: UInt) async throws -> DocumentType? {
-    if let cached = try database.element(DocumentTypeRecord.self, serverID: serverID, id: id) {
+    if let cached = try await database.element(DocumentTypeRecord.self, serverID: serverID, id: id)
+    {
       return cached
     }
     guard let fetched = try await wrapped.documentType(id: id) else { return nil }
-    try database.upsertElement(fetched, of: DocumentTypeRecord.self, serverID: serverID)
+    try await database.upsertElement(fetched, of: DocumentTypeRecord.self, serverID: serverID)
     return fetched
   }
 
@@ -768,87 +844,117 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func create(tag: ProtoTag) async throws -> Tag {
     let created = try await wrapped.create(tag: tag)
-    try database.upsertElement(created, of: TagRecord.self, serverID: serverID)
+    try await commitCache("create(tag:)") { [database, serverID] in
+      try await database.upsertElement(created, of: TagRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(tag: Tag) async throws -> Tag {
     let updated = try await wrapped.update(tag: tag)
-    try database.upsertElement(updated, of: TagRecord.self, serverID: serverID)
+    try await commitCache("update(tag:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: TagRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(tag: Tag) async throws {
     try await wrapped.delete(tag: tag)
-    try database.deleteElement(TagRecord.self, serverID: serverID, id: tag.id)
+    try await commitCache("delete(tag:)") { [database, serverID, id = tag.id] in
+      try await database.deleteElement(TagRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
     let created = try await wrapped.create(correspondent: correspondent)
-    try database.upsertElement(created, of: CorrespondentRecord.self, serverID: serverID)
+    try await commitCache("create(correspondent:)") { [database, serverID] in
+      try await database.upsertElement(created, of: CorrespondentRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(correspondent: Correspondent) async throws -> Correspondent {
     let updated = try await wrapped.update(correspondent: correspondent)
-    try database.upsertElement(updated, of: CorrespondentRecord.self, serverID: serverID)
+    try await commitCache("update(correspondent:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: CorrespondentRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(correspondent: Correspondent) async throws {
     try await wrapped.delete(correspondent: correspondent)
-    try database.deleteElement(CorrespondentRecord.self, serverID: serverID, id: correspondent.id)
+    try await commitCache("delete(correspondent:)") { [database, serverID, id = correspondent.id] in
+      try await database.deleteElement(CorrespondentRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
     let created = try await wrapped.create(documentType: documentType)
-    try database.upsertElement(created, of: DocumentTypeRecord.self, serverID: serverID)
+    try await commitCache("create(documentType:)") { [database, serverID] in
+      try await database.upsertElement(created, of: DocumentTypeRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(documentType: DocumentType) async throws -> DocumentType {
     let updated = try await wrapped.update(documentType: documentType)
-    try database.upsertElement(updated, of: DocumentTypeRecord.self, serverID: serverID)
+    try await commitCache("update(documentType:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: DocumentTypeRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(documentType: DocumentType) async throws {
     try await wrapped.delete(documentType: documentType)
-    try database.deleteElement(DocumentTypeRecord.self, serverID: serverID, id: documentType.id)
+    try await commitCache("delete(documentType:)") { [database, serverID, id = documentType.id] in
+      try await database.deleteElement(DocumentTypeRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
     let created = try await wrapped.create(storagePath: storagePath)
-    try database.upsertElement(created, of: StoragePathRecord.self, serverID: serverID)
+    try await commitCache("create(storagePath:)") { [database, serverID] in
+      try await database.upsertElement(created, of: StoragePathRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(storagePath: StoragePath) async throws -> StoragePath {
     let updated = try await wrapped.update(storagePath: storagePath)
-    try database.upsertElement(updated, of: StoragePathRecord.self, serverID: serverID)
+    try await commitCache("update(storagePath:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: StoragePathRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(storagePath: StoragePath) async throws {
     try await wrapped.delete(storagePath: storagePath)
-    try database.deleteElement(StoragePathRecord.self, serverID: serverID, id: storagePath.id)
+    try await commitCache("delete(storagePath:)") { [database, serverID, id = storagePath.id] in
+      try await database.deleteElement(StoragePathRecord.self, serverID: serverID, id: id)
+    }
   }
 
   public func create(savedView: ProtoSavedView) async throws -> SavedView {
     let created = try await wrapped.create(savedView: savedView)
-    try database.upsertElement(created, of: SavedViewRecord.self, serverID: serverID)
+    try await commitCache("create(savedView:)") { [database, serverID] in
+      try await database.upsertElement(created, of: SavedViewRecord.self, serverID: serverID)
+    }
     return created
   }
 
   public func update(savedView: SavedView) async throws -> SavedView {
     let updated = try await wrapped.update(savedView: savedView)
-    try database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
+    try await commitCache("update(savedView:)") { [database, serverID] in
+      try await database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
+    }
     return updated
   }
 
   public func delete(savedView: SavedView) async throws {
     try await wrapped.delete(savedView: savedView)
-    try database.deleteElement(SavedViewRecord.self, serverID: serverID, id: savedView.id)
+    try await commitCache("delete(savedView:)") { [database, serverID, id = savedView.id] in
+      try await database.deleteElement(SavedViewRecord.self, serverID: serverID, id: id)
+    }
   }
 
   // MARK: - Documents (pessimistic write-through + cache fallback)
@@ -860,8 +966,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // response carries permissions/custom fields — a `.full` write replaces the
     // row completely without dropping them. Ordering under the active sort isn't
     // recomputed offline — mark affected queries stale.
-    try database.upsertDocument(updated, serverID: serverID)
-    try database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
+    //
+    // Both writes are shielded together: the stale-marking is what tells the
+    // list its cached ordering no longer reflects the edit, so landing the row
+    // without it is its own kind of divergence. Two transactions rather than
+    // one, and deliberately so: anything that can land between them either
+    // rebuilds the affected key's order (a fill page, which clears the flag it
+    // has just earned the right to clear) or removes the document from it (a
+    // delete reconcile, after which there is nothing left to mark). Neither
+    // leaves a wrong state behind.
+    try await commitCache("update(document:)") { [database, serverID] in
+      try await database.upsertDocument(updated, serverID: serverID)
+      try await database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
+    }
     return updated
   }
 
@@ -869,7 +986,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.delete(document: document)
     // Explicitly prunes every cached query_order referencing it too — no FK
     // cascade does this (dropped in migration V6).
-    try database.deleteDocuments(serverID: serverID, removedIDs: [document.id])
+    try await commitCache("delete(document:)") { [database, serverID, id = document.id] in
+      try await database.deleteDocuments(serverID: serverID, removedIDs: [id])
+    }
   }
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
@@ -884,7 +1003,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // row would take its list membership with it, making an opened document
         // vanish. `reconcileDocumentDeletions` decides deletions against the
         // server's authoritative id set; here we serve the cached row.
-        if let cached = try database.document(serverID: serverID, id: id) {
+        if let cached = try await database.document(serverID: serverID, id: id) {
           Logger.shared.info(
             "document(id:) fetch returned nil (404?); serving cached instead of deleting")
           return cached
@@ -892,13 +1011,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         return nil
       }
       // A full-detail fetch — upgrade the row to Tier-2.
-      try database.upsertDocument(fetched, serverID: serverID)
+      try await database.upsertDocument(fetched, serverID: serverID)
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
       // Offline/transient: serve the last-known cached row (Tier-1 or Tier-2)
       // rather than failing the open. Mirrors the element offline-first policy.
       // A permission failure isn't caught here at all, so it propagates.
-      if let cached = try database.document(serverID: serverID, id: id) {
+      if let cached = try await database.document(serverID: serverID, id: id) {
         Logger.shared.info("document(id:) network failed (\(error)); serving cached")
         return cached
       }
@@ -909,10 +1028,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func document(asn: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }
-      try database.upsertDocument(fetched, serverID: serverID)
+      try await database.upsertDocument(fetched, serverID: serverID)
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
-      if let cached = try database.document(serverID: serverID, asn: asn) {
+      if let cached = try await database.document(serverID: serverID, asn: asn) {
         Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
         return cached
       }
@@ -933,7 +1052,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func reconcileDocumentDeletions() async throws {
-    let localIDs = try database.allDocumentIDs(serverID: serverID)
+    let localIDs = try await database.allDocumentIDs(serverID: serverID)
     // Nothing cached yet → nothing to reconcile (skip the id fetch entirely).
     guard !localIDs.isEmpty else { return }
 
@@ -944,7 +1063,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
     Logger.sync.info(
       "Reconcile: dropping \(removed.count, privacy: .public) remotely-deleted documents")
-    try database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
+    try await database.deleteDocuments(serverID: serverID, removedIDs: Array(removed))
   }
 
   public func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws {
@@ -957,10 +1076,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // detail; the setting only governs which docs are kept (every row is written
     // at `.full`). Nothing cached ⇒ the proactive fill (or a list open) seeds
     // first.
-    let localIDs = try database.allDocumentIDs(serverID: serverID)
+    let localIDs = try await database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
 
-    guard let watermark = deltaWatermark() else {
+    guard let watermark = await deltaWatermark() else {
       // First run: establish the baseline from the newest doc; subsequent passes
       // delta against it. (Avoids re-paging the whole library on cold start.)
       var newestFirst = FilterState.empty
@@ -968,7 +1087,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       newestFirst.sortOrder = .descending
       let baseline = try wrapped.documents(filter: newestFirst)
       if let newest = try await baseline.fetch(limit: 1).first?.modified {
-        setDeltaWatermark(newest)
+        try await setDeltaWatermark(newest)
       }
       return
     }
@@ -1020,24 +1139,35 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       // *Entire library*: keep every changed/new doc. *Recently browsed*: only
       // refresh rows already cached. Either way the row is written at `.full`.
+      //
+      // `localIDs` is a snapshot taken before the paging began, so a document
+      // cached mid-pass is skipped here even though the cursor moves past it.
+      // Harmless: whatever cached it did so by fetching it from the network,
+      // which is strictly fresher than this delta page's copy of it.
       let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
       if !toUpsert.isEmpty {
         Logger.sync.info(
           "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
-        try database.upsertDocuments(toUpsert, serverID: serverID)
         // Note edits bump `modified`, so a changed doc's cached notes may be
-        // stale. Drop them (cheap, local) — the upsert above just refreshed each
-        // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an empty
-        // row for free when the count is 0, or re-fetches when it's > 0. We can't
-        // tell a note change from any other field change, so this may re-fetch a
-        // few docs whose notes didn't actually change.
-        try? database.invalidateNotes(serverID: serverID, documentIDs: toUpsert.map(\.id))
+        // stale. Dropping them is cheap and local — the upsert refreshes each
+        // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an
+        // empty row for free when the count is 0, or re-fetches when it's > 0.
+        // We can't tell a note change from any other field change, so this may
+        // re-fetch a few docs whose notes didn't actually change.
+        //
+        // One transaction: a `createNote` / `deleteNote` write-through landing
+        // between an upsert and a separate invalidation would be deleted by it,
+        // and under *Recently browsed* nothing repairs that until the document
+        // is fetched online again.
+        try await database.upsertDocumentsInvalidatingNotes(toUpsert, serverID: serverID)
         applied += toUpsert.count
       }
       // Commit the cursor per page rather than once at the end — this is what
-      // makes an interrupted pass resume instead of restart.
+      // makes an interrupted pass resume instead of restart. A separate
+      // transaction from the page's write, and harmlessly so: losing it only
+      // re-applies the page next time, and the upsert is a straight replace.
       if cursor > watermark {
-        setDeltaWatermark(cursor)
+        try await setDeltaWatermark(cursor)
       }
       if await source.isExhausted { break }
     }
@@ -1046,12 +1176,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func reconcileSavedViewMembership() async throws {
     guard offlineBrowsingMode == .entireLibrary else { return }
     // Nothing cached ⇒ the proactive fill seeds membership first.
-    guard try !database.allDocumentIDs(serverID: serverID).isEmpty else { return }
+    guard try await !database.allDocumentIDs(serverID: serverID).isEmpty else { return }
 
     // Rebuild the default list + each saved view's order from the cheap Tier-0 id
     // projection. Runs *after* the R3δ pass (which lands new docs at detail), so
     // newly-matched ids already have a `document` row for the FK.
-    let savedViews = try database.elements(SavedViewRecord.self, serverID: serverID)
+    let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
     let views: [(name: String?, filter: FilterState)] =
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
     for (name, filter) in views {
@@ -1081,31 +1211,104 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             "Membership sweep: '\(name ?? "default", privacy: .public)' began filling; skipping")
           continue
         }
-        try database.replaceQueryOrder(queryKey: key, serverID: serverID, orderedIDs: ids)
-        try? database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
+        guard try await replaceQueryOrderOwningKey(key, orderedIDs: ids) else {
+          Logger.sync.info(
+            "Membership sweep: '\(name ?? "default", privacy: .public)' was taken over mid-write; skipping"
+          )
+          continue
+        }
+        try? await database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
       } catch is CancellationError {
         throw CancellationError()
       } catch {
         Logger.sync.info(
           "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
         )
-        try? database.recordQuerySyncError(
+        try? await database.recordQuerySyncError(
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
           message: Self.syncFailureMessage(error))
       }
+      // Both branches above end on a `try?`, which swallows cancellation along
+      // with everything else. On any view but the last, the check at the top of
+      // the next iteration catches that; on the last view the loop simply ends
+      // and this method returns normally, so `ServerSession.runReconcile` counts
+      // a cancelled sweep as one that succeeded. Ask once more here, after the
+      // body, so the last view is not a special case.
+      //
+      // `ServerSession`'s `sweep` helper re-asks the same question before it
+      // records an outcome; that is the backstop for this whole family of
+      // one-`await`-too-late windows, not a reason to leave them open.
+      try Task.checkCancellation()
     }
+  }
+
+  /// Rewrite `key`'s membership while *owning* the key, and report whether the
+  /// rewrite stood.
+  ///
+  /// The two `isFilling` guards around the caller used to be enough on their
+  /// own, because the write was a blocking main-actor call: nothing could claim
+  /// the key between the last check and the committed rewrite. Now that the
+  /// write suspends, that window is real — a fill could start inside it and
+  /// interleave its page-1 `replaceAll` with this delete-all-and-reinsert,
+  /// producing exactly the garbled merge the guards exist to prevent. Claiming
+  /// the key for the duration closes it again: a fill starting meanwhile drains
+  /// this write (`drainFill`) instead of racing it, and the drained sweep leaves
+  /// the key to the fill, which writes the better ordering anyway.
+  ///
+  /// - Returns: `false` if a fill took the key over, so the caller skips the
+  ///   view rather than clearing its recorded sync error.
+  private func replaceQueryOrderOwningKey(
+    _ key: QueryKey, orderedIDs: [UInt]
+  ) async throws -> Bool {
+    let database = database
+    let serverID = serverID
+    let write = Task {
+      try await database.replaceQueryOrder(
+        queryKey: key, serverID: serverID, orderedIDs: orderedIDs)
+    }
+    activeFills[key] = write
+    defer { if activeFills[key] == write { activeFills[key] = nil } }
+    let stood: Bool
+    do {
+      try await write.value
+      stood = true
+    } catch is CancellationError {
+      // A fill drained us. That cancellation is the *write task's*, not ours.
+      stood = false
+    }
+    // Ours is a separate question, and it has to be asked outside the `catch`
+    // above so it propagates instead of reading as "a fill took the key over".
+    // The write runs on an unstructured `Task`, which inherits isolation but
+    // *not* cancellation — that is what lets it own the key, and it also means
+    // `write.value` returns happily on a sweep cancelled while the rewrite was
+    // in flight. Unasked, the caller would clear the view's recorded sync error
+    // and — on the last view — the loop would simply run out, so
+    // `ServerSession` would count a cancelled membership sweep as a completed
+    // one and advance its freshness stamps on the strength of it.
+    try Task.checkCancellation()
+    return stood
   }
 
   // Per-server delta watermark (newest `modified` applied), in `server_sync_state`
   // keyed by serverID. Regenerable sync state — `clearCache` resets it, and
   // losing it just re-baselines on the next pass.
-  private func deltaWatermark() -> Date? {
-    try? database.deltaWatermark(serverID: serverID)
+  private func deltaWatermark() async -> Date? {
+    try? await database.deltaWatermark(serverID: serverID)
   }
 
-  private func setDeltaWatermark(_ date: Date) {
+  /// Commit the cursor, swallowing an ordinary persistence failure (the pass
+  /// re-applies the page next time) but *not* a cancellation.
+  ///
+  /// This is the delta's last `await` on its final page: `isExhausted` doesn't
+  /// throw, and under *Recently browsed* the membership sweep behind it no-ops,
+  /// so a swallowed cancellation here would let `reconcileDocumentChanges`
+  /// return normally with the cursor uncommitted — and `ServerSession` would
+  /// stamp the pass as clean over a delta that never landed.
+  private func setDeltaWatermark(_ date: Date) async throws {
     do {
-      try database.setDeltaWatermark(date, serverID: serverID)
+      try await database.setDeltaWatermark(date, serverID: serverID)
+    } catch is CancellationError {
+      throw CancellationError()
     } catch {
       Logger.sync.error("setDeltaWatermark failed: \(error)")
     }
@@ -1120,20 +1323,21 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// cached row may be absent (nothing fetched it yet) and the read itself may
   /// fail. In practice the detail view fetches the document first, so the
   /// versions are usually known by the time this is called.
-  private func fileMetadataVersionID(documentId: UInt) -> UInt {
-    (try? database.document(serverID: serverID, id: documentId))?.currentVersionID ?? documentId
+  private func fileMetadataVersionID(documentId: UInt) async -> UInt {
+    (try? await database.document(serverID: serverID, id: documentId))?.currentVersionID
+      ?? documentId
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
     // File-metadata is immutable per file version, so it caches under the
     // document's current version id.
-    let versionID = fileMetadataVersionID(documentId: documentId)
+    let versionID = await fileMetadataVersionID(documentId: documentId)
     do {
       let fetched = try await wrapped.metadata(documentId: documentId)
-      try database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
+      try await database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
-      if let cached = try database.fileMetadata(serverID: serverID, versionID: versionID) {
+      if let cached = try await database.fileMetadata(serverID: serverID, versionID: versionID) {
         Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
         return cached
       }
@@ -1144,12 +1348,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func notes(documentId: UInt) async throws -> [Document.Note] {
     do {
       let fetched = try await wrapped.notes(documentId: documentId)
-      try database.setNotes(fetched, serverID: serverID, documentID: documentId)
+      try await database.setNotes(fetched, serverID: serverID, documentID: documentId)
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
       // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
       // former propagates the network error.
-      if let cached = try database.notes(serverID: serverID, documentID: documentId) {
+      if let cached = try await database.notes(serverID: serverID, documentID: documentId) {
         Logger.shared.info("notes(documentId:) network failed (\(error)); serving cached")
         return cached
       }
@@ -1163,13 +1367,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Pessimistic: the server returns the updated full list, which we write
     // through so the cached notes stay consistent without a re-fetch.
     let updated = try await wrapped.createNote(documentId: documentId, note: note)
-    try database.setNotes(updated, serverID: serverID, documentID: documentId)
+    try await commitCache("createNote(documentId:)") { [database, serverID] in
+      try await database.setNotes(updated, serverID: serverID, documentID: documentId)
+    }
     return updated
   }
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
     let updated = try await wrapped.deleteNote(id: id, documentId: documentId)
-    try database.setNotes(updated, serverID: serverID, documentID: documentId)
+    try await commitCache("deleteNote(id:documentId:)") { [database, serverID] in
+      try await database.setNotes(updated, serverID: serverID, documentID: documentId)
+    }
     return updated
   }
 
@@ -1231,10 +1439,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Write the new settings through to the cached `ui_settings` singleton (the
     // server returns no body), merging onto the cached user/permissions, so the
     // live observation repaints `settings` (e.g. saved-view visibility).
-    if let current = try database.uiSettings(serverID: serverID) {
-      let merged = UISettings(
-        user: current.user, settings: settings, permissions: current.permissions)
-      try database.setUISettings(merged, serverID: serverID)
+    //
+    // `updateUISettings` does the read, the merge and the write in a single
+    // transaction: split across two accessors, an element sync writing a
+    // freshly-fetched row in between would be overwritten by a merge built on
+    // the pre-sync user and permission matrix. `commitCache` covers the other
+    // half — cancelled here, the server would be holding settings the cached
+    // singleton denies.
+    try await commitCache("update(settings:)") { [database, serverID] in
+      try await database.updateUISettings(serverID: serverID) { current in
+        UISettings(user: current.user, settings: settings, permissions: current.permissions)
+      }
     }
   }
 

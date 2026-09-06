@@ -611,7 +611,7 @@ public final class ConnectionManager {
     let database = database
     Task.detached(priority: .utility) {
       do {
-        let removed = try database.reclaimAfterDowngrade(
+        let removed = try await database.reclaimAfterDowngrade(
           serverID: serverID,
           defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
           keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)

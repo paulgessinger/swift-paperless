@@ -6,31 +6,41 @@ import GRDB
 /// `CachingRepository` and reset by `clearCache`. Dates cross the boundary as
 /// `Date?`; the on-disk shape (REAL `timeIntervalSinceReferenceDate`) stays
 /// inside `Persistence`.
+///
+/// Async only, like every cache table — see the rule in `Database+Connections`.
 extension Database {
   /// The newest document `modified` the changed-metadata delta has applied for
   /// this server, or `nil` if it has never baselined.
-  public func deltaWatermark(serverID: UUID) throws(DatabaseError) -> Date? {
-    try wrapping("deltaWatermark") {
-      try date(\.deltaWatermark, serverID: serverID)
+  public func deltaWatermark(serverID: UUID) async throws -> Date? {
+    try await wrappingAsync("deltaWatermark") {
+      try await writer.read { try Self.date(\.deltaWatermark, serverID: serverID, $0) }
     }
   }
 
-  public func setDeltaWatermark(_ date: Date?, serverID: UUID) throws(DatabaseError) {
-    try wrapping("setDeltaWatermark") {
-      try update(serverID: serverID) { $0.deltaWatermark = date?.timeIntervalSinceReferenceDate }
+  public func setDeltaWatermark(_ date: Date?, serverID: UUID) async throws {
+    try await wrappingAsync("setDeltaWatermark") {
+      try await writer.write {
+        try Self.updateSyncState($0, serverID: serverID) {
+          $0.deltaWatermark = date?.timeIntervalSinceReferenceDate
+        }
+      }
     }
   }
 
   /// When this server's library was last fully filled, or `nil` if never.
-  public func libraryCoverageAt(serverID: UUID) throws(DatabaseError) -> Date? {
-    try wrapping("libraryCoverageAt") {
-      try date(\.libraryCoverageAt, serverID: serverID)
+  public func libraryCoverageAt(serverID: UUID) async throws -> Date? {
+    try await wrappingAsync("libraryCoverageAt") {
+      try await writer.read { try Self.date(\.libraryCoverageAt, serverID: serverID, $0) }
     }
   }
 
-  public func setLibraryCoverageAt(_ date: Date?, serverID: UUID) throws(DatabaseError) {
-    try wrapping("setLibraryCoverageAt") {
-      try update(serverID: serverID) { $0.libraryCoverageAt = date?.timeIntervalSinceReferenceDate }
+  public func setLibraryCoverageAt(_ date: Date?, serverID: UUID) async throws {
+    try await wrappingAsync("setLibraryCoverageAt") {
+      try await writer.write {
+        try Self.updateSyncState($0, serverID: serverID) {
+          $0.libraryCoverageAt = date?.timeIntervalSinceReferenceDate
+        }
+      }
     }
   }
 
@@ -61,27 +71,17 @@ extension Database {
 
   // MARK: - Helpers
 
-  private func date(
-    _ keyPath: KeyPath<ServerSyncStateRecord, Double?>, serverID: UUID
+  private static func date(
+    _ keyPath: KeyPath<ServerSyncStateRecord, Double?>, serverID: UUID, _ db: GRDB.Database
   ) throws -> Date? {
-    try writer.read { db in
-      guard let stamp = try ServerSyncStateRecord.fetchOne(db, key: serverID)?[keyPath: keyPath]
-      else { return nil }
-      return Date(timeIntervalSinceReferenceDate: stamp)
-    }
+    guard let stamp = try ServerSyncStateRecord.fetchOne(db, key: serverID)?[keyPath: keyPath]
+    else { return nil }
+    return Date(timeIntervalSinceReferenceDate: stamp)
   }
 
-  /// Read-modify-write upsert preserving the row's other column.
-  private func update(
-    serverID: UUID, _ mutate: (inout ServerSyncStateRecord) -> Void
-  ) throws {
-    try writer.write { db in
-      try Self.updateSyncState(db, serverID: serverID, mutate)
-    }
-  }
-
-  /// Same read-modify-write, for callers that already hold a transaction and
-  /// need the change to commit atomically with the rest of their work.
+  /// Read-modify-write upsert preserving the row's other column. Takes the
+  /// caller's transaction so the change commits atomically with the rest of
+  /// its work.
   static func updateSyncState(
     _ db: GRDB.Database, serverID: UUID, _ mutate: (inout ServerSyncStateRecord) -> Void
   ) throws {
