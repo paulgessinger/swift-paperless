@@ -394,9 +394,9 @@ public final class ServerSession {
   }
 
   /// Throttled remote-delete reconcile: drop cached documents that no longer
-  /// exist on the server, fold in the changed-metadata delta, then rebuild
-  /// saved-view membership. Soft-fail throughout. `force` bypasses the 300 s
-  /// sub-throttle.
+  /// exist on the server, fold in the changed-metadata delta, rebuild
+  /// saved-view membership, then collect query keys nothing can reach any more.
+  /// Soft-fail throughout. `force` bypasses the 300 s sub-throttle.
   @discardableResult
   public func reconcileDocuments(force: Bool = false) async -> ReconcileResult {
     if let reconcileTask {
@@ -458,8 +458,13 @@ public final class ServerSession {
 
     // Deletes first (correctness), then the changed-metadata delta (freshness),
     // then the saved-view membership sweep (so newly-matched docs — now landed
-    // at detail by the delta — appear in every offline list). The last two are
+    // at detail by the delta — appear in every offline list). Those last two are
     // no-ops unless *Entire library* is enabled.
+    //
+    // The query-key GC goes last, in both modes, and specifically *after* the
+    // membership sweep: it prunes documents no cached query lists any more, and
+    // the membership sweep is what puts newly-matched documents into a list. Run
+    // ahead of it, it would reclaim rows the very next sweep re-fetches.
     await NetworkTransfer.$category.withValue(.reconcile) {
       await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
       await sweep("changes") {
@@ -470,6 +475,7 @@ public final class ServerSession {
         }
       }
       await sweep("membership") { try await backend.reconcileSavedViewMembership() }
+      await sweep("reachability") { try await backend.collectUnreachableQueries() }
     }
 
     // A pass in which *something* refreshed counts. A cancelled pass stamps
