@@ -1087,7 +1087,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       newestFirst.sortOrder = .descending
       let baseline = try wrapped.documents(filter: newestFirst)
       if let newest = try await baseline.fetch(limit: 1).first?.modified {
-        await setDeltaWatermark(newest)
+        try await setDeltaWatermark(newest)
       }
       return
     }
@@ -1167,7 +1167,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // transaction from the page's write, and harmlessly so: losing it only
       // re-applies the page next time, and the upsert is a straight replace.
       if cursor > watermark {
-        await setDeltaWatermark(cursor)
+        try await setDeltaWatermark(cursor)
       }
       if await source.isExhausted { break }
     }
@@ -1228,6 +1228,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
           message: Self.syncFailureMessage(error))
       }
+      // Both branches above end on a `try?`, which swallows cancellation along
+      // with everything else. On any view but the last, the check at the top of
+      // the next iteration catches that; on the last view the loop simply ends
+      // and this method returns normally, so `ServerSession.runReconcile` counts
+      // a cancelled sweep as one that succeeded. Ask once more here, after the
+      // body, so the last view is not a special case.
+      //
+      // `ServerSession`'s `sweep` helper re-asks the same question before it
+      // records an outcome; that is the backstop for this whole family of
+      // one-`await`-too-late windows, not a reason to leave them open.
+      try Task.checkCancellation()
     }
   }
 
@@ -1285,9 +1296,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try? await database.deltaWatermark(serverID: serverID)
   }
 
-  private func setDeltaWatermark(_ date: Date) async {
+  /// Commit the cursor, swallowing an ordinary persistence failure (the pass
+  /// re-applies the page next time) but *not* a cancellation.
+  ///
+  /// This is the delta's last `await` on its final page: `isExhausted` doesn't
+  /// throw, and under *Recently browsed* the membership sweep behind it no-ops,
+  /// so a swallowed cancellation here would let `reconcileDocumentChanges`
+  /// return normally with the cursor uncommitted — and `ServerSession` would
+  /// stamp the pass as clean over a delta that never landed.
+  private func setDeltaWatermark(_ date: Date) async throws {
     do {
       try await database.setDeltaWatermark(date, serverID: serverID)
+    } catch is CancellationError {
+      throw CancellationError()
     } catch {
       Logger.sync.error("setDeltaWatermark failed: \(error)")
     }
