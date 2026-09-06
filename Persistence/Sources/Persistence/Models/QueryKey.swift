@@ -52,4 +52,12 @@ public struct QueryKey: Hashable, Sendable {
   public init(sentinel: String) {
     rawValue = sentinel
   }
+
+  /// Rehydrate a key already on disk (a `query_meta` / `query_order` row's
+  /// `query_key`). Package-internal: outside `Persistence` a key is only ever
+  /// *derived* — from a filter or as a sentinel — and reading one back is the
+  /// reachability sweep's business, not a consumer's.
+  init(stored rawValue: String) {
+    self.rawValue = rawValue
+  }
 }
