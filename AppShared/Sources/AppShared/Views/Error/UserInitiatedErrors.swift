@@ -83,12 +83,18 @@ extension ErrorController {
   /// offline: `CachingRepository` catches the connectivity failure and serves
   /// the cached row, so `push(readError:)` never runs and the pull-to-refresh
   /// looks like it worked. Deciding on network state instead of on an error
-  /// covers both shapes. A read that announces here *and* then throws emits
-  /// two notices — the bridge does no de-duplication, on purpose: each notice
-  /// answers something the user did.
+  /// covers both shapes.
   ///
-  /// Returns whether the notice was emitted, i.e. whether the device is
-  /// offline; callers are free to ignore it and go on to refresh from cache.
+  /// The contract is: call this when the gesture starts, keep the answer, and
+  /// don't report the same thing twice. It returns whether a notice was
+  /// emitted, i.e. whether the device is offline — a `true` means the user has
+  /// already been told, so the read's own `catch` must skip
+  /// `push(readError:)`; a `false` leaves that path in charge, which is what
+  /// surfaces an online-but-unreachable server. Nothing de-duplicates
+  /// downstream: the bridge presents every notice it is handed.
+  ///
+  /// The answer says nothing about whether to *do* the read — callers go on
+  /// and refresh from cache either way.
   @discardableResult
   public func noteOfflineIfNeeded() -> Bool {
     guard isOffline?() == true else { return false }

@@ -139,9 +139,8 @@ class DocumentListViewModel {
 
     // Say "offline" up front: the passes below mostly fall back to the cache
     // rather than throwing, so waiting for an error would say nothing at all.
-    if userInitiated {
-      errorController.noteOfflineIfNeeded()
-    }
+    // Remembered, so the error path below doesn't say it a second time.
+    let announcedOffline = userInitiated && errorController.noteOfflineIfNeeded()
 
     var firstError: (any Error)?
     do {
@@ -153,13 +152,13 @@ class DocumentListViewModel {
 
     guard hasViewPermission() else {
       noPermissions = true
-      surface(firstError, userInitiated: userInitiated)
+      surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
     }
     noPermissions = false
 
     guard let key = store.documentQueryKey(filter: filterState) else {
-      surface(firstError, userInitiated: userInitiated)
+      surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
     }
     if key != queryKey {
@@ -172,11 +171,11 @@ class DocumentListViewModel {
       if firstError == nil { firstError = error }
     }
 
-    surface(firstError, userInitiated: userInitiated)
+    surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
   }
 
-  private func surface(_ error: (any Error)?, userInitiated: Bool) {
-    guard userInitiated, let error else { return }
+  private func surface(_ error: (any Error)?, userInitiated: Bool, announcedOffline: Bool) {
+    guard userInitiated, !announcedOffline, let error else { return }
     errorController.push(readError: error)
   }
 

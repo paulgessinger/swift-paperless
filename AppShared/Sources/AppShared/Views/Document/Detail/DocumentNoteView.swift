@@ -118,14 +118,13 @@ public struct DocumentNoteView: View {
   private func loadNotes(userInitiated: Bool) async {
     // Offline, the cache answers this without throwing, so the notice has to
     // come from the network state at the gesture, not from a failure.
-    if userInitiated {
-      errorController.noteOfflineIfNeeded()
-    }
+    // Remembered, so the error path doesn't say it a second time.
+    let announcedOffline = userInitiated && errorController.noteOfflineIfNeeded()
     do {
       notes = try await store.notes(for: document)
     } catch let error where error.isCancellationError {} catch {
       Logger.shared.error("Error loading notes for document: \(error)")
-      if userInitiated {
+      if userInitiated, !announcedOffline {
         errorController.push(readError: error)
       }
     }

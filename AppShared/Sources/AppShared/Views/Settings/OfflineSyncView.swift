@@ -198,11 +198,13 @@ public struct OfflineSyncView: View {
             // "Sync now" that looked identical whether it worked or not.
             syncNowRunning = true
             defer { syncNowRunning = false }
-            errorController.noteOfflineIfNeeded()
+            let announcedOffline = errorController.noteOfflineIfNeeded()
             do {
               try await store.sync(userInitiated: true)
             } catch {
-              errorController.push(readError: error)
+              if !announcedOffline {
+                errorController.push(readError: error)
+              }
             }
             // `.full` rather than the planned phases: this is the user asking
             // for the work outright, so the link gate doesn't apply. Saying so

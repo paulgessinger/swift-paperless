@@ -424,11 +424,13 @@ where
 
     .refreshable {
       await Task {
-        errorController.noteOfflineIfNeeded()
+        let announcedOffline = errorController.noteOfflineIfNeeded()
         do {
           try await store.sync(userInitiated: true)
         } catch {
-          errorController.push(readError: error)
+          if !announcedOffline {
+            errorController.push(readError: error)
+          }
         }
       }.value
     }

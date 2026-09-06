@@ -154,7 +154,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
   }
 
   private func refresh() async {
-    errorController.noteOfflineIfNeeded()
+    let announcedOffline = errorController.noteOfflineIfNeeded()
     do {
       try await store.sync(userInitiated: true)
       if let model {
@@ -164,7 +164,9 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
       }
     } catch {
-      errorController.push(readError: error)
+      if !announcedOffline {
+        errorController.push(readError: error)
+      }
     }
   }
 
