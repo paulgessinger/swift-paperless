@@ -83,8 +83,9 @@ extension ErrorController {
   /// offline: `CachingRepository` catches the connectivity failure and serves
   /// the cached row, so `push(readError:)` never runs and the pull-to-refresh
   /// looks like it worked. Deciding on network state instead of on an error
-  /// covers both shapes, and the bridge's replace-don't-stack guard keeps the
-  /// two from producing a double notice when a read does throw.
+  /// covers both shapes. A read that announces here *and* then throws emits
+  /// two notices — the bridge does no de-duplication, on purpose: each notice
+  /// answers something the user did.
   ///
   /// Returns whether the notice was emitted, i.e. whether the device is
   /// offline; callers are free to ignore it and go on to refresh from cache.

@@ -31,9 +31,6 @@ public struct OfflineToastBridge: ViewModifier {
 
   @Environment(\.presentToast) private var presentToast
 
-  // When the toast currently on screen goes away, as far as we know.
-  @State private var offlineToastVisibleUntil: Date?
-
   private static let duration: TimeInterval = 3.0
 
   public init(networkMonitor: NetworkMonitor, errorController: ErrorController) {
@@ -41,14 +38,10 @@ public struct OfflineToastBridge: ViewModifier {
     self.errorController = errorController
   }
 
-  /// Show the offline indicator, replacing rather than stacking: repeated
-  /// pull-to-refreshes while offline keep showing one "Offline", not a column
-  /// of them. The library hands back no dismiss handle, so "replace" is
-  /// implemented as "don't queue a second one behind the one already up".
+  /// Show the offline indicator. One notice per call, like every other toast:
+  /// a user who pulls to refresh three times while offline gets three, the
+  /// same as three failed saves would.
   private func presentOfflineToast() {
-    let now = Date()
-    if let until = offlineToastVisibleUntil, now < until { return }
-    offlineToastVisibleUntil = now.addingTimeInterval(Self.duration)
     presentToast(
       ToastValue(
         icon: Image(systemName: "wifi.slash")
@@ -63,7 +56,6 @@ public struct OfflineToastBridge: ViewModifier {
     content
       .onChange(of: networkMonitor.isOnline) { _, newValue in
         if newValue {
-          offlineToastVisibleUntil = nil
           presentToast(
             ToastValue(
               icon: Image(systemName: "wifi")
