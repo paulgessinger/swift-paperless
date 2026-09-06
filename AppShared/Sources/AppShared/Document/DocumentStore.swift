@@ -808,8 +808,9 @@ extension DocumentStore {
 
   /// Throttled remote-delete reconcile on the active server, run by its session:
   /// drop cached documents that no longer exist on the server (so they disappear
-  /// from every offline list), fold in the changed-metadata delta, then rebuild
-  /// saved-view membership. Soft-fail (background); kicked from `sync()`.
+  /// from every offline list), fold in the changed-metadata delta, rebuild
+  /// saved-view membership, then collect query keys nothing can reach any more.
+  /// Soft-fail (background); kicked from `sync()`.
   /// `userInitiated` bypasses the throttle.
   public func reconcileDocuments(userInitiated: Bool = false) async {
     await session?.reconcileDocuments(force: userInitiated)
