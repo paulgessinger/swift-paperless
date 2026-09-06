@@ -780,11 +780,15 @@ extension DocumentStore {
 
   /// Eager full-fill of a list: await page 1 + count, then background-page the
   /// rest. The returned handle carries the `QueryKey` the list then observes.
+  ///
+  /// Always `.list` for the meter: this surface exists for the document list UI,
+  /// i.e. a user opening, switching or refreshing a view. The proactive sweep
+  /// reaches `fillQuery` directly and books itself as `.fill`.
   public func fillDocumentQuery(filter: FilterState) async throws -> QueryFillHandle {
     guard let backend = session?.backend else {
       throw CachingRepositoryError.cacheMiss
     }
-    return try await backend.fillQuery(filter: filter)
+    return try await backend.fillQuery(filter: filter, category: .list)
   }
 
   /// Live growing-prefix of a cached query's ordered answer (the list's data).

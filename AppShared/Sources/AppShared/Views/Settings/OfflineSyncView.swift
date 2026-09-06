@@ -263,9 +263,15 @@ public struct OfflineSyncView: View {
           Text(.settings(.offlineSyncResetStatistics))
         }
       } header: {
-        Text(.settings(.offlineSyncDataHeader))
+        Text(.settings(.offlineSyncApiDataHeader))
       } footer: {
-        Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
+        // The meter has one feeder (the API response chokepoint), so thumbnails
+        // and streamed downloads are missing from these numbers by design. Say
+        // so here rather than letting "Total" read as everything the app moved.
+        VStack(alignment: .leading, spacing: 4) {
+          Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
+          Text(.settings(.offlineSyncDataScope))
+        }
       }
     }
     .task { libraryTotal = await store.libraryDocumentCount() }

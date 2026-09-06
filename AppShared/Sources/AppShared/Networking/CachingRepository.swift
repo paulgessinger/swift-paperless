@@ -73,7 +73,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// cap here would become a hard ceiling on what is reachable *even online*.
   /// Removing that ceiling needs a real on-scroll fetch trigger (R3b), not a
   /// cap; until users ask for it, every opened view eager-fills in full.
-  func fillQuery(filter: FilterState) async throws -> QueryFillHandle
+  ///
+  /// `category` says who asked: the same code serves an interactive list open
+  /// and the proactive library sweep, and the transfer meter has to tell those
+  /// apart. It is a parameter rather than the ambient task-local because the
+  /// paging runs on a detached task, which inherits no task-local.
+  func fillQuery(filter: FilterState, category: TransferCategory) async throws -> QueryFillHandle
 
   /// Proactive one-time coverage fill (*Entire library*): page the
   /// default list and every saved view, stamping rows `.full`, so the whole
@@ -309,7 +314,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// `.full`. Page 1 is awaited (first window + exact count); the rest pages in
   /// the background. Shared by the interactive on-open path and the proactive
   /// library fill.
-  public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
+  public func fillQuery(filter: FilterState, category: TransferCategory) async throws
+    -> QueryFillHandle
+  {
     let key = QueryKey(serverID: serverID, filter: filter)
 
     // Two fills on one key used to interleave: the newcomer's page-1
@@ -333,10 +340,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // caller's context it was unclaimed until the background task existed, and
     // the membership sweep's whole-key `replaceQueryOrder` could land in that
     // gap — after which the fill appended page 2 onto a different ordering.
-    // Detached tasks inherit no task-local, so re-establish `.fill` here.
+    // Detached tasks inherit no task-local, so re-establish the caller's
+    // category here rather than reading the (default) ambient one.
     let (firstPage, pageOne) = AsyncThrowingStream<UInt?, any Error>.makeStream()
     let task = Task.detached(priority: .utility) {
-      try await NetworkTransfer.$category.withValue(.fill) {
+      try await NetworkTransfer.$category.withValue(category) {
         var position = 0
         do {
           let batch = try await source.fetch(limit: pageSize)
@@ -479,7 +487,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       do {
         // Sequential: let each query's background paging finish before the next,
         // so we never run N concurrent paging chains against the server.
-        let handle = try await fillQuery(filter: filter)
+        let handle = try await fillQuery(filter: filter, category: .fill)
         // `fillQuery` pages the rest of the view on a *detached* task, which
         // inherits no cancellation, and awaiting a `Task<Void, Never>` neither
         // throws nor propagates one. Without this bridge the only cancellation
