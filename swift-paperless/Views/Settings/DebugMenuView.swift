@@ -21,6 +21,8 @@ struct DebugMenuView: View {
   @State private var exportResult: ExportResult?
   @State private var showClearCacheConfirmation = false
   @State private var showCacheClearedConfirmation = false
+  @State private var reclaimResult: ReclaimResult?
+  @State private var isReclaiming = false
 
   /// Outcome of the legacy-storage export, reported in an alert rather than
   /// through `ErrorController` so it stays visible above the settings sheet.
@@ -43,6 +45,24 @@ struct DebugMenuView: View {
     } catch {
       Logger.shared.error("Legacy connection export failed: \(error)")
       exportResult = .failed(error.localizedDescription)
+    }
+  }
+
+  /// Outcome of the on-demand blob reclaim, in an alert for the same reason as
+  /// ``ExportResult``.
+  private struct ReclaimResult: Identifiable {
+    let report: ContentStore.ReclaimReport
+    var id: String { "\(report.removedFiles)-\(report.reclaimedBytes)-\(report.examinedVersions)" }
+  }
+
+  private func reclaimDocumentContent() async {
+    isReclaiming = true
+    defer { isReclaiming = false }
+    do {
+      reclaimResult = ReclaimResult(report: try await store.reclaimDocumentContent())
+    } catch {
+      Logger.shared.error("Failed to reclaim document content: \(error)")
+      errorController.push(error: error)
     }
   }
 
@@ -137,6 +157,21 @@ struct DebugMenuView: View {
         } message: {
           Text(.settings(.clearCacheConfirmation))
         }
+
+        // Debug-only affordance: not localized on purpose, so debug strings
+        // don't reach translators. Unthrottled, unlike the copy the reconcile
+        // runs — the point here is to see the effect immediately.
+        Button {
+          Task { await reclaimDocumentContent() }
+        } label: {
+          Label {
+            Text(verbatim: "Reclaim unused document files")
+              .accentColor(.primary)
+          } icon: {
+            Image(systemName: "arrow.up.trash")
+          }
+        }
+        .disabled(isReclaiming)
       } header: {
         Text(.settings(.localStorage))
       } footer: {
@@ -164,6 +199,18 @@ struct DebugMenuView: View {
           message: Text(verbatim: message),
           dismissButton: .default(Text(.app(.ok))))
       }
+    }
+    .alert(item: $reclaimResult) { result in
+      Alert(
+        title: Text(verbatim: "Reclaim complete"),
+        message: Text(
+          verbatim: """
+            Removed \(result.report.removedFiles) files \
+            (\(ByteCountFormatter.string(fromByteCount: result.report.reclaimedBytes, countStyle: .file))) \
+            across \(result.report.examinedVersions) cached versions. \
+            \(result.report.keptRecent) kept for now (written too recently).
+            """),
+        dismissButton: .default(Text(.app(.ok))))
     }
     .alert(
       String(localized: .settings(.cacheCleared)),
