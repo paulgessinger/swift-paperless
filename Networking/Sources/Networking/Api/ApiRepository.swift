@@ -48,7 +48,10 @@ public class ApiRepository {
     let modified: Date
   }
 
-  private var inFlightDownloads: [DownloadKey: Task<URL, Error>] = [:]
+  // Every joined caller is fed progress by the shared operation, not just the
+  // one that started it: a second view opening the same document used to show
+  // a bar frozen at zero for the whole download.
+  private let inFlightDownloads = SingleFlight<DownloadKey, URL>()
 
   // Detected API/backend versions. Mutable because detection can be re-run at
   // runtime: if the backend is unreachable at init we lock in the minimum API
@@ -681,25 +684,18 @@ extension ApiRepository: Repository {
       return cached
     }
 
-    if let existing = inFlightDownloads[inFlightKey] {
-      return try await existing.value
-    }
-
-    let task = Task<URL, Error> { [contentStore] in
-      defer { inFlightDownloads[inFlightKey] = nil }
-
-      let request = try request(
+    return try await inFlightDownloads.run(key: inFlightKey, progress: progress) {
+      @MainActor [contentStore] report in
+      let request = try self.request(
         .download(documentId: document.id, original: original, version: queryVersion))
-      let (tempURL, response) = try await urlSession.getDownload(
-        for: request, progress: progress)
+      let (tempURL, response) = try await self.urlSession.getDownload(
+        for: request, progress: report)
 
-      try validateDownloadResponse(response, request: request)
+      try self.validateDownloadResponse(response, request: request)
 
       return try contentStore.store(
         key, movingFrom: tempURL, modified: modified)
     }
-    inFlightDownloads[inFlightKey] = task
-    return try await task.value
   }
 
   private func fetchToTemp(
