@@ -253,9 +253,36 @@ public class ApiRepository {
       // Accept header. The retried call goes straight to the static helper, so a
       // second 406 propagates instead of looping.
       Logger.networking.warning(
-        "Request rejected as unsupported API version (sent \(String(describing: sentVersion), privacy: .public)); re-probing backend"
+        "Request rejected as unsupported API version (sent \(String(describing: sentVersion), privacy: .public))"
       )
 
+      // Retries the original request once with `version`, bypassing this
+      // recovery path so a second 406 propagates instead of looping.
+      func retry(withVersion version: UInt) async throws -> (Data, URLResponse) {
+        var retry = request
+        retry.setValue(
+          "application/json; version=\(version)", forHTTPHeaderField: "Accept")
+        return try await Self.fetchData(
+          for: retry, expectedStatus: expectedStatus, progress: progress,
+          cachePolicy: cachePolicy, urlSession: urlSession
+        )
+      }
+
+      // The effective version may have moved on while this request was in
+      // flight: a concurrent request 406'd first, re-probed, and learned the
+      // real version. This request was sent with the stale version, so its 406
+      // says nothing new about the backend — retry with the version we now
+      // hold rather than probing again. Without this, requests that 406 after
+      // a probe has already completed each kick off a redundant probe.
+      if let sentVersion, sentVersion != effectiveApiVersion {
+        let currentVersion = effectiveApiVersion
+        Logger.networking.notice(
+          "API version already moved from \(sentVersion) to \(currentVersion) since the request was sent; retrying without re-probing"
+        )
+        return try await retry(withVersion: currentVersion)
+      }
+
+      Logger.networking.notice("Re-probing backend for its API version")
       guard await reprobeVersion() != nil else {
         Logger.networking.error(
           "Re-probe failed to detect a working API version; propagating unsupportedVersion")
@@ -272,13 +299,7 @@ public class ApiRepository {
 
       Logger.networking.notice(
         "Re-probe selected API version \(retryVersion); retrying request once")
-      var retry = request
-      retry.setValue(
-        "application/json; version=\(retryVersion)", forHTTPHeaderField: "Accept")
-      return try await Self.fetchData(
-        for: retry, expectedStatus: expectedStatus, progress: progress,
-        cachePolicy: cachePolicy, urlSession: urlSession
-      )
+      return try await retry(withVersion: retryVersion)
     }
   }
 
@@ -311,8 +332,16 @@ public class ApiRepository {
       return nil
     }
 
+    // Publish the task before the first suspension point. `reprobeVersion` is
+    // MainActor-isolated and `Task { }` doesn't suspend, so there is no
+    // check-then-act window between the lookup above and this store: a
+    // concurrent caller observes either "no probe yet" or this exact task.
     versionReprobeTask = task
-    defer { versionReprobeTask = nil }
+    defer {
+      if versionReprobeTask == task {
+        versionReprobeTask = nil
+      }
+    }
     return await task.value
   }
 
