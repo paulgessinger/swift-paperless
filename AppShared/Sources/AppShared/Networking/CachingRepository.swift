@@ -154,6 +154,35 @@ extension CachingBackend {
   public func reconcileDocumentChanges() async throws {
     try await reconcileDocumentChanges(progress: nil)
   }
+
+  /// Reclaim downloaded document files no cached document version references
+  /// any more: superseded versions, and documents (or whole servers) the
+  /// database has since dropped.
+  ///
+  /// A protocol extension rather than a requirement: everything it needs is
+  /// already on the protocol (`database`), and the blob store is a single
+  /// app-group directory, so there is nothing per-backend to implement.
+  ///
+  /// The reachable set is read across *every* server in one query — the store is
+  /// shared, and a per-server answer could not tell a removed server's leftovers
+  /// from another server's live files. Callers therefore need not (and must not)
+  /// run this once per server.
+  @discardableResult
+  public func reclaimDocumentContent() async throws -> ContentStore.ReclaimReport {
+    // No app-group container (host tests, previews, a mis-configured
+    // entitlement) means no blob store to sweep. Not an error: the download
+    // path degrades the same way, straight to a temporary file.
+    guard let store = try? ContentStore() else { return ContentStore.ReclaimReport() }
+    let retained = try await database.retainedContentVersions()
+    // Off the main actor: conformers are `@MainActor`, and this walks one
+    // directory entry per downloaded document and unlinks files. Detached
+    // because that isolation is what we are escaping; the sweep is bounded and
+    // idempotent, so not inheriting cancellation costs at most one short pass —
+    // and the caller's own `Task.checkCancellation` still sees the cancel.
+    return await Task.detached(priority: .utility) {
+      store.reclaim(retaining: retained)
+    }.value
+  }
 }
 
 enum CachingRepositoryError: Error {

@@ -896,6 +896,17 @@ extension DocumentStore {
     // Nuke memory + disk image cache.
     imagePipeline.cache.removeAll()
   }
+
+  /// Debug / maintenance: drop downloaded document files that no cached document
+  /// version references any more, keeping everything still reachable.
+  ///
+  /// The same sweep the reconcile runs, minus its hourly throttle — the point of
+  /// the debug affordance is to see the effect now, on demand.
+  @discardableResult
+  public func reclaimDocumentContent() async throws -> ContentStore.ReclaimReport {
+    guard let backend = session?.backend else { return ContentStore.ReclaimReport() }
+    return try await backend.reclaimDocumentContent()
+  }
 }
 
 //// Permissions checking for resources
