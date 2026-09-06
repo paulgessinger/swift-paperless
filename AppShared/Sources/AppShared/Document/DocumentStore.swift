@@ -22,28 +22,34 @@ public final class DocumentStore: Sendable {
 
   public private(set) var tasks: [PaperlessTask] = []
 
-  /// The live element projection (DB → typed `ValueObservation`). The store owns
-  /// it and re-exposes its collections through the computed delegates below, so
-  /// `store.tags` etc. keep working and stay reactive (a view reading
-  /// `store.tags` tracks `ElementStore.tags` through the getter). The reference
-  /// is stable across its lifetime — only its contents change — so it is
-  /// `@ObservationIgnored`; the inner `@Observable` does the tracking.
-  @ObservationIgnored
-  public let elementStore = ElementStore()
+  /// The live projection of the *active* server (DB → typed `ValueObservation`),
+  /// or `nil` when there is no server to project (before login, or a repository
+  /// that fronts no DB). The store owns it and re-exposes it through the
+  /// read-only computed delegates below, so `store.tags` etc. keep working.
+  ///
+  /// Deliberately a tracked stored property, and deliberately *replaced* rather
+  /// than re-pointed on a connection switch. Both hops a delegate walks —
+  /// `projection`, then the value on it — are observation-tracked, so views
+  /// repaint when the instance is swapped as well as when its contents change.
+  /// Replacing it is also what makes a superseded server's late emission
+  /// harmless: that server's loops hold the object they were born with, and
+  /// once it is no longer this property nothing reads what they write into it.
+  public private(set) var projection: ServerProjection?
 
   // Element collections and singletons — read-only projections of the DB,
-  // observed via `elementStore`. Writes go through the repository (which
-  // write-throughs to the DB); the observation repaints these.
-  public var correspondents: [UInt: Correspondent] { elementStore.correspondents }
-  public var documentTypes: [UInt: DocumentType] { elementStore.documentTypes }
-  public var tags: [UInt: Tag] { elementStore.tags }
-  public var savedViews: [UInt: SavedView] { elementStore.savedViews }
-  public var storagePaths: [UInt: StoragePath] { elementStore.storagePaths }
-  public var users: [UInt: User] { elementStore.users }
-  public var groups: [UInt: UserGroup] { elementStore.groups }
-  public var customFields: [UInt: CustomField] { elementStore.customFields }
-  public var currentUser: User? { elementStore.currentUser }
-  public var serverConfiguration: ServerConfiguration? { elementStore.serverConfiguration }
+  // observed via `projection`. Writes go through the repository (which
+  // write-throughs to the DB); the observation repaints these. The fallbacks are
+  // the serverless state: the same empties a fresh projection is born with.
+  public var correspondents: [UInt: Correspondent] { projection?.correspondents ?? [:] }
+  public var documentTypes: [UInt: DocumentType] { projection?.documentTypes ?? [:] }
+  public var tags: [UInt: Tag] { projection?.tags ?? [:] }
+  public var savedViews: [UInt: SavedView] { projection?.savedViews ?? [:] }
+  public var storagePaths: [UInt: StoragePath] { projection?.storagePaths ?? [:] }
+  public var users: [UInt: User] { projection?.users ?? [:] }
+  public var groups: [UInt: UserGroup] { projection?.groups ?? [:] }
+  public var customFields: [UInt: CustomField] { projection?.customFields ?? [:] }
+  public var currentUser: User? { projection?.currentUser }
+  public var serverConfiguration: ServerConfiguration? { projection?.serverConfiguration }
   /// The permission matrix to *gate on* — and, until `ui_settings` has landed
   /// for the active server, a deliberate optimistic lie.
   ///
@@ -59,16 +65,17 @@ public final class DocumentStore: Sendable {
   /// ``permissionsKnown`` first — otherwise it reports access the server never
   /// granted. `PermissionsView` does.
   public var permissions: UserPermissions {
-    permissionsKnown ? elementStore.permissions : .full
+    guard let projection, projection.isHydrated else { return .full }
+    return projection.permissions
   }
 
-  public var settings: UISettingsSettings { elementStore.settings }
+  public var settings: UISettingsSettings { projection?.settings ?? UISettingsSettings() }
 
   /// Whether ``permissions`` reflects the server's answer yet, or is the
   /// optimistic `.full` stand-in. Gates don't need this; anything that shows the
   /// matrix, or that would otherwise assert *why* something is unavailable,
   /// does.
-  public var permissionsKnown: Bool { elementStore.isHydrated }
+  public var permissionsKnown: Bool { projection?.isHydrated ?? false }
 
   /// The last automatic (non-user-initiated) sync failure, kept so the UI can
   /// surface a degraded state without tearing down the cached display.
@@ -98,23 +105,26 @@ public final class DocumentStore: Sendable {
   /// the store used never to hear about.
   public var lastReconcileAt: Date? { session?.lastReconcileSuccess }
 
-  /// When the active server's library was last fully filled (`nil` if never).
-  /// A stored, observed mirror of `server_sync_state.library_coverage_at` —
-  /// refreshed when the repository changes and after each fill — so the
-  /// Offline & Sync screen repaints instead of staying on "Never". A bare DB
-  /// read wouldn't be tracked by the observation.
-  public private(set) var libraryCoverageAt: Date?
+  /// When the active server's library was last fully filled (`nil` if never),
+  /// observed from `server_sync_state.library_coverage_at` so the Offline & Sync
+  /// screen tracks fills *and* a cache wipe (which clears it) instead of staying
+  /// on "Never".
+  ///
+  /// The one that made this bug visible: it may not emit again for hours, so a
+  /// value the previous server's observation slipped in after a switch used to
+  /// stay on screen until the next fill.
+  public var libraryCoverageAt: Date? { projection?.libraryCoverageAt }
 
   /// Views (saved or default) whose proactive offline fill the server most
   /// recently rejected — observed from `query_sync_error` for the active server
   /// so the Offline & Sync screen can warn that they aren't fully cached.
-  public private(set) var syncErrors: [QuerySyncError] = []
+  public var syncErrors: [QuerySyncError] { projection?.syncErrors ?? [] }
 
   /// Live count of `document` rows cached for the active server — lets the
   /// Offline & Sync screen show the effect of the proactive fill and the
   /// downgrade GC (switching *Entire library* → *Recently browsed*) without a
   /// debugger.
-  public private(set) var cachedDocumentCount: Int = 0
+  public var cachedDocumentCount: Int { projection?.cachedDocumentCount ?? 0 }
 
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
@@ -166,19 +176,6 @@ public final class DocumentStore: Sendable {
   @ObservationIgnored
   private var taskUpdateTask: Task<Void, Never>?
 
-  // Observes the active server's `library_coverage_at` into `libraryCoverageAt`.
-  // Re-pointed alongside the element projection whenever the repository changes.
-  @ObservationIgnored
-  private var coverageObservationTask: Task<Void, Never>?
-
-  // Observes the active server's recorded per-view sync failures into `syncErrors`.
-  @ObservationIgnored
-  private var syncErrorObservationTask: Task<Void, Never>?
-
-  // Observes the active server's cached document count into `cachedDocumentCount`.
-  @ObservationIgnored
-  private var documentCountObservationTask: Task<Void, Never>?
-
   // MARK: Methods
 
   /// The production store: it activates onto servers by asking `registry` for
@@ -199,58 +196,32 @@ public final class DocumentStore: Sendable {
     self.registry = registry
     self.session = session
     imagePipeline = Self.makeImagePipeline(delegate: session?.repository?.delegate)
-    wireElementStore()
+    rebuildProjection()
   }
 
   deinit {
     taskUpdateTask?.cancel()
-    coverageObservationTask?.cancel()
-    syncErrorObservationTask?.cancel()
-    documentCountObservationTask?.cancel()
   }
 
-  /// Point the element projection at the active repository's DB. Under the
-  /// source-of-truth model every production/preview repository fronts a DB
-  /// (`CachingBackend`); a repository that doesn't (e.g. `NullRepository` before
-  /// login) detaches the projection.
-  private func wireElementStore() {
-    coverageObservationTask?.cancel()
-    syncErrorObservationTask?.cancel()
-    documentCountObservationTask?.cancel()
-    if let backend = session?.backend {
-      elementStore.repoint(database: backend.database, serverID: backend.serverID)
-      // Source-of-truth: observe the coverage timestamp rather than reading it
-      // imperatively, so it tracks fills *and* a cache wipe (which clears it).
-      let stream = backend.database.observeLibraryCoverageAt(serverID: backend.serverID)
-      coverageObservationTask = Task { [weak self] in
-        do {
-          for try await date in stream { self?.libraryCoverageAt = date }
-        } catch {
-          Logger.shared.debug("Coverage observation ended: \(error)")
-        }
-      }
-      let errors = backend.database.observeQuerySyncErrors(serverID: backend.serverID)
-      syncErrorObservationTask = Task { [weak self] in
-        do {
-          for try await errors in errors { self?.syncErrors = errors }
-        } catch {
-          Logger.shared.debug("Sync-error observation ended: \(error)")
-        }
-      }
-      let counts = backend.database.observeDocumentCount(serverID: backend.serverID)
-      documentCountObservationTask = Task { [weak self] in
-        do {
-          for try await count in counts { self?.cachedDocumentCount = count }
-        } catch {
-          Logger.shared.debug("Document-count observation ended: \(error)")
-        }
-      }
-    } else {
-      elementStore.reset()
-      libraryCoverageAt = nil
-      syncErrors = []
-      cachedDocumentCount = 0
+  /// Build a projection for the active server, replacing whatever was there.
+  ///
+  /// Under the source-of-truth model every production/preview repository fronts
+  /// a DB (`CachingBackend`); a repository that doesn't (e.g. `NullRepository`
+  /// before login) leaves the store serverless and the delegates on their empty
+  /// defaults.
+  ///
+  /// Replacement, not re-pointing, is the whole design: the outgoing server's
+  /// observation loops die with the object they wrote into (they hold it weakly,
+  /// so dropping it here runs its `deinit` and cancels them), and a value one of
+  /// them had already produced can no longer reach the store — cancellation is
+  /// cooperative, so it *would* still be delivered, it just lands somewhere
+  /// nothing reads.
+  private func rebuildProjection() {
+    guard let backend = session?.backend else {
+      projection = nil
+      return
     }
+    projection = ServerProjection(database: backend.database, serverID: backend.serverID)
   }
 
   @Sendable
@@ -297,8 +268,8 @@ public final class DocumentStore: Sendable {
   /// Drop the per-server state this store still holds in memory, on a repository
   /// swap. That is only the task list and the last sync error now: documents
   /// aren't held in memory under source-of-truth (the list observes the DB
-  /// directly), and the element projection is owned by `elementStore` and
-  /// re-pointed by `wireElementStore()`. `private` because `install(session:)` is
+  /// directly), and the element projection is owned by `projection` and
+  /// rebuilt by `rebuildProjection()`. `private` because `install(session:)` is
   /// the one caller — a swap is the only moment this is the right thing to do.
   private func clear() {
     tasks = []
@@ -350,7 +321,7 @@ public final class DocumentStore: Sendable {
     // the Offline & Sync screen shows.
     self.session = session
     imagePipeline = Self.makeImagePipeline(delegate: session.repository?.delegate)
-    wireElementStore()
+    rebuildProjection()
     if reload {
       events.emit(.repositoryChanged)
       clear()
@@ -460,7 +431,16 @@ public final class DocumentStore: Sendable {
     guard (try? checkPermission(.view, for: .paperlessTask)) != nil else {
       return
     }
+    // The poller is not restarted on a connection switch, and the fetch below is
+    // a suspension point, so the session has to be re-checked: the outgoing
+    // server's task list must not land in the store after `install` cleared it
+    // for the incoming one.
+    let session = session
     guard let tasks = try? await repository.tasks(limit: Self.taskPollLimit) else {
+      return
+    }
+    guard self.session === session else {
+      Logger.shared.debug("Dropping task list from a superseded server")
       return
     }
     self.tasks = tasks
@@ -479,9 +459,9 @@ public final class DocumentStore: Sendable {
   /// permissions (offline-first) instead of aborting the launch load.
   public func fetchUISettings() async throws {
     try await sync()
-    if let backend = session?.backend {
-      elementStore.refreshUISettings(from: backend.database, serverID: backend.serverID)
-    }
+    // Re-read after the await: a switch during the sync means the projection to
+    // refresh is the new server's, and it reads its own database and serverID.
+    projection?.refreshUISettings()
   }
 
   /// Network → DB via the caching backend; the live element observation repaints
@@ -502,7 +482,10 @@ public final class DocumentStore: Sendable {
     guard let session else { return }
     do {
       try await session.syncElements()
-      lastSyncError = nil
+      // `lastSyncError` describes the server this call synced, so an outcome
+      // that arrives after a switch must not be shown for — or cleared on — the
+      // server now on screen.
+      if self.session === session { lastSyncError = nil }
       Logger.sync.info("Sync store complete")
       // Kick the reconcile alongside the element sync (throttled,
       // non-blocking). Not just remote deletes, despite the name it used to
@@ -524,7 +507,7 @@ public final class DocumentStore: Sendable {
       // Only presentable failures are recorded. A non-displayable one (a GRDB
       // `DatabaseError`, a raw `URLError`) leaves any degraded state already
       // on screen intact rather than clearing it.
-      if let displayable = error as? any DisplayableError {
+      if let displayable = error as? any DisplayableError, self.session === session {
         lastSyncError = displayable
       }
       Logger.sync.error("Background sync failed (suppressed): \(error)")
