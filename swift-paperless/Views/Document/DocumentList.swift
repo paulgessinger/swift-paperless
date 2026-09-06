@@ -57,7 +57,6 @@ struct DocumentList: View {
   var store: DocumentStore
   var onSelect: (Document) -> Void
   var filterModel: FilterModel
-  @Binding var isFetching: Bool
   // iPad split-view: highlights the row matching the selected detail doc.
   // Nil on iPhone (push-based navigation needs no list-side highlight).
   var selectedDocumentID: UInt?
@@ -72,13 +71,12 @@ struct DocumentList: View {
 
   init(
     store: DocumentStore, onSelect: @escaping (Document) -> Void, filterModel: FilterModel,
-    errorController: ErrorController, isFetching: Binding<Bool>,
+    errorController: ErrorController,
     selectedDocumentID: UInt? = nil
   ) {
     self.store = store
     self.onSelect = onSelect
     self.filterModel = filterModel
-    _isFetching = isFetching
     self.selectedDocumentID = selectedDocumentID
     _viewModel = State(
       initialValue: DocumentListViewModel(
@@ -339,7 +337,7 @@ struct DocumentList: View {
     }
 
     .onChange(of: viewModel.isFetching) { _, fetching in
-      isFetching = fetching
+      filterModel.isFetching = fetching
     }
 
     // @TODO: Re-evaluate if we want an animation here

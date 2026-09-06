@@ -13,7 +13,6 @@ import SwiftUI
 
 struct FilterAssemblyiOS18: View {
   var filterModel: FilterModel
-  var isFetching: Bool = false
   var showsBackdrop: Bool = true
 
   @State private var searchText: String = ""
@@ -26,7 +25,7 @@ struct FilterAssemblyiOS18: View {
       HStack {
         SearchBarViewiOS18(
           text: $searchText, cancelEnabled: false,
-          isLoading: searchPending || isFetching
+          isLoading: searchPending || filterModel.isFetching
         ) {}
 
         Menu {

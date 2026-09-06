@@ -15,6 +15,14 @@ import os
 public final class FilterModel {
   public var ready: Bool = true
 
+  /// True while the document list has a fill or refresh in flight. Lives here,
+  /// next to `ready`, rather than as `@State` on the screen that hosts the list:
+  /// a `@State` flip re-evaluates the whole screen — including the glass
+  /// safe-area inset above the list — and that layout pass lands exactly while
+  /// UIRefreshControl is animating the pull back, which showed as a jump on
+  /// release. On an `@Observable` only the search bar's spinner invalidates.
+  public var isFetching: Bool = false
+
   public var filterState: FilterState = {
     Logger.shared.trace("Loading FilterState")
     guard
