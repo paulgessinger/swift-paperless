@@ -41,6 +41,7 @@ private final class Counter: @unchecked Sendable {
   private var _value = 0
   var value: Int { lock.withLock { _value } }
   func bump() { lock.withLock { _value += 1 } }
+  func drop() { lock.withLock { _value -= 1 } }
 }
 
 /// Keeps the fan-out handler alive past the operation's return, so a test can
@@ -130,7 +131,12 @@ struct SingleFlightTests {
     let second = Task {
       try await flight.run(key: "k", progress: b.handler) { _ in -1 }
     }
-    try await waitUntil { flight.subscriberCount(forKey: "k") == 2 }
+    // Waiting on the replay, not on `subscriberCount`: the count flips under
+    // the lock at registration, while the replay is delivered after it is
+    // released. Releasing the gate on the count alone lets 0.5 overtake the
+    // replay — which the delivery path now (correctly) drops as stale, making
+    // the assertion below flaky for a reason that is not the test's subject.
+    try await waitUntil { b.values == [0.1] }
 
     await gate.release()
     #expect(try await first.value == 7)
@@ -279,4 +285,92 @@ struct SingleFlightTests {
     #expect(try await first.value == 1)
     #expect(try await second.value == 2)
   }
+
+  /// Reporting from inside a handler must queue, not nest. The delivery loop is
+  /// what guarantees it, and unlike the replay race itself this is fully
+  /// deterministic: the re-entrant report is issued from the handler's own
+  /// thread while that subscriber is marked as delivering.
+  @Test(.bug(id: "688"))
+  func handlerIsNeverReentered() async throws {
+    let flight = SingleFlight<String, Int>()
+    let box = HandlerBox()
+    let depth = Counter()
+    let nested = Counter()
+    let recorder = Recorder()
+
+    let record = recorder.handler
+    let handler: @Sendable (Double) -> Void = { value in
+      depth.bump()
+      if depth.value > 1 { nested.bump() }
+      record(value)
+      if value == 0.5 { box.handler?(0.7) }
+      depth.drop()
+    }
+
+    _ = try await flight.run(key: "k", progress: handler) { report in
+      box.set(report)
+      report(0.5)
+      return 7
+    }
+
+    #expect(recorder.values == [0.5, 0.7])
+    #expect(nested.value == 0)
+  }
+
+  /// The replay race, asserted as the invariant it violates rather than as an
+  /// interleaving. The window — between `run` releasing the lock and delivering
+  /// the replay — holds no suspension point and no injectable hook, so it
+  /// cannot be scheduled deterministically from the public API; what *is*
+  /// deterministic is that a joiner must never see progress rewind or repeat,
+  /// however the two paths interleave.
+  ///
+  /// Be honest about what this buys: against the pre-fix implementation it
+  /// reproduced roughly twice in 2000 iterations here (the replayed 0.1 landing
+  /// after 0.12), so at the iteration count below it is a cheap regression net,
+  /// not a reliable detector. ``handlerIsNeverReentered`` is the deterministic
+  /// guard; post-fix both properties hold by construction, from `deliveredSeq`
+  /// and the per-subscriber delivery loop respectively.
+  @Test(.bug(id: "688"))
+  func lateJoinerNeverSeesProgressGoBackwards() async throws {
+    for _ in 0..<200 {
+      let flight = SingleFlight<String, Int>()
+      let gate = Gate()
+      let box = HandlerBox()
+      let joiner = Recorder()
+
+      let first = Task {
+        try await flight.run(key: "k") { report in
+          box.set(report)
+          report(0.1)
+          await gate.wait()
+          return 7
+        }
+      }
+      try await waitUntil { box.handler != nil }
+
+      // Joining and reporting at once, on purpose: the joiner's replay of 0.1
+      // and the live reports are deliberately allowed to race. Values are
+      // chosen so none coincides with the replayed one, so a repeat in the
+      // recorder means a genuine duplicate delivery.
+      let reporter = Task.detached {
+        for i in 2...40 { box.handler?(0.1 + Double(i) / 100) }
+      }
+      let second = Task {
+        try await flight.run(key: "k", progress: joiner.handler) { _ in -1 }
+      }
+      // The first caller passed no handler, so the count reaching 1 means the
+      // joiner attached to *this* flight rather than starting its own.
+      try await waitUntil { flight.subscriberCount(forKey: "k") == 1 }
+
+      _ = await reporter.result
+      await gate.release()
+      #expect(try await first.value == 7)
+      #expect(try await second.value == 7)
+
+      let values = joiner.values
+      #expect(values == values.sorted())
+      #expect(values.count == Set(values).count)
+    }
+  }
+
 }

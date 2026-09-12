@@ -27,14 +27,34 @@ import os
 public final class SingleFlight<Key: Hashable & Sendable, Value: Sendable>: Sendable {
   public typealias ProgressHandler = @Sendable (Double) -> Void
 
+  private struct Subscriber {
+    let handler: ProgressHandler
+    /// Sequence number of the newest value this subscriber has been handed —
+    /// delivered or queued. It only ever moves forward, which is what stops a
+    /// late replay from stepping on a newer live report that overtook it.
+    var deliveredSeq = 0
+    /// Newest value waiting for `handler`, if any. Only the task owning the
+    /// delivery loop drains it, and it holds at most one value: progress is a
+    /// level, not an event, so coalescing a burst is a feature.
+    var pending: Double?
+    /// True while some task is inside `handler`. Whoever sets it owns delivery
+    /// until nothing is pending, so a caller's handler is never re-entered and
+    /// never runs on two threads at once.
+    var isDelivering = false
+  }
+
   private struct Entry {
     let id: Int
     let task: Task<Value, Error>
-    var subscribers: [Int: ProgressHandler] = [:]
+    var subscribers: [Int: Subscriber] = [:]
     /// Replayed to late joiners. Progress arrives in bursts, so without it a
     /// caller joining between two ticks renders an empty bar until the next
     /// one — which for a nearly-finished download can be never.
     var lastProgress: Double?
+    /// Counts reports for this flight. A joiner's replay carries the number
+    /// `lastProgress` was recorded under, so the delivery path can tell a stale
+    /// replay from a live report that beat it there, and drop it.
+    var progressSeq = 0
   }
 
   private struct State {
@@ -61,13 +81,15 @@ public final class SingleFlight<Key: Hashable & Sendable, Value: Sendable>: Send
     operation: @escaping @Sendable (@escaping ProgressHandler) async throws -> Value
   ) async throws -> Value {
     let (ticket, task, replay) = state.withLock {
-      state -> (Int, Task<Value, Error>, Double?) in
+      state -> (Int, Task<Value, Error>, (seq: Int, value: Double)?) in
       let ticket = state.nextID
       state.nextID += 1
 
       if var entry = state.entries[key] {
-        entry.subscribers[ticket] = progress
-        let replay = entry.lastProgress
+        // A caller without a handler is not a subscriber at all — it only wants
+        // the shared result.
+        if let progress { entry.subscribers[ticket] = Subscriber(handler: progress) }
+        let replay = entry.lastProgress.map { (seq: entry.progressSeq, value: $0) }
         state.entries[key] = entry
         return (ticket, entry.task, replay)
       }
@@ -83,15 +105,18 @@ public final class SingleFlight<Key: Hashable & Sendable, Value: Sendable>: Send
         return try await operation(report)
       }
       var entry = Entry(id: entryID, task: task)
-      entry.subscribers[ticket] = progress
+      if let progress { entry.subscribers[ticket] = Subscriber(handler: progress) }
       state.entries[key] = entry
       return (ticket, task, nil)
     }
 
     // Outside the lock: subscriber handlers are caller code and must never run
-    // under it.
-    if let replay, let progress {
-      progress(replay)
+    // under it. That gap is exactly the hazard — a report landing between the
+    // registration above and this line reaches the new subscriber first — so
+    // the replay takes the same per-subscriber path as a live report, where
+    // being older than what already arrived makes it a no-op.
+    if let replay {
+      deliver(key: key, ticket: ticket, seq: replay.seq, value: replay.value)
     }
 
     return try await withTaskCancellationHandler {
@@ -103,19 +128,71 @@ public final class SingleFlight<Key: Hashable & Sendable, Value: Sendable>: Send
   }
 
   private func makeReporter(key: Key, entryID: Int) -> ProgressHandler {
-    { [state] value in
-      let handlers = state.withLock { state -> [ProgressHandler] in
+    // Capturing `self` adds no retain cycle the entry does not already have:
+    // the in-flight task retains `self` too, and `finish` drops both.
+    { [self] value in
+      let fanout = state.withLock { state -> (seq: Int, tickets: [Int])? in
         // The entry id guards against a later flight for the same key: a
         // straggling report from a finished operation must not resurrect a
         // stale `lastProgress` on top of the new one.
-        guard var entry = state.entries[key], entry.id == entryID else { return [] }
+        guard var entry = state.entries[key], entry.id == entryID else { return nil }
+        entry.progressSeq += 1
         entry.lastProgress = value
         state.entries[key] = entry
-        return Array(entry.subscribers.values)
+        return (entry.progressSeq, Array(entry.subscribers.keys))
       }
-      for handler in handlers {
-        handler(value)
+      guard let fanout else { return }
+      for ticket in fanout.tickets {
+        deliver(key: key, ticket: ticket, seq: fanout.seq, value: value)
       }
+    }
+  }
+
+  /// Hands `value` to one subscriber, in sequence order, one value at a time.
+  ///
+  /// Handlers are caller code and cannot run under the lock, so registering a
+  /// late joiner and replaying to it cannot be one atomic step: a live report
+  /// can — and does — overtake the replay. Ordering is restored here instead.
+  /// Every value carries the sequence number of the report it came from, a
+  /// subscriber only ever moves forward in that sequence, and the first task to
+  /// find the subscriber idle owns its delivery loop until nothing is pending.
+  /// So a handler is never re-entered, never runs on two threads at once, and
+  /// never sees progress go backwards — the stale value is dropped, not
+  /// delivered late.
+  private func deliver(key: Key, ticket: Int, seq: Int, value: Double) {
+    let handler: ProgressHandler? = state.withLock { state -> ProgressHandler? in
+      guard var entry = state.entries[key], var subscriber = entry.subscribers[ticket] else {
+        return nil
+      }
+      // Something at least as new was already handed over: this value is stale.
+      guard seq > subscriber.deliveredSeq else { return nil }
+      subscriber.deliveredSeq = seq
+      subscriber.pending = value
+      let alreadyDelivering = subscriber.isDelivering
+      if !alreadyDelivering { subscriber.isDelivering = true }
+      entry.subscribers[ticket] = subscriber
+      state.entries[key] = entry
+      // Someone else owns the loop; they will pick this up.
+      return alreadyDelivering ? nil : subscriber.handler
+    }
+    guard let handler else { return }
+
+    while true {
+      let next: Double? = state.withLock { state -> Double? in
+        guard var entry = state.entries[key], var subscriber = entry.subscribers[ticket] else {
+          // Unsubscribed, or the flight finished: stop. There is no state left
+          // to hand ownership back to, and a cancelled caller wants no more.
+          return nil
+        }
+        let pending = subscriber.pending
+        subscriber.pending = nil
+        if pending == nil { subscriber.isDelivering = false }
+        entry.subscribers[ticket] = subscriber
+        state.entries[key] = entry
+        return pending
+      }
+      guard let next else { return }
+      handler(next)
     }
   }
 
