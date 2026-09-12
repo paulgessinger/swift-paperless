@@ -37,13 +37,13 @@ mkdocs==1.6.1
     #   mkdocs-literate-nav
     #   mkdocs-redirects
 mkdocs-exclude==1.0.2
-    # via -r docs/requirements.in
+    # via -r requirements.in
 mkdocs-get-deps==0.2.2
     # via mkdocs
 mkdocs-literate-nav==0.6.3
-    # via -r docs/requirements.in
+    # via -r requirements.in
 mkdocs-redirects==1.2.3
-    # via -r docs/requirements.in
+    # via -r requirements.in
 packaging==26.2
     # via
     #   mkdocs
@@ -62,9 +62,9 @@ properdocs==1.6.7
     #   mkdocs-redirects
 pygments==2.20.0
     # via zensical
-pymdown-extensions==10.21.3
+pymdown-extensions==11.0
     # via
-    #   -r docs/requirements.in
+    #   -r requirements.in
     #   zensical
 python-dateutil==2.9.0.post0
     # via ghp-import
@@ -89,4 +89,4 @@ watchdog==6.0.0
     #   mkdocs
     #   properdocs
 zensical==0.0.42
-    # via -r docs/requirements.in
+    # via -r requirements.in
