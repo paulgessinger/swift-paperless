@@ -109,7 +109,7 @@ struct QueryReachabilityGCTests {
     return counter
   }
 
-  // MARK: - pruneUnreachableQueries
+  // MARK: - pruneQueries
 
   @Test("keeps the reachable keys and drops the rest from all three query tables")
   func dropsUnreachableAcrossEveryTable() async throws {
@@ -126,8 +126,7 @@ struct QueryReachabilityGCTests {
     try await database.recordQuerySyncError(
       serverID: server, queryKey: drop.rawValue, savedViewName: "Drop", message: "boom")
 
-    let collected = try await database.pruneUnreachableQueries(
-      serverID: server, reachableKeys: [keep])
+    let collected = try await database.pruneQueries(serverID: server, collectedKeys: [drop])
 
     #expect(collected == 1)
     #expect(try orderKeys(database, server) == ["keep"])
@@ -135,7 +134,7 @@ struct QueryReachabilityGCTests {
     #expect(try errorKeys(database, server) == ["keep"])
   }
 
-  @Test("is a no-op — and reports zero — when every key is reachable")
+  @Test("is a no-op — and reports zero — when nothing was collected")
   func noOpWhenEverythingReachable() async throws {
     let server = UUID()
     let database = try database(server)
@@ -146,12 +145,12 @@ struct QueryReachabilityGCTests {
     try await database.replaceQueryOrder(queryKey: a, serverID: server, orderedIDs: [1])
     try await database.replaceQueryOrder(queryKey: b, serverID: server, orderedIDs: [1])
 
-    #expect(
-      try await database.pruneUnreachableQueries(serverID: server, reachableKeys: [a, b]) == 0)
+    #expect(try await database.pruneQueries(serverID: server, collectedKeys: []) == 0)
     #expect(try orderKeys(database, server) == ["a", "b"])
+    _ = (a, b)
   }
 
-  @Test("an empty reachable set drops the server's whole query cache")
+  @Test("collecting every key drops the server's whole query cache")
   func emptyReachableSetDropsEverything() async throws {
     let server = UUID()
     let database = try database(server)
@@ -162,7 +161,8 @@ struct QueryReachabilityGCTests {
       serverID: server, queryKey: key("b").rawValue, savedViewName: nil, message: "boom")
 
     #expect(
-      try await database.pruneUnreachableQueries(serverID: server, reachableKeys: []) == 2)
+      try await database.pruneQueries(
+        serverID: server, collectedKeys: [key("a"), key("b")]) == 2)
     #expect(try orderKeys(database, server).isEmpty)
     #expect(try metaKeys(database, server).isEmpty)
     #expect(try errorKeys(database, server).isEmpty)
@@ -186,8 +186,8 @@ struct QueryReachabilityGCTests {
     try await database.replaceQueryOrder(queryKey: shared, serverID: serverA, orderedIDs: [1])
     try await database.replaceQueryOrder(queryKey: shared, serverID: serverB, orderedIDs: [1])
 
-    let collected = try await database.pruneUnreachableQueries(
-      serverID: serverA, reachableKeys: [])
+    let collected = try await database.pruneQueries(
+      serverID: serverA, collectedKeys: [shared])
 
     #expect(collected == 1)
     #expect(try orderKeys(database, serverA).isEmpty)
@@ -207,7 +207,7 @@ struct QueryReachabilityGCTests {
       serverID: server, queryKey: key("drop").rawValue, savedViewName: nil, message: "boom")
 
     let counter = try countingCommits(on: database)
-    try await database.pruneUnreachableQueries(serverID: server, reachableKeys: [key("keep")])
+    try await database.pruneQueries(serverID: server, collectedKeys: [key("drop")])
 
     #expect(counter.commits == 1)
   }
@@ -224,7 +224,7 @@ struct QueryReachabilityGCTests {
     // Before the sweep the orphaned key still "references" document 2.
     #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
 
-    try await database.pruneUnreachableQueries(serverID: server, reachableKeys: [key("keep")])
+    try await database.pruneQueries(serverID: server, collectedKeys: [key("drop")])
 
     #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 1)
     #expect(try await database.document(serverID: server, id: 1) != nil)
@@ -283,6 +283,82 @@ struct QueryReachabilityGCTests {
     try await database.replaceQueryOrder(queryKey: key("b"), serverID: serverB, orderedIDs: [1])
 
     #expect(try await database.cachedQueries(serverID: serverA).map(\.key.rawValue) == ["a"])
+  }
+
+  @Test("leaves a key it was not told to collect alone, however unreachable")
+  func leavesUncollectedKeysAlone() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    // Stands in for the key a concurrent fill created after the sweep took its
+    // snapshot: not in the collected set, and so not the sweep's to delete —
+    // the P1 that a `NOT IN (reachable)` predicate had.
+    try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: key("snapshot"), serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key("newcomer"), serverID: server, orderedIDs: [2])
+
+    let collected = try await database.pruneQueries(
+      serverID: server, collectedKeys: [key("snapshot")])
+
+    #expect(collected == 1)
+    #expect(try orderKeys(database, server) == ["newcomer"])
+    #expect(try metaKeys(database, server) == ["newcomer"])
+  }
+
+  @Test("counts only the collected keys that actually had rows")
+  func countsOnlyPresentKeys() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    try await database.upsertDocuments([doc(1, "A")], serverID: server)
+    try await database.replaceQueryOrder(queryKey: key("real"), serverID: server, orderedIDs: [1])
+
+    #expect(
+      try await database.pruneQueries(
+        serverID: server, collectedKeys: [key("real"), key("never-existed")]) == 1)
+  }
+
+  @Test("collects a key set larger than one delete chunk")
+  func collectsAcrossChunks() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    try await database.upsertDocuments([doc(1, "A")], serverID: server)
+    let keys = (0..<1200).map { key("k\($0)") }
+    for k in keys {
+      try await database.replaceQueryOrder(queryKey: k, serverID: server, orderedIDs: [1])
+    }
+
+    let counter = try countingCommits(on: database)
+    let collected = try await database.pruneQueries(serverID: server, collectedKeys: Set(keys))
+
+    #expect(collected == keys.count)
+    // Chunked, but still one transaction — a partial prune is not a readable state.
+    #expect(counter.commits == 1)
+    #expect(try orderKeys(database, server).isEmpty)
+    #expect(try metaKeys(database, server).isEmpty)
+  }
+
+  @Test("sees a key whose only row is a recorded sync failure")
+  func seesErrorOnlyKey() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    // A first fill that failed before writing membership or meta. Invisible to
+    // the GC before this fix, so its failure stayed on the Offline & Sync screen
+    // with nothing left that could clear it.
+    try await database.recordQuerySyncError(
+      serverID: server, queryKey: key("failed").rawValue, savedViewName: "Gone", message: "boom")
+
+    let cached = try await database.cachedQueries(serverID: server)
+
+    #expect(cached.map(\.key.rawValue) == ["failed"])
+    #expect(cached.first?.filledAt == nil)
+
+    try await database.pruneQueries(serverID: server, collectedKeys: [key("failed")])
+    #expect(try errorKeys(database, server).isEmpty)
   }
 
   // MARK: - QueryRetention (pure)

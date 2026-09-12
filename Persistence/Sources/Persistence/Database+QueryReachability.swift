@@ -67,9 +67,12 @@ extension Database {
   /// Every query key this server has rows for, with the last time it was filled
   /// to completion — the candidate set the reachability policy chooses from.
   ///
-  /// Unions `query_order` in rather than reading `query_meta` alone: a key with
-  /// membership rows but no meta row should not be invisible to a GC whose whole
-  /// job is finding rows nothing points at.
+  /// Unions all three query tables rather than reading `query_meta` alone: a key
+  /// with membership rows but no meta row, or with nothing but a recorded sync
+  /// failure (a first fill that failed before it wrote anything else), should not
+  /// be invisible to a GC whose whole job is finding rows nothing points at. An
+  /// error-only orphan that the sweep cannot see is a broken saved view rendered
+  /// on the Offline & Sync screen with nothing left that could ever clear it.
   public func cachedQueries(serverID: UUID) async throws -> [CachedQuery] {
     try await wrappingAsync("cachedQueries") {
       try await writer.read { db in
@@ -77,10 +80,14 @@ extension Database {
         for row in try QueryMetaRow.filter(Column("server_id") == serverID).fetchAll(db) {
           filledAt[row.queryKey] = row.filledAt
         }
-        let orderKeys = try String.fetchAll(
-          db, sql: "SELECT DISTINCT query_key FROM query_order WHERE server_id = ?",
-          arguments: [serverID])
-        for key in orderKeys where filledAt.index(forKey: key) == nil {
+        let unstamped = try String.fetchAll(
+          db,
+          sql: """
+            SELECT DISTINCT query_key FROM query_order WHERE server_id = ?
+            UNION SELECT query_key FROM query_sync_error WHERE server_id = ?
+            """,
+          arguments: [serverID, serverID])
+        for key in unstamped where filledAt.index(forKey: key) == nil {
           filledAt[key] = Date?.none
         }
         return filledAt.map { CachedQuery(key: QueryKey(stored: $0.key), filledAt: $0.value) }
@@ -88,48 +95,63 @@ extension Database {
     }
   }
 
-  /// Delete `query_order` / `query_meta` / `query_sync_error` for every key of
-  /// `serverID` outside `reachableKeys`, in one transaction. Returns the number
-  /// of *keys* collected.
+  /// Delete `query_order` / `query_meta` / `query_sync_error` for every key in
+  /// `collectedKeys`, in one transaction. Returns the number of *keys* that
+  /// actually had rows.
   ///
   /// One transaction because the three tables hold one fact split three ways: a
   /// key whose membership is gone but whose recorded sync error survives would
   /// go on being rendered as a broken saved view on the Offline & Sync screen,
   /// with nothing left that could ever clear it.
   ///
-  /// The predicate is `NOT IN (reachable)` rather than `IN (collected)` — the
-  /// reachable set is bounded by policy, while the collected set is exactly the
-  /// unbounded thing this GC exists because of, and would eventually exceed
-  /// SQLite's bound-parameter limit.
+  /// The predicate is the explicit collected set rather than `NOT IN (reachable)`
+  /// precisely because the two are *not* equivalent for keys the caller never
+  /// saw. `NOT IN (reachable)` also matches every key created after the caller
+  /// took its snapshot, so a fill for a never-before-cached key could land its
+  /// page-one rows inside this delete's window and lose them — and then go on
+  /// appending page two at a nonzero position, leaving that list truncated in
+  /// the cache until something refilled it. Naming the keys makes the sweep
+  /// incapable of collecting a query it never observed; anything unreachable
+  /// that appeared since is simply collected by the next pass.
   ///
-  /// An empty `reachableKeys` means nothing is reachable and drops the server's
-  /// whole query cache. That is the honest reading; the caller never passes one
-  /// by accident, since the default list is always reachable.
+  /// The set is unbounded — it is the very thing this GC exists because of — so
+  /// it is deleted in chunks to stay under SQLite's bound-parameter limit. The
+  /// chunks share the one transaction; a partial prune is not a state any reader
+  /// should see.
   @discardableResult
-  public func pruneUnreachableQueries(
-    serverID: UUID, reachableKeys: Set<QueryKey>
+  public func pruneQueries(
+    serverID: UUID, collectedKeys: Set<QueryKey>
   ) async throws -> Int {
-    try await wrappingAsync("pruneUnreachableQueries") {
-      try await writer.write { db in
-        let reachable = Set(reachableKeys.map(\.rawValue))
-        let present = try String.fetchAll(
-          db,
-          sql: """
-            SELECT query_key FROM query_meta WHERE server_id = ?
-            UNION SELECT query_key FROM query_order WHERE server_id = ?
-            UNION SELECT query_key FROM query_sync_error WHERE server_id = ?
-            """,
-          arguments: [serverID, serverID, serverID])
-        let collected = present.filter { !reachable.contains($0) }
-        guard !collected.isEmpty else { return 0 }
-
+    try await wrappingAsync("pruneQueries") {
+      guard !collectedKeys.isEmpty else { return 0 }
+      return try await writer.write { db in
         let scope = Column("server_id") == serverID
-        let unreachable = !Array(reachable).contains(Column("query_key"))
-        try QueryOrderRow.filter(scope && unreachable).deleteAll(db)
-        try QueryMetaRow.filter(scope && unreachable).deleteAll(db)
-        try QuerySyncErrorRecord.filter(scope && unreachable).deleteAll(db)
-        return collected.count
+        let all = collectedKeys.map(\.rawValue)
+        var collected = 0
+        for start in stride(from: 0, to: all.count, by: Self.pruneKeyChunk) {
+          let chunk = Array(all[start..<min(start + Self.pruneKeyChunk, all.count)])
+          let inChunk = chunk.contains(Column("query_key"))
+          var present = try QueryMetaRow.filter(scope && inChunk)
+            .select(Column("query_key"), as: String.self).fetchSet(db)
+          try present.formUnion(
+            QueryOrderRow.filter(scope && inChunk)
+              .select(Column("query_key"), as: String.self).fetchSet(db))
+          try present.formUnion(
+            QuerySyncErrorRecord.filter(scope && inChunk)
+              .select(Column("query_key"), as: String.self).fetchSet(db))
+          collected += present.count
+
+          try QueryOrderRow.filter(scope && inChunk).deleteAll(db)
+          try QueryMetaRow.filter(scope && inChunk).deleteAll(db)
+          try QuerySyncErrorRecord.filter(scope && inChunk).deleteAll(db)
+        }
+        return collected
       }
     }
   }
+
+  /// Keys per `IN (...)`. SQLite's default `SQLITE_MAX_VARIABLE_NUMBER` is far
+  /// higher, but three statements share each chunk and the bound is not worth
+  /// depending on.
+  private static var pruneKeyChunk: Int { 500 }
 }

@@ -1357,21 +1357,35 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     for view in savedViews {
       reachable.insert(QueryKey(serverID: serverID, filter: FilterState(savedView: view)))
     }
-    reachable.formUnion(
-      QueryRetention.mostRecentlyFilled(cached, limit: QueryRetentionPolicy.recentAdHocCap))
     reachable.formUnion(activeFills.keys)
     reachable.formUnion(recentlyRequestedKeys)
+    // The LRU ranks *last*, over what is not already pinned. Ranking the whole
+    // cached set would let the default list and the saved views — reachable for
+    // their own reasons, whatever their fill stamps say — spend the slots the
+    // cap exists to reserve for ad-hoc filters: twenty recently filled saved
+    // views would otherwise leave ad-hoc retention at zero.
+    let adHocCandidates = cached.filter { !reachable.contains($0.key) }
+    reachable.formUnion(
+      QueryRetention.mostRecentlyFilled(
+        adHocCandidates, limit: QueryRetentionPolicy.recentAdHocCap))
 
-    let collected = cached.map(\.key).filter { !reachable.contains($0) }
+    let collected = Set(cached.map(\.key).filter { !reachable.contains($0) })
     guard !collected.isEmpty else { return }
 
     let database = database
     let serverID = serverID
-    let keeping = reachable
+    // Deleting *these* keys, not everything outside `reachable`: a fill for a
+    // key that was never cached — so absent from `collected`, so not owned in
+    // `activeFills` below and under no obligation to drain this sweep — can
+    // commit its page-one rows while the sweep is pending. A `NOT IN (reachable)`
+    // delete would take those fresh rows with it and leave the fill appending
+    // page two at a nonzero position, i.e. a permanently truncated cached list.
+    // Keys that went unreachable since the snapshot are collected next pass.
+    let collecting = collected
     // `Task<Void, any Error>` so it can sit in `activeFills` alongside the
     // fills; the count is `collected.count`, already known here.
     let sweep = Task {
-      try await database.pruneUnreachableQueries(serverID: serverID, reachableKeys: keeping)
+      try await database.pruneQueries(serverID: serverID, collectedKeys: collecting)
       return ()
     }
     // Own every key being collected for the duration of the delete, exactly as
