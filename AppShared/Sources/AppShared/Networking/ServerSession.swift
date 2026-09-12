@@ -175,7 +175,17 @@ public final class ServerSession {
 
   /// When the blob reclaim last ran. Advances on every attempt, like
   /// ``lastReconcileAttempt`` and for the same reason.
-  @ObservationIgnored private var lastContentReclaim: Date?
+  ///
+  /// `static`, unlike every other throttle here: the reclaim is the one pass on
+  /// this class that is not per-server. It walks a single app-group blob
+  /// directory against a reachable set `retainedContentVersions()` computes for
+  /// *every* server at once, so running it once per session would repeat the
+  /// whole traversal S times on a cold launch and find nothing on all but the
+  /// first. Safe as shared mutable state because `ServerSession` is
+  /// `@MainActor`; and since the stamp is taken before the `await` below, a
+  /// second session arriving in the same launch flurry sees it and skips rather
+  /// than racing into a duplicate sweep.
+  @ObservationIgnored private static var lastContentReclaim: Date?
 
   /// Much coarser than ``reconcileThrottle``: the reclaim is a directory walk
   /// over the whole blob store, and its input only changes when a version is
@@ -497,8 +507,8 @@ public final class ServerSession {
     // Deliberately not a `sweep`: reclamation is bookkeeping, not freshness, so
     // it neither advances the "something refreshed" count nor marks the pass
     // failed. Nothing the user sees depends on it having run.
-    if !result.cancelled, shouldReclaimContent() {
-      lastContentReclaim = Date()
+    if !result.cancelled, Self.shouldReclaimContent() {
+      Self.lastContentReclaim = Date()
       do {
         let report = try await backend.reclaimDocumentContent()
         if report.removedFiles > 0 {
@@ -519,9 +529,9 @@ public final class ServerSession {
     return result
   }
 
-  private func shouldReclaimContent() -> Bool {
+  private static func shouldReclaimContent() -> Bool {
     guard let last = lastContentReclaim else { return true }
-    return Date().timeIntervalSince(last) >= Self.contentReclaimThrottle
+    return Date().timeIntervalSince(last) >= contentReclaimThrottle
   }
 
   /// Proactive *Entire library* fill, gated by the server's own mode. Soft-fail
