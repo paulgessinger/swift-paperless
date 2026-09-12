@@ -60,9 +60,9 @@ properdocs==1.6.7
     # via
     #   mkdocs-literate-nav
     #   mkdocs-redirects
-pygments==2.20.0
+pygments==2.21.0
     # via zensical
-pymdown-extensions==11.0
+pymdown-extensions==11.0.1
     # via
     #   -r requirements.in
     #   zensical
