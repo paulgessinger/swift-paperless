@@ -274,6 +274,37 @@ struct ApiRepositoryDownloadTest {
     #expect(urls[0] == urls[1])
   }
 
+  // A caller that joins an in-flight download must be fed progress too — it
+  // used to see none at all and rendered a bar frozen at zero for the whole
+  // download.
+  @Test
+  func joinedCallerReceivesProgress() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let counter = Counter()
+    DownloadMockURLProtocol.responder = { req in
+      counter.bump()
+      // Long enough for the second caller to reach the dedupe gate before any
+      // bytes flow.
+      Thread.sleep(forTimeInterval: 0.05)
+      return (Self.okResponse(for: req), Data(repeating: 0xab, count: 1 << 20))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let firstProgress = Counter()
+    let secondProgress = Counter()
+    async let a = repo.download(
+      document: Self.makeDocument(), progress: { _ in firstProgress.bump() })
+    async let b = repo.download(
+      document: Self.makeDocument(), progress: { _ in secondProgress.bump() })
+    let urls = try await [a, b]
+
+    #expect(counter.value == 1)
+    #expect(urls[0] == urls[1])
+    #expect(firstProgress.value >= 1)
+    #expect(secondProgress.value >= 1)
+  }
+
   // Coalescing is keyed on the staleness stamp too. Two callers holding the
   // same version but different `modified` must not share a task — the winner
   // would otherwise write its own stamp into the sidecar for both, and a blob
