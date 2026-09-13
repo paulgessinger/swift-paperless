@@ -557,7 +557,8 @@ private struct IncompleteDocumentsBanner: View {
     // Rows scroll under the inset, so the tint alone would let them show through.
     .backport.glassEffect(
       .regular, in: RoundedRectangle(cornerRadius: 12, style: .continuous),
-      orFill: .regularMaterial)
+      orFill: .regularMaterial
+    )
     // Two separate targets: the details and Retry.
     .accessibilityElement(children: .contain)
     .padding(.horizontal)
@@ -625,24 +626,25 @@ private struct NoPermissionsViewDocument: View {
   NavigationStack {
     DocumentList(
       store: store, onSelect: { _ in }, filterModel: filterModel,
-      errorController: errorController)
-      .apply {
-        if #available(iOS 26.0, *) {
-          $0.scrollEdgeEffectHidden(true, for: .top)
-        } else {
-          $0
-        }
+      errorController: errorController
+    )
+    .apply {
+      if #available(iOS 26.0, *) {
+        $0.scrollEdgeEffectHidden(true, for: .top)
+      } else {
+        $0
       }
-      .safeAreaInset(edge: .top) {
-        if #available(iOS 26.0, *) {
-          FilterAssembly(filterModel: filterModel)
-        } else {
-          FilterAssemblyiOS18(filterModel: filterModel)
-        }
+    }
+    .safeAreaInset(edge: .top) {
+      if #available(iOS 26.0, *) {
+        FilterAssembly(filterModel: filterModel)
+      } else {
+        FilterAssemblyiOS18(filterModel: filterModel)
       }
-      .toolbarBackground(.hidden, for: .navigationBar)
-      .navigationTitle("Documents")
-      .navigationBarTitleDisplayMode(.inline)
+    }
+    .toolbarBackground(.hidden, for: .navigationBar)
+    .navigationTitle("Documents")
+    .navigationBarTitleDisplayMode(.inline)
   }
   .environment(store)
   .environmentObject(errorController)
