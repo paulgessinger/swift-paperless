@@ -59,7 +59,8 @@ public struct DocumentListState: Equatable, Sendable {
   ///   - isCacheComplete: A fill has paged the query to the end and nothing has
   ///     truncated it since.
   ///   - fillFailed: The list's most recent fill for this query failed, at page
-  ///     1 or while paging the rest.
+  ///     1 or while paging the rest — or another fill took the query over and
+  ///     ended without completing it (see ``DocumentListFillTracking``).
   public init(
     hasRows: Bool, isFetching: Bool, totalCount: UInt?, isCacheComplete: Bool, fillFailed: Bool
   ) {
@@ -85,5 +86,58 @@ public struct DocumentListState: Equatable, Sendable {
     } else {
       content = .empty
     }
+  }
+}
+
+/// What the list does when the fill it tracks for the query on screen ends.
+///
+/// The list can't simply ignore a cancelled fill. Only one fill writes a query
+/// at a time, so when another one starts on the same query (the proactive
+/// library sweep over the default list or a saved view, say) it cancels the
+/// list's. That newer fill now decides whether the cache ends up whole, and
+/// the list never gets its handle. Dropping the cancellation left the list
+/// with no outcome at all: partial rows without the incomplete notice, or
+/// placeholders forever over an empty prefix.
+public enum DocumentListFillTracking {
+  /// How the tracked fill's background paging ended.
+  public enum End: Equatable, Sendable {
+    /// Paged to the end of the query.
+    case finished
+    /// Stopped with an error.
+    case failed
+    /// Cancelled: by the list itself, or by a fill that took the query over.
+    case cancelled
+  }
+
+  public enum FollowUp: Equatable, Sendable {
+    /// Nothing to report.
+    case none
+    /// Record the error as the list's fill failure.
+    case recordFailure
+    /// Wait for whatever took the query over, then judge the cache.
+    case followReplacement
+  }
+
+  /// - Parameters:
+  ///   - end: How the fill ended.
+  ///   - isCurrent: The list still tracks this fill. `false` once the list
+  ///     itself moved on (a newer fill of its own, a query switch, a teardown),
+  ///     which is also every cancellation the list caused.
+  public static func followUp(after end: End, isCurrent: Bool) -> FollowUp {
+    guard isCurrent else { return .none }
+    switch end {
+    case .finished: return .none
+    case .failed: return .recordFailure
+    // The list didn't cancel it, so another fill did.
+    case .cancelled: return .followReplacement
+    }
+  }
+
+  /// Once nothing owns the query any more, whether the fill that replaced the
+  /// list's stopped short. Judged from the cache because the replacement's
+  /// error isn't the list's to see; a cache that isn't complete with nobody
+  /// filling it is a truncated answer however it came about.
+  public static func replacementStoppedShort(isCacheComplete: Bool) -> Bool {
+    !isCacheComplete
   }
 }

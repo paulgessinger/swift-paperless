@@ -63,15 +63,23 @@ class DocumentListViewModel {
   /// the fill fails.
   private var isCacheComplete = false
 
+  /// Another fill took the observed query over from the list's (see
+  /// ``DocumentListFillTracking``), and the list is waiting for it to finish.
+  private var isFollowingReplacement = false
+
+  /// A fill that took the query over has ended, and the cache it left isn't
+  /// complete. There is no error to show for it: it was another fill's.
+  private var replacementStoppedShort = false
+
   /// What the list shows: rows, placeholders, the empty state, or the
   /// load-failure state — and whether the rows are a known-truncated answer.
   var state: DocumentListState {
     DocumentListState(
       hasRows: !documents.isEmpty,
-      isFetching: isFetching || awaitingFill,
+      isFetching: isFetching || awaitingFill || isFollowingReplacement,
       totalCount: totalCount,
       isCacheComplete: isCacheComplete,
-      fillFailed: fillError != nil)
+      fillFailed: fillError != nil || replacementStoppedShort)
   }
 
   /// Which list the failure belongs to, for wording it.
@@ -273,6 +281,9 @@ class DocumentListViewModel {
     fill?.cancel()
     fillGeneration += 1
     let generation = fillGeneration
+    // This fill takes the key back from whatever the list was following.
+    isFollowingReplacement = false
+    replacementStoppedShort = false
     do {
       let handle = try await store.fillDocumentQuery(filter: filterState)
       // A newer fill (or a query switch) started while page 1 was in flight:
@@ -307,17 +318,55 @@ class DocumentListViewModel {
   private func watchCompletion(of handle: QueryFillHandle, generation: Int) {
     completionTask?.cancel()
     completionTask = Task { @MainActor [weak self] in
+      let end: DocumentListFillTracking.End
+      var failure: (any Error)?
       do {
         try await handle.awaitCompletion()
+        end = .finished
+      } catch let error where error.isCancellationError {
+        end = .cancelled
       } catch {
-        // Cancellation is the list moving on, or another fill (e.g. the
-        // library sweep) taking the key over — that fill owns the outcome.
-        guard !error.isCancellationError, let self, generation == fillGeneration else {
-          return
-        }
-        Logger.shared.error("Document fill stopped before the end of the query: \(error)")
-        fillError = error
+        end = .failed
+        failure = error
       }
+      guard let self else { return }
+      // Every cancellation the list causes itself bumps the generation first,
+      // so a cancellation that is still current came from another fill.
+      switch DocumentListFillTracking.followUp(
+        after: end, isCurrent: generation == fillGeneration)
+      {
+      case .none:
+        return
+      case .recordFailure:
+        if let failure {
+          Logger.shared.error("Document fill stopped before the end of the query: \(failure)")
+        }
+        fillError = failure
+      case .followReplacement:
+        await followReplacement(of: handle.queryKey, generation: generation)
+      }
+    }
+  }
+
+  /// Another fill (the library sweep, typically) took the query over and
+  /// cancelled the list's. Wait for the key's writers to finish, then judge the
+  /// outcome from the cache, since the replacement's error isn't visible here.
+  /// Meanwhile the list counts as fetching: something is filling its query.
+  private func followReplacement(of key: QueryKey, generation: Int) async {
+    Logger.shared.info("Document fill was taken over by another fill; following it")
+    isFollowingReplacement = true
+    await store.waitForQueryWriters(queryKey: key)
+    let status = try? await store.queryStatus(queryKey: key)
+    // The list moved on while waiting: a newer fill or query switch owns the
+    // state now, and has reset it.
+    guard generation == fillGeneration else { return }
+    isFollowingReplacement = false
+    // Read the status here rather than trust the observation, which lands a
+    // beat after the replacement's final write.
+    if let status { isCacheComplete = status.isComplete }
+    if DocumentListFillTracking.replacementStoppedShort(isCacheComplete: isCacheComplete) {
+      Logger.shared.error("The fill that took over the document list stopped short")
+      replacementStoppedShort = true
     }
   }
 
@@ -364,6 +413,8 @@ class DocumentListViewModel {
     completionTask?.cancel()
     completionTask = nil
     fillError = nil
+    isFollowingReplacement = false
+    replacementStoppedShort = false
     isCacheComplete = false
     awaitingFill = true
     startStatusObservation(key)
@@ -419,6 +470,8 @@ class DocumentListViewModel {
     queryKey = nil
     fillGeneration += 1
     fillError = nil
+    isFollowingReplacement = false
+    replacementStoppedShort = false
     isCacheComplete = false
     awaitingFill = false
   }
