@@ -414,7 +414,9 @@ public class ApiRepository {
       Logger.networking.error(
         "Caught error fetching \(sanitizedUrl, privacy: .public): \(sanitizedError, privacy: .public)"
       )
-      throw error
+      // Classified here, where it failed, so the path status is the one the
+      // request actually saw.
+      throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
     }
 
     let (data, response) = result
@@ -688,8 +690,13 @@ extension ApiRepository: Repository {
       @MainActor [contentStore] report in
       let request = try self.request(
         .download(documentId: document.id, original: original, version: queryVersion))
-      let (tempURL, response) = try await self.urlSession.getDownload(
-        for: request, progress: report)
+      let (tempURL, response): (URL, URLResponse)
+      do {
+        (tempURL, response) = try await self.urlSession.getDownload(
+          for: request, progress: report)
+      } catch {
+        throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
+      }
 
       try self.validateDownloadResponse(response, request: request)
 
@@ -704,8 +711,13 @@ extension ApiRepository: Repository {
   ) async throws -> URL {
     let request = try request(
       .download(documentId: documentID, original: original, version: version))
-    let (tempURL, response) = try await urlSession.getDownload(
-      for: request, progress: progress)
+    let (tempURL, response): (URL, URLResponse)
+    do {
+      (tempURL, response) = try await urlSession.getDownload(
+        for: request, progress: progress)
+    } catch {
+      throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
+    }
     try validateDownloadResponse(response, request: request)
 
     let dest = URL(

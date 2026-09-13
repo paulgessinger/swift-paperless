@@ -6,7 +6,7 @@
 //
 
 // Taken from NSURLError.h
-public enum NSURLError: Int {
+public enum NSURLError: Int, Sendable {
   public enum Category {
     case ssl
     case fileio

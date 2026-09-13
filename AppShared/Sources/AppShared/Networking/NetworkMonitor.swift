@@ -14,6 +14,7 @@
 import DataModel
 import Foundation
 import Network
+import Networking
 import os
 
 @MainActor
@@ -31,7 +32,9 @@ public final class NetworkMonitor {
   // When true, `isOnline` reports false regardless of the real interface
   // status. Toggled from the in-app debug menu to exercise the offline UI
   // without disrupting the device's actual network.
-  public var debugForceOffline: Bool = false
+  public var debugForceOffline: Bool = false {
+    didSet { NetworkPathProbe.setForcedOffline(debugForceOffline) }
+  }
 
   /// What the current path costs. One value, published as one value: the two
   /// facts are only meaningful together, and every consumer wants both.
@@ -43,6 +46,11 @@ public final class NetworkMonitor {
   public init() {
     monitor.pathUpdateHandler = { [weak self] path in
       let online = path.status == .satisfied
+      // Synchronously, before the hop: `Networking` classifies a failed request
+      // against the probe from whatever thread it failed on, and the observable
+      // properties below only catch up after a hop to the main actor — too
+      // late for a request failing right after the path changes.
+      NetworkPathProbe.update(interfaceSatisfied: online)
       let cost = LinkCost(isExpensive: path.isExpensive, isConstrained: path.isConstrained)
       Task { @MainActor [weak self] in
         guard let self else { return }

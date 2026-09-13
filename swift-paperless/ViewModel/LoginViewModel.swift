@@ -337,7 +337,7 @@ class LoginViewModel {
       Logger.shared.error("Unable to connect to API: local network access denied")
       loginState = .error(.request(.localNetworkDenied))
     } catch let nsError as NSError where nsError.domain == NSURLErrorDomain {
-      if let error = RequestError(from: nsError) {
+      if let error = RequestError(from: nsError, path: NetworkPathProbe.sample()) {
         Logger.shared.error(
           "Checking API converted NSError \(nsError) to known error: \(String(describing: error))")
         loginState = .error(.request(error))
@@ -702,6 +702,12 @@ class LoginViewModel {
       return nil
     } catch RequestError.unauthorized {
       credentialState = .error(.invalidToken)
+      return nil
+    } catch let error as RequestError where error.isConnectivity {
+      // Keep the offline / server-unreachable distinction instead of flattening
+      // it into a generic login failure.
+      Logger.shared.error("Connectivity failure during login: \(String(describing: error))")
+      credentialState = .error(.request(error))
       return nil
     } catch {
       Logger.shared.error("Error during login with url \(error)")

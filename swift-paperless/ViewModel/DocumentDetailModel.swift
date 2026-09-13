@@ -54,12 +54,14 @@ enum DocumentDownloadState: Equatable {
 /// permission error on a single endpoint, say) stay distinct and each still
 /// show.
 ///
-/// Transport failures arrive here raw: `ApiRepository.fetchData` rethrows what
-/// `URLSession` threw, and a bridged `URLError` carries the failing URL and a
-/// per-request task id in its `NSError.userInfo`, so no two are ever equal by
-/// value — not even two failures against the same endpoint. Those are compared
-/// by code. Everything else (`RequestError` and other `Equatable` errors) is
-/// compared by value, which is what keeps distinct failures distinct.
+/// Connectivity failures arrive as `RequestError.connectivity`, which is equal
+/// across endpoints for one outage and so compares by value like any other
+/// `RequestError`. The transport failures `ApiRepository` still passes through
+/// raw (SSL, redirects, ...) are bridged `URLError`s, whose `NSError.userInfo`
+/// carries the failing URL and a per-request task id, so no two are ever equal
+/// by value — not even two failures against the same endpoint. Those are
+/// compared by code. Everything else (other `Equatable` errors) is compared by
+/// value, which is what keeps distinct failures distinct.
 @MainActor
 private final class LoadErrorCollector {
   private(set) var distinct: [any Error] = []
