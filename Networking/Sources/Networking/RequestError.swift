@@ -34,6 +34,22 @@ public enum RequestError: Error, Equatable {
 
   case certificate(detail: String)
 
+  // A connectivity-class transport failure: the request never produced a
+  // response because the device is offline or the server couldn't be reached.
+  //
+  // `code` is kept rather than flattened into a message, because what it can
+  // mean for the *write* that failed differs (see `ErrorSuppression`). `kind`
+  // is the device-offline vs. server-unreachable verdict, decided when the
+  // request failed (see `TransportFailureKind`) and frozen into the value, so
+  // an error shown later isn't reclassified against a network that has since
+  // come back.
+  //
+  // `detail` is the system's localized message, which is the same for every
+  // request that fails the same way. That keeps two failures of one outage
+  // `==`, whereas the underlying `URLError`s never are: their userInfo carries
+  // the failing URL and a per-request task id.
+  case connectivity(code: NSURLError, kind: TransportFailureKind, detail: String)
+
   // Can split this up into additional cases for customized error messages
   case other(_: String)
 
@@ -113,7 +129,23 @@ private func string(for error: any Error) -> String {
 }
 
 extension RequestError {
-  public init?(from error: NSError) {
+  /// Map a `URLSession` failure onto the request-error vocabulary, or `nil` if
+  /// it isn't one we reinterpret.
+  ///
+  /// - SSL codes become ``certificate(detail:)``.
+  /// - Connectivity-class codes become ``connectivity(code:kind:detail:)``,
+  ///   classified against `path`. The default samples ``NetworkPathProbe``
+  ///   right here, so call this where the request failed, not later.
+  /// - `badURL`/`unsupportedURL` (the address itself is unusable) and
+  ///   `httpTooManyRedirects`/`redirectToNonExistentLocation`/
+  ///   `badServerResponse`/`resourceUnavailable` (something *did* answer, just
+  ///   not usefully) stay ``other(_:)`` with the system message: neither says
+  ///   anything about reachability, so the path status doesn't apply.
+  /// - Everything else, including cancellation and the file-I/O codes a
+  ///   download can hit, is `nil`.
+  public init?(
+    from error: NSError, path: @autoclosure () -> NetworkPathStatus = NetworkPathProbe.sample()
+  ) {
     guard error.domain == NSURLErrorDomain else {
       return nil
     }
@@ -127,14 +159,50 @@ extension RequestError {
       return
     }
 
+    if let kind = TransportFailureKind(code: code, path: path()) {
+      self = .connectivity(code: code, kind: kind, detail: string(for: error))
+      return
+    }
+
     switch code {
-    case .badURL, .unsupportedURL, .cannotFindHost, .cannotConnectToHost, .networkConnectionLost,
-      .dnsLookupFailed, .httpTooManyRedirects, .resourceUnavailable, .notConnectedToInternet,
+    case .badURL, .unsupportedURL, .httpTooManyRedirects, .resourceUnavailable,
       .redirectToNonExistentLocation, .badServerResponse:
       self = .other(string(for: error))
     default:
       return nil
     }
+  }
+
+  /// Normalize an error thrown by a `URLSession` transport call made by a
+  /// repository: a connectivity-class failure becomes
+  /// ``connectivity(code:kind:detail:)``, classified against the path status
+  /// sampled *now*. Anything else — cancellation, SSL, the other URL codes, and
+  /// errors from other domains — passes through untouched, as it did before.
+  public static func normalizingTransportFailure(
+    _ error: any Error, path: @autoclosure () -> NetworkPathStatus = NetworkPathProbe.sample()
+  ) -> any Error {
+    let nsError = error as NSError
+    guard nsError.domain == NSURLErrorDomain,
+      let code = NSURLError(rawValue: nsError.code),
+      let kind = TransportFailureKind(code: code, path: path())
+    else {
+      return error
+    }
+    return RequestError.connectivity(code: code, kind: kind, detail: string(for: error))
+  }
+}
+
+// `localizedDescription` for a connectivity failure is the system message it
+// replaced ("Could not connect to the server."). Code that only knows
+// `localizedDescription` — the Offline & Sync failure list, the "not saved"
+// toast's details — therefore reads the same as it did when the raw `URLError`
+// reached it. Every other case keeps the default bridging.
+extension RequestError: CustomNSError {
+  public var errorUserInfo: [String: Any] {
+    if case .connectivity(_, _, let detail) = self {
+      return [NSLocalizedDescriptionKey: detail]
+    }
+    return [:]
   }
 }
 
