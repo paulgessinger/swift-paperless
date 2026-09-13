@@ -480,4 +480,61 @@ struct DocumentCacheTests {
     }
     #expect(counts == (0, 0, 0))
   }
+
+  // MARK: - Blob reachability (ContentStore reclaim)
+
+  private func versioned(_ id: UInt, versions: [UInt]) -> Document {
+    Document(
+      id: id, title: "v", created: date(1000), tags: [], owner: .user(1),
+      versions: versions.map {
+        DocumentVersion(id: $0, added: date(1000), isRoot: $0 == versions.first)
+      })
+  }
+
+  @Test("retainedContentVersions reports only the current version of each document")
+  func retainedVersionsAreCurrentOnly() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments(
+      [
+        versioned(1, versions: [1, 9]),  // 1 is superseded by 9
+        doc(2, "no versions"),  // falls back to the document id
+      ], serverID: server)
+
+    let retained = try await database.retainedContentVersions()
+
+    #expect(retained == [server: [9, 2]])
+  }
+
+  @Test("retainedContentVersions spans every server in one answer")
+  func retainedVersionsSpanServers() async throws {
+    let serverA = UUID()
+    let serverB = UUID()
+    let database = try database(serverA)
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: serverB,
+        url: URL(string: "https://other.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "b")))
+    try await database.upsertDocuments([doc(1, "A")], serverID: serverA)
+    try await database.upsertDocuments([doc(1, "B")], serverID: serverB)
+
+    let retained = try await database.retainedContentVersions()
+
+    // Same document id on both servers: the blob store is shared, so the answer
+    // has to stay keyed by server.
+    #expect(retained == [serverA: [1], serverB: [1]])
+  }
+
+  @Test("a deleted document stops retaining its content")
+  func deletedDocumentReleasesContent() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments(
+      [versioned(1, versions: [1, 9]), doc(2, "B")], serverID: server)
+
+    try await database.deleteDocuments(serverID: server, removedIDs: [1])
+
+    #expect(try await database.retainedContentVersions() == [server: [2]])
+  }
 }

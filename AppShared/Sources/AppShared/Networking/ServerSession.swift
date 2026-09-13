@@ -173,6 +173,28 @@ public final class ServerSession {
   /// (much longer) throttle before asking.
   private static let reconcileThrottle: TimeInterval = 300
 
+  /// When the blob reclaim last ran. Advances on every attempt, like
+  /// ``lastReconcileAttempt`` and for the same reason.
+  ///
+  /// `static`, unlike every other throttle here: the reclaim is the one pass on
+  /// this class that is not per-server. It walks a single app-group blob
+  /// directory against a reachable set `retainedContentVersions()` computes for
+  /// *every* server at once, so running it once per session would repeat the
+  /// whole traversal S times on a cold launch and find nothing on all but the
+  /// first. Safe as shared mutable state because `ServerSession` is
+  /// `@MainActor`; and since the stamp is taken before the `await` below, a
+  /// second session arriving in the same launch flurry sees it and skips rather
+  /// than racing into a duplicate sweep.
+  @ObservationIgnored private static var lastContentReclaim: Date?
+
+  /// Much coarser than ``reconcileThrottle``: the reclaim is a directory walk
+  /// over the whole blob store, and its input only changes when a version is
+  /// superseded or a document disappears — neither of which is worth re-checking
+  /// every five minutes on every foreground. In-memory, so a cold launch sweeps
+  /// once; that is the cheap case (one `readdir` per server unless something is
+  /// actually unreferenced) and it bounds how long a leak can survive relaunches.
+  private static let contentReclaimThrottle: TimeInterval = 3600
+
   /// Every sync stage running right now *for this server*, in a fixed order;
   /// empty when idle. The Offline & Sync screen renders the active server's,
   /// through its store.
@@ -478,12 +500,38 @@ public final class ServerSession {
       await sweep("reachability") { try await backend.collectUnreachableQueries() }
     }
 
+    // Blob reclaim last, and outside the transfer category: it touches no
+    // network. After the delete sweep on purpose — a document pruned above
+    // loses its downloaded file in the same pass rather than a pass later.
+    //
+    // Deliberately not a `sweep`: reclamation is bookkeeping, not freshness, so
+    // it neither advances the "something refreshed" count nor marks the pass
+    // failed. Nothing the user sees depends on it having run.
+    if !result.cancelled, Self.shouldReclaimContent() {
+      Self.lastContentReclaim = Date()
+      do {
+        let report = try await backend.reclaimDocumentContent()
+        if report.removedFiles > 0 {
+          Logger.sync.info(
+            "Reclaimed \(report.removedFiles, privacy: .public) unreferenced document files (\(report.reclaimedBytes, privacy: .public) bytes)"
+          )
+        }
+      } catch {
+        Logger.sync.info("Document content reclaim failed (suppressed): \(error)")
+      }
+    }
+
     // A pass in which *something* refreshed counts. A cancelled pass stamps
     // nothing — it didn't finish, it was called off.
     if result.succeeded > 0, !result.cancelled {
       lastReconcileSuccess = Date()
     }
     return result
+  }
+
+  private static func shouldReclaimContent() -> Bool {
+    guard let last = lastContentReclaim else { return true }
+    return Date().timeIntervalSince(last) >= contentReclaimThrottle
   }
 
   /// Proactive *Entire library* fill, gated by the server's own mode. Soft-fail
