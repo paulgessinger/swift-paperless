@@ -265,12 +265,13 @@ public struct OfflineSyncView: View {
       } header: {
         Text(.settings(.offlineSyncApiDataHeader))
       } footer: {
-        // The meter has one feeder (the API response chokepoint), so thumbnails
-        // and streamed downloads are missing from these numbers by design. Say
-        // so here rather than letting "Total" read as everything the app moved.
+        // The meter is fed by the API response chokepoint and the image
+        // pipeline's session; streamed document downloads reach neither, so
+        // they are missing from these numbers by design. Say so here rather
+        // than letting "Total" read as everything the app moved.
         VStack(alignment: .leading, spacing: 4) {
           Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
-          Text(.settings(.offlineSyncDataScope))
+          Text(.settings(.offlineSyncDataScopeThumbnails))
         }
       }
     }

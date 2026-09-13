@@ -7,10 +7,9 @@
 //  `install()`); surfaced read-only in the Offline & Sync settings screen so the
 //  Wi‑Fi gating can be tuned with evidence rather than guesswork.
 //
-//  Counts *wire* bytes for API requests — headers and body, both directions,
-//  as reported by the task metrics. File downloads and thumbnails take other
-//  paths and are deliberately excluded: they are explicit, user-driven
-//  transfers rather than background fills.
+//  Counts *wire* bytes — headers and body, both directions, as reported by the
+//  task metrics — for API requests and for thumbnails loaded by the image
+//  pipeline. Streamed document downloads take another path and are not counted.
 //
 
 import Common

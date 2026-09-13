@@ -3250,7 +3250,7 @@
       }
     },
     "offlineSyncApiDataHeader" : {
-      "comment" : "Section header for how much network data the app has used. Covers API requests only, not thumbnails or downloaded files",
+      "comment" : "Section header for how much network data the app has used. Covers API requests and thumbnails, not downloaded document files",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3423,14 +3423,14 @@
         }
       }
     },
-    "offlineSyncDataScope" : {
+    "offlineSyncDataScopeThumbnails" : {
       "comment" : "Footer under the data-transferred figures, stating what the meter does and does not count",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Counts API data only — document lists, details, notes and element sync. Thumbnails and downloaded files are not included."
+            "value" : "Counts document lists, details, notes, element sync and thumbnails. Downloaded document files are not included."
           }
         }
       }
@@ -6025,6 +6025,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öğe eşitlemesi"
+          }
+        }
+      }
+    },
+    "transferCategoryThumbnails" : {
+      "comment" : "Data-transfer category: document thumbnail images loaded for lists and previews",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thumbnails"
           }
         }
       }
