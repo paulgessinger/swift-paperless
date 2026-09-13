@@ -356,7 +356,7 @@ struct DocumentList: View {
               if state.isIncomplete {
                 IncompleteDocumentsBanner(
                   title: failureTitle(incomplete: true),
-                  message: viewModel.fillErrorDescription,
+                  error: viewModel.fillFailure,
                   retry: retry
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
@@ -497,12 +497,18 @@ private struct DocumentsUnavailableView: View {
 
 /// Above rows from a truncated cache whose fill failed: the documents shown are
 /// not the whole answer.
+///
+/// Pinned over the list, so it keeps one height whatever the error says: only
+/// the error's headline shows, and tapping it opens the full text in the same
+/// alert an error toast's details open.
 private struct IncompleteDocumentsBanner: View {
   var title: String
-  var message: String?
+  var error: (any DisplayableError)?
   var retry: () -> Void
 
-  var body: some View {
+  @State private var detail: (any DisplayableError)?
+
+  private var summary: some View {
     HStack(spacing: 12) {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundStyle(.orange)
@@ -510,14 +516,36 @@ private struct IncompleteDocumentsBanner: View {
         Text(title)
           .font(.subheadline)
           .fontWeight(.semibold)
-        if let message {
-          Text(message)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
+        if let error {
+          HStack(spacing: 4) {
+            Text(error.message)
+              .lineLimit(1)
+            if error.details != nil {
+              Image(systemName: "info.circle")
+            }
+          }
+          .font(.caption)
+          .foregroundStyle(.secondary)
         }
       }
       Spacer(minLength: 0)
+    }
+    .contentShape(Rectangle())
+  }
+
+  var body: some View {
+    HStack(spacing: 12) {
+      if let error, error.details != nil {
+        Button {
+          detail = error
+        } label: {
+          summary
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text(.app(.errorAlertTapForDetails)))
+      } else {
+        summary
+      }
       Button(String(localized: .app(.documentListRetry)), action: retry)
         .buttonStyle(.bordered)
         .controlSize(.small)
@@ -530,9 +558,19 @@ private struct IncompleteDocumentsBanner: View {
     .backport.glassEffect(
       .regular, in: RoundedRectangle(cornerRadius: 12, style: .continuous),
       orFill: .regularMaterial)
-    .accessibilityElement(children: .combine)
+    // Two separate targets: the details and Retry.
+    .accessibilityElement(children: .contain)
     .padding(.horizontal)
     .padding(.vertical, 6)
+    .alert(
+      unwrapping: $detail,
+      title: { Text($0.message) },
+      actions: { ErrorAlertActions(for: $0) },
+      message: { detail in
+        if let details = detail.details {
+          Text(details)
+        }
+      })
   }
 }
 

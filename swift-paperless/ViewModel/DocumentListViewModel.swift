@@ -94,6 +94,12 @@ class DocumentListViewModel {
     fillError.map { errorController.describe($0) }
   }
 
+  /// The failed fill's error with its headline and full text kept apart, for
+  /// surfaces too small for the whole description.
+  var fillFailure: (any DisplayableError)? {
+    fillError.map { errorController.displayableError(for: $0) }
+  }
+
   // Growing-prefix state.
   @ObservationIgnored private var queryKey: QueryKey?
   @ObservationIgnored private var prefixLimit: Int
