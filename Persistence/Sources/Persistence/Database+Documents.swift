@@ -461,6 +461,38 @@ extension Database {
       .fetchOne(db)?.filledAt
   }
 
+  /// Record that a list was put on screen at `date`.
+  ///
+  /// Creates the `query_meta` row if there isn't one yet: a list opened before
+  /// its first page lands (offline, or with page 1 still in flight) was viewed
+  /// all the same, and the fill that follows must not make it read as unseen.
+  ///
+  /// Written through ``QueryViewedRow`` rather than `QueryMetaRow`: each record's
+  /// `upsert` sets only its own columns, so page writes and this stamp can't
+  /// overwrite each other.
+  public func markQueryViewed(
+    queryKey: QueryKey, serverID: UUID, at date: Date = Date()
+  ) async throws {
+    try await wrappingAsync("markQueryViewed") {
+      try await writer.write { db in
+        try QueryViewedRow(serverId: serverID, queryKey: queryKey.rawValue, viewedAt: date)
+          .upsert(db)
+      }
+    }
+  }
+
+  /// When this list was last put on screen, or `nil` if it never was (or its row
+  /// predates the column).
+  public func queryViewedAt(queryKey: QueryKey, serverID: UUID) async throws -> Date? {
+    try await wrappingAsync("queryViewedAt") {
+      try await writer.read { db in
+        try QueryViewedRow
+          .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+          .fetchOne(db)?.viewedAt
+      }
+    }
+  }
+
   /// Server total, locally-present count (reflects deletion gaps), and
   /// order-stale flag for a cached query.
   public func queryStatus(queryKey: QueryKey, serverID: UUID) async throws -> QueryStatus {

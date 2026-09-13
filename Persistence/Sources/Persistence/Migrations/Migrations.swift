@@ -87,6 +87,10 @@ enum Migrations {
       try V9_PromoteDocumentQueryColumns.run(db)
     }
 
+    migrator.registerMigration("v10_add_query_viewed_at") { db in
+      try V10_AddQueryViewedAt.run(db)
+    }
+
     return migrator
   }
 }
