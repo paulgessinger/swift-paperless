@@ -17,15 +17,30 @@ public actor PreviewDocumentSource: PagedSource {
 
   public var sequence: DocumentSequence
 
-  public init(sequence: DocumentSequence) {
+  /// Serve this many documents as the first page, then fail the next fetch as a
+  /// dropped connection. `nil` serves everything in one page.
+  private let failAfter: Int?
+  private var servedFirstPage = false
+
+  public init(sequence: DocumentSequence, failAfter: Int? = nil) {
     self.sequence = sequence
+    self.failAfter = failAfter
   }
 
-  public func fetch(limit: UInt) async -> [Document] {
-    Array(sequence.prefix(Int(limit)))
+  public func fetch(limit: UInt) async throws -> [Document] {
+    guard let failAfter else {
+      return Array(sequence.prefix(Int(limit)))
+    }
+    guard !servedFirstPage else {
+      throw RequestError.connectivity(
+        code: .networkConnectionLost, kind: .connectionLost,
+        detail: "The network connection was lost.")
+    }
+    servedFirstPage = true
+    return Array(sequence.prefix(min(Int(limit), failAfter)))
   }
 
-  public var isExhausted: Bool { true }
+  public var isExhausted: Bool { failAfter == nil }
   public var totalCount: UInt? { UInt(sequence.count) }
 }
 
@@ -58,9 +73,14 @@ public class PreviewRepository: Repository {
   private var notesByDocument: [UInt: [Document.Note]]
 
   private let downloadDelay: Double
+  private let failDocumentsAfter: Int?
 
-  public init(downloadDelay: Double = 0.0) {
+  /// - Parameter failDocumentsAfter: Page documents out this many at a time and
+  ///   fail every document source's second page, so a query fill stops short
+  ///   with a truncated cache. `nil` serves every document in one page.
+  public init(downloadDelay: Double = 0.0, failDocumentsAfter: Int? = nil) {
     self.downloadDelay = downloadDelay
+    self.failDocumentsAfter = failDocumentsAfter
 
     let users = [
       User(id: 1, isSuperUser: true, username: "superperson"),
@@ -382,7 +402,9 @@ public class PreviewRepository: Repository {
   }
 
   public func documents(filter _: FilterState) -> PreviewDocumentSource {
-    PreviewDocumentSource(sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }))
+    PreviewDocumentSource(
+      sequence: documents.map(\.value).sorted(by: { a, b in a.id < b.id }),
+      failAfter: failDocumentsAfter)
   }
 
   // In-memory fixture: paging the full list is the cheap path here.

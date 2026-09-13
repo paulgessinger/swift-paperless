@@ -10,6 +10,7 @@ import DataModel
 import Foundation
 import Networking
 import Nuke
+import Persistence
 import SwiftUI
 import os
 
@@ -48,7 +49,8 @@ struct LoadingDocumentList: View {
     }
     .listStyle(.plain)
     .task {
-      documents = await PreviewRepository().documents(filter: .default).fetch(limit: 10)
+      documents =
+        (try? await PreviewRepository().documents(filter: .default).fetch(limit: 10)) ?? []
     }
   }
 }
@@ -562,4 +564,43 @@ private struct NoPermissionsViewDocument: View {
 
 #Preview("NoDocumentsView") {
   NoDocumentsView(filtering: true)
+}
+
+#Preview("Incomplete list") {
+  // The real list over a fill that loses the connection after its first page:
+  // a truncated cache plus a failed fill, which is what shows the banner.
+  @Previewable @State var store = DocumentStore.preview(PreviewRepository(failDocumentsAfter: 8))
+  @Previewable @StateObject var errorController = ErrorController()
+  @Previewable @State var filterModel = FilterModel()
+  @Previewable @State var connectionManager = ConnectionManager(
+    database: try! Database.inMemory())
+
+  // Hosted like `DocumentView.compactBody`, so the banner sits under the filter bar.
+  NavigationStack {
+    DocumentList(
+      store: store, onSelect: { _ in }, filterModel: filterModel,
+      errorController: errorController)
+      .apply {
+        if #available(iOS 26.0, *) {
+          $0.scrollEdgeEffectHidden(true, for: .top)
+        } else {
+          $0
+        }
+      }
+      .safeAreaInset(edge: .top) {
+        if #available(iOS 26.0, *) {
+          FilterAssembly(filterModel: filterModel)
+        } else {
+          FilterAssemblyiOS18(filterModel: filterModel)
+        }
+      }
+      .toolbarBackground(.hidden, for: .navigationBar)
+      .navigationTitle("Documents")
+      .navigationBarTitleDisplayMode(.inline)
+  }
+  .environment(store)
+  .environmentObject(errorController)
+  .environment(connectionManager)
+  .environment(filterModel)
+  .environment(RouteManager())
 }
