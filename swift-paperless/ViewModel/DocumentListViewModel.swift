@@ -198,6 +198,22 @@ class DocumentListViewModel {
     totalCount = handle.totalCount
   }
 
+  // MARK: - Viewed stamp
+
+  /// The list is on screen again, e.g. returned to from a pushed document. Its
+  /// first appearance has no key yet; `subscribe` stamps that one.
+  ///
+  /// Not re-sent on foregrounding, which fires no appear. It doesn't need to be:
+  /// the *Recently browsed* cap only runs before any list is open.
+  func noteAppeared() {
+    guard let queryKey else { return }
+    markViewed(queryKey)
+  }
+
+  private func markViewed(_ key: QueryKey) {
+    Task { [store] in await store.markDocumentQueryViewed(key) }
+  }
+
   // MARK: - Growing-prefix windowing (no network)
 
   func fetchMoreIfNeeded(currentIndex: Int) {
@@ -213,6 +229,8 @@ class DocumentListViewModel {
 
   private func subscribe(to key: QueryKey, resettingWindow: Bool) {
     queryKey = key
+    // A list newly on screen: the first load, a filter change, a view switch.
+    markViewed(key)
     if resettingWindow {
       prefixLimit = initialLimit
       prefetchedIds = []

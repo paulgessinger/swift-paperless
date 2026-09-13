@@ -23,7 +23,13 @@ public final class FilterModel {
   /// release. On an `@Observable` only the search bar's spinner invalidates.
   public var isFetching: Bool = false
 
-  public var filterState: FilterState = {
+  /// The filter the document list opens with: the last one in effect, or the
+  /// default when there is none.
+  ///
+  /// Also read by the *Recently browsed* cap, which runs just before the list
+  /// opens and leaves this filter's list whole rather than cutting what the
+  /// list's fill is about to download again.
+  public nonisolated static func restoredFilterState() -> FilterState {
     Logger.shared.trace("Loading FilterState")
     guard
       let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.object(
@@ -44,7 +50,9 @@ public final class FilterModel {
       )
       return .default
     }
-  }()
+  }
+
+  public var filterState: FilterState = FilterModel.restoredFilterState()
   {
     didSet {
       Logger.shared.trace("FilterState modified")

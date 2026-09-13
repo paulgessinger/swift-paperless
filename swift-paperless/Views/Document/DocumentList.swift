@@ -353,6 +353,10 @@ struct DocumentList: View {
       await viewModel.load()
     }
 
+    .onAppear {
+      viewModel.noteAppeared()
+    }
+
     .onEvent(from: store.events, perform: onReceiveEvent)
 
     // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string

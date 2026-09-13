@@ -42,6 +42,28 @@ struct QueryMetaRow: FetchableRecord, PersistableRecord, TableRecord, Codable, S
   }
 }
 
+/// When a list was last put on screen (`query_meta.viewed_at`), as a record of
+/// its own over the same table.
+///
+/// Kept off ``QueryMetaRow`` on purpose. A record's `upsert` sets only the
+/// columns it encodes, so every page write leaves this stamp alone, and stamping
+/// leaves the fill bookkeeping alone. Nothing has to carry either forward.
+struct QueryViewedRow: FetchableRecord, PersistableRecord, TableRecord, Codable, Sendable,
+  Equatable
+{
+  static let databaseTableName = "query_meta"
+
+  var serverId: UUID
+  var queryKey: String
+  var viewedAt: Date?
+
+  enum CodingKeys: String, CodingKey {
+    case serverId = "server_id"
+    case queryKey = "query_key"
+    case viewedAt = "viewed_at"
+  }
+}
+
 /// Public status of a cached query, surfaced to the list view-model: the
 /// server's `totalCount` (what the count pill shows — the list renders only the
 /// locally-loaded prefix, so this is not a scroll extent), how many rows are

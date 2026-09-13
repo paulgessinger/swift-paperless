@@ -65,6 +65,17 @@ enum QueryRetentionPolicy {
   /// `pruneUnreferencedDocuments` — pins every document it lists, so this is
   /// really a cap on how much of the library an abandoned filter can keep alive.
   static let recentAdHocCap = 20
+
+  /// How long a viewed list stays exempt from the *Recently browsed* cap
+  /// (`OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows per list).
+  ///
+  /// Recency rather than position decides *which* lists get cut back: a list the
+  /// user just browsed stays whole, so the older documents they scrolled down to
+  /// are still there offline, and storage settles back to the cap once they've
+  /// moved on. A day rather than a session: "browsed this morning, offline on the
+  /// train tonight" is the case the mode is named for, and it matches the *Entire
+  /// library* coverage backstop (``LibraryCoverage/maxAge``).
+  static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
 /// The cache control surface the store reaches for, kept off the `Repository`
@@ -1355,6 +1366,48 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return try await activeFills.withOwnership(of: [key]) {
       try await database.replaceQueryOrder(
         queryKey: key, serverID: serverID, orderedIDs: orderedIDs)
+    }
+  }
+
+  /// Apply the *Recently browsed* storage cap: cut every list not viewed within
+  /// ``QueryRetentionPolicy/recentlyBrowsedGrace`` back to its first
+  /// `OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows, and drop the
+  /// documents that frees.
+  ///
+  /// Only correct while none of this server's lists can be on screen or filling
+  /// (see `Database.capRecentlyBrowsedQueries`), so ``ServerSession`` runs it as
+  /// part of its first repository build, which every list waits for.
+  ///
+  /// The list the app opens with is exempt: the default list, and the filter the
+  /// document list restores from last time, which is what actually opens when
+  /// one was left applied. That list opens as soon as the store has a
+  /// repository, and every open refills it in full, so cutting it here would
+  /// only cost a download online and lose rows offline.
+  ///
+  /// Soft-fail: a missed pass leaves the cache as it was until the next launch.
+  func applyRecentlyBrowsedCap() async {
+    // The accessor re-checks the mode; this only skips a pointless write.
+    guard offlineBrowsingMode == .recentlyBrowsed else { return }
+    let cutoff = Date().addingTimeInterval(-QueryRetentionPolicy.recentlyBrowsedGrace)
+    let opening: Set<QueryKey> = [
+      QueryKey(serverID: serverID, filter: .default),
+      QueryKey(serverID: serverID, filter: FilterModel.restoredFilterState()),
+    ]
+    do {
+      let result = try await database.capRecentlyBrowsedQueries(
+        serverID: serverID,
+        keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap,
+        notViewedSince: cutoff,
+        exempting: opening)
+      if result.truncatedRows > 0 {
+        Logger.sync.info(
+          "Recently browsed cap: trimmed \(result.truncatedRows, privacy: .public) row(s), reclaimed \(result.removedDocuments, privacy: .public) document(s) for server \(self.serverLogLabel, privacy: .public)"
+        )
+      }
+    } catch {
+      Logger.sync.error(
+        "Recently browsed cap failed for server \(self.serverLogLabel, privacy: .public): \(error)"
+      )
     }
   }
 

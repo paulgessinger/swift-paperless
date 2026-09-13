@@ -70,6 +70,24 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v10 adds a nullable viewed_at to query_meta")
+  func v10AddsQueryViewedAt() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      let columns = try db.columns(in: "query_meta")
+      #expect(
+        Set(columns.map(\.name)) == [
+          "server_id", "query_key", "total_count", "order_stale", "filled_at", "viewed_at",
+        ])
+
+      // Added to an existing table with no backfill, so rows that predate it
+      // must be allowed to carry nothing.
+      let viewedAt = try #require(columns.first(where: { $0.name == "viewed_at" }))
+      #expect(!viewedAt.isNotNull)
+      #expect(viewedAt.type.uppercased() == "TEXT")
+    }
+  }
+
   @Test("migrator tracks applied identifiers internally")
   func migratorTracksAppliedIdentifiers() throws {
     let database = try Database.inMemory()

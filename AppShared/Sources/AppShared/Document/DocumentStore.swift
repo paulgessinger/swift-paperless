@@ -810,6 +810,18 @@ extension DocumentStore {
     return backend.database.observeQueryStatus(queryKey: queryKey, serverID: backend.serverID)
   }
 
+  /// Record that the list for `queryKey` is on screen, so the *Recently browsed*
+  /// cap keeps it whole for a while. Soft-fail: a missed stamp costs at most a
+  /// refill of that list after a later cold start.
+  public func markDocumentQueryViewed(_ queryKey: QueryKey) async {
+    guard let backend = session?.backend else { return }
+    do {
+      try await backend.database.markQueryViewed(queryKey: queryKey, serverID: backend.serverID)
+    } catch {
+      Logger.shared.error("Could not record document list as viewed: \(error)")
+    }
+  }
+
   /// Throttled remote-delete reconcile on the active server, run by its session:
   /// drop cached documents that no longer exist on the server (so they disappear
   /// from every offline list), fold in the changed-metadata delta, rebuild
