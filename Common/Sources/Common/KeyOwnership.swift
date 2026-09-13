@@ -27,6 +27,11 @@ import Foundation
 /// key only if that owner still holds it afterwards. What a caller does between
 /// `drain` returning and its own `claim` is its business — keep it synchronous,
 /// or someone else can claim in the gap.
+///
+/// ``withOwnership(of:perform:)`` claims before its first `await`, and a
+/// main-actor caller enters it without suspending, so a snapshot of
+/// ``ownedKeys`` the caller took just before the call is still current at the
+/// claim.
 @MainActor
 public final class KeyOwnership<Key: Hashable & Sendable> {
   public typealias Owner = Task<Void, any Error>

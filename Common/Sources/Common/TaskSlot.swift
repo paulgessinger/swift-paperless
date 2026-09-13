@@ -29,6 +29,11 @@ import Observation
 /// ``joinOrStart(ifIdle:)`` is synchronous for exactly that reason. The only
 /// suspension is awaiting the task's value, which happens *after* the claim.
 ///
+/// A main-actor caller also enters these methods without suspending — calling
+/// an async function on the executor you are already on does not give it up —
+/// so state the caller checked just before the call (say, "the slot is empty"
+/// after ``waitUntilIdle()``) is still true at the claim.
+///
 /// ## What it deliberately does not do
 ///
 /// - It does not propagate the caller's cancellation into the task. The task is
