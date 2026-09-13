@@ -10279,6 +10279,114 @@
         }
       }
     },
+    "requestErrorConnectionLostHint" : {
+      "comment" : "Explanation under 'Connection to the server was lost'. The server may already have applied a change, so the user is told to check before retrying to avoid duplicates.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+          }
+        }
+      }
+    },
+    "requestErrorConnectionLostTitle" : {
+      "comment" : "Title of the error shown when the device is online, but the connection to the Paperless server dropped before the server answered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connection to the server was lost"
+          }
+        }
+      }
+    },
     "requestErrorDetailLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10381,6 +10489,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İstek eksik izinler nedeniyle reddedildi"
+          }
+        }
+      }
+    },
+    "requestErrorHostNotFoundHint" : {
+      "comment" : "Explanation under 'Can't find the server': the device is online, but the server's hostname did not resolve (DNS). Common causes: a typo in the address, or a server only reachable on a home network or VPN.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+          }
+        }
+      }
+    },
+    "requestErrorHostNotFoundTitle" : {
+      "comment" : "Title of the error shown when the device is online but the Paperless server's address (hostname) could not be looked up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't find the server"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't find the server"
           }
         }
       }
@@ -10593,6 +10809,222 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eğer *mTLS* kullanıyorsanız bu bir istemci sertifikası sağlamanız gerektiği veya sağladığınız sertifikanın kabul edilmediği anlamına gelir."
+          }
+        }
+      }
+    },
+    "requestErrorOfflineHint" : {
+      "comment" : "Explanation under 'You're offline': the request failed because the device itself has no network connection.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+          }
+        }
+      }
+    },
+    "requestErrorOfflineTitle" : {
+      "comment" : "Title of the error shown when a request to the Paperless server failed because the device has no network connection (Wi-Fi and mobile data are off or unavailable).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're offline"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You're offline"
+          }
+        }
+      }
+    },
+    "requestErrorServerNotRespondingHint" : {
+      "comment" : "Explanation under 'The server isn't responding': the device has a network connection, but no Paperless server answered at the configured address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+          }
+        }
+      }
+    },
+    "requestErrorServerNotRespondingTitle" : {
+      "comment" : "Title of the error shown when the device is online and the server's address is known, but the Paperless server did not answer (connection refused or timed out).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server isn't responding"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server isn't responding"
           }
         }
       }

@@ -10,7 +10,31 @@ import Networking
 
 extension RequestError: DisplayableError {
   public var message: String {
-    String(localized: .app(.errorDefaultMessage))
+    if case .connectivity(_, let kind, _) = self {
+      return Self.connectivityTitle(for: kind)
+    }
+    return String(localized: .app(.errorDefaultMessage))
+  }
+
+  /// The headline for a connectivity failure. Each kind needs something
+  /// different from the user, so each gets its own.
+  public static func connectivityTitle(for kind: TransportFailureKind) -> String {
+    switch kind {
+    case .offline: String(localized: .app(.requestErrorOfflineTitle))
+    case .hostNotFound: String(localized: .app(.requestErrorHostNotFoundTitle))
+    case .serverNotResponding: String(localized: .app(.requestErrorServerNotRespondingTitle))
+    case .connectionLost: String(localized: .app(.requestErrorConnectionLostTitle))
+    }
+  }
+
+  /// What a connectivity failure likely means, in terms the user can act on.
+  public static func connectivityHint(for kind: TransportFailureKind) -> String {
+    switch kind {
+    case .offline: String(localized: .app(.requestErrorOfflineHint))
+    case .hostNotFound: String(localized: .app(.requestErrorHostNotFoundHint))
+    case .serverNotResponding: String(localized: .app(.requestErrorServerNotRespondingHint))
+    case .connectionLost: String(localized: .app(.requestErrorConnectionLostHint))
+    }
   }
 
   public var details: String? {
@@ -69,8 +93,11 @@ extension RequestError: DisplayableError {
     case .certificate(let detail):
       raw = String(localized: .app(.requestErrorCertificate)) + " " + detail
 
-    case .connectivity(_, _, let detail):
-      raw = detail
+    case .connectivity(_, let kind, let detail):
+      // Our own hint plus the system's message, which carries no markdown, so
+      // skip the markdown pass below: it would also run the two paragraphs
+      // together.
+      return Self.connectivityHint(for: kind) + "\n\n" + label + " " + detail
 
     case .other(let detail):
       raw = detail
