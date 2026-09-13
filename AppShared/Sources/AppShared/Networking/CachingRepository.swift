@@ -242,9 +242,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// included, not only the background continuation) or the membership sweep's
   /// rewrite. Every writer of a key consults this: a new fill drains the current
   /// owner before touching the key, and the membership sweep steps over a key
-  /// that is mid-fill. Main-actor isolated like the rest of this class, and
-  /// claiming/clearing never suspends, so two writers cannot both hold a key.
-  private var activeFills: [QueryKey: Task<Void, any Error>] = [:]
+  /// that is mid-fill. `KeyOwnership` is main-actor isolated like the rest of
+  /// this class, and claiming/releasing never suspends, so two writers cannot
+  /// both hold a key.
+  private let activeFills = KeyOwnership<QueryKey>()
 
   /// Keys `fillQuery` has been asked for during this repository's lifetime, most
   /// recent last, capped at ``QueryRetentionPolicy/recentAdHocCap``.
@@ -477,7 +478,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       }
     }
 
-    activeFills[key] = task
+    activeFills.claim(key, by: task)
     Task { [weak self] in
       do {
         try await task.value
@@ -491,8 +492,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       }
       // Retract only our own registration: a newer fill may have drained and
       // replaced us while this was waiting.
-      guard let self, activeFills[key] == task else { return }
-      activeFills[key] = nil
+      self?.activeFills.release(key, ifOwnedBy: task)
     }
 
     // A cancelled caller takes the whole fill with it — the task is detached,
@@ -512,19 +512,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// Stop the fill that currently owns `key` and wait for it to actually stop.
   /// Cancellation is cooperative — the loop only checks between pages — so
   /// returning without the await would leave a writer alive across the caller's
-  /// own write, which is the whole problem being fixed.
+  /// own write, which is the whole problem being fixed. The departing fill's
+  /// outcome is its own business (its registration task logs it).
   private func drainFill(for key: QueryKey) async {
-    guard let owner = activeFills[key] else { return }
-    owner.cancel()
-    // Its outcome is the departing fill's own business (its registration task
-    // logs it) — all this needs is for it to have stopped writing.
-    _ = try? await owner.value
-    if activeFills[key] == owner { activeFills[key] = nil }
+    await activeFills.drain(key)
   }
 
   /// Whether a fill (or the membership sweep's own rewrite) currently owns this
   /// key's `query_order`.
-  private func isFilling(_ key: QueryKey) -> Bool { activeFills[key] != nil }
+  private func isFilling(_ key: QueryKey) -> Bool { activeFills.isOwned(key) }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
     // Read the marker before the guard rather than inside it: `||`'s right-hand
@@ -1349,31 +1345,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   ) async throws -> Bool {
     let database = database
     let serverID = serverID
-    let write = Task {
+    // `withOwnership` runs the write on an unstructured task — which is what
+    // lets it own the key — and so separates the two cancellations: a fill
+    // draining us (the write's, reported as `false`) from this sweep being
+    // cancelled (ours, thrown). Unasked, the latter would clear the view's
+    // recorded sync error and — on the last view — the loop would simply run
+    // out, so `ServerSession` would count a cancelled membership sweep as a
+    // completed one and advance its freshness stamps on the strength of it.
+    return try await activeFills.withOwnership(of: [key]) {
       try await database.replaceQueryOrder(
         queryKey: key, serverID: serverID, orderedIDs: orderedIDs)
     }
-    activeFills[key] = write
-    defer { if activeFills[key] == write { activeFills[key] = nil } }
-    let stood: Bool
-    do {
-      try await write.value
-      stood = true
-    } catch is CancellationError {
-      // A fill drained us. That cancellation is the *write task's*, not ours.
-      stood = false
-    }
-    // Ours is a separate question, and it has to be asked outside the `catch`
-    // above so it propagates instead of reading as "a fill took the key over".
-    // The write runs on an unstructured `Task`, which inherits isolation but
-    // *not* cancellation — that is what lets it own the key, and it also means
-    // `write.value` returns happily on a sweep cancelled while the rewrite was
-    // in flight. Unasked, the caller would clear the view's recorded sync error
-    // and — on the last view — the loop would simply run out, so
-    // `ServerSession` would count a cancelled membership sweep as a completed
-    // one and advance its freshness stamps on the strength of it.
-    try Task.checkCancellation()
-    return stood
   }
 
   public func collectUnreachableQueries() async throws {
@@ -1394,7 +1376,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     for view in savedViews {
       reachable.insert(QueryKey(serverID: serverID, filter: FilterState(savedView: view)))
     }
-    reachable.formUnion(activeFills.keys)
+    reachable.formUnion(activeFills.ownedKeys)
     reachable.formUnion(recentlyRequestedKeys)
     // The LRU ranks *last*, over what is not already pinned. Ranking the whole
     // cached set would let the default list and the saved views — reachable for
@@ -1419,34 +1401,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // page two at a nonzero position, i.e. a permanently truncated cached list.
     // Keys that went unreachable since the snapshot are collected next pass.
     let collecting = collected
-    // `Task<Void, any Error>` so it can sit in `activeFills` alongside the
-    // fills; the count is `collected.count`, already known here.
-    let sweep = Task {
-      try await database.pruneQueries(serverID: serverID, collectedKeys: collecting)
-      return ()
-    }
     // Own every key being collected for the duration of the delete, exactly as
     // `replaceQueryOrderOwningKey` owns the one key it rewrites. A `fillQuery`
     // arriving for one of them now cancels and *awaits* this sweep before its
     // page-1 write, instead of racing it and having its fresh rows deleted from
-    // under it.
-    for key in collected { activeFills[key] = sweep }
-    defer {
-      for key in collected where activeFills[key] == sweep { activeFills[key] = nil }
+    // under it. A cancelled sweep throws out of here rather than returning as a
+    // clean pass — see `replaceQueryOrderOwningKey` for why that is asked
+    // separately from the delete being drained.
+    let completed = try await activeFills.withOwnership(of: collected) {
+      _ = try await database.pruneQueries(serverID: serverID, collectedKeys: collecting)
     }
-
-    do {
-      try await sweep.value
-    } catch is CancellationError {
+    guard completed else {
       // A fill took one of the collected keys over. The rest are still garbage
       // and the next sweep collects them.
       Logger.sync.info("Reachability sweep drained by a fill; retrying next pass")
       return
     }
-    // Ours is a separate question from the write task's — see the same argument
-    // in `replaceQueryOrderOwningKey`. Without it a sweep cancelled mid-write
-    // returns normally and `ServerSession` records it as a clean pass.
-    try Task.checkCancellation()
 
     Logger.sync.info(
       "Reachability sweep: collected \(collected.count, privacy: .public) orphaned query key(s) for server \(self.serverLogLabel, privacy: .public)"
