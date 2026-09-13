@@ -149,7 +149,7 @@ public class ApiRepository {
   }
 
   public nonisolated
-    var delegate: (any URLSessionDelegate)?
+    var imageSessionDelegate: (any URLSessionDelegate)?
   {
     urlSessionDelegate
   }

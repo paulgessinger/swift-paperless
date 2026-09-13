@@ -163,8 +163,11 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   func acknowledge(tasks: [UInt]) async throws
 
+  /// The delegate the image pipeline's own `URLSession` should use, so thumbnail
+  /// loads pass the same client-certificate challenges as API requests. Only for
+  /// that session: it is not the API session's delegate.
   nonisolated
-    var delegate: (any URLSessionDelegate)?
+    var imageSessionDelegate: (any URLSessionDelegate)?
   { get }
 
   func supports(feature: BackendFeature) -> Bool
