@@ -82,4 +82,49 @@ struct TransferStatsTest {
       #expect(recorder.categories.isEmpty)
     }
   }
+
+  @Test("with no category set, records land in .other")
+  func defaultCategoryIsOther() {
+    withSink { recorder in
+      NetworkTransfer.record(bytes: 10)
+      #expect(recorder.categories == [.other])
+    }
+  }
+
+  @Test("the innermost category wins when scopes nest")
+  func innermostCategoryWins() {
+    // The shared fill path runs inside the proactive sweep's `.fill` scope as
+    // well as on its own, so an inner scope has to override an outer one rather
+    // than be swallowed by it.
+    withSink { recorder in
+      NetworkTransfer.$category.withValue(.fill) {
+        NetworkTransfer.record(bytes: 1)
+        NetworkTransfer.$category.withValue(.list) {
+          NetworkTransfer.record(bytes: 1)
+        }
+        NetworkTransfer.record(bytes: 1)
+      }
+      #expect(recorder.categories == [.fill, .list, .fill])
+    }
+  }
+
+  @Test("interactive list traffic is a category of its own")
+  func listIsDistinctFromFill() {
+    #expect(TransferCategory.list != TransferCategory.fill)
+    #expect(TransferCategory.allCases.contains(.list))
+  }
+
+  @Test("raw values are stable, so persisted totals keep decoding")
+  func rawValuesAreStable() {
+    // `TransferStatistics` persists totals keyed by raw value and drops keys it
+    // can't decode. Renaming one silently zeroes that category's history.
+    let expected: [TransferCategory: String] = [
+      .sync: "sync", .list: "list", .fill: "fill", .reconcile: "reconcile", .other: "other",
+    ]
+    #expect(Set(TransferCategory.allCases) == Set(expected.keys))
+    for (category, raw) in expected {
+      #expect(category.rawValue == raw)
+      #expect(TransferCategory(rawValue: raw) == category)
+    }
+  }
 }

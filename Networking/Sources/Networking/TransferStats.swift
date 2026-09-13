@@ -5,8 +5,8 @@
 //  Lightweight, best-effort accounting of bytes received over the API, fed from
 //  the single `ApiRepository` response chokepoint. The app registers a `sink`
 //  once at startup to forward totals into an app-level observable; the active
-//  `category` is a task-local set by callers around an operation (fill / sync /
-//  reconcile), so the meter can break traffic down by what produced it.
+//  `category` is a task-local set by callers around an operation (list / fill /
+//  sync / reconcile), so the meter can break traffic down by what produced it.
 //
 //  Scope: this records API requests that flow through `fetchData` (metadata,
 //  list pages, element collections, detail, notes). File downloads (streamed)
@@ -23,9 +23,16 @@
 import Foundation
 
 /// Coarse classification of a recorded response, for the data-transfer meter.
+///
+/// `list` and `fill` both come from the shared `fillQuery` path; they are split
+/// because a user opening or switching a list is traffic they asked for, while
+/// the library/detail sweeps run on their own. Filing both under `fill` made
+/// interactive browsing look like background sync, which is the opposite of
+/// what a meter informing the Wi-Fi gate needs to show.
 public enum TransferCategory: String, Sendable, CaseIterable {
   case sync  // element collections (tags, correspondents, …)
-  case fill  // list / proactive library fill (metadata + detail pages)
+  case list  // interactive list load: the user opened, switched or refreshed a view
+  case fill  // proactive library / document-detail fill
   case reconcile  // R2 / R3δ / membership sweeps
   case other  // everything else (on-open detail, notes, suggestions, …)
 }

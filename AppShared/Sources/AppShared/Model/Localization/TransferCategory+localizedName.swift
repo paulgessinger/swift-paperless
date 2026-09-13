@@ -10,6 +10,8 @@ extension TransferCategory {
     switch self {
     case .sync:
       String(localized: .settings(.transferCategorySync))
+    case .list:
+      String(localized: .settings(.transferCategoryList))
     case .fill:
       String(localized: .settings(.transferCategoryFill))
     case .reconcile:
