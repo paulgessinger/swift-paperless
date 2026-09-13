@@ -416,7 +416,7 @@ public class ApiRepository {
       )
       // Classified here, where it failed, so the path status is the one the
       // request actually saw.
-      throw RequestError.normalizingTransportFailure(error)
+      throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
     }
 
     let (data, response) = result
@@ -695,7 +695,7 @@ extension ApiRepository: Repository {
         (tempURL, response) = try await self.urlSession.getDownload(
           for: request, progress: report)
       } catch {
-        throw RequestError.normalizingTransportFailure(error)
+        throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
       }
 
       try self.validateDownloadResponse(response, request: request)
@@ -716,7 +716,7 @@ extension ApiRepository: Repository {
       (tempURL, response) = try await urlSession.getDownload(
         for: request, progress: progress)
     } catch {
-      throw RequestError.normalizingTransportFailure(error)
+      throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
     }
     try validateDownloadResponse(response, request: request)
 

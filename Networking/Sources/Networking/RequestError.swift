@@ -134,8 +134,9 @@ extension RequestError {
   ///
   /// - SSL codes become ``certificate(detail:)``.
   /// - Connectivity-class codes become ``connectivity(code:kind:detail:)``,
-  ///   classified against `path`. The default samples ``NetworkPathProbe``
-  ///   right here, so call this where the request failed, not later.
+  ///   classified against `path`. Pass ``NetworkPathProbe/sample()`` where the
+  ///   request failed, not later. There is deliberately no default, so a
+  ///   caller reads as consulting the probe and a new caller has to choose.
   /// - `badURL`/`unsupportedURL` (the address itself is unusable) and
   ///   `httpTooManyRedirects`/`redirectToNonExistentLocation`/
   ///   `badServerResponse`/`resourceUnavailable` (something *did* answer, just
@@ -143,9 +144,7 @@ extension RequestError {
   ///   anything about reachability, so the path status doesn't apply.
   /// - Everything else, including cancellation and the file-I/O codes a
   ///   download can hit, is `nil`.
-  public init?(
-    from error: NSError, path: @autoclosure () -> NetworkPathStatus = NetworkPathProbe.sample()
-  ) {
+  public init?(from error: NSError, path: @autoclosure () -> NetworkPathStatus) {
     guard error.domain == NSURLErrorDomain else {
       return nil
     }
@@ -185,7 +184,7 @@ extension RequestError {
   /// sampled *now*. Anything else — cancellation, SSL, the other URL codes, and
   /// errors from other domains — passes through untouched, as it did before.
   public static func normalizingTransportFailure(
-    _ error: any Error, path: @autoclosure () -> NetworkPathStatus = NetworkPathProbe.sample()
+    _ error: any Error, path: @autoclosure () -> NetworkPathStatus
   ) -> any Error {
     let nsError = error as NSError
     guard nsError.domain == NSURLErrorDomain,

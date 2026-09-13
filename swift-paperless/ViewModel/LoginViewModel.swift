@@ -337,7 +337,7 @@ class LoginViewModel {
       Logger.shared.error("Unable to connect to API: local network access denied")
       loginState = .error(.request(.localNetworkDenied))
     } catch let nsError as NSError where nsError.domain == NSURLErrorDomain {
-      if let error = RequestError(from: nsError) {
+      if let error = RequestError(from: nsError, path: NetworkPathProbe.sample()) {
         Logger.shared.error(
           "Checking API converted NSError \(nsError) to known error: \(String(describing: error))")
         loginState = .error(.request(error))
