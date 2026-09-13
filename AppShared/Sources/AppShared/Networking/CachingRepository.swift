@@ -65,6 +65,20 @@ enum QueryRetentionPolicy {
   /// `pruneUnreferencedDocuments` — pins every document it lists, so this is
   /// really a cap on how much of the library an abandoned filter can keep alive.
   static let recentAdHocCap = 20
+
+  /// How long a list a fill paged to the end stays exempt from the recurring
+  /// *Recently browsed* cap (`OfflineLibrarySize.recentlyBrowsedDefaultListCap`
+  /// rows per list).
+  ///
+  /// Recency rather than position decides *which* lists get cut back: a list
+  /// the user just browsed in full stays whole, so the older documents they
+  /// scrolled down to are still there offline, and storage settles back to the
+  /// cap once they've moved on. A day rather than a session: "browsed this
+  /// morning, offline on the train tonight" is the case the mode is named for,
+  /// and it matches the *Entire library* coverage backstop
+  /// (``LibraryCoverage/maxAge``). Lists in use right now are pinned separately
+  /// and don't depend on this.
+  static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
 /// The cache control surface the store reaches for, kept off the `Repository`
@@ -131,6 +145,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// anything in use right now), then reclaim the documents those orphans were
   /// pinning. Runs in *both* offline modes — an ad-hoc filter leaves a key
   /// behind either way.
+  ///
+  /// Under *Recently browsed* it also re-applies the storage cap: every
+  /// surviving list that is not in use and was not completed recently is cut
+  /// back to its first `OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows,
+  /// so the cache settles back down after a browsing session instead of only
+  /// at the downgrade.
   func collectUnreachableQueries() async throws
 
   /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
@@ -1389,7 +1409,32 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         adHocCandidates, limit: QueryRetentionPolicy.recentAdHocCap))
 
     let collected = Set(cached.map(\.key).filter { !reachable.contains($0) })
-    guard !collected.isEmpty else { return }
+
+    // The recurring *Recently browsed* cap (#678). `reclaimAfterDowngrade` cuts
+    // the cache down once, at the downgrade; every list open then eager-fills
+    // in full again, so without this the cap held only until the next launch.
+    // Folded into this sweep rather than given its own throttle: it already
+    // runs on every reconcile, already owns the keys it writes, and the cap is
+    // one indexed delete per list that finds nothing to do in steady state.
+    //
+    // Pinned exactly like the collection above, and for a stronger reason: a
+    // list someone is looking at must never be cut. Scrolling only widens a
+    // prefix over local rows, so a truncated on-screen list dead-ends at the
+    // cap *even online* — the very thing `fillQuery` stays uncapped to avoid.
+    // `activeFills` covers a list mid-fill; `recentlyRequestedKeys` covers one
+    // on screen whose fill has finished (or never started, offline). Lists not
+    // pinned are still kept whole while their last complete fill is recent —
+    // see ``QueryRetentionPolicy/recentlyBrowsedGrace``. The mode is also
+    // re-checked inside the write, so this read only saves a pointless one.
+    let cutoff = Date().addingTimeInterval(-QueryRetentionPolicy.recentlyBrowsedGrace)
+    var capped: Set<QueryKey> = []
+    if offlineBrowsingMode == .recentlyBrowsed {
+      capped = QueryRetention.recentlyBrowsedCapCandidates(
+        cached.filter { !collected.contains($0.key) },
+        pinned: Set(activeFills.ownedKeys).union(recentlyRequestedKeys),
+        completedBefore: cutoff)
+    }
+    guard !collected.isEmpty || !capped.isEmpty else { return }
 
     let database = database
     let serverID = serverID
@@ -1401,23 +1446,40 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // page two at a nonzero position, i.e. a permanently truncated cached list.
     // Keys that went unreachable since the snapshot are collected next pass.
     let collecting = collected
-    // Own every key being collected for the duration of the delete, exactly as
-    // `replaceQueryOrderOwningKey` owns the one key it rewrites. A `fillQuery`
-    // arriving for one of them now cancels and *awaits* this sweep before its
-    // page-1 write, instead of racing it and having its fresh rows deleted from
-    // under it. A cancelled sweep throws out of here rather than returning as a
-    // clean pass — see `replaceQueryOrderOwningKey` for why that is asked
-    // separately from the delete being drained.
-    let completed = try await activeFills.withOwnership(of: collected) {
+    let capping = capped
+    let label = capped.isEmpty ? "" : serverLogLabel
+    // Own every key being collected *or capped* for the duration of the write,
+    // exactly as `replaceQueryOrderOwningKey` owns the one key it rewrites. A
+    // `fillQuery` arriving for one of them now cancels and *awaits* this sweep
+    // before its page-1 write, instead of racing it — having its fresh rows
+    // deleted from under it, or its page 3 appended behind a truncated tail. A
+    // cancelled sweep throws out of here rather than returning as a clean pass —
+    // see `replaceQueryOrderOwningKey` for why that is asked separately from the
+    // delete being drained.
+    let completed = try await activeFills.withOwnership(of: collected.union(capped)) {
       _ = try await database.pruneQueries(serverID: serverID, collectedKeys: collecting)
+      // After the collection, so the cap never spends a write on a key that is
+      // about to disappear. It prunes the documents it frees in its own
+      // transaction; the prune below still covers what the collection freed.
+      let cap = try await database.capRecentlyBrowsedQueries(
+        serverID: serverID, candidateKeys: capping,
+        keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap,
+        completedBefore: cutoff)
+      if cap.truncatedRows > 0 {
+        Logger.sync.info(
+          "Recently browsed cap: trimmed \(cap.truncatedRows, privacy: .public) row(s), reclaimed \(cap.removedDocuments, privacy: .public) document(s) for server \(label, privacy: .public)"
+        )
+      }
     }
     guard completed else {
-      // A fill took one of the collected keys over. The rest are still garbage
-      // and the next sweep collects them.
+      // A fill took one of the collected or capped keys over. The rest are
+      // still garbage (or still over the cap) and the next sweep gets them.
       Logger.sync.info("Reachability sweep drained by a fill; retrying next pass")
       return
     }
 
+    // The cap prunes what it frees itself; the rest is the collection's.
+    guard !collected.isEmpty else { return }
     Logger.sync.info(
       "Reachability sweep: collected \(collected.count, privacy: .public) orphaned query key(s) for server \(self.serverLogLabel, privacy: .public)"
     )
