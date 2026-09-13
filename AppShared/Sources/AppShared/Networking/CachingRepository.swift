@@ -50,6 +50,23 @@ enum LibraryCoverage {
   }
 }
 
+/// Retention policy for the per-server reachability GC of cached query keys.
+/// Non-generic so the `static` constant is legal (it wouldn't be on the generic
+/// `CachingRepository`), same as ``LibraryCoverage`` above.
+enum QueryRetentionPolicy {
+  /// How many *ad-hoc* query keys — a filter/sort combination that is neither
+  /// the default list nor a saved view — survive the sweep, most recently filled
+  /// first.
+  ///
+  /// Twenty rather than a handful or a hundred: what the retention buys is "go
+  /// back to what I was just looking at and it's still there offline", which is
+  /// a session's worth of browsing, not a history. Each retained key costs one
+  /// `query_order` row per member document *and* — through the anti-join in
+  /// `pruneUnreferencedDocuments` — pins every document it lists, so this is
+  /// really a cap on how much of the library an abandoned filter can keep alive.
+  static let recentAdHocCap = 20
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
@@ -102,6 +119,14 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// added (their detail arrives via R3δ in the same reconcile). No-op unless
   /// *Entire library* is enabled.
   func reconcileSavedViewMembership() async throws
+
+  /// Reachability GC for cached query keys: delete `query_order` / `query_meta`
+  /// / `query_sync_error` for every key that is no longer reachable (the default
+  /// list, the current saved views, a bounded LRU of recent ad-hoc filters,
+  /// anything in use right now), then reclaim the documents those orphans were
+  /// pinning. Runs in *both* offline modes — an ad-hoc filter leaves a key
+  /// behind either way.
+  func collectUnreachableQueries() async throws
 
   /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
   /// and drop every cached document absent from it — `deleteDocuments` explicitly
@@ -186,6 +211,27 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// that is mid-fill. Main-actor isolated like the rest of this class, and
   /// claiming/clearing never suspends, so two writers cannot both hold a key.
   private var activeFills: [QueryKey: Task<Void, any Error>] = [:]
+
+  /// Keys `fillQuery` has been asked for during this repository's lifetime, most
+  /// recent last, capped at ``QueryRetentionPolicy/recentAdHocCap``.
+  ///
+  /// This is what pins *the list on screen*. The persistent LRU cannot: it ranks
+  /// on `query_meta.filled_at`, which is only stamped when a fill pages a query
+  /// to the *end*, so a list the user is looking at right now over a flaky
+  /// connection — the case where losing its cached rows is most visible — has no
+  /// stamp at all and would sort last. Bounded because a long session must not
+  /// grow this without limit, and the most recent entries are the ones that can
+  /// still be on screen.
+  private var recentlyRequestedKeys: [QueryKey] = []
+
+  private func noteRequested(_ key: QueryKey) {
+    recentlyRequestedKeys.removeAll { $0 == key }
+    recentlyRequestedKeys.append(key)
+    if recentlyRequestedKeys.count > QueryRetentionPolicy.recentAdHocCap {
+      recentlyRequestedKeys.removeFirst(
+        recentlyRequestedKeys.count - QueryRetentionPolicy.recentAdHocCap)
+    }
+  }
 
   public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
@@ -311,6 +357,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// library fill.
   public func fillQuery(filter: FilterState) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
+    // Pin the key before the first suspension: from here until the sweep next
+    // reconsiders it, this key counts as in use even if its fill never lands a
+    // single page (offline on open).
+    noteRequested(key)
 
     // Two fills on one key used to interleave: the newcomer's page-1
     // `replaceAll: true` deletes every `query_order` row for the key, and the
@@ -1287,6 +1337,94 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // one and advance its freshness stamps on the strength of it.
     try Task.checkCancellation()
     return stood
+  }
+
+  public func collectUnreachableQueries() async throws {
+    // Deliberately not gated on `offlineBrowsingMode`: `fillQuery` writes a
+    // key's rows on every list open in either mode, so orphans accumulate in
+    // either mode — under *Recently browsed* they are in fact the *only* thing
+    // keeping the reclaimed library from growing back one abandoned filter at a
+    // time.
+    let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
+    let cached = try await database.cachedQueries(serverID: serverID)
+
+    // No suspension from here to the claim below — that is what makes the
+    // in-use guarantee hold. `activeFills` and `recentlyRequestedKeys` are
+    // main-actor state read *after* the last `await`, so a fill that started
+    // during either read above is already in one of them, and a fill that starts
+    // after the claim has to drain this sweep (`drainFill`) before it writes.
+    var reachable: Set<QueryKey> = [QueryKey(serverID: serverID, filter: .default)]
+    for view in savedViews {
+      reachable.insert(QueryKey(serverID: serverID, filter: FilterState(savedView: view)))
+    }
+    reachable.formUnion(activeFills.keys)
+    reachable.formUnion(recentlyRequestedKeys)
+    // The LRU ranks *last*, over what is not already pinned. Ranking the whole
+    // cached set would let the default list and the saved views — reachable for
+    // their own reasons, whatever their fill stamps say — spend the slots the
+    // cap exists to reserve for ad-hoc filters: twenty recently filled saved
+    // views would otherwise leave ad-hoc retention at zero.
+    let adHocCandidates = cached.filter { !reachable.contains($0.key) }
+    reachable.formUnion(
+      QueryRetention.mostRecentlyFilled(
+        adHocCandidates, limit: QueryRetentionPolicy.recentAdHocCap))
+
+    let collected = Set(cached.map(\.key).filter { !reachable.contains($0) })
+    guard !collected.isEmpty else { return }
+
+    let database = database
+    let serverID = serverID
+    // Deleting *these* keys, not everything outside `reachable`: a fill for a
+    // key that was never cached — so absent from `collected`, so not owned in
+    // `activeFills` below and under no obligation to drain this sweep — can
+    // commit its page-one rows while the sweep is pending. A `NOT IN (reachable)`
+    // delete would take those fresh rows with it and leave the fill appending
+    // page two at a nonzero position, i.e. a permanently truncated cached list.
+    // Keys that went unreachable since the snapshot are collected next pass.
+    let collecting = collected
+    // `Task<Void, any Error>` so it can sit in `activeFills` alongside the
+    // fills; the count is `collected.count`, already known here.
+    let sweep = Task {
+      try await database.pruneQueries(serverID: serverID, collectedKeys: collecting)
+      return ()
+    }
+    // Own every key being collected for the duration of the delete, exactly as
+    // `replaceQueryOrderOwningKey` owns the one key it rewrites. A `fillQuery`
+    // arriving for one of them now cancels and *awaits* this sweep before its
+    // page-1 write, instead of racing it and having its fresh rows deleted from
+    // under it.
+    for key in collected { activeFills[key] = sweep }
+    defer {
+      for key in collected where activeFills[key] == sweep { activeFills[key] = nil }
+    }
+
+    do {
+      try await sweep.value
+    } catch is CancellationError {
+      // A fill took one of the collected keys over. The rest are still garbage
+      // and the next sweep collects them.
+      Logger.sync.info("Reachability sweep drained by a fill; retrying next pass")
+      return
+    }
+    // Ours is a separate question from the write task's — see the same argument
+    // in `replaceQueryOrderOwningKey`. Without it a sweep cancelled mid-write
+    // returns normally and `ServerSession` records it as a clean pass.
+    try Task.checkCancellation()
+
+    Logger.sync.info(
+      "Reachability sweep: collected \(collected.count, privacy: .public) orphaned query key(s) for server \(self.serverLogLabel, privacy: .public)"
+    )
+    // Only when something was actually collected: this is the anti-join that
+    // orphaned keys were blocking, and running it on every reconcile regardless
+    // would scan the whole document table to find nothing — and would widen the
+    // blast radius of "referenced means `query_order` membership" (a document
+    // cached by an ASN scan and listed nowhere) to every sweep rather than the
+    // passes that just freed something.
+    let reclaimed = try await database.pruneUnreferencedDocuments(serverID: serverID)
+    if reclaimed > 0 {
+      Logger.sync.info(
+        "Reachability sweep: reclaimed \(reclaimed, privacy: .public) unreferenced document(s)")
+    }
   }
 
   /// Per-server delta watermark (newest `modified` applied), in
