@@ -125,7 +125,7 @@ test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking"
 
 lint-format:
   find . -name '*.swift' \
-    -not -path '*/.git/*' -not -path '*/.build/*' -not -path '*/vendor/*' \
+    -not -path '*/.git/*' -not -path '*/.build/*' -not -path '*/vendor/*' -not -path "*/.agents/*" \
     | parallel swift-format format --in-place {}
 
 lint-whitespace:

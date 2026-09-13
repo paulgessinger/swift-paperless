@@ -251,6 +251,8 @@ def find_all_files(root: Path, parser: GitignoreParser) -> Iterator[Path]:
         ".build",
         ".swiftpm",
         "build",
+        ".agents",
+        ".claude",
         "DerivedData",
         "__pycache__",
     }
