@@ -56,20 +56,34 @@ extension URLSession {
         _: URLSession, task _: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics
       ) {
         guard let onTransfer else { return }
-        var sent: Int64 = 0
-        var received: Int64 = 0
-        for transaction in metrics.transactionMetrics {
-          sent += transaction.countOfRequestHeaderBytesSent
-          sent += transaction.countOfRequestBodyBytesSent
-          received += transaction.countOfResponseHeaderBytesReceived
-          received += transaction.countOfResponseBodyBytesReceived
-        }
-        onTransfer(sent, received)
+        let bytes = metrics.transferredBytes
+        onTransfer(bytes.sent, bytes.received)
       }
     }
 
     let delegate = Delegate(progress, onTransfer: onTransfer)
 
     return try await data(for: request, delegate: delegate)
+  }
+}
+
+extension URLSessionTaskMetrics {
+  /// Bytes this task actually put on the wire: header and body, in both
+  /// directions, summed across every transaction (redirects, retries). These
+  /// are *transport* counts — a gzipped response reports its compressed size,
+  /// and a response served from `URLCache` reports no body bytes at all.
+  ///
+  /// Shared by every data-meter feeder so they can't drift apart on what a
+  /// "byte transferred" means.
+  public var transferredBytes: (sent: Int64, received: Int64) {
+    var sent: Int64 = 0
+    var received: Int64 = 0
+    for transaction in transactionMetrics {
+      sent += transaction.countOfRequestHeaderBytesSent
+      sent += transaction.countOfRequestBodyBytesSent
+      received += transaction.countOfResponseHeaderBytesReceived
+      received += transaction.countOfResponseBodyBytesReceived
+    }
+    return (sent, received)
   }
 }
