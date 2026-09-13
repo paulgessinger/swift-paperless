@@ -270,8 +270,10 @@ extension Database {
   /// reads correctly via the existing growing-prefix observation;
   /// `query_meta.total_count` is left as the server's true count, so
   /// `QueryStatus.localCount < totalCount` reports the cap the same way it
-  /// already reports any other partial local presence. Returns the number of
-  /// `query_order` rows removed.
+  /// already reports any other partial local presence. `filled_at` is kept too
+  /// (the reachability LRU ranks on it); `QueryStatus.isComplete` still reads
+  /// `false` afterwards, because the order no longer reaches the total. Returns
+  /// the number of `query_order` rows removed.
   ///
   /// Counts rows rather than testing `position < limit`, because positions are
   /// gappy by design (a skipped page-boundary repeat, a deleted document), so a
@@ -540,13 +542,41 @@ extension Database {
       try QueryMetaRow
       .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
       .fetchOne(db)
-    let localCount =
-      try QueryOrderRow
-      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-      .fetchCount(db)
+    let order = try Row.fetchOne(
+      db,
+      sql: """
+        SELECT COUNT(*) AS local_count, MAX(position) AS last_position FROM query_order
+        WHERE server_id = ? AND query_key = ?
+        """,
+      arguments: [serverID, queryKey.rawValue])
+    let localCount: Int = order?["local_count"] ?? 0
+    let lastPosition: Int? = order?["last_position"]
     return QueryStatus(
       totalCount: meta?.totalCount, localCount: localCount,
-      orderStale: meta?.orderStale ?? false, isComplete: meta?.filledAt != nil)
+      orderStale: meta?.orderStale ?? false,
+      isComplete: isOrderComplete(
+        filledAt: meta?.filledAt, lastPosition: lastPosition, totalCount: meta?.totalCount))
+  }
+
+  /// Whether a cached order is its query's whole membership.
+  ///
+  /// The fill stamp alone isn't enough: `truncateQuery` cuts the tail and keeps
+  /// `filled_at` on purpose (the reachability LRU ranks on it, so a capped list
+  /// has to keep its place). A cut order therefore also has to reach the
+  /// server's total.
+  ///
+  /// Measured by the last position rather than the row count. A complete fill
+  /// can hold fewer rows than the total — a document repeated across a page
+  /// boundary is skipped by the `remote_id` unique key, and a remote delete
+  /// prunes a row — but positions still run to the end, while a truncation
+  /// always removes the tail. The one miss is conservative: a deleted *last*
+  /// row reads as incomplete until the next fill.
+  ///
+  /// No recorded total leaves the stamp to decide.
+  static func isOrderComplete(filledAt: Date?, lastPosition: Int?, totalCount: UInt?) -> Bool {
+    guard filledAt != nil else { return false }
+    let extent = lastPosition.map { $0 + 1 } ?? 0
+    return extent >= Int(totalCount ?? 0)
   }
 
   /// Upsert one document row. Every write is the complete object (the list

@@ -221,6 +221,11 @@ struct DocumentObservationTests {
       from: database.observeQueryStatus(queryKey: key, serverID: server))
     #expect(partial.isComplete == false)
 
+    // The stamp only counts once the order reaches the server's total.
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B")],
+      startPosition: 1, totalCount: 2, replaceAll: false)
+
     let complete = try await value(
       from: database.observeQueryStatus(queryKey: key, serverID: server)
     ) {

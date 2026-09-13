@@ -74,11 +74,13 @@ public struct QueryStatus: Equatable, Sendable {
   public var totalCount: UInt?
   public var localCount: Int
   public var orderStale: Bool
-  /// A fill paged this query to the end (`query_meta.filled_at` is stamped).
-  /// `false` for a never-filled key and for one whose last fill stopped short:
-  /// page 1's replace clears the stamp, so only a fill that reaches the end sets
-  /// it again. The list uses this to tell a truncated cache from a complete one
-  /// when its own fill fails.
+  /// A fill paged this query to the end (`query_meta.filled_at` is stamped) and
+  /// nothing has cut its tail since. `false` for a never-filled key, for one
+  /// whose last fill stopped short (page 1's replace clears the stamp, so only a
+  /// fill that reaches the end sets it again), and for one a storage cap
+  /// truncated (the stamp survives that, but the order no longer reaches the
+  /// total). The list uses this to tell a truncated cache from a complete one
+  /// when its fill fails.
   public var isComplete: Bool
 
   public init(totalCount: UInt?, localCount: Int, orderStale: Bool, isComplete: Bool = false) {
