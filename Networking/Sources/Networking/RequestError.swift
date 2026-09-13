@@ -173,6 +173,12 @@ extension RequestError {
     }
   }
 
+  /// Whether this is a connectivity-class transport failure.
+  public var isConnectivity: Bool {
+    if case .connectivity = self { return true }
+    return false
+  }
+
   /// Normalize an error thrown by a `URLSession` transport call made by a
   /// repository: a connectivity-class failure becomes
   /// ``connectivity(code:kind:detail:)``, classified against the path status

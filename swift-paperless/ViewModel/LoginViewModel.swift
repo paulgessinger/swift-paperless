@@ -703,6 +703,12 @@ class LoginViewModel {
     } catch RequestError.unauthorized {
       credentialState = .error(.invalidToken)
       return nil
+    } catch let error as RequestError where error.isConnectivity {
+      // Keep the offline / server-unreachable distinction instead of flattening
+      // it into a generic login failure.
+      Logger.shared.error("Connectivity failure during login: \(String(describing: error))")
+      credentialState = .error(.request(error))
+      return nil
     } catch {
       Logger.shared.error("Error during login with url \(error)")
       credentialState = .error(.init(other: error))
