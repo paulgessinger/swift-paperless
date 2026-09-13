@@ -235,6 +235,31 @@ struct DocumentList: View {
     await viewModel.refresh(userInitiated: true)
   }
 
+  private func retry() {
+    Task {
+      await viewModel.retry()
+    }
+  }
+
+  /// Names the list that failed: the default list, the saved view by name, or
+  /// the current filter. A saved view whose name isn't cached is worded as a
+  /// filter rather than guessed at.
+  private func failureTitle(incomplete: Bool) -> String {
+    if case .savedView(let id) = viewModel.scope, let name = store.savedViews[id]?.name {
+      return incomplete
+        ? String(localized: .app(.documentListIncompleteSavedView(name)))
+        : String(localized: .app(.documentListUnavailableSavedView(name)))
+    }
+    if viewModel.scope == .allDocuments {
+      return incomplete
+        ? String(localized: .app(.documentListIncomplete))
+        : String(localized: .app(.documentListUnavailable))
+    }
+    return incomplete
+      ? String(localized: .app(.documentListIncompleteFilter))
+      : String(localized: .app(.documentListUnavailableFilter))
+  }
+
   var body: some View {
     VStack {
       if !viewModel.ready {
@@ -249,23 +274,44 @@ struct DocumentList: View {
           }
       } else {
         let documents = viewModel.documents
-        if documents.isEmpty {
-          // No rows yet: distinguish "still filling" (cold cache + a fill in
-          // flight, or the server reports a non-empty count) from a genuinely
-          // empty result, so we don't flash "No documents" during the fill.
-          if viewModel.isFetching || (viewModel.totalCount ?? 0) > 0 {
-            LoadingDocumentList()
-          } else {
-            NoDocumentsView(filtering: filterModel.filterState.filtering)
-              .equatable()
-              .refreshable {
-                await Task {
-                  await refresh()
-                }.value
-              }
-              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        let state = viewModel.state
+        switch state.content {
+        case .loading:
+          // Still filling (cold cache + a fill in flight, or the server reports
+          // a non-empty count): don't flash "No documents" during the fill.
+          LoadingDocumentList()
+        case .empty:
+          NoDocumentsView(filtering: filterModel.filterState.filtering)
+            .equatable()
+            .refreshable {
+              await Task {
+                await refresh()
+              }.value
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        case .unavailable:
+          // The load failed and nothing is cached: say so rather than claim
+          // the query matched no documents.
+          DocumentsUnavailableView(
+            title: failureTitle(incomplete: false),
+            message: viewModel.fillErrorDescription,
+            retry: retry
+          )
+          .refreshable {
+            await Task {
+              await refresh()
+            }.value
           }
-        } else {
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        case .documents:
+          if state.isIncomplete {
+            IncompleteDocumentsBanner(
+              title: failureTitle(incomplete: true),
+              message: viewModel.fillErrorDescription,
+              retry: retry
+            )
+            .transition(.move(edge: .top).combined(with: .opacity))
+          }
           ScrollViewReader { proxy in
             List {
               Section {
@@ -329,6 +375,7 @@ struct DocumentList: View {
     }
     .animation(.default, value: viewModel.ready)
     .animation(.default, value: viewModel.noPermissions)
+    .animation(.default, value: viewModel.state)
 
     .onChange(of: filterModel.filterState) { _, filter in
       Task {
@@ -414,6 +461,68 @@ private struct NoDocumentsView: View, Equatable {
     static func == (_: NoDocumentsView, _: NoDocumentsView) -> Bool
   {
     true
+  }
+}
+
+/// The list's load-failure state: shown instead of `NoDocumentsView` when the
+/// query couldn't be loaded and nothing is cached, so a failure never reads as
+/// "no matching documents".
+private struct DocumentsUnavailableView: View {
+  var title: String
+  var message: String?
+  var retry: () -> Void
+
+  var body: some View {
+    ScrollView(.vertical) {
+      ContentUnavailableView {
+        Label(title, systemImage: "exclamationmark.triangle")
+      } description: {
+        if let message {
+          Text(message)
+        }
+      } actions: {
+        Button(String(localized: .app(.documentListRetry)), action: retry)
+          .buttonStyle(.bordered)
+      }
+      .padding(.top, 40)
+    }
+  }
+}
+
+/// Above rows from a truncated cache whose fill failed: the documents shown are
+/// not the whole answer.
+private struct IncompleteDocumentsBanner: View {
+  var title: String
+  var message: String?
+  var retry: () -> Void
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Image(systemName: "exclamationmark.triangle.fill")
+        .foregroundStyle(.orange)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(title)
+          .font(.subheadline)
+          .fontWeight(.semibold)
+        if let message {
+          Text(message)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+        }
+      }
+      Spacer(minLength: 0)
+      Button(String(localized: .app(.documentListRetry)), action: retry)
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+    }
+    .padding(12)
+    .background(
+      Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+    )
+    .accessibilityElement(children: .combine)
+    .padding(.horizontal)
+    .padding(.vertical, 6)
   }
 }
 

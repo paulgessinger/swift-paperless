@@ -6,6 +6,7 @@
 //
 
 import AppShared
+import Common
 import DataModel
 import Foundation
 import Networking
@@ -47,12 +48,55 @@ class DocumentListViewModel {
   /// True while a fill (page-1 await) or refresh is in flight.
   private(set) var isFetching = false
 
+  /// The observed query was just switched to and its fill hasn't reported back
+  /// yet. Without this, the element sync that precedes a filter change's fill
+  /// is a window in which an uncached query reads as "No documents".
+  private var awaitingFill = false
+
+  /// Why the most recent fill of the observed query stopped — at page 1 or
+  /// while paging the rest — or `nil` if it hasn't failed. Scoped to the query
+  /// on screen: switching queries clears it, and a superseded fill can't set it.
+  private var fillError: (any Error)?
+
+  /// The cached order is the observed query's complete membership (from the
+  /// query-status observation). Tells a truncated cache from a whole one when
+  /// the fill fails.
+  private var isCacheComplete = false
+
+  /// What the list shows: rows, placeholders, the empty state, or the
+  /// load-failure state — and whether the rows are a known-truncated answer.
+  var state: DocumentListState {
+    DocumentListState(
+      hasRows: !documents.isEmpty,
+      isFetching: isFetching || awaitingFill,
+      totalCount: totalCount,
+      isCacheComplete: isCacheComplete,
+      fillFailed: fillError != nil)
+  }
+
+  /// Which list the failure belongs to, for wording it.
+  var scope: DocumentListScope {
+    DocumentListScope(
+      savedView: filterState.savedView, modified: filterState.modified,
+      filtering: filterState.filtering)
+  }
+
+  /// The failed fill's error, as the user-facing text the error banners use.
+  var fillErrorDescription: String? {
+    fillError.map { errorController.describe($0) }
+  }
+
   // Growing-prefix state.
   @ObservationIgnored private var queryKey: QueryKey?
   @ObservationIgnored private var prefixLimit: Int
   @ObservationIgnored private nonisolated(unsafe) var fill: QueryFillHandle?
   @ObservationIgnored private nonisolated(unsafe) var documentTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var statusTask: Task<Void, Never>?
+  @ObservationIgnored private nonisolated(unsafe) var completionTask: Task<Void, Never>?
+  /// Bumped whenever the list moves on from a fill (a newer fill, a query
+  /// switch, a teardown), so an older fill's late outcome is dropped rather
+  /// than reported against whatever is on screen now.
+  @ObservationIgnored private var fillGeneration = 0
 
   private let initialLimit = 250
   private let widenStep = 250
@@ -82,6 +126,7 @@ class DocumentListViewModel {
   deinit {
     documentTask?.cancel()
     statusTask?.cancel()
+    completionTask?.cancel()
     fill?.cancel()
   }
 
@@ -111,8 +156,9 @@ class DocumentListViewModel {
     do {
       try await runFill()
     } catch {
-      // Initial load is silent: offline shows whatever is cached (or nothing),
-      // never a toast. A user-initiated refresh is where errors surface.
+      // Initial load never toasts: offline shows whatever is cached. A failure
+      // still reaches the list itself through `state`, so an empty cache reads
+      // as "couldn't load", not as "no documents".
       Logger.shared.error("Document fill failed (offline?): \(error)")
     }
     ready = true
@@ -135,7 +181,16 @@ class DocumentListViewModel {
   /// toast at the end, so a pull-to-refresh while offline doesn't stack two
   /// identical alerts.
   func refresh(filter: FilterState? = nil, userInitiated: Bool = false) async {
-    if let filter { filterState = filter }
+    if let filter {
+      filterState = filter
+      // Switch the observation before the element sync, not after it: the sync
+      // can take a full timeout when the server is unreachable, and for that
+      // whole time the list would otherwise keep showing the previous query's
+      // rows — or its failure — under the new filter.
+      if let key = store.documentQueryKey(filter: filter), key != queryKey {
+        subscribe(to: key, resettingWindow: true)
+      }
+    }
 
     // Say "offline" up front: the passes below mostly fall back to the cache
     // rather than throwing, so waiting for an error would say nothing at all.
@@ -152,12 +207,14 @@ class DocumentListViewModel {
 
     guard hasViewPermission() else {
       noPermissions = true
+      awaitingFill = false
       surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
     }
     noPermissions = false
 
     guard let key = store.documentQueryKey(filter: filterState) else {
+      awaitingFill = false
       surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
     }
@@ -171,7 +228,31 @@ class DocumentListViewModel {
       if firstError == nil { firstError = error }
     }
 
+    // The list already says the load failed, in place; a toast on top would
+    // report the same thing twice.
+    let state = state
+    if fillError != nil, state.content == .unavailable || state.isIncomplete {
+      return
+    }
     surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
+  }
+
+  /// The load-failure state's retry: fill the query on screen again.
+  ///
+  /// Only the fill, not a whole `refresh`: the element sync that runs first
+  /// there can sit out a full timeout against an unreachable server, during
+  /// which the tap would appear to do nothing. The fill flips the list to
+  /// placeholders at once. Not a user-initiated refresh as far as errors go —
+  /// the outcome shows in the list itself — but an offline device still gets
+  /// the offline indicator, so the tap visibly answers.
+  func retry() async {
+    guard queryKey != nil else { return }
+    errorController.noteOfflineIfNeeded()
+    do {
+      try await runFill()
+    } catch {
+      Logger.shared.error("Document fill retry failed: \(error)")
+    }
   }
 
   private func surface(_ error: (any Error)?, userInitiated: Bool, announcedOffline: Bool) {
@@ -182,20 +263,62 @@ class DocumentListViewModel {
   /// Kick the eager fill: page 1 awaited (DB write → observation repaints), the
   /// rest paged in the background. Throws the underlying error so the caller
   /// decides whether to surface it (coalesced with the element-sync error).
+  ///
+  /// A failure is also recorded as `fillError` for the query on screen — page 1
+  /// here, the background paging via `watchCompletion` — so the list can tell a
+  /// failed load from a query with no matches.
   private func runFill() async throws {
     isFetching = true
     defer { isFetching = false }
     fill?.cancel()
-    let handle = try await store.fillDocumentQuery(filter: filterState)
-    fill = handle
-    // Adopt the fill's authoritative count immediately. `observeQueryStatus`
-    // would deliver the same number, but only a beat *after* the page-1 write
-    // — and in that beat `documents` is still the pre-emission `[]`. Without
-    // this, switching to a not-yet-cached view momentarily reads as
-    // `documents.isEmpty && !isFetching && totalCount == 0` and flashes
-    // "No documents" before the observation repaints. Setting it here keeps
-    // the empty-state guard on the loading branch until the rows arrive.
-    totalCount = handle.totalCount
+    fillGeneration += 1
+    let generation = fillGeneration
+    do {
+      let handle = try await store.fillDocumentQuery(filter: filterState)
+      // A newer fill (or a query switch) started while page 1 was in flight:
+      // this outcome no longer describes the list on screen.
+      guard generation == fillGeneration else { return }
+      fill = handle
+      // Adopt the fill's authoritative count immediately. `observeQueryStatus`
+      // would deliver the same number, but only a beat *after* the page-1 write
+      // — and in that beat `documents` is still the pre-emission `[]`. Without
+      // this, switching to a not-yet-cached view momentarily reads as
+      // `documents.isEmpty && !isFetching && totalCount == 0` and flashes
+      // "No documents" before the observation repaints. Setting it here keeps
+      // the empty-state guard on the loading branch until the rows arrive.
+      totalCount = handle.totalCount
+      fillError = nil
+      awaitingFill = false
+      watchCompletion(of: handle, generation: generation)
+    } catch {
+      if generation == fillGeneration {
+        awaitingFill = false
+        if !error.isCancellationError {
+          fillError = error
+        }
+      }
+      throw error
+    }
+  }
+
+  /// Follow the background paging to its end. Its failure is otherwise only
+  /// logged by the repository, leaving the list stopped at whatever page it
+  /// reached with nothing to say it is incomplete.
+  private func watchCompletion(of handle: QueryFillHandle, generation: Int) {
+    completionTask?.cancel()
+    completionTask = Task { @MainActor [weak self] in
+      do {
+        try await handle.awaitCompletion()
+      } catch {
+        // Cancellation is the list moving on, or another fill (e.g. the
+        // library sweep) taking the key over — that fill owns the outcome.
+        guard !error.isCancellationError, let self, generation == fillGeneration else {
+          return
+        }
+        Logger.shared.error("Document fill stopped before the end of the query: \(error)")
+        fillError = error
+      }
+    }
   }
 
   // MARK: - Viewed stamp
@@ -235,6 +358,14 @@ class DocumentListViewModel {
       prefixLimit = initialLimit
       prefetchedIds = []
     }
+    // A different query: the previous one's fill outcome says nothing about
+    // this one, and its fill is not ours to report any more.
+    fillGeneration += 1
+    completionTask?.cancel()
+    completionTask = nil
+    fillError = nil
+    isCacheComplete = false
+    awaitingFill = true
     startStatusObservation(key)
     startDocumentObservation(key, limit: prefixLimit)
   }
@@ -267,6 +398,7 @@ class DocumentListViewModel {
         for try await status in store.observeQueryStatus(queryKey: key) {
           guard let self else { break }
           totalCount = status.totalCount
+          isCacheComplete = status.isComplete
         }
       } catch is CancellationError {
       } catch {
@@ -280,9 +412,15 @@ class DocumentListViewModel {
     documentTask = nil
     statusTask?.cancel()
     statusTask = nil
+    completionTask?.cancel()
+    completionTask = nil
     fill?.cancel()
     fill = nil
     queryKey = nil
+    fillGeneration += 1
+    fillError = nil
+    isCacheComplete = false
+    awaitingFill = false
   }
 
   // MARK: - Permissions / inbox helpers
