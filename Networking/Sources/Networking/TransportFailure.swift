@@ -33,27 +33,54 @@ public enum NetworkPathStatus: Sendable, Equatable {
 /// Process-wide source of the current ``NetworkPathStatus``, sampled when a
 /// request fails.
 ///
-/// A hook rather than an argument threaded through every repository: the
-/// network path is a device-wide fact, the repository stack is assembled in
-/// several places, and none of them should have to know about it. The app
-/// installs the provider once, at launch.
+/// A process-wide value rather than an argument threaded through every
+/// repository: the network path is a device-wide fact, the repository stack is
+/// assembled in several places, and none of them should have to know about it.
+/// `NetworkMonitor` (in AppShared) pushes updates in; requests read it when they
+/// fail.
+///
+/// The interface status and the debug force-offline override are stored
+/// separately and combined on read. More than one monitor can exist (the app
+/// shell builds a throwaway one, previews build their own), and every one of
+/// them pushes the real path; were the override folded in before the push, a
+/// second monitor's update would silently switch it off.
 public enum NetworkPathProbe {
-  public typealias Provider = @Sendable () -> NetworkPathStatus
-
-  private static let provider = OSAllocatedUnfairLock<Provider?>(initialState: nil)
-
-  /// Install (or, with `nil`, remove) the provider. The provider is called
-  /// from whatever context a request fails on, so it must be cheap and
-  /// thread-safe.
-  public static func install(_ provider: Provider?) {
-    self.provider.withLock { $0 = provider }
+  private struct State {
+    /// `nil` until a monitor delivers its first path.
+    var interfaceSatisfied: Bool?
+    var forcedOffline = false
   }
 
-  /// The path status right now, or `.unknown` if no provider is installed.
+  private static let state = OSAllocatedUnfairLock(initialState: State())
+
+  /// Record the interface status a path monitor just reported. Call it
+  /// synchronously from the monitor's callback, so a request failing right
+  /// after the path changes already sees the new status.
+  public static func update(interfaceSatisfied: Bool) {
+    state.withLock { $0.interfaceSatisfied = interfaceSatisfied }
+  }
+
+  /// Report `.unsatisfied` regardless of the interface while `forced` is set;
+  /// clearing it restores the last reported interface status.
+  public static func setForcedOffline(_ forced: Bool) {
+    state.withLock { $0.forcedOffline = forced }
+  }
+
+  /// The path status right now, or `.unknown` if no monitor has reported one.
   public static func sample() -> NetworkPathStatus {
-    // Called outside the lock: the provider takes its own.
-    let provider = provider.withLock { $0 }
-    return provider?() ?? .unknown
+    state.withLock { state in
+      if state.forcedOffline { return .unsatisfied }
+      return switch state.interfaceSatisfied {
+      case nil: .unknown
+      case true?: .satisfied
+      case false?: .unsatisfied
+      }
+    }
+  }
+
+  /// Back to "no monitor has reported", for tests.
+  static func reset() {
+    state.withLock { $0 = State() }
   }
 }
 

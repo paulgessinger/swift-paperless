@@ -75,9 +75,6 @@ struct MainView: View {
         // folds it into a single answer for all of them.
         linkCost: { [weak networkMonitor] in networkMonitor?.cost ?? .unknown }))
     errorController.installConnectivityPolicy(networkMonitor: networkMonitor)
-    // Transport failures are classified (device offline vs. server
-    // unreachable) against this monitor's path status when they happen.
-    networkMonitor.installAsNetworkPathProbe()
     _errorController = StateObject(wrappedValue: errorController)
     _networkMonitor = State(initialValue: networkMonitor)
     _biometricLockManager = StateObject(

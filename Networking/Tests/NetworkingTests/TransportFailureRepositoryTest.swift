@@ -56,33 +56,55 @@ final class TransportFailureMockURLProtocol: URLProtocol, @unchecked Sendable {
   override func stopLoading() {}
 }
 
-/// Tracks what the probe reports and how often it was asked, so a test can
-/// tell the path was sampled at failure time rather than up front.
-private final class ProbeRecorder: @unchecked Sendable {
-  private let lock = NSLock()
-  private var _status: NetworkPathStatus
-  private var _samples = 0
-
-  init(_ status: NetworkPathStatus) { _status = status }
-
-  var status: NetworkPathStatus {
-    get { lock.withLock { _status } }
-    set { lock.withLock { _status = newValue } }
-  }
-
-  var samples: Int { lock.withLock { _samples } }
-
-  func sample() -> NetworkPathStatus {
-    lock.withLock {
-      _samples += 1
-      return _status
-    }
-  }
-}
-
+// Serialized, and the only suite touching `NetworkPathProbe`: the probe is
+// process-wide, so its own tests live here too rather than racing this one.
 @MainActor
 @Suite(.serialized)
 struct TransportFailureRepositoryTest {
+  // MARK: - NetworkPathProbe
+
+  @Test
+  func probeIsUnknownUntilAMonitorReports() {
+    NetworkPathProbe.reset()
+    defer { NetworkPathProbe.reset() }
+
+    #expect(NetworkPathProbe.sample() == .unknown)
+    NetworkPathProbe.update(interfaceSatisfied: true)
+    #expect(NetworkPathProbe.sample() == .satisfied)
+    NetworkPathProbe.update(interfaceSatisfied: false)
+    #expect(NetworkPathProbe.sample() == .unsatisfied)
+  }
+
+  @Test
+  func forcedOfflineOverridesAndClearingRestoresTheInterface() {
+    NetworkPathProbe.reset()
+    defer { NetworkPathProbe.reset() }
+
+    NetworkPathProbe.update(interfaceSatisfied: true)
+    NetworkPathProbe.setForcedOffline(true)
+    #expect(NetworkPathProbe.sample() == .unsatisfied)
+
+    // Another monitor pushing the real path must not switch the override off.
+    NetworkPathProbe.update(interfaceSatisfied: true)
+    #expect(NetworkPathProbe.sample() == .unsatisfied)
+
+    NetworkPathProbe.setForcedOffline(false)
+    #expect(NetworkPathProbe.sample() == .satisfied)
+  }
+
+  @Test
+  func forcedOfflineAppliesBeforeTheFirstPath() {
+    NetworkPathProbe.reset()
+    defer { NetworkPathProbe.reset() }
+
+    NetworkPathProbe.setForcedOffline(true)
+    #expect(NetworkPathProbe.sample() == .unsatisfied)
+    NetworkPathProbe.setForcedOffline(false)
+    #expect(NetworkPathProbe.sample() == .unknown)
+  }
+
+  // MARK: - Through ApiRepository
+
   private static func makeRepo() -> ApiRepository {
     ApiRepository(
       connection: Connection(
@@ -106,11 +128,11 @@ struct TransportFailureRepositoryTest {
 
   @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/667", id: 667))
   func classifiesAgainstThePathAtFailureTime() async throws {
-    let probe = ProbeRecorder(.satisfied)
-    NetworkPathProbe.install { probe.sample() }
+    NetworkPathProbe.reset()
+    NetworkPathProbe.update(interfaceSatisfied: true)
     TransportFailureMockURLProtocol.responder = { _ in throw URLError(.cannotConnectToHost) }
     defer {
-      NetworkPathProbe.install(nil)
+      NetworkPathProbe.reset()
       TransportFailureMockURLProtocol.reset()
     }
 
@@ -125,10 +147,9 @@ struct TransportFailureRepositoryTest {
       )
       return
     }
-    #expect(probe.samples >= 1)
 
     // Same repository, same failure; only the path changed before it failed.
-    probe.status = .unsatisfied
+    NetworkPathProbe.update(interfaceSatisfied: false)
     let offline = await Self.failure { _ = try await repo.notes(documentId: 1) }
     guard case .connectivity(.cannotConnectToHost, .offline, _) = offline as? RequestError else {
       Issue.record(
@@ -141,10 +162,11 @@ struct TransportFailureRepositoryTest {
   // error value, so it collapses into one message.
   @Test
   func oneOutageIsOneErrorAcrossEndpoints() async throws {
-    NetworkPathProbe.install { .satisfied }
+    NetworkPathProbe.reset()
+    NetworkPathProbe.update(interfaceSatisfied: true)
     TransportFailureMockURLProtocol.responder = { _ in throw URLError(.cannotFindHost) }
     defer {
-      NetworkPathProbe.install(nil)
+      NetworkPathProbe.reset()
       TransportFailureMockURLProtocol.reset()
     }
 
