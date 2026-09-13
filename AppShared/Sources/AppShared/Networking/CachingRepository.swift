@@ -544,7 +544,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private func isFilling(_ key: QueryKey) -> Bool { activeFills.isOwned(key) }
 
   public func waitForQueryWriters(_ key: QueryKey) async {
-    while let owner = activeFills[key], !Task.isCancelled {
+    while let owner = activeFills.owner(of: key), !Task.isCancelled {
       // The owner's outcome is its own caller's to report; this only waits.
       _ = try? await owner.value
       // A finished owner is retracted by a separate main-actor job (its
@@ -552,7 +552,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // have run yet. A drained owner's successor registers in the same job as
       // that retraction, so there's no gap in which an in-progress takeover
       // reads as "nobody". Back off briefly rather than spin on the stale entry.
-      if activeFills[key] == owner {
+      if activeFills.owner(of: key) == owner {
         try? await Task.sleep(for: .milliseconds(20))
       }
     }
