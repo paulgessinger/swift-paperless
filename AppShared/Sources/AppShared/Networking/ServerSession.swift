@@ -95,8 +95,7 @@ public final class ServerSession {
   /// server is precisely the state this type exists to make unrepresentable,
   /// and deleting the engine's active-server guard is what made the race
   /// reachable: a sweep and an `activate` can now land on the same session.
-  @ObservationIgnored private var building:
-    (connection: Connection, task: Task<any Repository & CachingBackend, Error>)?
+  private let building = TaskSlot<any Repository & CachingBackend, any Error>()
 
   // In-flight work, one single-flight per phase.
   //
@@ -108,26 +107,16 @@ public final class ServerSession {
   // what let the engine's "skip the active server" guard go away, since there
   // is no longer a second owner to stay out of the way of.
   //
-  // The slots stay unobserved — `deinit` cancels them, and an observed
-  // property can't be read from a nonisolated deinit — so `didSet` mirrors
-  // them into ``isSyncing`` instead. Doing it in `didSet` rather than at each
-  // mutation site is what keeps the flag from drifting: there is no assignment
-  // that can forget to update it.
-  @ObservationIgnored private var syncTask: Task<Void, Never>? {
-    didSet { refreshIsSyncing() }
-  }
-  @ObservationIgnored private var elementSyncTask: Task<Void, Error>? {
-    didSet { refreshIsSyncing() }
-  }
-  @ObservationIgnored private var reconcileTask: Task<ReconcileResult, Never>? {
-    didSet { refreshIsSyncing() }
-  }
-  @ObservationIgnored private var libraryFillTask: Task<Bool, Never>? {
-    didSet { refreshIsSyncing() }
-  }
-  @ObservationIgnored private var detailFillTask: Task<Bool, Never>? {
-    didSet { refreshIsSyncing() }
-  }
+  // Join-or-start, retract-only-our-own and retire all live in `TaskSlot`,
+  // which also publishes whether it is occupied — so ``isSyncing`` is derived
+  // from the slots rather than mirrored into a stored flag. A slot cancels
+  // whatever is still in it when it is released, which is what the session's
+  // own `deinit` used to do by hand.
+  private let syncSlot = TaskSlot<Void, Never>()
+  private let elementSyncSlot = TaskSlot<Void, any Error>()
+  private let reconcileSlot = TaskSlot<ReconcileResult, Never>()
+  private let libraryFillSlot = TaskSlot<Bool, Never>()
+  private let detailFillSlot = TaskSlot<Bool, Never>()
 
   /// Whether any work is running for this server.
   ///
@@ -140,15 +129,12 @@ public final class ServerSession {
   /// nothing is being reported. Gating a control on "no stage is reporting"
   /// made the Offline & Sync screen's Sync now button flick back to enabled
   /// mid-pass.
-  public private(set) var isSyncing: Bool = false
-
-  private func refreshIsSyncing() {
-    let busy =
-      syncTask != nil || elementSyncTask != nil || reconcileTask != nil
-      || libraryFillTask != nil || detailFillTask != nil
-    if busy != isSyncing {
-      isSyncing = busy
-    }
+  ///
+  /// Not the repository build: that is not sync work, and never was part of
+  /// this flag.
+  public var isSyncing: Bool {
+    syncSlot.isOccupied || elementSyncSlot.isOccupied || reconcileSlot.isOccupied
+      || libraryFillSlot.isOccupied || detailFillSlot.isOccupied
   }
 
   public private(set) var state: State = .idle
@@ -241,14 +227,6 @@ public final class ServerSession {
     state = .ready
   }
 
-  deinit {
-    syncTask?.cancel()
-    elementSyncTask?.cancel()
-    reconcileTask?.cancel()
-    libraryFillTask?.cancel()
-    detailFillTask?.cancel()
-  }
-
   // MARK: - Repository access
 
   /// The live repository, or `nil` before anything has built it.
@@ -291,12 +269,7 @@ public final class ServerSession {
       //
       // The failure of someone else's build is not this caller's to inherit;
       // it just means the slot is free and this caller tries for itself.
-      while let building {
-        _ = try? await building.task.value
-        if self.building?.task == building.task {
-          self.building = nil
-        }
-      }
+      await building.waitUntilIdle()
 
       let connection = try stored.connection
       if let built, built.connection == connection {
@@ -317,18 +290,11 @@ public final class ServerSession {
         // session, so this half still has to be done by hand.
         retirePhases()
       }
-      // No suspension between the loop exiting and this assignment, and the
-      // session is main-actor, so the slot cannot be claimed twice.
-      let task = Task { @MainActor () throws -> any Repository & CachingBackend in
+      // No suspension between `waitUntilIdle` returning and this claim, so the
+      // slot is empty here and this starts the build rather than joining one.
+      let repository = try await building.joinOrStart {
         try await makeCachingRepository(for: stored, database: database, mode: mode)
       }
-      building = (connection, task)
-      defer {
-        if building?.task == task {
-          building = nil
-        }
-      }
-      let repository = try await task.value
       built = (connection, repository)
       return repository
     }
@@ -342,21 +308,16 @@ public final class ServerSession {
   /// cancel the very task doing the discovering. Retiring the phases is enough
   /// — the composed pass then sees them fail out and ends on its own.
   private func retirePhases() {
-    elementSyncTask?.cancel()
-    elementSyncTask = nil
-    reconcileTask?.cancel()
-    reconcileTask = nil
-    libraryFillTask?.cancel()
-    libraryFillTask = nil
-    detailFillTask?.cancel()
-    detailFillTask = nil
+    elementSyncSlot.retire()
+    reconcileSlot.retire()
+    libraryFillSlot.retire()
+    detailFillSlot.retire()
   }
 
   /// Drop the retained stack. Used when the server row goes away — the row
   /// delete FK-cascades the cache, so there is nothing else to clean up.
   public func invalidate() {
-    syncTask?.cancel()
-    syncTask = nil
+    syncSlot.retire()
     retirePhases()
     built = nil
     state = .idle
@@ -372,30 +333,22 @@ public final class ServerSession {
   /// pull-to-refresh that lands on an in-flight background sync still sees the
   /// failure it needs to toast.
   public func syncElements() async throws {
-    if let elementSyncTask {
+    if elementSyncSlot.isOccupied {
       Logger.sync.debug("Joining in-flight element sync")
-      return try await elementSyncTask.value
     }
-    guard let backend = current else {
-      // No repository yet (e.g. a store still on `NullRepository` before login).
-      Logger.sync.info("Element sync skipped: session has no repository")
-      return
-    }
-    Logger.sync.debug("Starting element sync")
-    let task = Task { [weak self] in
-      try await NetworkTransfer.$category.withValue(.sync) {
-        try await backend.syncElements { self?.report($0, for: .elementSync) }
+    _ = try await elementSyncSlot.joinOrStart(ifIdle: {
+      guard let backend = current else {
+        // No repository yet (e.g. a store still on `NullRepository` before login).
+        Logger.sync.info("Element sync skipped: session has no repository")
+        return nil
       }
-    }
-    elementSyncTask = task
-    defer {
-      // Retract only our own task: a replacement may already own the slot by the
-      // time we resume, and clearing it blindly would break its coalescing.
-      if elementSyncTask == task {
-        elementSyncTask = nil
+      Logger.sync.debug("Starting element sync")
+      return { [weak self] in
+        try await NetworkTransfer.$category.withValue(.sync) {
+          try await backend.syncElements { self?.report($0, for: .elementSync) }
+        }
       }
-    }
-    try await task.value
+    })
   }
 
   /// What one reconcile pass achieved.
@@ -421,26 +374,22 @@ public final class ServerSession {
   /// Soft-fail throughout. `force` bypasses the 300 s sub-throttle.
   @discardableResult
   public func reconcileDocuments(force: Bool = false) async -> ReconcileResult {
-    if let reconcileTask {
-      return await reconcileTask.value
-    }
-    guard let backend = current else { return ReconcileResult() }
-    if !force, let last = lastReconcileAttempt,
-      Date().timeIntervalSince(last) < Self.reconcileThrottle
-    {
-      return ReconcileResult()
-    }
-    lastReconcileAttempt = Date()
-    let task = Task { @MainActor [weak self] in
-      guard let self else { return ReconcileResult() }
-      return await runReconcile(backend: backend)
-    }
-    reconcileTask = task
-    let result = await task.value
-    if reconcileTask == task {
-      reconcileTask = nil
-    }
-    return result
+    let result = await reconcileSlot.joinOrStart(ifIdle: {
+      guard let backend = current else { return nil }
+      if !force, let last = lastReconcileAttempt,
+        Date().timeIntervalSince(last) < Self.reconcileThrottle
+      {
+        return nil
+      }
+      // Stamped only when a pass actually starts — a joiner or a throttled
+      // caller leaves it alone.
+      lastReconcileAttempt = Date()
+      return { [weak self] in
+        guard let self else { return ReconcileResult() }
+        return await runReconcile(backend: backend)
+      }
+    })
+    return result ?? ReconcileResult()
   }
 
   private func runReconcile(backend: any CachingBackend) async -> ReconcileResult {
@@ -553,10 +502,7 @@ public final class ServerSession {
     // Join an in-flight fill rather than starting a second pass over the same
     // queries. `force` is not lost by joining: a fill only runs at all when the
     // coverage marker is stale or forced, so one is already doing the work.
-    if let libraryFillTask {
-      return await libraryFillTask.value
-    }
-    let task = Task { @MainActor [weak self] in
+    return await libraryFillSlot.joinOrStart { [weak self] in
       do {
         try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
@@ -573,12 +519,6 @@ public final class ServerSession {
         return false
       }
     }
-    libraryFillTask = task
-    let completed = await task.value
-    if libraryFillTask == task {
-      libraryFillTask = nil
-    }
-    return completed
   }
 
   /// Proactive *Entire library* per-document detail fill (notes + file
@@ -589,10 +529,7 @@ public final class ServerSession {
   public func fillDocumentDetails() async -> Bool {
     guard let backend = current, backend.offlineBrowsingMode == .entireLibrary
     else { return true }
-    if let detailFillTask {
-      return await detailFillTask.value
-    }
-    let task = Task { @MainActor [weak self] in
+    return await detailFillSlot.joinOrStart { [weak self] in
       do {
         try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
@@ -608,12 +545,6 @@ public final class ServerSession {
         return false
       }
     }
-    detailFillTask = task
-    let completed = await task.value
-    if detailFillTask == task {
-      detailFillTask = nil
-    }
-    return completed
   }
 
   // MARK: - Composed sequence
@@ -629,20 +560,9 @@ public final class ServerSession {
   /// session receives a decision, never the inputs to one — and the order they
   /// run in is `SyncPhases`'s, not either party's.
   public func sync(stored: StoredConnection, phases: SyncPhases) async {
-    if let syncTask {
-      return await syncTask.value
-    }
-    let task = Task { @MainActor [weak self] in
+    await syncSlot.joinOrStart { [weak self] in
       guard let self else { return }
       await runSync(stored: stored, phases: phases)
-    }
-    syncTask = task
-    await task.value
-    // Retract only our own task: a swap can retire this pass mid-flight and a
-    // replacement may already own `syncTask` by the time we resume, and clearing
-    // it blindly would break the replacement's coalescing.
-    if syncTask == task {
-      syncTask = nil
     }
   }
 
