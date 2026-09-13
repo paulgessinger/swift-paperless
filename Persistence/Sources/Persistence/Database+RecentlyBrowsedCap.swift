@@ -14,99 +14,79 @@ public struct RecentlyBrowsedCapResult: Sendable, Equatable {
   }
 }
 
-extension QueryRetention {
-  /// Which cached lists the recurring *Recently browsed* cap may shorten: every
-  /// key that is neither `pinned` (in use right now) nor completed at or after
-  /// `completedBefore`.
-  ///
-  /// **Recency picks the lists, position picks the rows.** Within one list the
-  /// cap always keeps a prefix in server order: the list view observes a
-  /// growing prefix by ordered row offset, so keeping, say, rows 700–900 instead
-  /// of 200–700 would read offline as one contiguous list that silently jumps
-  /// 500 documents. There is also no per-row recency to key on — `query_order`
-  /// carries none, and `filled_at` is per list. Recency therefore decides
-  /// *whether* a list is capped: one a fill paged to the end recently is
-  /// something the user just browsed, and keeping it whole is what stops the
-  /// next sweep evicting the older documents they scrolled down to.
-  ///
-  /// A key with no stamp is eligible. The stamp is cleared by every page-one
-  /// write and only set when a fill reaches the end, so its absence is a list no
-  /// fill is completing; in-flight fills are the caller's to pin, as for
-  /// ``mostRecentlyFilled(_:limit:)``.
-  public static func recentlyBrowsedCapCandidates(
-    _ cached: [CachedQuery], pinned: Set<QueryKey>, completedBefore cutoff: Date
-  ) -> Set<QueryKey> {
-    Set(
-      cached
-        .filter { !pinned.contains($0.key) }
-        .filter { candidate in
-          guard let filledAt = candidate.filledAt else { return true }
-          return filledAt < cutoff
-        }
-        .map(\.key))
-  }
-}
-
-/// The recurring half of the *Recently browsed* storage cap.
+/// The *Recently browsed* storage cap, applied to lists nobody has looked at in
+/// a while.
 ///
 /// `reclaimAfterDowngrade` shrinks the cache once, at the *Entire library* →
 /// *Recently browsed* transition. Nothing kept it there: every opened list
 /// eager-fills in full (`fillQuery` is deliberately uncapped — scrolling is
 /// local-only, so a cap there would dead-end the list even online), so the
-/// cache grew straight back. This re-applies the same truncate-then-prune on
-/// an ongoing basis, to lists nobody is using, so storage settles back down
-/// after a browsing session.
+/// cache grew straight back. This re-applies the same truncate-then-prune to the
+/// lists that haven't been viewed recently.
 ///
 /// Async only, like every cache table — see the rule in `Database+Connections`.
 extension Database {
-  /// Cap each of `candidateKeys` to its first `keepingFirst` rows and prune the
-  /// documents that frees, in one transaction — but only while the server is
-  /// in *Recently browsed*, and never for a list completed at or after
-  /// `completedBefore`.
+  /// Cut every cached list for `serverID` not viewed since `cutoff` back to its
+  /// first `keepingFirst` rows, and prune the documents that frees, in one
+  /// transaction. Does nothing unless the server is in *Recently browsed*.
   ///
-  /// - The mode is read inside the transaction rather than trusted from the
-  ///   caller, so an upgrade to *Entire library* that commits first is honoured
-  ///   instead of having its freshly filled lists cut back.
-  /// - The stamp is re-checked inside the transaction for the same reason: the
-  ///   caller's candidate set is a snapshot, and a list completed since is a
-  ///   list the user just browsed.
-  /// - Only the named keys are touched, never "everything else". A fill for a
-  ///   key the caller didn't see may have appended pages already; truncating it
-  ///   would leave that fill appending at positions past a hole, i.e. a cached
-  ///   list silently missing documents. (Same argument as ``pruneQueries``.)
-  /// - `total_count` and `filled_at` survive, as in `truncateQuery`: the count
-  ///   pill keeps the server's total, and the reachability LRU keeps ranking the
-  ///   list by when it was really browsed.
-  /// - The document prune only runs when a tail was actually cut. In steady
-  ///   state nothing exceeds the cap, and the anti-join would otherwise scan the
-  ///   whole document table on every reconcile to find nothing.
+  /// **Run this only while nothing is showing or filling the server's lists.** A
+  /// list cut while on screen dead-ends at the cap, because scrolling only widens
+  /// a prefix over local rows, and a fill part-way through would go on appending
+  /// pages behind the cut. The app runs it when a server's session first builds
+  /// its repository, before any of its lists can open.
+  ///
+  /// - **Recency picks the lists, position picks the rows.** Within a list the cap
+  ///   keeps a prefix in server order: the list view observes a growing prefix,
+  ///   so keeping rows 700–900 instead of 200–700 would read offline as one list
+  ///   that silently skips 500 documents. `viewed_at` is per list, so it decides
+  ///   *whether* a list is cut.
+  /// - A list with no stamp is eligible. That includes every list cached before
+  ///   the column existed; the cost of guessing wrong is a refill on next open.
+  /// - `exempting` is for lists about to be refilled in full anyway, where a cut
+  ///   only buys a download.
+  /// - The mode is read here rather than trusted from the caller.
+  /// - `total_count`, `filled_at` and `viewed_at` survive, as in `truncateQuery`,
+  ///   so the count pill keeps the server's total.
+  /// - The document prune only runs when a tail was actually cut. Otherwise the
+  ///   anti-join would scan the whole document table to find nothing.
   @discardableResult
   public func capRecentlyBrowsedQueries(
     serverID: UUID,
-    candidateKeys: Set<QueryKey>,
     keepingFirst limit: Int,
-    completedBefore cutoff: Date
+    notViewedSince cutoff: Date,
+    exempting exempt: Set<QueryKey> = []
   ) async throws -> RecentlyBrowsedCapResult {
     try await wrappingAsync("capRecentlyBrowsedQueries") {
-      guard !candidateKeys.isEmpty else { return RecentlyBrowsedCapResult() }
-      return try await writer.write { db in
+      try await writer.write { db in
         // Raw value of AppShared's `OfflineBrowsingMode.recentlyBrowsed`, the
         // same literal `V1` defaults the column to. A missing server row means
         // there is nothing to cap (and its cache has cascaded away).
-        let mode = try String.fetchOne(
-          db, sql: "SELECT offline_browsing_mode FROM server WHERE id = ?",
-          arguments: [serverID])
+        let mode =
+          try ConnectionRecord
+          .select(ConnectionRecord.Columns.offlineBrowsingMode, as: String.self)
+          .filter(ConnectionRecord.Columns.id == serverID)
+          .fetchOne(db)
         guard mode == "recentlyBrowsed" else { return RecentlyBrowsedCapResult() }
 
+        let scope = Column("server_id") == serverID
+        let listed =
+          try QueryOrderRow
+          .filter(scope)
+          .select(Column("query_key"), as: String.self)
+          .distinct()
+          .fetchSet(db)
+        var viewedAt: [String: Date] = [:]
+        for row in try QueryViewedRow.filter(scope).fetchAll(db) {
+          viewedAt[row.queryKey] = row.viewedAt
+        }
+        let exemptKeys = Set(exempt.map(\.rawValue))
+
         var result = RecentlyBrowsedCapResult()
-        for key in candidateKeys {
-          let filledAt =
-            try QueryMetaRow
-            .filter(Column("server_id") == serverID && Column("query_key") == key.rawValue)
-            .fetchOne(db)?.filledAt
-          if let filledAt, filledAt >= cutoff { continue }
+        for key in listed where !exemptKeys.contains(key) {
+          if let viewed = viewedAt[key], viewed >= cutoff { continue }
           result.truncatedRows += try Self.truncateQuery(
-            db, serverID: serverID, queryKey: key, keepingFirst: limit)
+            db, serverID: serverID, queryKey: QueryKey(stored: key), keepingFirst: limit)
         }
         if result.truncatedRows > 0 {
           result.removedDocuments = try Self.pruneUnreferenced(db, serverID: serverID)
