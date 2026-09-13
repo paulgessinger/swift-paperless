@@ -3249,18 +3249,6 @@
         }
       }
     },
-    "offlineSyncApiDataHeader" : {
-      "comment" : "Section header for how much network data the app has used. Covers API requests and thumbnails, not downloaded document files",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "API data transferred"
-          }
-        }
-      }
-    },
     "offlineSyncCachedDocuments" : {
       "comment" : "Row label for how many documents are currently stored on the device for offline use",
       "extractionState" : "manual",
@@ -3423,14 +3411,14 @@
         }
       }
     },
-    "offlineSyncDataScopeThumbnails" : {
-      "comment" : "Footer under the data-transferred figures, stating what the meter does and does not count",
+    "offlineSyncDataScopeAll" : {
+      "comment" : "Footer under the data-transferred figures, stating what the meter counts",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Counts document lists, details, notes, element sync and thumbnails. Downloaded document files are not included."
+            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
           }
         }
       }
@@ -3485,6 +3473,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ tarihinden beri"
+          }
+        }
+      }
+    },
+    "offlineSyncDataTransferredHeader" : {
+      "comment" : "Section header for how much network data the app has used: API requests, thumbnails and downloaded document files",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data transferred"
           }
         }
       }
@@ -5797,6 +5797,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ayarlar"
+          }
+        }
+      }
+    },
+    "transferCategoryDocuments" : {
+      "comment" : "Data-transfer category: document files (PDFs, originals) downloaded to view or share them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document files"
           }
         }
       }

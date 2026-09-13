@@ -133,6 +133,18 @@ struct TransferStatsTest {
     }
   }
 
+  @Test("document downloads file their bytes under documents")
+  func documentDownloadsRecordDocuments() {
+    withSink { recorder in
+      // The download's metrics callback runs outside the caller's task, so the
+      // ambient category must not leak in.
+      NetworkTransfer.$category.withValue(.list) {
+        ApiRepository.recordDocumentTransfer(sent: 300, received: 50000)
+      }
+      #expect(recorder.bytes(in: .documents) == [50300])
+    }
+  }
+
   @Test("interactive list traffic is a category of its own")
   func listIsDistinctFromFill() {
     #expect(TransferCategory.list != TransferCategory.fill)
@@ -145,7 +157,7 @@ struct TransferStatsTest {
     // can't decode. Renaming one silently zeroes that category's history.
     let expected: [TransferCategory: String] = [
       .sync: "sync", .list: "list", .fill: "fill", .reconcile: "reconcile",
-      .thumbnails: "thumbnails", .other: "other",
+      .thumbnails: "thumbnails", .documents: "documents", .other: "other",
     ]
     #expect(Set(TransferCategory.allCases) == Set(expected.keys))
     for (category, raw) in expected {

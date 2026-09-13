@@ -16,6 +16,8 @@ extension TransferCategory {
       String(localized: .settings(.transferCategoryFill))
     case .thumbnails:
       String(localized: .settings(.transferCategoryThumbnails))
+    case .documents:
+      String(localized: .settings(.transferCategoryDocuments))
     case .reconcile:
       String(localized: .settings(.transferCategoryReconcile))
     case .other:

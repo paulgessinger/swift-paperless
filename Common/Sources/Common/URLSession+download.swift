@@ -17,17 +17,35 @@ extension URLSession {
   /// so the caller MUST move or replace it before this method returns.
   /// Background `URLSession`s only support download/upload tasks (not `data`),
   /// so this shape is also what a future background sync engine will need.
+  ///
+  /// - Parameter onTransfer: reports the bytes the download put on the wire,
+  ///   once the task's metrics land. Same meaning as in
+  ///   `getData(for:progress:onTransfer:)`.
   public nonisolated func getDownload(
-    for request: URLRequest, progress: (@Sendable (Double) -> Void)?
+    for request: URLRequest, progress: (@Sendable (Double) -> Void)?,
+    onTransfer: (@Sendable (_ sent: Int64, _ received: Int64) -> Void)? = nil
   ) async throws -> (URL, URLResponse) {
     final class Delegate: NSObject, URLSessionTaskDelegate {
       let callback: (@Sendable (Double) -> Void)?
+      let onTransfer: (@Sendable (Int64, Int64) -> Void)?
 
       @MainActor
       private var progressObservation: NSKeyValueObservation? = nil
 
-      init(_ callback: (@Sendable (Double) -> Void)? = nil) {
+      init(
+        _ callback: (@Sendable (Double) -> Void)? = nil,
+        onTransfer: (@Sendable (Int64, Int64) -> Void)? = nil
+      ) {
         self.callback = callback
+        self.onTransfer = onTransfer
+      }
+
+      func urlSession(
+        _: URLSession, task _: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics
+      ) {
+        guard let onTransfer else { return }
+        let bytes = metrics.transferredBytes
+        onTransfer(bytes.sent, bytes.received)
       }
 
       func urlSession(_: URLSession, didCreateTask task: URLSessionTask) {
@@ -41,7 +59,7 @@ extension URLSession {
       }
     }
 
-    let delegate = Delegate(progress)
+    let delegate = Delegate(progress, onTransfer: onTransfer)
     return try await download(for: request, delegate: delegate)
   }
 }

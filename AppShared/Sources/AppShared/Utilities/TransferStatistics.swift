@@ -8,8 +8,8 @@
 //  Wi‑Fi gating can be tuned with evidence rather than guesswork.
 //
 //  Counts *wire* bytes — headers and body, both directions, as reported by the
-//  task metrics — for API requests and for thumbnails loaded by the image
-//  pipeline. Streamed document downloads take another path and are not counted.
+//  task metrics — for API requests, thumbnails loaded by the image pipeline,
+//  and document file downloads.
 //
 
 import Common

@@ -159,12 +159,20 @@ public class ApiRepository {
   /// callback couldn't see anyway.
   ///
   /// The API session keeps the non-recording delegate: its requests are counted
-  /// by their per-task delegate in `fetchData`, and streamed document downloads
-  /// stay uncounted rather than landing in some category.
+  /// by their per-task delegate, in `fetchData` and in the document download
+  /// paths, so a session-level recorder there would count them twice.
   public nonisolated
     var imageSessionDelegate: (any URLSessionDelegate)?
   {
     thumbnailSessionDelegate
+  }
+
+  /// Document file downloads are filed under `.documents` regardless of the
+  /// caller's task-local category: the metrics callback runs outside the
+  /// caller's task, and a file download is the same kind of traffic whichever
+  /// screen asked for it.
+  nonisolated static func recordDocumentTransfer(sent: Int64, received: Int64) {
+    NetworkTransfer.record(bytes: Int(sent + received), category: .documents)
   }
 
   private nonisolated static func makeThumbnailSessionDelegate(
@@ -711,10 +719,11 @@ extension ApiRepository: Repository {
       @MainActor [contentStore] report in
       let request = try self.request(
         .download(documentId: document.id, original: original, version: queryVersion))
+      // Coalesced callers share this one task, so its bytes are recorded once.
       let (tempURL, response): (URL, URLResponse)
       do {
         (tempURL, response) = try await self.urlSession.getDownload(
-          for: request, progress: report)
+          for: request, progress: report, onTransfer: Self.recordDocumentTransfer)
       } catch {
         throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
       }
@@ -735,7 +744,7 @@ extension ApiRepository: Repository {
     let (tempURL, response): (URL, URLResponse)
     do {
       (tempURL, response) = try await urlSession.getDownload(
-        for: request, progress: progress)
+        for: request, progress: progress, onTransfer: Self.recordDocumentTransfer)
     } catch {
       throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
     }
