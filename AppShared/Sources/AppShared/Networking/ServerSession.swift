@@ -86,6 +86,13 @@ public final class ServerSession {
   @ObservationIgnored private var built:
     (connection: Connection, repository: any Repository & CachingBackend)?
 
+  /// Whether this session has built a repository yet.
+  ///
+  /// The first build is the one moment none of this server's lists can be open
+  /// or filling, so it is where the *Recently browsed* cap runs. A rebuild after a
+  /// re-auth or a connection edit happens with lists on screen and must skip it.
+  @ObservationIgnored private var hasBuiltRepository = false
+
   /// The build currently in flight, if any.
   ///
   /// `prepareRepository` has an `await` between "is `built` still good?" and
@@ -290,12 +297,22 @@ public final class ServerSession {
         // session, so this half still has to be done by hand.
         retirePhases()
       }
+      // The cap runs inside the build rather than after it. A caller waiting on
+      // `building` resumes when the build finishes, so work done after it could
+      // still be running when that caller opens a list on the new repository.
+      let isFirstBuild = !hasBuiltRepository
       // No suspension between `waitUntilIdle` returning and this claim, so the
       // slot is empty here and this starts the build rather than joining one.
       let repository = try await building.joinOrStart {
-        try await makeCachingRepository(for: stored, database: database, mode: mode)
+        let repository = try await makeCachingRepository(
+          for: stored, database: database, mode: mode)
+        if isFirstBuild {
+          await repository.applyRecentlyBrowsedCap()
+        }
+        return repository
       }
       built = (connection, repository)
+      hasBuiltRepository = true
       return repository
     }
   }
