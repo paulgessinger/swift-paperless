@@ -822,6 +822,19 @@ extension DocumentStore {
     }
   }
 
+  /// One-shot status of a cached query, or `nil` without a caching backend.
+  public func queryStatus(queryKey: QueryKey) async throws -> QueryStatus? {
+    guard let backend = session?.backend else { return nil }
+    return try await backend.database.queryStatus(queryKey: queryKey, serverID: backend.serverID)
+  }
+
+  /// Wait until no fill or sweep is writing the query's cached order. Returns at
+  /// once without a caching backend. See ``CachingBackend/waitForQueryWriters(_:)``.
+  public func waitForQueryWriters(queryKey: QueryKey) async {
+    guard let backend = session?.backend else { return }
+    await backend.waitForQueryWriters(queryKey)
+  }
+
   /// Throttled remote-delete reconcile on the active server, run by its session:
   /// drop cached documents that no longer exist on the server (so they disappear
   /// from every offline list), fold in the changed-metadata delta, rebuild

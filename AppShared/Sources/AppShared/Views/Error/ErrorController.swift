@@ -80,6 +80,21 @@ public class ErrorController: ObservableObject {
     return GenericError(message: message ?? Self.defaultTitle, details: error.localizedDescription)
   }
 
+  /// The user-facing text for an error, for surfaces that show it in place
+  /// rather than as a banner (e.g. the document list's load-failure state).
+  /// Applies no suppression policy and presents nothing.
+  public func describe(_ error: any Error) -> String {
+    let displayable = displayable(for: error, message: nil)
+    return displayable.details ?? displayable.message
+  }
+
+  /// An error's headline and full text kept apart, for in-place surfaces with
+  /// room for only the headline that offer the rest on demand. Applies no
+  /// suppression policy and presents nothing.
+  public func displayableError(for error: any Error) -> any DisplayableError {
+    displayable(for: error, message: nil)
+  }
+
   public func push(error: any Error, message: LocalizedStringResource) {
     push(error: error, message: String(localized: message))
   }

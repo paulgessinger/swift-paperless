@@ -108,6 +108,16 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// paging runs on a detached task, which inherits no task-local.
   func fillQuery(filter: FilterState, category: TransferCategory) async throws -> QueryFillHandle
 
+  /// Suspend until nothing is writing `key`'s cached order: no fill, and no
+  /// membership or reachability sweep holding the key.
+  ///
+  /// How a list follows a fill that took its query over. The newer fill cancels
+  /// the list's and the list never sees its handle, so it waits here for the
+  /// key to settle and then reads the cache's completeness. Follows successive
+  /// owners (a fill drained by yet another one), and returns early if the
+  /// calling task is cancelled.
+  func waitForQueryWriters(_ key: QueryKey) async
+
   /// Proactive one-time coverage fill (*Entire library*): page the
   /// default list and every saved view, stamping rows `.full`, so the whole
   /// active-server library browses offline even if never opened. Sequential
@@ -532,6 +542,21 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// Whether a fill (or the membership sweep's own rewrite) currently owns this
   /// key's `query_order`.
   private func isFilling(_ key: QueryKey) -> Bool { activeFills.isOwned(key) }
+
+  public func waitForQueryWriters(_ key: QueryKey) async {
+    while let owner = activeFills.owner(of: key), !Task.isCancelled {
+      // The owner's outcome is its own caller's to report; this only waits.
+      _ = try? await owner.value
+      // A finished owner is retracted by a separate main-actor job (its
+      // registration task, `drainFill`, or a sweep's `defer`), which may not
+      // have run yet. A drained owner's successor registers in the same job as
+      // that retraction, so there's no gap in which an in-progress takeover
+      // reads as "nobody". Back off briefly rather than spin on the stale entry.
+      if activeFills.owner(of: key) == owner {
+        try? await Task.sleep(for: .milliseconds(20))
+      }
+    }
+  }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
     // Read the marker before the guard rather than inside it: `||`'s right-hand

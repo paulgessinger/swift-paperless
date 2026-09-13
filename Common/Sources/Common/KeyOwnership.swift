@@ -43,6 +43,10 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   /// Whether some writer currently owns `key`.
   public func isOwned(_ key: Key) -> Bool { owners[key] != nil }
 
+  /// The writer currently owning `key`, if any — for callers that wait for the
+  /// key to settle without taking it over.
+  public func owner(of key: Key) -> Owner? { owners[key] }
+
   /// Every key currently owned, as of this call.
   public var ownedKeys: Dictionary<Key, Owner>.Keys { owners.keys }
 

@@ -5649,6 +5649,90 @@
         }
       }
     },
+    "documentListIncomplete" : {
+      "comment" : "Banner above a document list that is only partially loaded because loading the default document list failed partway.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load all documents"
+          }
+        }
+      }
+    },
+    "documentListIncompleteFilter" : {
+      "comment" : "Banner above a filtered document list that is only partially loaded because loading failed partway.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load all documents for this filter"
+          }
+        }
+      }
+    },
+    "documentListIncompleteSavedView" : {
+      "comment" : "Banner above a saved view's document list that is only partially loaded because loading failed partway. The argument is the saved view's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load all of “%@”"
+          }
+        }
+      }
+    },
+    "documentListRetry" : {
+      "comment" : "Button in the document list's error state and partial-load banner that tries loading the list again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
+    "documentListUnavailable" : {
+      "comment" : "Title of the document list's error state when loading the default document list failed and nothing is cached. Shown instead of 'No documents'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load documents"
+          }
+        }
+      }
+    },
+    "documentListUnavailableFilter" : {
+      "comment" : "Title of the document list's error state when loading the documents for the current filter failed and nothing is cached. Shown instead of 'No documents'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load documents for this filter"
+          }
+        }
+      }
+    },
+    "documentListUnavailableSavedView" : {
+      "comment" : "Title of the document list's error state when loading a saved view failed and nothing is cached. The argument is the saved view's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load “%@”"
+          }
+        }
+      }
+    },
     "documentOpen" : {
       "extractionState" : "manual",
       "localizations" : {

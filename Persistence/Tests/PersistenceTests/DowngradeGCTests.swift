@@ -217,6 +217,96 @@ struct DowngradeGCTests {
       ])
   }
 
+  @Test(
+    "A truncated query is no longer complete, though it keeps its fill stamp",
+    .bug("https://github.com/paulgessinger/swift-paperless/pull/723"))
+  func truncatedQueryIsIncomplete() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "default")
+
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: (1...5).map { doc($0, "d\($0)") },
+      startPosition: 0, totalCount: 5, replaceAll: true)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete)
+
+    try await database.truncateQueryOrder(serverID: server, queryKey: key, keepingFirst: 3)
+
+    let status = try await database.queryStatus(queryKey: key, serverID: server)
+    #expect(status.isComplete == false)
+    #expect(status.totalCount == 5)
+    // The stamp survives on purpose: the reachability LRU ranks on it.
+    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) != nil)
+  }
+
+  @Test("reclaimAfterDowngrade leaves the capped default list incomplete")
+  func reclaimLeavesDefaultListIncomplete() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "default")
+
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: (1...4).map { doc($0, "d\($0)") },
+      startPosition: 0, totalCount: 4, replaceAll: true)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+
+    try await database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: key, keepingFirst: 2)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete == false)
+    // A cap at or above the list's size cuts nothing, so it stays complete.
+    let whole = QueryKey(sentinel: "whole")
+    try await database.writeQueryPage(
+      queryKey: whole, serverID: server, documents: [doc(1, "d1"), doc(2, "d2")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    try await database.markQueryFillComplete(queryKey: whole, serverID: server)
+    try await database.truncateQueryOrder(serverID: server, queryKey: whole, keepingFirst: 200)
+    #expect(try await database.queryStatus(queryKey: whole, serverID: server).isComplete)
+  }
+
+  @Test("A complete fill with position gaps still reads complete")
+  func gappyCompleteFillIsComplete() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "default")
+
+    // Document 3 repeats across the page boundary: the unique key skips the
+    // repeat, so five server results leave four rows at positions 0, 1, 2, 4.
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "a"), doc(2, "b"), doc(3, "c")],
+      startPosition: 0, totalCount: 5, replaceAll: true)
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(3, "c"), doc(4, "d")],
+      startPosition: 3, totalCount: 5, replaceAll: false)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+
+    var status = try await database.queryStatus(queryKey: key, serverID: server)
+    #expect(status.localCount == 4)
+    #expect(status.isComplete)
+
+    // A remote delete mid-list punches another hole; the order is still whole.
+    try await database.deleteDocuments(serverID: server, removedIDs: [2])
+    status = try await database.queryStatus(queryKey: key, serverID: server)
+    #expect(status.localCount == 3)
+    #expect(status.isComplete)
+  }
+
+  @Test("Completeness needs the stamp; a missing total leaves the stamp to decide")
+  func orderCompletenessRule() {
+    let stamp = date(1)
+    #expect(!Database.isOrderComplete(filledAt: nil, lastPosition: 4, totalCount: 5))
+    #expect(Database.isOrderComplete(filledAt: stamp, lastPosition: 4, totalCount: 5))
+    #expect(!Database.isOrderComplete(filledAt: stamp, lastPosition: 2, totalCount: 5))
+    // More positions than the server's total (the total shrank mid-fill).
+    #expect(Database.isOrderComplete(filledAt: stamp, lastPosition: 9, totalCount: 5))
+    // A complete zero-match answer.
+    #expect(Database.isOrderComplete(filledAt: stamp, lastPosition: nil, totalCount: 0))
+    // Every row cut, with a non-zero total.
+    #expect(!Database.isOrderComplete(filledAt: stamp, lastPosition: nil, totalCount: 3))
+    #expect(Database.isOrderComplete(filledAt: stamp, lastPosition: nil, totalCount: nil))
+  }
+
   // MARK: - reclaimAfterDowngrade
 
   @Test("reclaimAfterDowngrade drops, truncates and prunes in one call")
