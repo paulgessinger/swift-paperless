@@ -435,13 +435,17 @@ struct FilterBar: View {
   @Environment(\.dismiss) private var dismiss
   @Environment(RouteManager.self) private var routeManager
 
-  @State private var showTags = false
-  @State private var showDocumentType = false
-  @State private var showCorrespondent = false
-  @State private var showStoragePath = false
-  @State private var showCustomFields = false
-  @State private var showAsn = false
-  @State private var showDate = false
+  // Exactly one filter modal can be up at a time, so the presentation state is
+  // a single optional rather than one flag per component. Two independent
+  // `isPresented` flags being true at once makes SwiftUI's SheetBridge preempt
+  // the live presentation, and the zoom transition that runs on that dismissal
+  // traps on a source it can no longer resolve (crash in
+  // `_UIZoomTransitionController.startInteractiveTransition`).
+  @State private var presented: ModalMode?
+
+  // A mode requested while another modal is still up. It is presented once the
+  // outgoing modal has actually gone away - see `presentPendingIfNeeded()`.
+  @State private var pendingPresentation: ModalMode?
 
   private enum ModalMode {
     case tags
@@ -486,41 +490,60 @@ struct FilterBar: View {
   // MARK: present()
 
   private func present(_ mode: ModalMode) {
+    // The hop off the current run loop turn is deliberate: presenting straight
+    // out of the pill's tap action races the menu/glass dismissal.
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
-      switch mode {
-      case .tags:
-        showTags = true
-      case .correspondent:
-        showCorrespondent = true
-      case .documentType:
-        showDocumentType = true
-      case .storagePath:
-        showStoragePath = true
-      case .customFields:
-        showCustomFields = true
-      case .asn:
-        showAsn = true
-      case .date:
-        showDate = true
+      guard presented != mode else { return }
+
+      guard presented == nil else {
+        // Swapping one modal for another in a single update means SwiftUI
+        // presents the new one while the old one is still up, which is the
+        // preemption path that crashes. Take the modal down first and let its
+        // teardown say when presenting again is safe.
+        pendingPresentation = mode
+        presented = nil
+        return
       }
+
+      presented = mode
     }
   }
 
   private func closeAll() {
-    showTags = false
-    showCorrespondent = false
-    showDocumentType = false
-    showStoragePath = false
-    showCustomFields = false
-    showAsn = false
-    showDate = false
+    pendingPresentation = nil
+    presented = nil
+  }
+
+  /// Called when a modal's content has left the hierarchy, i.e. the
+  /// presentation is fully torn down and a new one can safely begin.
+  private func presentPendingIfNeeded() {
+    guard let next = pendingPresentation else { return }
+    pendingPresentation = nil
+    presented = next
+  }
+
+  /// `isPresented` binding for one component, derived from the single
+  /// `presented` state so that no two components can ever both be presenting.
+  private func isPresented(_ mode: ModalMode) -> Binding<Bool> {
+    Binding(
+      get: { presented == mode },
+      set: { isPresented in
+        if isPresented {
+          presented = mode
+        } else if presented == mode {
+          presented = nil
+        }
+      }
+    )
   }
 
   private func handlePendingRoute() {
     guard let action = routeManager.pendingRoute?.action else { return }
     switch action {
     case .openFilterSettings(let setting):
-      closeAll()
+      // No `closeAll()` here: `present()` takes any open modal down itself and
+      // waits for it to go away. Doing both would dismiss and present in the
+      // same update, which is exactly what must not happen.
       routeManager.pendingRoute = nil
       let target: ModalMode =
         switch setting {
@@ -746,7 +769,9 @@ struct FilterBar: View {
     switch component {
     case .tags:
       tagElement
-        .filterPopover(isPresented: $showTags) {
+        .filterPopover(
+          isPresented: isPresented(.tags), onDismiss: presentPendingIfNeeded
+        ) {
           Modal(title: String(localized: .app(.tags))) {
             TagFilterView(
               selectedTags: $filterModel.filterState.tags)
@@ -765,7 +790,9 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.documentType != .any
       ) { present(.documentType) }
-      .filterPopover(isPresented: $showDocumentType) {
+      .filterPopover(
+        isPresented: isPresented(.documentType), onDismiss: presentPendingIfNeeded
+      ) {
         Modal(title: String(localized: .app(.documentType))) {
           CommonPickerFilterView(
             selection: $filterModel.filterState.documentType,
@@ -789,7 +816,9 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.correspondent != .any
       ) { present(.correspondent) }
-      .filterPopover(isPresented: $showCorrespondent) {
+      .filterPopover(
+        isPresented: isPresented(.correspondent), onDismiss: presentPendingIfNeeded
+      ) {
         Modal(title: String(localized: .app(.correspondent))) {
           CommonPickerFilterView(
             selection: $filterModel.filterState.correspondent,
@@ -813,7 +842,9 @@ struct FilterBar: View {
           )
         }, active: filterModel.filterState.storagePath != .any
       ) { present(.storagePath) }
-      .filterPopover(isPresented: $showStoragePath) {
+      .filterPopover(
+        isPresented: isPresented(.storagePath), onDismiss: presentPendingIfNeeded
+      ) {
         Modal(title: String(localized: .app(.storagePath))) {
           CommonPickerFilterView(
             selection: $filterModel.filterState.storagePath,
@@ -841,7 +872,9 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.customField != .any
       ) { present(.customFields) }
-      .filterPopover(isPresented: $showCustomFields) {
+      .filterPopover(
+        isPresented: isPresented(.customFields), onDismiss: presentPendingIfNeeded
+      ) {
         CustomFieldFilterView(query: $filterModel.filterState.customField)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.customFields, in: transition)
       }
@@ -854,7 +887,9 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.asn != .any
       ) { present(.asn) }
-      .filterPopover(isPresented: $showAsn) {
+      .filterPopover(
+        isPresented: isPresented(.asn), onDismiss: presentPendingIfNeeded
+      ) {
         AsnFilterView(query: $filterModel.filterState.asn)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.asn, in: transition)
       }
@@ -867,7 +902,9 @@ struct FilterBar: View {
             )
         }, active: filterModel.filterState.date.isActive
       ) { present(.date) }
-      .filterPopover(isPresented: $showDate) {
+      .filterPopover(
+        isPresented: isPresented(.date), onDismiss: presentPendingIfNeeded
+      ) {
         DateFilterView(query: $filterModel.filterState.date)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
       }
@@ -939,15 +976,22 @@ extension View {
   ///
   /// `popoverSize` only affects the popover layer — the adapted sheet
   /// ignores it and lays out at full height.
+  ///
+  /// `onDismiss` fires when the presented content leaves the hierarchy, which
+  /// is the only reliable signal that UIKit has finished tearing the
+  /// presentation down and another one may begin. `popover` has no `onDismiss`
+  /// parameter of its own, hence `onDisappear` on the content.
   fileprivate func filterPopover<Content: View>(
     isPresented: Binding<Bool>,
     popoverSize: CGSize = CGSize(width: 420, height: 520),
+    onDismiss: @escaping () -> Void = {},
     @ViewBuilder content: @escaping () -> Content
   ) -> some View {
     popover(isPresented: isPresented) {
       content()
         .frame(idealWidth: popoverSize.width, idealHeight: popoverSize.height)
         .presentationCompactAdaptation(.sheet)
+        .onDisappear(perform: onDismiss)
     }
   }
 }
