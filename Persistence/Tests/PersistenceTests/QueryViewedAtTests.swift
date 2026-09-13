@@ -57,7 +57,8 @@ struct QueryViewedAtTests {
       queryKey: list, serverID: server, documents: (3...4).map(doc),
       startPosition: 2, totalCount: 4, replaceAll: false)
     try await database.markQueryFillComplete(queryKey: list, serverID: server)
-    try await database.replaceQueryOrder(queryKey: list, serverID: server, orderedIDs: [4, 3, 2, 1])
+    try await database.replaceQueryOrder(
+      queryKey: list, serverID: server, orderedIDs: [4, 3, 2, 1])
     try await database.truncateQueryOrder(serverID: server, queryKey: list, keepingFirst: 1)
 
     #expect(try await database.queryViewedAt(queryKey: list, serverID: server) == date(1000))
