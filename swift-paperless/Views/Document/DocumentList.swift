@@ -306,14 +306,6 @@ struct DocumentList: View {
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         case .documents:
-          if state.isIncomplete {
-            IncompleteDocumentsBanner(
-              title: failureTitle(incomplete: true),
-              message: viewModel.fillErrorDescription,
-              retry: retry
-            )
-            .transition(.move(edge: .top).combined(with: .opacity))
-          }
           ScrollViewReader { proxy in
             List {
               Section {
@@ -358,6 +350,18 @@ struct DocumentList: View {
               .listSectionSeparator(.hidden)
             }
             .listStyle(.plain)
+            // Pinned below the filter bar: the rows scroll under it, so the
+            // notice stays in view however far down the truncated list goes.
+            .safeAreaInset(edge: .top, spacing: 0) {
+              if state.isIncomplete {
+                IncompleteDocumentsBanner(
+                  title: failureTitle(incomplete: true),
+                  message: viewModel.fillErrorDescription,
+                  retry: retry
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+              }
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
               DocumentCountPill(total: viewModel.totalCount)
             }
@@ -522,6 +526,10 @@ private struct IncompleteDocumentsBanner: View {
     .background(
       Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous)
     )
+    // Rows scroll under the inset, so the tint alone would let them show through.
+    .backport.glassEffect(
+      .regular, in: RoundedRectangle(cornerRadius: 12, style: .continuous),
+      orFill: .regularMaterial)
     .accessibilityElement(children: .combine)
     .padding(.horizontal)
     .padding(.vertical, 6)
