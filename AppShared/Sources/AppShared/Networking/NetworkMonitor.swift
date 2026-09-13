@@ -14,6 +14,7 @@
 import DataModel
 import Foundation
 import Network
+import Networking
 import os
 
 @MainActor
@@ -31,7 +32,9 @@ public final class NetworkMonitor {
   // When true, `isOnline` reports false regardless of the real interface
   // status. Toggled from the in-app debug menu to exercise the offline UI
   // without disrupting the device's actual network.
-  public var debugForceOffline: Bool = false
+  public var debugForceOffline: Bool = false {
+    didSet { pathSnapshot.setForcedOffline(debugForceOffline) }
+  }
 
   /// What the current path costs. One value, published as one value: the two
   /// facts are only meaningful together, and every consumer wants both.
@@ -40,9 +43,18 @@ public final class NetworkMonitor {
   @ObservationIgnored private let monitor = NWPathMonitor()
   @ObservationIgnored private let queue = DispatchQueue(label: "NetworkMonitor.queue")
 
+  // Lock-protected mirror of `isOnline`, readable from any thread. A request
+  // fails wherever it fails, and the observable properties above only catch up
+  // after a hop to the main actor — too late, and too isolated, to classify
+  // the failure against.
+  @ObservationIgnored private let pathSnapshot = PathSnapshot()
+
   public init() {
-    monitor.pathUpdateHandler = { [weak self] path in
+    monitor.pathUpdateHandler = { [weak self, pathSnapshot] path in
       let online = path.status == .satisfied
+      // Synchronously, before the hop: a request failing right after the path
+      // changes must already see the new status.
+      pathSnapshot.setInterfaceSatisfied(online)
       let cost = LinkCost(isExpensive: path.isExpensive, isConstrained: path.isConstrained)
       Task { @MainActor [weak self] in
         guard let self else { return }
@@ -57,7 +69,44 @@ public final class NetworkMonitor {
     monitor.start(queue: queue)
   }
 
+  /// Make this monitor the path status `Networking` samples when a request
+  /// fails, so the failure is classified as device-offline or
+  /// server-unreachable against the network as it was at that moment. Install
+  /// one monitor, once, at launch; a later install replaces it.
+  public func installAsNetworkPathProbe() {
+    NetworkPathProbe.install { [pathSnapshot] in pathSnapshot.status }
+  }
+
   deinit {
     monitor.cancel()
+  }
+}
+
+private final class PathSnapshot: Sendable {
+  private struct State {
+    // `nil` until NWPathMonitor delivers its first path.
+    var interfaceSatisfied: Bool?
+    var forcedOffline = false
+  }
+
+  private let state = OSAllocatedUnfairLock(initialState: State())
+
+  func setInterfaceSatisfied(_ satisfied: Bool) {
+    state.withLock { $0.interfaceSatisfied = satisfied }
+  }
+
+  func setForcedOffline(_ forced: Bool) {
+    state.withLock { $0.forcedOffline = forced }
+  }
+
+  var status: NetworkPathStatus {
+    state.withLock { state in
+      if state.forcedOffline { return .unsatisfied }
+      return switch state.interfaceSatisfied {
+      case nil: .unknown
+      case true?: .satisfied
+      case false?: .unsatisfied
+      }
+    }
   }
 }
