@@ -202,6 +202,44 @@ struct DocumentObservationTests {
     #expect(stale.orderStale == true)
   }
 
+  @Test(
+    "observeQueryStatus reports completeness only once a fill reaches the end",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/692", id: 692))
+  func queryStatusCompleteness() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server)
+    let key = QueryKey(sentinel: "q")
+
+    let cold = try await firstValue(
+      from: database.observeQueryStatus(queryKey: key, serverID: server))
+    #expect(cold.isComplete == false)
+
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    let partial = try await firstValue(
+      from: database.observeQueryStatus(queryKey: key, serverID: server))
+    #expect(partial.isComplete == false)
+
+    let complete = try await value(
+      from: database.observeQueryStatus(queryKey: key, serverID: server)
+    ) {
+      try await database.markQueryFillComplete(queryKey: key, serverID: server)
+    }
+    #expect(complete.isComplete == true)
+
+    // A new fill's page 1 truncates the order again, so the key must read as
+    // incomplete until that fill also reaches the end.
+    let refilling = try await value(
+      from: database.observeQueryStatus(queryKey: key, serverID: server)
+    ) {
+      try await database.writeQueryPage(
+        queryKey: key, serverID: server, documents: [self.doc(1, "A")],
+        startPosition: 0, totalCount: 2, replaceAll: true)
+    }
+    #expect(refilling.isComplete == false)
+  }
+
   // MARK: - observeDocument
 
   @Test("observeDocument emits nil cold, then the value, then in-place updates")

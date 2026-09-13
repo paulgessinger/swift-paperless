@@ -546,7 +546,7 @@ extension Database {
       .fetchCount(db)
     return QueryStatus(
       totalCount: meta?.totalCount, localCount: localCount,
-      orderStale: meta?.orderStale ?? false)
+      orderStale: meta?.orderStale ?? false, isComplete: meta?.filledAt != nil)
   }
 
   /// Upsert one document row. Every write is the complete object (the list
