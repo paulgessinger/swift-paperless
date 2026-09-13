@@ -44,7 +44,17 @@ class ReleaseNotesViewModel {
 
   private(set) var status: Status = .none
 
-  private let appVersion: AppVersion?
+  /// Builds published for the current version that are newer than the running
+  /// one, and are therefore deliberately left out of the list. Only ever set on
+  /// the TestFlight/debug code path.
+  struct HiddenNewerBuilds: Equatable {
+    let count: Int
+    let latest: UInt
+  }
+
+  private(set) var hiddenNewerBuilds: HiddenNewerBuilds?
+
+  let appVersion: AppVersion?
   let appConfiguration: AppConfiguration?
 
   init(version: AppVersion? = nil, appConfiguration: AppConfiguration? = nil) {
@@ -267,23 +277,27 @@ class ReleaseNotesViewModel {
         && !release.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    let sortedReleases =
-      matchingReleases
-      .compactMap { release -> (Release, UInt)? in
-        let components = release.tag_name.split(separator: "/")
-        guard components.count == 3,
-          let buildNumber = UInt(components[2])
-        else {
-          Logger.shared.warning("Invalid tag format: \(release.tag_name)")
-          return nil
-        }
-        guard buildNumber <= version.build else {
-          Logger.shared.debug(
-            "Skipping release \(release.tag_name) newer than current build \(version.build)")
-          return nil
-        }
-        return (release, buildNumber)
+    let builds = matchingReleases.compactMap { release -> (Release, UInt)? in
+      let components = release.tag_name.split(separator: "/")
+      guard components.count == 3,
+        let buildNumber = UInt(components[2])
+      else {
+        Logger.shared.warning("Invalid tag format: \(release.tag_name)")
+        return nil
       }
+      return (release, buildNumber)
+    }
+
+    let newerBuilds = builds.map(\.1).filter { $0 > version.build }
+    if let latest = newerBuilds.max() {
+      Logger.shared.debug(
+        "Hiding \(newerBuilds.count) release(s) newer than current build \(version.build)")
+      hiddenNewerBuilds = HiddenNewerBuilds(count: newerBuilds.count, latest: latest)
+    }
+
+    let sortedReleases =
+      builds
+      .filter { $0.1 <= version.build }
       .sorted { $0.1 > $1.1 }
       .map { $0.0 }
 
@@ -318,6 +332,8 @@ class ReleaseNotesViewModel {
       return
     }
 
+    hiddenNewerBuilds = nil
+
     do {
       switch appConfiguration {
       case .AppStore:
@@ -333,6 +349,65 @@ class ReleaseNotesViewModel {
       Logger.shared.error("Error loading release notes: \(error)")
       status = .error(error)
     }
+  }
+}
+
+/// Explains why the list stops where it does when the running build is older
+/// than the newest published one. Only ever shown on debug/TestFlight builds,
+/// so the text stays hardcoded English.
+private struct HiddenBuildsBanner: View {
+  let hidden: ReleaseNotesViewModel.HiddenNewerBuilds
+  let running: AppVersion
+  let configuration: AppConfiguration
+
+  private var detail: String {
+    if configuration == .TestFlight {
+      return
+        "\(running.build) is a beta build. You can find the release notes of recent builds below."
+    }
+
+    let published =
+      hidden.count == 1
+      ? "Build \(hidden.latest) is published but not listed"
+      : "\(hidden.count) newer builds, up to \(hidden.latest), are published but not listed"
+
+    return """
+      This install reports build \(running.build), and the list only shows builds up to the one \
+      you are running. \(published).
+      """
+  }
+
+  private var title: String {
+    return switch configuration {
+    case .Debug:
+      "You are running a Debug build"
+    case .Simulator:
+      "You are running in the Simulator"
+    case .TestFlight:
+      "This is a TestFlight build"
+    case .AppStore:
+      preconditionFailure("This should not be shown on App Store builds")
+    }
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Label {
+        Text(verbatim: title)
+          .bold()
+      } icon: {
+        Image(systemName: "info.bubble")
+      }
+
+      Text(verbatim: detail)
+        .font(.footnote)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(Color.green.opacity(0.15))
+    )
   }
 }
 
@@ -354,6 +429,16 @@ private struct ReleaseNotesBareView: View {
     NavigationStack {
       ScrollView(.vertical) {
         VStack {
+          if model.appConfiguration != .AppStore, let hidden = model.hiddenNewerBuilds,
+            let running = model.appVersion
+          {
+            HiddenBuildsBanner(
+              hidden: hidden, running: running, configuration: model.appConfiguration ?? .Simulator
+            )
+            .padding([.horizontal, .top])
+            .transition(.opacity)
+          }
+
           switch model.status {
           case .none:
             ProgressView()
@@ -380,6 +465,7 @@ private struct ReleaseNotesBareView: View {
           }
         }
         .animation(.easeInOut, value: model.status)
+        .animation(.easeInOut, value: model.hiddenNewerBuilds)
       }
       .refreshable {
         await model.loadReleaseNotes()
@@ -473,6 +559,14 @@ private struct HelperView: View {
 
 #Preview("Current") {
   HelperView()
+}
+
+#Preview("Debug") {
+  HelperView(version: AppVersion(version: "1.9.0", build: "170"), appConfiguration: .Debug)
+}
+
+#Preview("Simulator") {
+  HelperView(version: AppVersion(version: "1.9.0", build: "170"), appConfiguration: .Simulator)
 }
 
 #Preview("TestFlight") {
