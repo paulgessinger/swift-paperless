@@ -138,7 +138,7 @@ public class NullRepository: Repository {
   public func suggestions(documentId _: UInt) async -> Suggestions { .init() }
 
   public nonisolated
-    var delegate: (any URLSessionDelegate)?
+    var imageSessionDelegate: (any URLSessionDelegate)?
   { nil }
 
   // MARK: - Share links

@@ -575,7 +575,7 @@ extension TransientRepository: Repository {
   }
 
   public nonisolated
-    var delegate: (any URLSessionDelegate)?
+    var imageSessionDelegate: (any URLSessionDelegate)?
   { nil }
 
   public func setSuggestions(_ suggestions: Suggestions, for documentId: UInt) {

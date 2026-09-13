@@ -479,7 +479,7 @@ public class PreviewRepository: Repository {
   }
 
   public nonisolated
-    var delegate: (any URLSessionDelegate)?
+    var imageSessionDelegate: (any URLSessionDelegate)?
   { nil }
 
   public func uiSettings() async -> UISettings {

@@ -195,7 +195,7 @@ public final class DocumentStore: Sendable {
   private init(registry: ServerSessionRegistry?, session: ServerSession?) {
     self.registry = registry
     self.session = session
-    imagePipeline = Self.makeImagePipeline(delegate: session?.repository?.delegate)
+    imagePipeline = Self.makeImagePipeline(delegate: session?.repository?.imageSessionDelegate)
     rebuildProjection()
   }
 
@@ -320,7 +320,7 @@ public final class DocumentStore: Sendable {
     // so pointing the store at a new one *is* switching which server's progress
     // the Offline & Sync screen shows.
     self.session = session
-    imagePipeline = Self.makeImagePipeline(delegate: session.repository?.delegate)
+    imagePipeline = Self.makeImagePipeline(delegate: session.repository?.imageSessionDelegate)
     rebuildProjection()
     if reload {
       events.emit(.repositoryChanged)

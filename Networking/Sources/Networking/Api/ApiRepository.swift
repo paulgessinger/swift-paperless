@@ -32,6 +32,7 @@ public class ApiRepository {
 
   private let urlSession: URLSession
   private let urlSessionDelegate: PaperlessURLSessionDelegate
+  private let thumbnailSessionDelegate: PaperlessURLSessionDelegate
   private let contentStore: ContentStore?
 
   // Per-key in-flight task map: two concurrent downloads of the same blob
@@ -94,6 +95,7 @@ public class ApiRepository {
     self.contentStore = contentStore
     let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
     urlSessionDelegate = delegate
+    thumbnailSessionDelegate = Self.makeThumbnailSessionDelegate(from: delegate)
     self.urlSession = urlSession
     self.apiVersion = apiVersion
     self.backendVersion = backendVersion
@@ -112,6 +114,7 @@ public class ApiRepository {
     let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
 
     urlSessionDelegate = delegate
+    thumbnailSessionDelegate = Self.makeThumbnailSessionDelegate(from: delegate)
     urlSession = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
 
     if let versions = await Self.loadBackendVersions(urlSession: urlSession, connection: connection)
@@ -148,10 +151,36 @@ public class ApiRepository {
     }
   }
 
+  /// A *separate* delegate from the API session's: same client-certificate
+  /// credential, but it also records every task's wire bytes as `.thumbnails`.
+  /// The image pipeline is the only session it is attached to, and everything
+  /// that session loads is a thumbnail (prefetch, cells, previews), so the
+  /// category is fixed rather than read from a task-local, which a delegate
+  /// callback couldn't see anyway.
+  ///
+  /// The API session keeps the non-recording delegate: its requests are counted
+  /// by their per-task delegate, in `fetchData` and in the document download
+  /// paths, so a session-level recorder there would count them twice.
   public nonisolated
-    var delegate: (any URLSessionDelegate)?
+    var imageSessionDelegate: (any URLSessionDelegate)?
   {
-    urlSessionDelegate
+    thumbnailSessionDelegate
+  }
+
+  /// Document file downloads are filed under `.documents` regardless of the
+  /// caller's task-local category: the metrics callback runs outside the
+  /// caller's task, and a file download is the same kind of traffic whichever
+  /// screen asked for it.
+  nonisolated static func recordDocumentTransfer(sent: Int64, received: Int64) {
+    NetworkTransfer.record(bytes: Int(sent + received), category: .documents)
+  }
+
+  private nonisolated static func makeThumbnailSessionDelegate(
+    from delegate: PaperlessURLSessionDelegate
+  ) -> PaperlessURLSessionDelegate {
+    delegate.recordingTransfers { sent, received in
+      NetworkTransfer.record(bytes: Int(sent + received), category: .thumbnails)
+    }
   }
 
   private nonisolated
@@ -690,10 +719,11 @@ extension ApiRepository: Repository {
       @MainActor [contentStore] report in
       let request = try self.request(
         .download(documentId: document.id, original: original, version: queryVersion))
+      // Coalesced callers share this one task, so its bytes are recorded once.
       let (tempURL, response): (URL, URLResponse)
       do {
         (tempURL, response) = try await self.urlSession.getDownload(
-          for: request, progress: report)
+          for: request, progress: report, onTransfer: Self.recordDocumentTransfer)
       } catch {
         throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
       }
@@ -714,7 +744,7 @@ extension ApiRepository: Repository {
     let (tempURL, response): (URL, URLResponse)
     do {
       (tempURL, response) = try await urlSession.getDownload(
-        for: request, progress: progress)
+        for: request, progress: progress, onTransfer: Self.recordDocumentTransfer)
     } catch {
       throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
     }

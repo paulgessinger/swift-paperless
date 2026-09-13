@@ -1627,7 +1627,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   // MARK: - Infrastructure pass-throughs
 
-  public nonisolated var delegate: (any URLSessionDelegate)? { wrapped.delegate }
+  public nonisolated var imageSessionDelegate: (any URLSessionDelegate)? {
+    wrapped.imageSessionDelegate
+  }
 
   public func supports(feature: BackendFeature) -> Bool {
     wrapped.supports(feature: feature)

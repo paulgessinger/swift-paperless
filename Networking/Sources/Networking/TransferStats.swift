@@ -2,16 +2,19 @@
 //  TransferStats.swift
 //  Networking
 //
-//  Lightweight, best-effort accounting of bytes received over the API, fed from
-//  the single `ApiRepository` response chokepoint. The app registers a `sink`
+//  Lightweight, best-effort accounting of bytes moved over the network, fed from
+//  the `ApiRepository` response chokepoint, its document download paths, and the
+//  image pipeline's session delegate (see `ApiRepository.imageSessionDelegate`).
+//  The app registers a `sink`
 //  once at startup to forward totals into an app-level observable; the active
 //  `category` is a task-local set by callers around an operation (list / fill /
 //  sync / reconcile), so the meter can break traffic down by what produced it.
 //
-//  Scope: this records API requests that flow through `fetchData` (metadata,
-//  list pages, element collections, detail, notes). File downloads (streamed)
-//  and thumbnails (Nuke) take other paths and are intentionally not counted
-//  here — they are explicit, user-driven transfers, not background fills.
+//  Scope: API requests that flow through `fetchData` (metadata, list pages,
+//  element collections, detail, notes), plus every load on the Nuke image
+//  pipeline's session, filed under `.thumbnails`, plus streamed document file
+//  downloads, filed under `.documents`. A file served from the local
+//  `ContentStore` makes no request and counts nothing.
 //
 //  Bytes come from the task's `URLSessionTaskMetrics`, so they are what actually
 //  crossed the wire: compressed sizes, headers included, both directions, and
@@ -34,6 +37,8 @@ public enum TransferCategory: String, Sendable, CaseIterable {
   case list  // interactive list load: the user opened, switched or refreshed a view
   case fill  // proactive library / document-detail fill
   case reconcile  // R2 / R3δ / membership sweeps
+  case thumbnails  // image pipeline: list prefetch, cell loads, previews
+  case documents  // document file downloads (archive PDF or original)
   case other  // everything else (on-open detail, notes, suggestions, …)
 }
 

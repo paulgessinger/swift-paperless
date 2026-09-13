@@ -263,14 +263,14 @@ public struct OfflineSyncView: View {
           Text(.settings(.offlineSyncResetStatistics))
         }
       } header: {
-        Text(.settings(.offlineSyncApiDataHeader))
+        Text(.settings(.offlineSyncDataTransferredHeader))
       } footer: {
-        // The meter has one feeder (the API response chokepoint), so thumbnails
-        // and streamed downloads are missing from these numbers by design. Say
-        // so here rather than letting "Total" read as everything the app moved.
+        // Say what "Total" covers, and that opening a document already in the
+        // offline cache costs nothing, so a small Documents row isn't read as
+        // the meter missing traffic.
         VStack(alignment: .leading, spacing: 4) {
           Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
-          Text(.settings(.offlineSyncDataScope))
+          Text(.settings(.offlineSyncDataScopeAll))
         }
       }
     }

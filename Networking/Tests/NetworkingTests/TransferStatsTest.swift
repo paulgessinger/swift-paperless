@@ -17,6 +17,9 @@ struct TransferStatsTest {
       lock.withLock { entries.append((bytes, category)) }
     }
     var categories: [TransferCategory] { lock.withLock { entries.map(\.1) } }
+    func bytes(in category: TransferCategory) -> [Int] {
+      lock.withLock { entries.filter { $0.1 == category }.map(\.0) }
+    }
   }
 
   private func withSink(_ body: (Recorder) throws -> Void) rethrows {
@@ -108,6 +111,40 @@ struct TransferStatsTest {
     }
   }
 
+  @Test("the image session delegate files its bytes under thumbnails")
+  @MainActor
+  func imageSessionDelegateRecordsThumbnails() throws {
+    let repository = ApiRepository(
+      connection: Connection(
+        url: URL(string: "https://example.com")!, token: "t", identityName: nil,
+        serverID: UUID()),
+      mode: .release, contentStore: nil, urlSession: URLSession(configuration: .ephemeral))
+    let delegate = try #require(repository.imageSessionDelegate as? PaperlessURLSessionDelegate)
+
+    withSink { recorder in
+      // Wrapped in a different ambient category: the callback runs on a
+      // URLSession queue in production, so the category must be fixed on the
+      // delegate, never read from a task-local.
+      NetworkTransfer.$category.withValue(.fill) {
+        delegate.record(sent: 20, received: 200)
+      }
+      // Other suites may feed the global sink concurrently; look at ours only.
+      #expect(recorder.bytes(in: .thumbnails) == [220])
+    }
+  }
+
+  @Test("document downloads file their bytes under documents")
+  func documentDownloadsRecordDocuments() {
+    withSink { recorder in
+      // The download's metrics callback runs outside the caller's task, so the
+      // ambient category must not leak in.
+      NetworkTransfer.$category.withValue(.list) {
+        ApiRepository.recordDocumentTransfer(sent: 300, received: 50000)
+      }
+      #expect(recorder.bytes(in: .documents) == [50300])
+    }
+  }
+
   @Test("interactive list traffic is a category of its own")
   func listIsDistinctFromFill() {
     #expect(TransferCategory.list != TransferCategory.fill)
@@ -119,7 +156,8 @@ struct TransferStatsTest {
     // `TransferStatistics` persists totals keyed by raw value and drops keys it
     // can't decode. Renaming one silently zeroes that category's history.
     let expected: [TransferCategory: String] = [
-      .sync: "sync", .list: "list", .fill: "fill", .reconcile: "reconcile", .other: "other",
+      .sync: "sync", .list: "list", .fill: "fill", .reconcile: "reconcile",
+      .thumbnails: "thumbnails", .documents: "documents", .other: "other",
     ]
     #expect(Set(TransferCategory.allCases) == Set(expected.keys))
     for (category, raw) in expected {
