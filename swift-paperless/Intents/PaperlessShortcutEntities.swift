@@ -7,6 +7,7 @@ import AppIntents
 import AppShared
 import DataModel
 import Foundation
+import Networking
 
 struct PaperlessServerEntity: AppEntity {
   static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Server")
@@ -73,7 +74,7 @@ struct PaperlessServerQuery: EntityStringQuery {
 
   @MainActor
   private func allEntities() -> [PaperlessServerEntity] {
-    let connectionManager = ConnectionManager()
+    let connectionManager = PaperlessIntentStore.connectionManager
     let allConnections = Array(connectionManager.connections.values)
     let activeConnectionId = connectionManager.activeConnectionId
 
@@ -88,10 +89,8 @@ struct PaperlessServerQuery: EntityStringQuery {
 
   @MainActor
   private func activeEntity() -> PaperlessServerEntity? {
-    let connectionManager = ConnectionManager()
-    guard let activeConnectionId = connectionManager.activeConnectionId,
-      let connection = connectionManager.connections[activeConnectionId]
-    else {
+    let connectionManager = PaperlessIntentStore.connectionManager
+    guard let connection = connectionManager.storedConnection else {
       return nil
     }
 
@@ -124,34 +123,24 @@ struct PaperlessDocumentTypeQuery: EntityStringQuery {
   func entities(for identifiers: [PaperlessDocumentTypeEntity.ID]) async throws
     -> [PaperlessDocumentTypeEntity]
   {
-    guard !identifiers.isEmpty else { return [] }
-    let ids = Set(identifiers)
-    return try await allEntities().filter { ids.contains($0.id) }
+    try await PaperlessElementLoader.resolve(
+      identifiers, server: intent?.server, kind: String(localized: .app(.documentType))
+    ) { try await $0.documentTypes() }
+    .map(PaperlessDocumentTypeEntity.init)
   }
 
   func entities(matching string: String) async throws -> [PaperlessDocumentTypeEntity] {
     let search = string.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !search.isEmpty else { return try await suggestedEntities() }
-    return try await allEntities().filter {
-      $0.documentType.name.localizedCaseInsensitiveContains(search)
+    return try await suggestedEntities().filter {
+      search.isEmpty || $0.documentType.name.localizedCaseInsensitiveContains(search)
     }
   }
 
   func suggestedEntities() async throws -> [PaperlessDocumentTypeEntity] {
-    try await allEntities()
-  }
-
-  private func allEntities() async throws -> [PaperlessDocumentTypeEntity] {
-    do {
-      let repository = try await PaperlessIntentRepository.repository(server: intent?.server)
-      return try await repository.documentTypes()
-        .sortedByLocalizedName()
-        .map(PaperlessDocumentTypeEntity.init)
-    } catch let error as PaperlessIntentError {
-      throw error
-    } catch {
-      throw PaperlessIntentError.loadOptionsFailed(error.localizedDescription)
+    try await PaperlessElementLoader.suggested(server: intent?.server) {
+      try await $0.documentTypes()
     }
+    .map(PaperlessDocumentTypeEntity.init)
   }
 }
 
@@ -178,34 +167,24 @@ struct PaperlessCorrespondentQuery: EntityStringQuery {
   func entities(for identifiers: [PaperlessCorrespondentEntity.ID]) async throws
     -> [PaperlessCorrespondentEntity]
   {
-    guard !identifiers.isEmpty else { return [] }
-    let ids = Set(identifiers)
-    return try await allEntities().filter { ids.contains($0.id) }
+    try await PaperlessElementLoader.resolve(
+      identifiers, server: intent?.server, kind: String(localized: .app(.correspondent))
+    ) { try await $0.correspondents() }
+    .map(PaperlessCorrespondentEntity.init)
   }
 
   func entities(matching string: String) async throws -> [PaperlessCorrespondentEntity] {
     let search = string.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !search.isEmpty else { return try await suggestedEntities() }
-    return try await allEntities().filter {
-      $0.correspondent.name.localizedCaseInsensitiveContains(search)
+    return try await suggestedEntities().filter {
+      search.isEmpty || $0.correspondent.name.localizedCaseInsensitiveContains(search)
     }
   }
 
   func suggestedEntities() async throws -> [PaperlessCorrespondentEntity] {
-    try await allEntities()
-  }
-
-  private func allEntities() async throws -> [PaperlessCorrespondentEntity] {
-    do {
-      let repository = try await PaperlessIntentRepository.repository(server: intent?.server)
-      return try await repository.correspondents()
-        .sortedByLocalizedName()
-        .map(PaperlessCorrespondentEntity.init)
-    } catch let error as PaperlessIntentError {
-      throw error
-    } catch {
-      throw PaperlessIntentError.loadOptionsFailed(error.localizedDescription)
+    try await PaperlessElementLoader.suggested(server: intent?.server) {
+      try await $0.correspondents()
     }
+    .map(PaperlessCorrespondentEntity.init)
   }
 }
 
@@ -230,29 +209,69 @@ struct PaperlessTagQuery: EntityStringQuery {
   private var intent
 
   func entities(for identifiers: [PaperlessTagEntity.ID]) async throws -> [PaperlessTagEntity] {
-    guard !identifiers.isEmpty else { return [] }
-    let ids = Set(identifiers)
-    return try await allEntities().filter { ids.contains($0.id) }
+    try await PaperlessElementLoader.resolve(
+      identifiers, server: intent?.server, kind: String(localized: .app(.tag))
+    ) { try await $0.tags() }
+    .map(PaperlessTagEntity.init)
   }
 
   func entities(matching string: String) async throws -> [PaperlessTagEntity] {
     let search = string.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !search.isEmpty else { return try await suggestedEntities() }
-    return try await allEntities().filter {
-      $0.tag.name.localizedCaseInsensitiveContains(search)
+    return try await suggestedEntities().filter {
+      search.isEmpty || $0.tag.name.localizedCaseInsensitiveContains(search)
     }
   }
 
   func suggestedEntities() async throws -> [PaperlessTagEntity] {
-    try await allEntities()
+    try await PaperlessElementLoader.suggested(server: intent?.server) { try await $0.tags() }
+      .map(PaperlessTagEntity.init)
+  }
+}
+
+/// Element reads for the server picked in the intent (or the active one), always
+/// through the store's repository so they come from the synced local cache.
+@MainActor
+private enum PaperlessElementLoader {
+  /// Picker lists: give a short sync the chance to pull in new elements, then
+  /// read whatever is cached — also when the sync failed or timed out.
+  static func suggested<Element: LocallyNamed & Sendable>(
+    server: PaperlessServerEntity?,
+    load: @Sendable (any Repository) async throws -> [Element]
+  ) async throws -> [Element] {
+    try await loading {
+      let store = try await PaperlessIntentStore.store(server: server)
+      await store.sync(timeout: .seconds(3))
+      return try await load(store.repository).sortedByLocalizedName()
+    }
   }
 
-  private func allEntities() async throws -> [PaperlessTagEntity] {
+  /// Saved parameter values: read the cache without syncing. Only if an ID is
+  /// missing, sync once and read again before reporting it as gone.
+  static func resolve<Element: Identifiable & Sendable>(
+    _ identifiers: [Int],
+    server: PaperlessServerEntity?,
+    kind: String,
+    load: @Sendable (any Repository) async throws -> [Element]
+  ) async throws -> [Element] where Element.ID == UInt {
+    guard !identifiers.isEmpty else { return [] }
+    let ids = Set(identifiers)
+    return try await loading {
+      let store = try await PaperlessIntentStore.store(server: server)
+      var found = try await load(store.repository).filter { ids.contains(Int($0.id)) }
+      if found.count < ids.count {
+        try? await store.sync()
+        found = try await load(store.repository).filter { ids.contains(Int($0.id)) }
+        guard found.count == ids.count else {
+          throw PaperlessIntentError.missingElement(kind)
+        }
+      }
+      return found
+    }
+  }
+
+  private static func loading<T>(_ body: () async throws -> T) async throws -> T {
     do {
-      let repository = try await PaperlessIntentRepository.repository(server: intent?.server)
-      return try await repository.tags()
-        .sortedByLocalizedName()
-        .map(PaperlessTagEntity.init)
+      return try await body()
     } catch let error as PaperlessIntentError {
       throw error
     } catch {

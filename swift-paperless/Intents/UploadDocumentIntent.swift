@@ -56,8 +56,11 @@ struct UploadDocumentIntent: AppIntent {
       created: nil)
 
     do {
-      let repository = try await PaperlessIntentRepository.repository(server: server)
-      try await repository.create(
+      let store = try await PaperlessIntentStore.store(server: server)
+      // Opportunistic: refresh the element cache while the upload runs, so the
+      // next shortcut run sees current tags/types/correspondents.
+      Task { try? await store.sync(userInitiated: true) }
+      try await store.repository.create(
         document: document,
         file: uploadFile.url,
         filename: uploadFile.filename)
