@@ -16249,6 +16249,17 @@
         }
       }
     },
+    "uploadDocumentIntentMissingElementError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+          }
+        }
+      }
+    },
     "uploadDocumentIntentNoConnectionError" : {
       "extractionState" : "manual",
       "localizations" : {
