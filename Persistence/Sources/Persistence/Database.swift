@@ -100,9 +100,9 @@ public final class Database: Sendable {
     // an app container is the completeUntilFirstUserAuthentication we want, so
     // the guarantee holds by default rather than because of this code.
     Self.applyFileProtection(directory)
-    Self.applyFileProtection(path)
-    Self.applyFileProtection(path.deletingPathExtension().appendingPathExtension("sqlite-wal"))
-    Self.applyFileProtection(path.deletingPathExtension().appendingPathExtension("sqlite-shm"))
+    for file in Self.files(of: path) {
+      Self.applyFileProtection(file)
+    }
 
     let migrator = Migrations.migrator(legacyConnectionsUserDefaults: legacyConnectionsUserDefaults)
     #if DEBUG
@@ -181,18 +181,49 @@ public final class Database: Sendable {
       .appendingPathComponent("Application Support", isDirectory: true)
       .appendingPathComponent("Database", isDirectory: true)
       .appendingPathComponent("swift-paperless.sqlite")
-    let files = [
-      base,
-      base.deletingPathExtension().appendingPathExtension("sqlite-wal"),
-      base.deletingPathExtension().appendingPathExtension("sqlite-shm"),
-    ]
-    for file in files where FileManager.default.fileExists(atPath: file.path) {
+    for file in files(of: base) where FileManager.default.fileExists(atPath: file.path) {
       try FileManager.default.removeItem(at: file)
     }
     Logger.persistence.notice("Wiped local database at \(base.path, privacy: .public)")
   }
 
+  // MARK: - Disk usage
+
+  /// The SQLite file backing this database, or `nil` for an in-memory one.
+  public var fileURL: URL? {
+    (writer as? DatabasePool).map { URL(fileURLWithPath: $0.path) }
+  }
+
+  /// Space the database takes on disk — the main file *and* its `-wal` /
+  /// `-shm` sidecars, since in WAL mode recent writes live in the `-wal` until
+  /// a checkpoint folds them back, and it can run to megabytes after a fill.
+  ///
+  /// A handful of `stat` calls, but still file-system I/O: keep it off the
+  /// main actor. Zero for an in-memory database.
+  ///
+  /// One figure for every server: the file is shared, and SQLite can't say
+  /// which pages belong to whose rows. Per-server detail is a row count, which
+  /// the cache observations already provide.
+  public func diskUsage() -> DiskUsage {
+    guard let fileURL else { return .zero }
+    return DiskUsage.measure(Self.files(of: fileURL))
+  }
+
   // MARK: - Filesystem helpers
+
+  /// The database file followed by its WAL-mode sidecars.
+  ///
+  /// SQLite appends `-wal` / `-shm` to the *whole* filename, so the sidecars of
+  /// `swift-paperless.sqlite` are `swift-paperless.sqlite-wal` and
+  /// `…-shm`. Built by appending to the last path component rather than by
+  /// swapping the extension: production always ends in `.sqlite`, but the
+  /// `init(path:)` test seam takes any path, and a `cache.db` there has
+  /// `cache.db-wal`, not `cache.sqlite-wal`.
+  private static func files(of base: URL) -> [URL] {
+    let directory = base.deletingLastPathComponent()
+    let name = base.lastPathComponent
+    return ["", "-wal", "-shm"].map { directory.appendingPathComponent(name + $0) }
+  }
 
   private static func createDirectory(_ url: URL) throws {
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
