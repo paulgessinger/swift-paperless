@@ -105,9 +105,20 @@ extension Database {
         position: startPosition + offset, remoteId: domain.id
       ).insert(db)
     }
+    // Only page 1 has earned the right to clear the stale flag: it rewrites the
+    // whole order from the server. A later page appends behind rows fetched
+    // earlier, and a flag set in between (a delta refresh or an edit changing a
+    // document those rows already placed) still describes them — clearing it
+    // here would let the fill's tail vouch for its head.
+    let orderStale =
+      replaceAll
+      ? false
+      : try QueryMetaRow
+        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+        .fetchOne(db)?.orderStale ?? false
     try setQueryMeta(
       db, serverID: serverID, queryKey: queryKey,
-      totalCount: totalCount, orderStale: false,
+      totalCount: totalCount, orderStale: orderStale,
       stamp: replaceAll ? .cleared : .unchanged)
   }
 
