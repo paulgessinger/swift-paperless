@@ -4113,6 +4113,162 @@
         }
       }
     },
+    "offlineSyncFailuresHeader" : {
+      "comment" : "Header for the Offline & Sync section listing the parts of this server's last sync that failed (e.g. the server returned an error)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync errors"
+          }
+        }
+      }
+    },
+    "offlineSyncFailuresDescription" : {
+      "comment" : "Footer under the Offline & Sync section listing failed parts of the last sync",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+          }
+        }
+      }
+    },
+    "offlineSyncFailureRepeated" : {
+      "comment" : "Shown under a failed sync step when it failed several consecutive times. %lld is the number of consecutive failures (always 2 or more)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed %lld times in a row"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteConnection" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: setting up the connection to the server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to the server"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteUISettings" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: fetching the user's permissions and UI settings from the server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permissions and settings"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteElements" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: fetching tags, correspondents, document types, storage paths, saved views, users, groups and custom fields",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags, correspondents and other data"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteDeletions" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: removing documents from the offline cache that were deleted on the server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removing deleted documents"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteChanges" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: refreshing cached documents that changed on the server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating changed documents"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteMembership" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: refreshing which documents each saved view contains",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating saved views"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteReachability" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: removing cached lists that are no longer needed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up the offline cache"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteLibraryFill" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: downloading the whole document library for offline use",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading the library"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteDetailFill" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: downloading each document's notes and file metadata for offline use",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading notes and file details"
+          }
+        }
+      }
+    },
+
+
+
+
+
+
+
+
+
+
+
+
     "offlineSyncProgressCount" : {
       "comment" : "Progress counter under the sync progress bar. %1$lld is the number of items finished, %2$lld the total",
       "extractionState" : "manual",

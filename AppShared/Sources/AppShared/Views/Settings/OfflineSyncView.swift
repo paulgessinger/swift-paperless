@@ -227,6 +227,9 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineSyncStatusHeader))
       }
 
+      // Both modes, unlike the per-view list below; empty renders nothing.
+      SyncFailuresSection(failures: store.syncFailures)
+
       if mode == .entireLibrary, !store.syncErrors.isEmpty {
         Section {
           ForEach(store.syncErrors) { error in
