@@ -522,7 +522,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // `fillLibrary` awaits the fill and reports its failure where the user
         // can see it. The interactive path doesn't await the background paging
         // at all, so without this its failures would be entirely silent.
-        Logger.sync.error("Background query fill failed: \(error)")
+        // Classified rather than a flat `.error`: a list opened offline pages
+        // into a dead network, which is routine (see `SyncFailureClass`).
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(), "Background query fill failed: \(error)")
       }
       // Retract only our own registration: a newer fill may have drained and
       // replaced us while this was waiting.
@@ -583,6 +586,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
     var succeeded = 0
+    // Whether every view that failed did so because the device is offline. A
+    // pass like that is the network, not the library, and says so at `.info`.
+    var failedOnlyOffline = true
     Logger.sync.info(
       "Library fill: \(views.count, privacy: .public) view(s) for server \(self.serverLogLabel, privacy: .public)"
     )
@@ -632,6 +638,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           Logger.sync.warning(
             "Library fill: '\(name ?? "default", privacy: .public)' ended incomplete; not counting it as covered"
           )
+          failedOnlyOffline = false
           continue
         }
         try? await database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
@@ -642,8 +649,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // A rejected view (e.g. an advanced full-text query the server won't run)
         // must not block the *whole* library's coverage. Record it so the
         // Offline & Sync screen can warn, and carry on.
-        Logger.sync.warning(
+        //
+        // Not when the device is offline, though: that says nothing about the
+        // view, and recording it would list every saved view as broken the
+        // moment *Sync now* is tapped without a network (#663). Any error the
+        // view already has stays until it next fills.
+        let failureClass = SyncFailureClass(error)
+        Logger.sync.log(
+          level: failureClass.logLevel(),
           "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
+        guard failureClass != .offline else { continue }
+        failedOnlyOffline = false
         try? await database.recordQuerySyncError(
           serverID: serverID, queryKey: key.rawValue, savedViewName: name,
           message: Self.syncFailureMessage(error))
@@ -657,7 +673,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // empty cache — the ordinary shape of Wi-Fi with the server unreachable,
     // since neither `isExpensive` nor `isConstrained` means reachable.
     guard succeeded > 0 else {
-      Logger.sync.warning(
+      Logger.sync.log(
+        level: failedOnlyOffline ? .info : .error,
         "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
       return
     }
@@ -777,6 +794,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let domains = try await fetch()
       try await database.replaceElements(domains, of: type, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
+      // Routine (see `SyncFailureClass`): a collection this user may not see.
+      // Anything else propagates and fails the element phase, which
+      // `ServerSession` logs and records at the level the rule gives it.
       Logger.sync.info(
         "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
     }
@@ -793,7 +813,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       try await database.setUISettings(settings, serverID: serverID)
       return settings.permissions
     } catch {
-      Logger.sync.info(
+      // The sharpest instance of #663: a 500 here was logged at `.info` and
+      // never seen, because the fallback keeps the rest of the sync going.
+      Logger.sync.log(
+        level: SyncFailureClass(error).logLevel(),
         "uiSettings sync failed (\(error)); gating sync on cached permissions")
       return try? await database.uiSettings(serverID: serverID)?.permissions
     }
@@ -804,6 +827,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let config = try await wrapped.serverConfiguration()
       try await database.setServerConfiguration(config, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
+      // Routine, as in `syncCollection`.
       Logger.sync.info("Skipping serverConfiguration sync: \(error)")
     }
   }
@@ -1142,7 +1166,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // rather than failing the open. Mirrors the element offline-first policy.
       // A permission failure isn't caught here at all, so it propagates.
       if let cached = try await database.document(serverID: serverID, id: id) {
-        Logger.shared.info("document(id:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "document(id:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
@@ -1156,7 +1182,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
       if let cached = try await database.document(serverID: serverID, asn: asn) {
-        Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "document(asn:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
@@ -1345,7 +1373,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       } catch is CancellationError {
         throw CancellationError()
       } catch {
-        Logger.sync.info(
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(),
           "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
         )
         try? await database.recordQuerySyncError(
@@ -1575,7 +1604,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
       if let cached = try await database.fileMetadata(serverID: serverID, versionID: versionID) {
-        Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "metadata(documentId:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
@@ -1591,7 +1622,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
       // former propagates the network error.
       if let cached = try await database.notes(serverID: serverID, documentID: documentId) {
-        Logger.shared.info("notes(documentId:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "notes(documentId:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
