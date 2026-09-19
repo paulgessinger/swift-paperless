@@ -3,8 +3,9 @@
 //  swift-paperless
 //
 //  Central place to control and observe offline caching: the browsing-scope
-//  setting, the current sync/fill status, and how much data the background
-//  processes have moved (to inform Wi‑Fi gating).
+//  setting, the current sync/fill status, how much data the background
+//  processes have moved (to inform Wi‑Fi gating), and how much space it all
+//  takes on disk.
 //
 
 import DataModel
@@ -279,6 +280,8 @@ public struct OfflineSyncView: View {
           Text(.settings(.offlineSyncDataScopeAll))
         }
       }
+
+      OfflineStorageSection()
     }
     .task { libraryTotal = await store.libraryDocumentCount() }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))

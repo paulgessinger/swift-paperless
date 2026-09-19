@@ -106,6 +106,26 @@ public final class DocumentStore: Sendable {
   /// currently *reporting* — see ``ServerSession/isSyncing``.
   public var isSyncing: Bool { session?.isSyncing ?? false }
 
+  /// Whether *any* configured server has sync work in flight — the active one
+  /// or one `SyncEngine` is sweeping in the background.
+  ///
+  /// ``isSyncing`` is the right question for anything that speaks for the
+  /// active server (its stage rows, its *Sync now* button). This is the one for
+  /// anything that describes the app as a whole: an inactive server's sweep
+  /// writes to the same database and the same app-group blob store, so the
+  /// storage figures move without ``isSyncing`` ever changing.
+  ///
+  /// Reads the registry's sessions, which is observable, as is each session's
+  /// flag — so a view gating on this repaints when a background sweep starts or
+  /// ends. A fixture store pinned to one session has no registry and falls back
+  /// to that session alone.
+  public var isAnyServerSyncing: Bool {
+    if let registry, registry.sessions.values.contains(where: \.isSyncing) {
+      return true
+    }
+    return isSyncing
+  }
+
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
   /// `nil` until the first successful reconcile this session.
   ///
@@ -352,12 +372,17 @@ public final class DocumentStore: Sendable {
     return ImagePipeline(configuration: config)
   }
 
+  /// Where the image pipelines keep their on-disk thumbnail cache — `nil`
+  /// without an app-group container (previews, host tests). Only the path: the
+  /// storage statistics read it off the main actor, and must not create it.
+  nonisolated static func thumbnailCacheURL() -> URL? {
+    FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: ContentStore.appGroup
+    )?.appendingPathComponent("Caches/Nuke", isDirectory: true)
+  }
+
   private static func sharedThumbnailCacheURL() -> URL? {
-    guard
-      let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: ContentStore.appGroup)
-    else { return nil }
-    let url = container.appendingPathComponent("Caches/Nuke", isDirectory: true)
+    guard let url = thumbnailCacheURL() else { return nil }
     try? FileManager.default.createDirectory(
       at: url, withIntermediateDirectories: true)
     try? FileManager.default.setAttributes(
@@ -936,6 +961,19 @@ extension DocumentStore {
     }
     // Nuke memory + disk image cache.
     imagePipeline.cache.removeAll()
+  }
+
+  /// How much disk the offline data takes, for the Offline & Sync screen.
+  ///
+  /// Detached, because it walks the blob and thumbnail directories — thousands
+  /// of files for a fully-cached library — and that must not stall the UI. The
+  /// database is read through the active session; before login there is none,
+  /// and it reads as zero (the screen isn't reachable then anyway).
+  public func storageUsage() async -> OfflineStorageUsage {
+    let database = session?.backend?.database
+    return await Task.detached(priority: .utility) {
+      OfflineStorageUsage.measure(database: database)
+    }.value
   }
 
   /// Debug / maintenance: drop downloaded document files that no cached document
