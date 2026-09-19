@@ -288,4 +288,49 @@ struct ContentStoreTests {
 
     #expect(FileManager.default.fileExists(atPath: foreignFile.path))
   }
+
+  // MARK: - Usage
+
+  @Test("Usage attributes blobs to their server and counts blobs, not sidecars")
+  func usageByServer() throws {
+    let (store, _) = try Self.makeStore()
+    _ = try Self.write(store, Self.key(server: Self.serverA, version: 1, kind: .archive))
+    _ = try Self.write(store, Self.key(server: Self.serverA, version: 1, kind: .original))
+    _ = try Self.write(store, Self.key(server: Self.serverA, version: 2, kind: .archive))
+    _ = try Self.write(store, Self.key(server: Self.serverB, version: 1, kind: .archive))
+
+    let usage = store.usage()
+
+    #expect(usage.byServer[Self.serverA]?.files == 3)
+    #expect(usage.byServer[Self.serverB]?.files == 1)
+    #expect(usage.total.files == 4)
+    // Eight files on disk (blob + sidecar each), all at least one byte.
+    #expect(usage.total.bytes >= 8)
+    #expect(
+      usage.total.bytes
+        == (usage.byServer[Self.serverA]?.bytes ?? 0) + (usage.byServer[Self.serverB]?.bytes ?? 0))
+  }
+
+  @Test("Usage counts space outside any server directory in the total only")
+  func usageIncludesForeignEntriesInTotal() throws {
+    let (store, root) = try Self.makeStore()
+    _ = try Self.write(store, Self.key(version: 4))
+    let foreign = root.appendingPathComponent("Caches/ContentStore/not-a-uuid/keep.txt")
+    try FileManager.default.createDirectory(
+      at: foreign.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data("keep".utf8).write(to: foreign)
+
+    let usage = store.usage()
+
+    #expect(Array(usage.byServer.keys) == [Self.serverA])
+    #expect(usage.total.bytes > usage.byServer[Self.serverA]!.bytes)
+    // Not a blob name, so it takes space without counting as a download.
+    #expect(usage.total.files == 1)
+  }
+
+  @Test("An empty store measures as zero")
+  func usageOfEmptyStore() throws {
+    let (store, _) = try Self.makeStore()
+    #expect(store.usage() == ContentStore.Usage())
+  }
 }
