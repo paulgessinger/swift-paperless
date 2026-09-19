@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   upload_to_testflight:
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
     permissions:
       # Needed to create the build tag and its prerelease after a successful
