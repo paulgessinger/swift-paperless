@@ -401,6 +401,60 @@ struct DocumentCacheTests {
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
   }
 
+  @Test(
+    "an appended page keeps a stale flag set after page 1",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func appendKeepsStale() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    // A refresh moved document 1 after page 1 placed it; page 2 doesn't
+    // revisit page 1's rows, so it can't vouch for them.
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B")],
+      startPosition: 1, totalCount: 2, replaceAll: false)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("an appended page leaves a clean order clean")
+  func appendKeepsClean() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B")],
+      startPosition: 1, totalCount: 2, replaceAll: false)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test("a membership rewrite clears the order-stale flag")
+  func membershipRewriteClearsStale() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    // The server's own ordering of the whole key, so it is current again.
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
   // MARK: - Reconcile support
 
   @Test("allDocumentIDs returns every cached document id for the server")
