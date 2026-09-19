@@ -24,8 +24,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - macos: macos-26
-            ios: "26.2"
+          - macos: xcode-27
+            ios: "27.0"
             xcode: default
       fail-fast: false
     name: "iOS ${{ matrix.ios }} (Xcode ${{ matrix.xcode }}, ${{ matrix.macos }})"
@@ -65,10 +65,9 @@ jobs:
       - name: Build application
         run: |
           set -o pipefail
-          xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
           xcodebuild build \
             -scheme swift-paperless \
-            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=${{ matrix.ios }}" \
+            -destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=${{ matrix.ios }}" \
             -clonedSourcePackagesDirPath SourcePackages \
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGN_IDENTITY="" \
@@ -76,7 +75,7 @@ jobs:
 
   test:
     name: "swift tests ${{ matrix.package }}"
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 25
 
     strategy:
@@ -128,3 +127,19 @@ jobs:
       - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
         with:
           prek-version: '0.3.x'
+
+  # The only check branch protection requires. The other job names embed matrix
+  # values (iOS/Xcode/runner versions) that change with every toolchain bump;
+  # gating on this one job keeps the required-check list stable. `always()` is
+  # needed so a failed dependency fails this job instead of skipping it, which
+  # GitHub would count as passing.
+  all-green:
+    name: CI
+    if: always()
+    needs: [build, test, lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
+        with:
+          jobs: ${{ toJSON(needs) }}
