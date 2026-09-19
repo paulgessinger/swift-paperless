@@ -135,6 +135,101 @@ struct KeyOwnershipTests {
     successor.cancel()
   }
 
+  @Test(
+    "Two drainers of one owner cannot both end up claiming the key",
+    .bug(id: "735"))
+  func concurrentDrainersDoNotBothClaim() async throws {
+    // Two fills for one key arrive while a third owns it. Both wait in `drain`
+    // on that same owner; when it stops, the first resumes and claims. The
+    // second must not then claim over the first without stopping it — that
+    // leaves two fills writing one key's `query_order`.
+    let ownership = KeyOwnership<String>()
+    let latch = Latch()
+    let old = KeyOwnership<String>.Owner {
+      await latch.wait()
+      try Task.checkCancellation()
+    }
+    ownership.claim("key", by: old)
+
+    @MainActor func drainThenClaim() async -> KeyOwnership<String>.Owner {
+      await ownership.drain("key")
+      // No suspension between `drain` returning and the claim, as in `fillQuery`.
+      let fill = KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+      ownership.claim("key", by: fill)
+      return fill
+    }
+    let first = Task { @MainActor in await drainThenClaim() }
+    let second = Task { @MainActor in await drainThenClaim() }
+    // Let both drainers reach their `await` on `old` before it stops.
+    try await Task.sleep(for: .milliseconds(20))
+    await latch.release()
+    let fills = [await first.value, await second.value]
+
+    let holder = try #require(ownership.owner(of: "key"))
+    #expect(fills.contains(holder))
+    for fill in fills where fill != holder {
+      #expect(fill.isCancelled, "a replaced claimant must have been stopped, not left writing")
+    }
+    for fill in fills { fill.cancel() }
+  }
+
+  @Test("Taking a key over drains its owner and registers the new one", .bug(id: "735"))
+  func takeOverReplacesOwner() async throws {
+    let ownership = KeyOwnership<String>()
+    let old = KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+    ownership.claim("key", by: old)
+
+    let fill = await ownership.takeOver("key") {
+      KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+    }
+    #expect(old.isCancelled)
+    #expect(ownership.owner(of: "key") == fill)
+    // The drained owner finishing late must not unprotect its successor.
+    ownership.release("key", ifOwnedBy: old)
+    #expect(ownership.owner(of: "key") == fill)
+    fill.cancel()
+  }
+
+  @Test("Concurrent take-overs of one key leave exactly one writer running", .bug(id: "735"))
+  func concurrentTakeOversLeaveOneWriter() async throws {
+    let ownership = KeyOwnership<String>()
+    let latch = Latch()
+    let old = KeyOwnership<String>.Owner {
+      await latch.wait()
+      try Task.checkCancellation()
+    }
+    ownership.claim("key", by: old)
+
+    let takers = (0..<3).map { _ in
+      Task { @MainActor in
+        await ownership.takeOver("key") {
+          KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+        }
+      }
+    }
+    try await Task.sleep(for: .milliseconds(20))
+    await latch.release()
+    var fills: [KeyOwnership<String>.Owner] = []
+    for taker in takers { fills.append(await taker.value) }
+
+    let holder = try #require(ownership.owner(of: "key"))
+    #expect(fills.filter { !$0.isCancelled } == [holder])
+    for fill in fills { fill.cancel() }
+  }
+
+  @Test("A throwing start claims nothing")
+  func takeOverStartThrows() async throws {
+    let ownership = KeyOwnership<String>()
+    let old = KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+    ownership.claim("key", by: old)
+
+    await #expect(throws: WriteFailed.self) {
+      try await ownership.takeOver("key") { throw WriteFailed() }
+    }
+    #expect(old.isCancelled)
+    #expect(!ownership.isOwned("key"))
+  }
+
   @Test("A write owns its keys for its whole duration and releases them afterwards")
   func withOwnershipHoldsAcrossAwaits() async throws {
     let ownership = KeyOwnership<String>()
