@@ -103,9 +103,9 @@ struct AtomicCacheUpdateTests {
       permissions: UserPermissions.empty(with: { $0.set(.view, to: true, for: .document) }))
   }
 
-  // MARK: - upsertDocumentsInvalidatingNotes
+  // MARK: - applyChangedDocuments
 
-  @Test("upsertDocumentsInvalidatingNotes refreshes the rows and drops their notes")
+  @Test("applyChangedDocuments refreshes the rows and drops their notes")
   func combinedUpsertAndInvalidate() async throws {
     let server = UUID()
     let database = try database(server)
@@ -114,7 +114,7 @@ struct AtomicCacheUpdateTests {
     try await database.setNotes([note(1, "one")], serverID: server, documentID: 1)
     try await database.setNotes([note(2, "two")], serverID: server, documentID: 2)
 
-    try await database.upsertDocumentsInvalidatingNotes(
+    try await database.applyChangedDocuments(
       [doc(1, title: "Renamed")], serverID: server)
 
     #expect(try await database.document(serverID: server, id: 1)?.title == "Renamed")
@@ -123,7 +123,7 @@ struct AtomicCacheUpdateTests {
     #expect(try await database.notes(serverID: server, documentID: 2)?.count == 1)
   }
 
-  @Test("upsertDocumentsInvalidatingNotes takes exactly one transaction")
+  @Test("applyChangedDocuments takes exactly one transaction")
   func combinedUpsertIsOneTransaction() async throws {
     let server = UUID()
     let database = try database(server)
@@ -131,7 +131,7 @@ struct AtomicCacheUpdateTests {
     try await database.setNotes([note(1, "one")], serverID: server, documentID: 1)
 
     let counter = try countingCommits(on: database)
-    try await database.upsertDocumentsInvalidatingNotes([doc(1)], serverID: server)
+    try await database.applyChangedDocuments([doc(1)], serverID: server)
 
     // The regression this guards: as two accessors it was two commits, and a
     // `createNote` write-through committing between them was deleted by the
@@ -140,7 +140,7 @@ struct AtomicCacheUpdateTests {
     #expect(counter.commits == 1)
   }
 
-  @Test("upsertDocumentsInvalidatingNotes writes nothing for an empty batch")
+  @Test("applyChangedDocuments writes nothing for an empty batch")
   func combinedUpsertEmptyBatch() async throws {
     let server = UUID()
     let database = try database(server)
@@ -148,13 +148,13 @@ struct AtomicCacheUpdateTests {
     try await database.setNotes([note(1, "one")], serverID: server, documentID: 1)
 
     let counter = try countingCommits(on: database)
-    try await database.upsertDocumentsInvalidatingNotes([], serverID: server)
+    try await database.applyChangedDocuments([], serverID: server)
 
     #expect(counter.commits == 0)
     #expect(try await database.notes(serverID: server, documentID: 1)?.count == 1)
   }
 
-  @Test("upsertDocumentsInvalidatingNotes is scoped to one server")
+  @Test("applyChangedDocuments is scoped to one server")
   func combinedUpsertServerScoping() async throws {
     let serverA = UUID()
     let serverB = UUID()
@@ -170,7 +170,7 @@ struct AtomicCacheUpdateTests {
     try await database.setNotes([note(1, "a")], serverID: serverA, documentID: 1)
     try await database.setNotes([note(1, "b")], serverID: serverB, documentID: 1)
 
-    try await database.upsertDocumentsInvalidatingNotes([doc(1)], serverID: serverA)
+    try await database.applyChangedDocuments([doc(1)], serverID: serverA)
 
     #expect(try await database.notes(serverID: serverA, documentID: 1) == nil)
     #expect(try await database.notes(serverID: serverB, documentID: 1)?.count == 1)

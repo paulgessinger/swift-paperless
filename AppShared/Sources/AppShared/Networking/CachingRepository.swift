@@ -1353,7 +1353,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // between an upsert and a separate invalidation would be deleted by it,
         // and under *Recently browsed* nothing repairs that until the document
         // is fetched online again.
-        try await database.upsertDocumentsInvalidatingNotes(toUpsert, serverID: serverID)
+        //
+        // The same write marks stale every cached list whose order a changed
+        // document may no longer fit (see `Database.applyChangedDocuments` for
+        // the rule). It doesn't claim those keys: the mark touches no
+        // `query_order` row, so a fill paging one of them keeps writing, and
+        // the mark outlives the fill's remaining pages. What clears it is a
+        // rewrite of the whole order from the server — the membership sweep
+        // right behind this pass (*Entire library*: the default list and saved
+        // views), or the next fill of the list, which every open of it starts.
+        let marked = try await database.applyChangedDocuments(toUpsert, serverID: serverID)
+        if marked > 0 {
+          Logger.sync.info(
+            "Reconcile: \(marked, privacy: .public) cached list(s) may be out of order")
+        }
         applied += toUpsert.count
       }
       // Commit the cursor per page rather than once at the end — this is what

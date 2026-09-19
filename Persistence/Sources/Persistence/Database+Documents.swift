@@ -35,29 +35,81 @@ extension Database {
     }
   }
 
-  /// Upsert a batch of documents **and** drop their cached notes, in one
-  /// transaction — the changed-metadata delta's write.
+  /// Apply a page of the changed-documents delta (R3δ): upsert the documents,
+  /// drop their cached notes, and mark stale every cached query order the
+  /// refresh may have invalidated — in one transaction. Returns how many
+  /// cached query keys were newly marked.
   ///
-  /// A note edit bumps `modified`, so a document the delta refreshes may have
-  /// stale cached notes; the upsert also refreshes its `notesCount`, which is
-  /// what lets the next detail fill re-seed an empty row for free or re-fetch.
-  /// The delta cannot tell a note change from any other field change, so this
-  /// may drop notes that did not actually change.
+  /// **Notes.** A note edit bumps `modified`, so a document the delta refreshes
+  /// may have stale cached notes; the upsert also refreshes its `notesCount`,
+  /// which is what lets the next detail fill re-seed an empty row for free or
+  /// re-fetch. The delta cannot tell a note change from any other field change,
+  /// so this may drop notes that did not actually change.
+  ///
+  /// **Query orders.** A cached `query_order` is the server's answer to one
+  /// filter and sort, taken when it was filled. The rule:
+  ///
+  /// > Every cached query that lists a refreshed document is marked
+  /// > order-stale when the refresh changed a field a filter or sort can
+  /// > reference (`Document.queryPlacementMayDiffer(from:)`), or when there
+  /// > was no cached row to compare with.
+  ///
+  /// - *Compared, not assumed.* The delta re-fetches from its watermark's day,
+  ///   so most of what it applies is identical to the cached row; marking on
+  ///   every write would flag nearly every list on every pass and make the
+  ///   flag meaningless.
+  /// - *Coarse per key, not per filter.* A `QueryKey` is a one-way hash of the
+  ///   query, so the filter behind a cached order can't be recovered to test
+  ///   the document against it. Even with the filter stored, much of it can't
+  ///   be evaluated locally — full-text search, "more like this", the
+  ///   relevance score and the duplicate filter run on server-side state the
+  ///   cache doesn't hold. So every key listing the document is marked.
+  /// - *Leaving is covered, entering is not.* A document that now matches a
+  ///   query it isn't listed in yet leaves that key unmarked. Marking every key
+  ///   of the server instead would, since any real edit bumps `modified`, mark
+  ///   every list on nearly every pass — the same meaningless flag. Entry is
+  ///   left to the passes that already rebuild membership from the server: the
+  ///   membership sweep that follows the delta under *Entire library* (the
+  ///   default list and every saved view), and the refill every list gets when
+  ///   it is opened online.
+  /// - *No row to compare* means the key holds a skeleton (the membership
+  ///   sweep lists ids before their objects arrive): its position came from a
+  ///   copy of the document the cache never saw, so it is marked too.
+  ///
+  /// Marking only flips `query_meta.order_stale`; it rewrites no `query_order`
+  /// row, so it can't garble a fill writing the same key. The flag survives
+  /// that fill's later pages and is cleared only by a rewrite of the whole
+  /// order (a fill's page 1, or the membership sweep).
   ///
   /// One transaction rather than an upsert followed by an invalidation,
   /// because the two are no longer separated by nothing: the `async` accessors
   /// suspend, and a `createNote` / `deleteNote` write-through landing between
   /// them would be deleted by the invalidation that follows it. Under
   /// *Recently browsed* nothing repairs that until the document is fetched
-  /// online again, so the user's just-written note would appear to vanish.
-  public func upsertDocumentsInvalidatingNotes(
+  /// online again, so the user's just-written note would appear to vanish. The
+  /// comparison needs the pre-write rows, so it belongs in the same transaction
+  /// for the same reason.
+  @discardableResult
+  public func applyChangedDocuments(
     _ domains: [Document], serverID: UUID
-  ) async throws {
-    guard !domains.isEmpty else { return }
-    try await wrappingAsync("upsertDocumentsInvalidatingNotes") {
+  ) async throws -> Int {
+    guard !domains.isEmpty else { return 0 }
+    return try await wrappingAsync("applyChangedDocuments") {
       try await writer.write { db in
+        let ids = domains.map(\.id)
+        let cached =
+          try DocumentRecord
+          .filter(Column("server_id") == serverID && ids.contains(Column("id")))
+          .fetchAll(db)
+        let previous = Dictionary(uniqueKeysWithValues: cached.map { ($0.id, $0.domain) })
+        let moved = domains.filter { document in
+          guard let old = previous[document.id] else { return true }
+          return document.queryPlacementMayDiffer(from: old)
+        }.map(\.id)
+
         try Self.writeDocumentRows(db, domains, serverID: serverID)
-        try Self.dropNotes(serverID: serverID, documentIDs: domains.map(\.id), db)
+        try Self.dropNotes(serverID: serverID, documentIDs: ids, db)
+        return try Self.markOrderStale(db, containingAnyOf: moved, serverID: serverID)
       }
     }
   }
@@ -170,12 +222,26 @@ extension Database {
   private static func markOrderStale(
     _ db: GRDB.Database, containing remoteID: UInt, serverID: UUID
   ) throws {
+    try markOrderStale(db, containingAnyOf: [remoteID], serverID: serverID)
+  }
+
+  /// Flag every cached query listing any of `remoteIDs` as order-stale, and
+  /// return how many were not already flagged.
+  @discardableResult
+  private static func markOrderStale(
+    _ db: GRDB.Database, containingAnyOf remoteIDs: [UInt], serverID: UUID
+  ) throws -> Int {
+    guard !remoteIDs.isEmpty else { return 0 }
     let containing =
       QueryOrderRow
       .select(Column("query_key"), as: String.self)
-      .filter(Column("server_id") == serverID && Column("remote_id") == remoteID)
-    try QueryMetaRow
-      .filter(Column("server_id") == serverID && containing.contains(Column("query_key")))
+      .filter(Column("server_id") == serverID && remoteIDs.contains(Column("remote_id")))
+    return
+      try QueryMetaRow
+      .filter(
+        Column("server_id") == serverID && containing.contains(Column("query_key"))
+          && Column("order_stale") == false
+      )
       .updateAll(db, Column("order_stale").set(to: true))
   }
 
