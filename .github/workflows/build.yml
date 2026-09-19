@@ -65,7 +65,6 @@ jobs:
       - name: Build application
         run: |
           set -o pipefail
-          xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
           xcodebuild build \
             -scheme swift-paperless \
             -destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=${{ matrix.ios }}" \
