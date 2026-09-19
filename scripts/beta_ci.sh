@@ -226,11 +226,9 @@ fi
 # commit. Without ASC credentials (a local --no-upload smoke test) the
 # placeholder is used as-is.
 if [ -z "$build_number" ] && [ -n "$app_id" ]; then
-  build_number="$(asc builds next-build-number --app "$app_id" --platform IOS --output json \
-    | jq -r '.nextBuildNumber')"
+  build_number="$(scripts/next_build_number.sh "$app_id")"
 elif [ -n "$build_number" ] && [ -n "$app_id" ]; then
-  next="$(asc builds next-build-number --app "$app_id" --platform IOS --output json \
-    | jq -r '.nextBuildNumber')"
+  next="$(scripts/next_build_number.sh "$app_id")"
   if [ "$build_number" -lt "$next" ] && [ "${ALLOW_BUILD_NUMBER_MISMATCH:-0}" != "1" ]; then
     echo "error: --build-number $build_number is below the next free number ($next)" >&2
     echo "       App Store Connect will reject it; set ALLOW_BUILD_NUMBER_MISMATCH=1 to try anyway" >&2

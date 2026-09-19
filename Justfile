@@ -43,6 +43,12 @@ get-version:
 get-build:
   @grep -m1 '^CURRENT_PROJECT_VERSION' {{version_xcconfig}} | sed 's/.*= //'
 
+# Needs `asc` logged in; counts in-flight uploads too. The number in
+# Version.xcconfig is only a placeholder; e.g. `just set_build $(just next-build)`.
+# Print the next free TestFlight build number from App Store Connect.
+next-build:
+  @scripts/next_build_number.sh
+
 # Cut a TestFlight beta: previews the notes it will publish, then dispatches
 # .github/workflows/beta.yml. Nothing is committed, pushed, or built locally —
 # CI takes the build number from App Store Connect and tags the result. Args are
