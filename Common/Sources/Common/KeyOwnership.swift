@@ -59,8 +59,11 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   /// Register `owner` as `key`'s writer.
   ///
   /// Unconditional: whatever owned the key before is replaced *without* being
-  /// cancelled. Callers that want exclusion use ``takeOver(_:start:)``.
-  public func claim(_ key: Key, by owner: Owner) {
+  /// cancelled. Not public for that reason: outside callers take a key over
+  /// with ``takeOver(_:start:)``, or write a key they checked is free under
+  /// ``withOwnership(of:perform:)``, and neither can leave a replaced writer
+  /// running.
+  func claim(_ key: Key, by owner: Owner) {
     owners[key] = owner
   }
 
@@ -86,12 +89,27 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   /// releasing it and this resuming. Either is drained in turn, so the key is
   /// free when this returns — the last check and the return are one main-actor
   /// job, with no suspension in between.
-  public func drain(_ key: Key) async {
+  ///
+  /// A drainer cancelled *itself* stops here instead, with
+  /// `CancellationError`. `await owner.value` is not interruptible, so such a
+  /// caller resumes anyway, and without the check it would go on to cancel
+  /// whatever it finds next — after several drainers waited on one owner, that
+  /// is the *successor* a still-live caller is depending on. It would stop that
+  /// successor and then claim a replacement its own caller cancels the instant
+  /// it exists (``takeOver(_:start:)`` claims without suspending, so the caller's
+  /// cancellation handler is the very next thing to run): two writers killed and
+  /// the key left with nobody refreshing it (#735). So cancellation is checked
+  /// before every owner this would stop, and once more before returning, where
+  /// the caller's claim follows. A cancelled drainer has cancelled nothing and
+  /// leaves the key exactly as it found it.
+  public func drain(_ key: Key) async throws {
     while let owner = owners[key] {
+      try Task.checkCancellation()
       owner.cancel()
       _ = try? await owner.value
       release(key, ifOwnedBy: owner)
     }
+    try Task.checkCancellation()
   }
 
   /// Take `key` over: drain it until nobody owns it, then register the owner
@@ -105,10 +123,13 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   /// ``release(_:ifOwnedBy:)`` once it has stopped: a newer caller may have
   /// taken the key over meanwhile.
   ///
+  /// Throws `CancellationError` without claiming anything if the *caller* was
+  /// cancelled while draining — see ``drain(_:)``.
+  ///
   /// - Returns: The owner `start` created, now registered against `key`.
   @discardableResult
-  public func takeOver(_ key: Key, start: () throws -> Owner) async rethrows -> Owner {
-    await drain(key)
+  public func takeOver(_ key: Key, start: () throws -> Owner) async throws -> Owner {
+    try await drain(key)
     let owner = try start()
     claim(key, by: owner)
     return owner
@@ -132,11 +153,21 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   ///
   /// Any other error from `write` propagates as-is.
   ///
+  /// This is for a writer that *steps over* keys in use rather than taking them
+  /// over, so every key must be free: the caller checks ``isOwned(_:)`` (or
+  /// ``ownedKeys``) and gets here without suspending. Claiming an owned key
+  /// would replace its writer without stopping it, so that is asserted against
+  /// rather than done silently; a writer that wants a busy key uses
+  /// ``takeOver(_:start:)``.
+  ///
   /// - Returns: `true` if the write completed, `false` if it was drained.
   public func withOwnership(
     of keys: Set<Key>,
     perform write: @escaping @Sendable () async throws -> Void
   ) async throws -> Bool {
+    assert(
+      keys.allSatisfy { owners[$0] == nil },
+      "withOwnership would replace a running writer without stopping it")
     let owner = Owner { try await write() }
     for key in keys { claim(key, by: owner) }
     defer {
