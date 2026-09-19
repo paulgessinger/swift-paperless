@@ -188,6 +188,25 @@ public final class ServerSession {
   /// actually unreferenced) and it bounds how long a leak can survive relaunches.
   private static let contentReclaimThrottle: TimeInterval = 3600
 
+  /// Which parts of this server's sync last failed, and how. Rendered on the
+  /// Offline & Sync screen for the active server.
+  ///
+  /// Every phase below reports into this, whoever started it — the store's
+  /// on-appear triggers, pull-to-refresh, or a background sweep — which is what
+  /// lets an *inactive* server's failures show up once it is switched to, and
+  /// what `DocumentStore.lastSyncError` could never do: that only ever saw a
+  /// thrown, displayable element-sync failure on the store's own path. The
+  /// rule for what gets in (and at what level it logs) is `SyncFailureClass`'s;
+  /// in particular, being offline never records anything.
+  ///
+  /// In memory only, like the other stamps here: a relaunch runs a fresh pass
+  /// straight away, which re-records whatever is still broken.
+  private var failureLedger = SyncFailureLedger()
+
+  /// The current failures, in a fixed order; empty when every part of the last
+  /// pass that ran succeeded.
+  public var syncFailures: [SyncFailureLedger.Entry] { failureLedger.current }
+
   /// Every sync stage running right now *for this server*, in a fixed order;
   /// empty when idle. The Offline & Sync screen renders the active server's,
   /// through its store.
@@ -214,6 +233,69 @@ public final class ServerSession {
   /// stage; the list keeps showing whatever else is still running.
   private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
     activeStages[stage] = activity
+  }
+
+  /// Record a failure at `site` and log it at the level the rule gives it.
+  ///
+  /// The single place a sync failure is logged. Only the ledger knows how many
+  /// attempts in a row a site has failed, so only a line written from here can
+  /// escalate an unreachable server to `.error`; a layer below that logs the
+  /// same failure on the way past can only ever write a quieter duplicate.
+  private func recordFailure(_ error: any Error, at site: SyncFailureSite) {
+    // Classify before touching the ledger: a mutation of an observed property
+    // repaints the Offline & Sync screen even when it changes nothing, and the
+    // routine failures — offline above all — are the common ones.
+    let failureClass = SyncFailureClass(error)
+    var level = failureClass.logLevel()
+    var consecutive = 0
+    if failureClass.isSurfaced {
+      let outcome = failureLedger.recordFailure(
+        error, at: site, message: Self.failureMessage(error))
+      level = outcome.logLevel
+      consecutive = outcome.consecutiveFailures
+    }
+    Logger.sync.log(
+      level: level,
+      "Sync \(site.rawValue, privacy: .public) failed for server \(self.serverID, privacy: .public) (\(consecutive, privacy: .public) in a row): \(error)"
+    )
+  }
+
+  /// Record a failure a phase is *still* reporting from an earlier attempt —
+  /// the detail fill's excluded documents — without disturbing an entry that is
+  /// already standing.
+  ///
+  /// The site is genuinely still broken, so the entry must not be cleared. But
+  /// the pass that re-reported it made no request about it: restamping would
+  /// show a stale failure as having just happened, and counting it would
+  /// escalate an unreachable server to `.error` off passes that never went near
+  /// the network.
+  private func recordUnresolved(_ error: any Error, at site: SyncFailureSite) {
+    guard failureLedger[site] == nil else { return }
+    recordFailure(error, at: site)
+  }
+
+  /// Record that `site` completed, clearing whatever failure it had.
+  private func recordSuccess(at site: SyncFailureSite) {
+    // Same reason as above for checking first.
+    guard failureLedger[site] != nil else { return }
+    failureLedger.recordSuccess(at: site)
+    Logger.sync.notice(
+      "Sync \(site.rawValue, privacy: .public) recovered for server \(self.serverID, privacy: .public)"
+    )
+  }
+
+  /// The reason shown on the Offline & Sync screen. For a connectivity failure
+  /// the headline is the useful part ("Server not responding"); for anything
+  /// else the headline is a generic "an error occurred" and the details carry
+  /// the status code and the server's own message.
+  private static func failureMessage(_ error: any Error) -> String {
+    if let displayable = error as? any DisplayableError {
+      if let request = error as? RequestError, request.isConnectivity {
+        return displayable.message
+      }
+      return displayable.details ?? displayable.message
+    }
+    return (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
   }
 
   public init(
@@ -296,6 +378,9 @@ public final class ServerSession {
         // unnecessary when sessions took ownership — a rebuild is the same
         // session, so this half still has to be done by hand.
         retirePhases()
+        // What failed against the old connection says nothing about the new
+        // one — an edited URL is exactly how "host not found" gets fixed.
+        failureLedger.reset()
       }
       // The cap runs inside the build rather than after it. A caller waiting on
       // `building` resumes when the build finishes, so work done after it could
@@ -361,8 +446,32 @@ public final class ServerSession {
       }
       Logger.sync.debug("Starting element sync")
       return { [weak self] in
-        try await NetworkTransfer.$category.withValue(.sync) {
-          try await backend.syncElements { self?.report($0, for: .elementSync) }
+        // Recorded here, inside the single-flight, so a failure is counted once
+        // however many callers joined it.
+        //
+        // Permissions first, and on its own: the element sync is gated on the
+        // matrix it caches, but a failure here is absorbed rather than fatal —
+        // the element sync carries on from the last cached matrix. Recording it
+        // before the element phase runs is what makes its outcome independent
+        // of that phase's: a tags request failing afterwards no longer buries a
+        // fresh permissions failure, and a permissions endpoint that has
+        // recovered clears its entry even if the pass then fails elsewhere.
+        do {
+          try await NetworkTransfer.$category.withValue(.sync) {
+            try await backend.syncUISettings()
+          }
+          self?.recordSuccess(at: .uiSettings)
+        } catch {
+          self?.recordFailure(error, at: .uiSettings)
+        }
+        do {
+          try await NetworkTransfer.$category.withValue(.sync) {
+            try await backend.syncElements { self?.report($0, for: .elementSync) }
+          }
+          self?.recordSuccess(at: .elements)
+        } catch {
+          self?.recordFailure(error, at: .elements)
+          throw error
         }
       }
     })
@@ -420,7 +529,7 @@ public final class ServerSession {
     // reconcile. Cancellation is the exception: it means the pass as a whole is
     // unwanted, so it stops the remaining sweeps instead of being stepped over.
     var result = ReconcileResult()
-    func sweep(_ label: String, _ body: () async throws -> Void) async {
+    func sweep(_ site: SyncFailureSite, _ body: () async throws -> Void) async {
       guard !result.cancelled else { return }
       do {
         try await body()
@@ -432,14 +541,16 @@ public final class ServerSession {
         // catches the next one before it is found.
         try Task.checkCancellation()
         result.succeeded += 1
+        recordSuccess(at: site)
       } catch {
         guard !error.isCancellationError else {
-          Logger.sync.debug("Reconcile cancelled during \(label, privacy: .public)")
+          Logger.sync.debug("Reconcile cancelled during \(site.rawValue, privacy: .public)")
           result.cancelled = true
           return
         }
-        Logger.sync.info(
-          "Reconcile sweep \(label, privacy: .public) failed (suppressed): \(error)")
+        // Still a failed pass for the throttle whatever its class — an offline
+        // sweep refreshed nothing — but only a surfaced one reaches the screen.
+        recordFailure(error, at: site)
         result.failed = true
       }
     }
@@ -454,16 +565,16 @@ public final class ServerSession {
     // the membership sweep is what puts newly-matched documents into a list. Run
     // ahead of it, it would reclaim rows the very next sweep re-fetches.
     await NetworkTransfer.$category.withValue(.reconcile) {
-      await sweep("deletions") { try await backend.reconcileDocumentDeletions() }
-      await sweep("changes") {
+      await sweep(.deletions) { try await backend.reconcileDocumentDeletions() }
+      await sweep(.changes) {
         try await backend.reconcileDocumentChanges { [weak self] in
           // The delta finishing doesn't end the reconcile — the membership
           // sweep runs after it — so fall back to the bare stage.
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
       }
-      await sweep("membership") { try await backend.reconcileSavedViewMembership() }
-      await sweep("reachability") { try await backend.collectUnreachableQueries() }
+      await sweep(.membership) { try await backend.reconcileSavedViewMembership() }
+      await sweep(.reachability) { try await backend.collectUnreachableQueries() }
     }
 
     // Blob reclaim last, and outside the transfer category: it touches no
@@ -483,7 +594,11 @@ public final class ServerSession {
           )
         }
       } catch {
-        Logger.sync.info("Document content reclaim failed (suppressed): \(error)")
+        // Local file bookkeeping: not something the user can act on, so not
+        // surfaced, but a failure of it is still a real one for the log.
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(),
+          "Document content reclaim failed (suppressed): \(error)")
       }
     }
 
@@ -514,7 +629,11 @@ public final class ServerSession {
     // call, expressed by including `.fill` in the phase set. What remains is the
     // server's own mode, which is a property of the server, not the decision.
     guard let backend = current, backend.offlineBrowsingMode == .entireLibrary
-    else { return true }
+    else {
+      // Left *Entire library*: a fill failure from before says nothing now.
+      recordSuccess(at: .libraryFill)
+      return true
+    }
 
     // Join an in-flight fill rather than starting a second pass over the same
     // queries. `force` is not lost by joining: a fill only runs at all when the
@@ -527,12 +646,13 @@ public final class ServerSession {
         // `true` here is what tells `runSync` the pass completed; a cancellation
         // swallowed on the fill's last `await` must not reach it as one.
         try Task.checkCancellation()
+        self?.recordSuccess(at: .libraryFill)
         return true
       } catch is CancellationError {
-        Logger.sync.info("Proactive library fill cancelled")
+        Logger.sync.debug("Proactive library fill cancelled")
         return false
       } catch {
-        Logger.sync.info("Proactive library fill failed (suppressed): \(error)")
+        self?.recordFailure(error, at: .libraryFill)
         return false
       }
     }
@@ -545,20 +665,34 @@ public final class ServerSession {
   @discardableResult
   public func fillDocumentDetails() async -> Bool {
     guard let backend = current, backend.offlineBrowsingMode == .entireLibrary
-    else { return true }
+    else {
+      recordSuccess(at: .detailFill)
+      return true
+    }
     return await detailFillSlot.joinOrStart { [weak self] in
       do {
-        try await NetworkTransfer.$category.withValue(.fill) {
+        let absorbed = try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
         }
         // As in `fillLibrary`: `true` is a claim the pass finished.
         try Task.checkCancellation()
+        // A document the server won't serve is skipped, not retried, so the
+        // pass *did* finish — same rule as a saved view the library fill can't
+        // read, which must not pin "last full sync" at Never either. But the
+        // details are still missing, so the failure that excluded it is
+        // reported rather than cleared. (`nil` when nothing was worth
+        // surfacing: a pass that simply ran out of network reports nothing.)
+        if let absorbed {
+          self?.recordUnresolved(absorbed, at: .detailFill)
+        } else {
+          self?.recordSuccess(at: .detailFill)
+        }
         return true
       } catch is CancellationError {
-        Logger.sync.info("Proactive detail fill cancelled")
+        Logger.sync.debug("Proactive detail fill cancelled")
         return false
       } catch {
-        Logger.sync.info("Proactive detail fill failed (suppressed): \(error)")
+        self?.recordFailure(error, at: .detailFill)
         return false
       }
     }
@@ -606,7 +740,19 @@ public final class ServerSession {
       "Syncing server \(stored.logLabel, privacy: .public) (phases: \(phases.ordered.count))")
     do {
       _ = try await prepareRepository(for: stored)
-      state = .ready
+    } catch {
+      guard !error.isCancellationError else {
+        Logger.sync.debug("Sync cancelled for \(stored.logLabel, privacy: .public)")
+        return
+      }
+      state = .failed
+      recordFailure(error, at: .connection)
+      return
+    }
+    recordSuccess(at: .connection)
+    state = .ready
+
+    do {
 
       // Walk the phases in `SyncPhases`'s canonical order, so the executor
       // cannot run one before something it depends on even if a future planner
@@ -655,8 +801,11 @@ public final class ServerSession {
         return
       }
       state = .failed
+      // Only the element sync throws out of the phase loop, and it has already
+      // logged and recorded the failure at the level the rule gives it
+      // (`recordFailure`). This line just marks where the pass stopped.
       Logger.sync.info(
-        "Sync failed for \(stored.logLabel, privacy: .public) (suppressed): \(error)")
+        "Sync pass stopped for \(stored.logLabel, privacy: .public) (suppressed): \(error)")
     }
   }
 }

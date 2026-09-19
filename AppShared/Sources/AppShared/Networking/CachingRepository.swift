@@ -84,9 +84,24 @@ enum QueryRetentionPolicy {
 /// to direct-network behavior.
 @MainActor
 public protocol CachingBackend: AnyObject, Sendable {
+  /// Fetch the permissions / UI-settings singleton and write it to the cache.
+  ///
+  /// Its own step, called immediately before ``syncElements(progress:)``,
+  /// rather than the first half of it. The element sync deliberately soldiers
+  /// on past a failed permissions fetch — it falls back to the last cached
+  /// matrix, which is right for the data — so folded in, this failure was only
+  /// *knowable* when the element phase as a whole happened to succeed: a tags
+  /// request failing in the same pass hid it, and a permissions failure that
+  /// had since healed stayed on screen (#663). Split out, the caller records
+  /// its outcome on every attempt, whatever the element phase then does.
+  func syncUISettings() async throws
+
   /// Fetch every element collection from the network and reconcile it into the
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
+  ///
+  /// Gated on the *cached* permission matrix, which ``syncUISettings()`` has
+  /// just refreshed — or failed to, leaving the last known one, or none at all.
   func syncElements(progress: SyncProgressReporter?) async throws
 
   /// Eager full-fill of a document list: await page 1 (so the first
@@ -137,7 +152,16 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// request. Driven off what's still missing, so it resumes rather than
   /// restarts; uncapped, reporting progress, stopped only by cancellation. Runs
   /// after `fillLibrary`. No-op unless *Entire library* is enabled.
-  func fillDocumentDetails(progress: SyncProgressReporter?) async throws
+  ///
+  /// A document whose `/notes/` or `/metadata/` fails doesn't abort the pass —
+  /// it is skipped and excluded from further attempts this session. Returns the
+  /// failure that got it excluded (`nil` when there was none worth surfacing,
+  /// which is what keeps a mid-pass loss of network off the screen), so the
+  /// caller can report a fill that finished but left details missing. Sticky
+  /// for as long as the exclusions are: a later pass finds nothing missing only
+  /// *because* those documents are excluded, so it must not read as a success.
+  @discardableResult
+  func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> (any Error)?
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -198,7 +222,8 @@ extension CachingBackend {
     try await fillLibrary(force: force, progress: nil)
   }
 
-  public func fillDocumentDetails() async throws {
+  @discardableResult
+  public func fillDocumentDetails() async throws -> (any Error)? {
     try await fillDocumentDetails(progress: nil)
   }
 
@@ -314,12 +339,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // MARK: - CachingBackend
 
   public func syncElements(progress: SyncProgressReporter?) async throws {
-    // Sync UI settings *first*: its permission matrix gates the rest, so we
-    // don't ask the server for collections the user can't view (doomed 403s).
-    // When the matrix is unavailable (uiSettings failed and nothing is cached),
-    // `gate` is nil and we fetch everything, relying on the per-resource
-    // 403/401-skip in `syncCollection` as a fallback.
-    let gate = await syncUISettings()
+    // The permission matrix gates the rest, so we don't ask the server for
+    // collections the user can't view (doomed 403s). It comes from the cache,
+    // which `syncUISettings` — called by the session immediately before this —
+    // has just refreshed. When it is unavailable (that fetch failed and nothing
+    // was cached), `gate` is nil and we fetch everything, relying on the
+    // per-resource 403/401-skip in `syncCollection` as a fallback.
+    let gate = try? await database.uiSettings(serverID: serverID)?.permissions
     func canView(_ resource: UserPermissions.Resource) -> Bool {
       gate?.test(.view, for: resource) ?? true
     }
@@ -688,8 +714,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // clears on the next launch rather than sticking forever.
   private var detailFillFailures: Set<UInt> = []
 
-  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws {
-    guard offlineBrowsingMode == .entireLibrary else { return }
+  // The first failure worth surfacing among them (see
+  // `SyncFailureClass.firstSurfaced`), with the same lifetime as the exclusions
+  // above and for the same reason: once a document is excluded, a later pass
+  // finds nothing missing *because* of that failure, and reporting it as a
+  // clean fill would clear an error whose cause is still there. Offline never
+  // lands here — a pass that ran out of network absorbed nothing to report.
+  private var detailFillFailure: (any Error)?
+
+  @discardableResult
+  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> (any Error)? {
+    guard offlineBrowsingMode == .entireLibrary else { return nil }
     // Before the seed and the two "what's missing" reads: they're quick, but a
     // gap here shows up as the activity flicking back to "Idle".
     progress?(SyncActivity(stage: .detailFill))
@@ -699,9 +734,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // out of the fetch set below.
     let seeded = (try? await database.seedEmptyNotesForZeroCountDocuments(serverID: serverID)) ?? 0
 
-    // Then fetch only what's genuinely missing, capped per pass. `try?` per doc
-    // so one failure (or going offline mid-pass) doesn't abort the rest; the
-    // still-missing set simply shrinks and the next pass resumes.
+    // Then fetch only what's genuinely missing. One failure (or going offline
+    // mid-pass) doesn't abort the rest; the still-missing set simply shrinks
+    // and the next pass resumes. The failure is *remembered* rather than
+    // dropped, though: a 500 on one document's `/metadata/` leaves the fill
+    // incomplete, and a pass that reports "done" over it is exactly the silence
+    // #663 is about.
     var fetchedMetadata = 0
     var fetchedNotes = 0
     defer { progress?(nil) }
@@ -755,10 +793,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for id in missingMetadata {
         try Task.checkCancellation()
-        if (try? await metadata(documentId: id)) != nil {
+        do {
+          _ = try await metadata(documentId: id)
           fetchedMetadata += 1
-        } else {
+        } catch {
           detailFillFailures.insert(id)
+          detailFillFailure = SyncFailureClass.firstSurfaced(detailFillFailure, error)
         }
         done += 1
         reportThrottled()
@@ -766,10 +806,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for id in needsNotes {
         try Task.checkCancellation()
-        if (try? await notes(documentId: id)) != nil {
+        do {
+          _ = try await notes(documentId: id)
           fetchedNotes += 1
-        } else {
+        } catch {
           detailFillFailures.insert(id)
+          detailFillFailure = SyncFailureClass.firstSurfaced(detailFillFailure, error)
         }
         done += 1
         reportThrottled()
@@ -777,8 +819,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
 
     Logger.sync.info(
-      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata"
+      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(self.detailFillFailures.count, privacy: .public) documents excluded"
     )
+    return detailFillFailure
   }
 
   /// A short, user-facing reason for a failed view sync — prefers the server's
@@ -802,24 +845,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  /// Fetch the UI settings singleton and return its permission matrix to gate
-  /// the rest of the sync. Never throws: on any failure it falls back to the
-  /// last cached matrix, or `nil` if none exists (caller then fetches every
-  /// collection and relies on per-resource 403/401-skip, as before). A
-  /// uiSettings failure therefore degrades gating without aborting the sync.
-  private func syncUISettings() async -> UserPermissions? {
-    do {
-      let settings = try await wrapped.uiSettings()
-      try await database.setUISettings(settings, serverID: serverID)
-      return settings.permissions
-    } catch {
-      // The sharpest instance of #663: a 500 here was logged at `.info` and
-      // never seen, because the fallback keeps the rest of the sync going.
-      Logger.sync.log(
-        level: SyncFailureClass(error).logLevel(),
-        "uiSettings sync failed (\(error)); gating sync on cached permissions")
-      return try? await database.uiSettings(serverID: serverID)?.permissions
-    }
+  /// Fetch the UI settings singleton and write it through to the cache.
+  ///
+  /// Throws on failure and does not log: the session catches it, records it at
+  /// `.uiSettings`, and logs it once at the level the ledger's consecutive
+  /// count gives it. Logging here as well would have been the second line —
+  /// and, knowing nothing of the count, the *quieter* one, which is how a
+  /// server that never answers this endpoint stayed at `.default` forever
+  /// instead of escalating to `.error` (#663).
+  ///
+  /// The failure is absorbed rather than fatal: `syncElements` carries on,
+  /// gated on the last cached permission matrix.
+  public func syncUISettings() async throws {
+    let settings = try await wrapped.uiSettings()
+    try await database.setUISettings(settings, serverID: serverID)
   }
 
   private func syncServerConfiguration() async throws {
