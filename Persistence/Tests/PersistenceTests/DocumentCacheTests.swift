@@ -383,6 +383,77 @@ struct DocumentCacheTests {
     #expect(try await database.queryStatus(queryKey: keyB, serverID: server).orderStale == false)
   }
 
+  // MARK: - Removing a document from a list
+
+  @Test(
+    "removeDocument takes it out of the named lists only and lowers their totals",
+    .bug(id: "676"))
+  func removeDocumentFromQueries() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let inbox = QueryKey(sentinel: "inbox")
+    let other = QueryKey(sentinel: "other")
+    let untouched = QueryKey(sentinel: "untouched")
+
+    for key in [inbox, other, untouched] {
+      try await database.writeQueryPage(
+        queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
+        startPosition: 0, totalCount: 3, replaceAll: true)
+    }
+
+    let removed = try await database.removeDocument(
+      2, fromQueries: [inbox, other], serverID: server)
+    #expect(removed == [inbox, other])
+
+    let inboxIDs = try await database.queryDocuments(
+      queryKey: inbox, serverID: server, limit: 10, offset: 0
+    ).map(\.id)
+    #expect(inboxIDs == [1, 3])
+    #expect(try await database.queryStatus(queryKey: inbox, serverID: server).totalCount == 2)
+    #expect(try await database.queryStatus(queryKey: other, serverID: server).totalCount == 2)
+
+    let untouchedStatus = try await database.queryStatus(queryKey: untouched, serverID: server)
+    #expect(untouchedStatus.totalCount == 3)
+    #expect(untouchedStatus.localCount == 3)
+
+    // The document itself stays cached: it is still a document.
+    #expect(try await database.document(serverID: server, id: 2) != nil)
+  }
+
+  @Test("removeDocument leaves a list that doesn't hold the document as it was")
+  func removeDocumentNotMember() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 5, replaceAll: true)
+
+    let removed = try await database.removeDocument(9, fromQueries: [key], serverID: server)
+    #expect(removed.isEmpty)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).totalCount == 5)
+  }
+
+  @Test("a complete list stays complete after a removal, wherever the row was")
+  func removeDocumentKeepsCompleteness() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "view")
+
+    for removedID: UInt in [3, 1] {
+      try await database.writeQueryPage(
+        queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
+        startPosition: 0, totalCount: 3, replaceAll: true)
+      try await database.markQueryFillComplete(queryKey: key, serverID: server)
+      #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete)
+
+      try await database.removeDocument(removedID, fromQueries: [key], serverID: server)
+      let status = try await database.queryStatus(queryKey: key, serverID: server)
+      #expect(status.isComplete, "removed \(removedID)")
+      #expect(status.totalCount == 2)
+    }
+  }
+
   @Test("a fresh fill clears the order-stale flag")
   func fillClearsStale() async throws {
     let server = UUID()
