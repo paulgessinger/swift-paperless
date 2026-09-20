@@ -79,6 +79,7 @@ struct DocumentView: View {
   @State private var isDocumentScannerAvailable = false
   @State private var isDataScannerAvailable = false
   @State private var showDocumentScanner = false
+  @State private var showNetworkScanner = false
   @State private var showCreateModal = false
 
   @StateObject private var importModel = DocumentImportModel()
@@ -299,6 +300,14 @@ struct DocumentView: View {
             } label: {
               Label(String(localized: .app(.scanDocument)), systemImage: "doc.viewfinder")
             }
+          }
+
+          // Always offered: discovery — and with it the Local Network
+          // permission prompt — only starts once the sheet is open.
+          Button {
+            showNetworkScanner = true
+          } label: {
+            Label(String(localized: .app(.scanNetworkDocument)), systemImage: "scanner")
           }
 
           Button {
@@ -690,6 +699,16 @@ struct DocumentView: View {
         }
       )
       .ignoresSafeArea()
+    }
+
+    .sheet(isPresented: $showNetworkScanner) {
+      NetworkScannerView { url in
+        Task { @MainActor in
+          await importModel.importFile(
+            result: [url], isSecurityScoped: false, errorController: errorController)
+          showCreateModal = true
+        }
+      }
     }
 
     .sheet(
