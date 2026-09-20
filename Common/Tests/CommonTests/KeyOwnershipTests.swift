@@ -207,6 +207,35 @@ struct KeyOwnershipTests {
     #expect(!ownership.isOwned("key"))
   }
 
+  @Test("`cancellingWithCaller` stops the write too, and still reports cancellation")
+  func callerCancellationForwardedToWrite() async throws {
+    // The membership sweep claims its key *before* the network fetch it rewrites
+    // from, so that fetch runs inside the unstructured write — which inherits no
+    // cancellation. A cancelled reconcile means to stop using the network, so
+    // this variant hands the cancellation on, while the caller still sees
+    // `CancellationError` rather than the `false` a drain reports.
+    let ownership = KeyOwnership<String>()
+    let log = Log()
+
+    let caller = Task { @MainActor in
+      try await ownership.withOwnership(of: ["key"], cancellingWithCaller: true) {
+        do {
+          try await Task.sleep(for: .seconds(60))
+          log.append("write completed")
+        } catch {
+          log.append("write cancelled")
+          throw error
+        }
+      }
+    }
+    try await waitUntil { ownership.isOwned("key") }
+    caller.cancel()
+
+    await #expect(throws: CancellationError.self) { try await caller.value }
+    #expect(log.entries == ["write cancelled"])
+    #expect(!ownership.isOwned("key"))
+  }
+
   @Test("A caller cancelled while its write is drained still sees cancellation")
   func callerCancellationWinsOverDrain() async throws {
     let ownership = KeyOwnership<String>()

@@ -96,11 +96,20 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   ///   or not, so a cancelled caller always sees `CancellationError` instead of
   ///   an outcome it would record as work done.
   ///
+  /// `cancellingWithCaller` additionally forwards the caller's cancellation to
+  /// the write. The default is not to: a short database write is better finished
+  /// than abandoned, and the caller learns of its own cancellation either way.
+  /// Pass `true` when the write is the owner of expensive work — a network fetch
+  /// it had to claim the key *before* issuing — which a cancelled caller (app
+  /// backgrounded, server switched) means to stop. The caller still sees
+  /// `CancellationError` rather than the `false` a drain reports.
+  ///
   /// Any other error from `write` propagates as-is.
   ///
   /// - Returns: `true` if the write completed, `false` if it was drained.
   public func withOwnership(
     of keys: Set<Key>,
+    cancellingWithCaller: Bool = false,
     perform write: @escaping @Sendable () async throws -> Void
   ) async throws -> Bool {
     let owner = Owner { try await write() }
@@ -110,7 +119,15 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
     }
     let completed: Bool
     do {
-      try await owner.value
+      if cancellingWithCaller {
+        try await withTaskCancellationHandler {
+          try await owner.value
+        } onCancel: {
+          owner.cancel()
+        }
+      } else {
+        try await owner.value
+      }
       completed = true
     } catch is CancellationError {
       completed = false

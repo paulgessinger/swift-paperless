@@ -494,10 +494,22 @@ class DocumentListViewModel {
 
   func removeInboxTags(document: Document) async {
     guard hasInboxTags(document: document) else { return }
-    var document = document
+    var edited = document
     let inboxTagIDs = Set(store.tags.values.filter(\.isInboxTag).map(\.id))
-    document.tags.removeAll { inboxTagIDs.contains($0) }
-    _ = try? await store.updateDocument(document)
+    edited.tags.removeAll { inboxTagIDs.contains($0) }
+    do {
+      let updated = try await store.updateDocument(edited)
+      // The server has accepted it, so this list can be repaired locally: the
+      // row goes if this list's own filter no longer accepts the document (the
+      // triage case — an inbox view the document just left). The filter is
+      // passed in because only the list knows which list is on screen.
+      await store.dropFromQuery(filter: filterState, previous: document, updated: updated)
+    } catch let error where !error.isCancellationError {
+      // Nothing changed locally, so the row simply stays — but say why, or the
+      // swipe looks like it was ignored.
+      Logger.shared.error("Removing inbox tags failed: \(error)")
+      errorController.push(mutationError: error)
+    } catch {}
   }
 
   // MARK: - Thumbnail prefetch

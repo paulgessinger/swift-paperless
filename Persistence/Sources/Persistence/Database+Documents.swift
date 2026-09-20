@@ -168,6 +168,50 @@ extension Database {
       .updateAll(db, Column("order_stale").set(to: true))
   }
 
+  /// Take one document out of the given cached queries' membership, keeping
+  /// its `document` row: an edit decided locally that it no longer belongs in
+  /// those lists, but it is still a document, and other lists may hold it.
+  ///
+  /// Each key the document was actually removed from has its recorded
+  /// `total_count` lowered by one, which is what the server now reports for
+  /// it — the count pill agrees with the rows without waiting for a refill.
+  /// That keeps completeness intact as well: `isOrderComplete` compares the
+  /// last position with the total, and removing a row lowers the total by one
+  /// while lowering the last position by at most one. The fill stamp and
+  /// order-stale flag are left alone; removing a row reorders nothing.
+  ///
+  /// - Returns: The keys the document was removed from.
+  @discardableResult
+  public func removeDocument(
+    _ remoteID: UInt, fromQueries keys: some Collection<QueryKey>, serverID: UUID
+  ) async throws -> Set<QueryKey> {
+    guard !keys.isEmpty else { return [] }
+    let keys = Array(keys)
+    return try await wrappingAsync("removeDocumentFromQueries") {
+      try await writer.write { db in
+        var removed = Set<QueryKey>()
+        for key in keys {
+          let deleted =
+            try QueryOrderRow
+            .filter(
+              Column("server_id") == serverID && Column("query_key") == key.rawValue
+                && Column("remote_id") == remoteID
+            )
+            .deleteAll(db)
+          guard deleted > 0 else { continue }
+          removed.insert(key)
+          try db.execute(
+            sql: """
+              UPDATE query_meta SET total_count = total_count - 1
+              WHERE server_id = ? AND query_key = ? AND total_count > 0
+              """,
+            arguments: [serverID, key.rawValue])
+        }
+        return removed
+      }
+    }
+  }
+
   /// Delete documents absent from the server's authoritative id set (the
   /// remote-delete reconcile), and prune their `query_order` rows from every
   /// cached list. There is no FK from `query_order` to `document` (a row may be a
