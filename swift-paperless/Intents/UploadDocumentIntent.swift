@@ -38,9 +38,16 @@ struct UploadDocumentIntent: AppIntent {
   // so the server is the only authority, and it already rejects what it cannot
   // read. A list here could only be a guess, wrong in both directions depending
   // on the deployment.
+  //
+  // `.connectToPreviousIntentResult` marks this as the action's input, so
+  // dropping the action after "Get Contents of Folder" or "Take Photo" wires
+  // that result into the field directly. It is the parameter for it: the one
+  // thing an upload cannot run without, and the only one a previous action
+  // plausibly produces.
   @Parameter(
     title: "Document",
-    supportedTypeIdentifiers: ["public.data"])
+    supportedTypeIdentifiers: ["public.data"],
+    inputConnectionBehavior: .connectToPreviousIntentResult)
   var document: IntentFile
 
   @Parameter(title: "Server")
