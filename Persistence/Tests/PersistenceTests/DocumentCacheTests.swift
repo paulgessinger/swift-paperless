@@ -455,6 +455,164 @@ struct DocumentCacheTests {
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
   }
 
+  // MARK: - Marks landing mid-rewrite
+
+  /// A whole-order rewrite asks the server for the list's answer, waits, and
+  /// then writes it and clears the stale flag. These cover the window in
+  /// between: a mark landing there describes a change the answer in hand
+  /// predates, and nothing re-marks the key afterwards, so clearing over it
+  /// leaves the list wrong until some other document in it changes.
+
+  @Test(
+    "a mark landing while a membership rewrite is in flight survives it",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func markDuringMembershipRewriteSurvives() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    // The request goes out with the counter as it stands…
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    // …document 2 changes while the server is answering…
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    // …and the answer, which predates that change, lands.
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], clearingStaleIf: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("an uncontested membership rewrite still clears the flag")
+  func uncontestedMembershipRewriteClears() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    // The mark is what triggered the rewrite, so it is accounted for by the
+    // answer the rewrite asked for.
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], clearingStaleIf: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test(
+    "a mark landing while a fill's first page is in flight survives it",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func markDuringFirstPageSurvives() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B"), doc(1, "A")],
+      startPosition: 0, totalCount: 2, replaceAll: true, clearingStaleIf: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("an uncontested first page still clears the flag")
+  func uncontestedFirstPageClears() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true, clearingStaleIf: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test("a mark on an already-stale list still advances its counter")
+  func markAdvancesCounterWhenAlreadyStale() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+
+    // The flag is already set — which is the normal state when the list on
+    // screen reacts to it — so a second mark has no flag left to flip. It must
+    // still be visible to a rewrite already in flight.
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+
+    #expect(
+      try await database.queryOrderGeneration(queryKey: key, serverID: server) != generation)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], clearingStaleIf: generation)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("the counter is per key: a mark on another list doesn't hold up a rewrite")
+  func counterIsPerKey() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let keyA = QueryKey(sentinel: "A")
+    let keyB = QueryKey(sentinel: "B")
+    try await database.writeQueryPage(
+      queryKey: keyA, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+    try await database.writeQueryPage(
+      queryKey: keyB, serverID: server, documents: [doc(2, "B")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    let generation = try await database.queryOrderGeneration(queryKey: keyA, serverID: server)
+    // Only B's member changes while A's rewrite is in flight.
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: keyA, serverID: server, orderedIDs: [1], clearingStaleIf: generation)
+
+    #expect(try await database.queryStatus(queryKey: keyA, serverID: server).orderStale == false)
+    #expect(try await database.queryStatus(queryKey: keyB, serverID: server).orderStale)
+  }
+
+  @Test("a rewrite's own write doesn't move the counter")
+  func rewriteLeavesCounterAlone() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 0, totalCount: 1, replaceAll: true)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    // A `query_meta` upsert rewrites every column, so the counter has to be
+    // carried forward: losing it would make the *next* capture compare against
+    // a reset value and clear over a mark it never saw.
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1], clearingStaleIf: generation)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 1, totalCount: 2, replaceAll: false)
+
+    #expect(try await database.queryOrderGeneration(queryKey: key, serverID: server) == generation)
+  }
+
   // MARK: - Reconcile support
 
   @Test("allDocumentIDs returns every cached document id for the server")

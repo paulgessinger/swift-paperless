@@ -567,11 +567,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         try await NetworkTransfer.$category.withValue(category) {
           var position = 0
           do {
+            // Page 1 is a whole-order rewrite and clears the stale flag, so it
+            // needs the same evidence a membership rewrite does: the counter as
+            // it stood before the page was asked for. A mark landing while page 1
+            // was in flight — an edit made from the list, a delta pass — describes
+            // a change this page predates, and clearing over it would leave the
+            // key clean and wrong. See ``QueryOrderGeneration``.
+            let generation = try await database.queryOrderGeneration(
+              queryKey: key, serverID: serverID)
             let batch = try await source.fetch(limit: pageSize)
             let total = await source.totalCount
             try await database.writeQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
-              startPosition: 0, totalCount: total, replaceAll: true)
+              startPosition: 0, totalCount: total, replaceAll: true,
+              clearingStaleIf: generation)
             position = batch.count
             pageOne.yield(total)
             pageOne.finish()
@@ -1541,6 +1550,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     _ key: QueryKey, filter: FilterState, label: String, hydrating: MembershipHydration
   ) async throws -> MembershipRewriteOutcome {
     guard !isFilling(key) else { return .leftToFill }
+    // Captured before the request, so the write can tell whether the answer it
+    // is about to store already accounts for every mark — see
+    // ``QueryOrderGeneration``. Nothing else excludes a marker: it writes no
+    // `query_order` row, so owning the key does not hold it off.
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: serverID)
     // Ordered, not the id-set projection: these ids become `query_order`
     // positions verbatim, so the query's own sort has to survive the round trip
     // or the rewrite reduces the cached list to id order.
@@ -1548,7 +1562,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     guard !isFilling(key) else { return .leftToFill }
     try await hydrate(ids, policy: hydrating, label: label)
     guard !isFilling(key) else { return .leftToFill }
-    return try await replaceQueryOrderOwningKey(key, orderedIDs: ids) ? .rewritten : .takenOver
+    return try await replaceQueryOrderOwningKey(key, orderedIDs: ids, generation: generation)
+      ? .rewritten : .takenOver
   }
 
   /// Fetch objects for the ids `ids` has no cached row behind, as far as
@@ -1597,7 +1612,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// - Returns: `false` if a fill took the key over, so the caller skips the
   ///   view rather than clearing its recorded sync error.
   private func replaceQueryOrderOwningKey(
-    _ key: QueryKey, orderedIDs: [UInt]
+    _ key: QueryKey, orderedIDs: [UInt], generation: QueryOrderGeneration
   ) async throws -> Bool {
     let database = database
     let serverID = serverID
@@ -1610,7 +1625,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // completed one and advance its freshness stamps on the strength of it.
     return try await activeFills.withOwnership(of: [key]) {
       try await database.replaceQueryOrder(
-        queryKey: key, serverID: serverID, orderedIDs: orderedIDs)
+        queryKey: key, serverID: serverID, orderedIDs: orderedIDs,
+        clearingStaleIf: generation)
     }
   }
 

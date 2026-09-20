@@ -75,16 +75,32 @@ struct DatabaseSchemaTests {
     let database = try Database.inMemory()
     try database.writer.read { db in
       let columns = try db.columns(in: "query_meta")
-      #expect(
-        Set(columns.map(\.name)) == [
-          "server_id", "query_key", "total_count", "order_stale", "filled_at", "viewed_at",
-        ])
 
       // Added to an existing table with no backfill, so rows that predate it
       // must be allowed to carry nothing.
       let viewedAt = try #require(columns.first(where: { $0.name == "viewed_at" }))
       #expect(!viewedAt.isNotNull)
       #expect(viewedAt.type.uppercased() == "TEXT")
+    }
+  }
+
+  @Test("v11 adds order_generation to query_meta, defaulting to 0")
+  func v11AddsQueryOrderGeneration() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      let columns = try db.columns(in: "query_meta")
+      #expect(
+        Set(columns.map(\.name)) == [
+          "server_id", "query_key", "total_count", "order_stale", "filled_at", "viewed_at",
+          "order_generation",
+        ])
+
+      // Counted, not carried: every existing row starts at zero, and a rewrite
+      // that captures zero and reads zero back clears the flag as before.
+      let generation = try #require(columns.first(where: { $0.name == "order_generation" }))
+      #expect(generation.isNotNull)
+      #expect(generation.type.uppercased() == "INTEGER")
+      #expect(generation.defaultValueSQL == "0")
     }
   }
 
