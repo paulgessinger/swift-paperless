@@ -60,12 +60,21 @@ private struct FilterMenu<Content: View>: View {
     Logger.shared.info("Finished saving active saved view \(String(describing: updated))")
   }
 
+  /// Whether the filter differs from the baseline it was built from: the saved
+  /// view it carries, or the app default when it carries none.
+  private var isModified: Bool {
+    if let id = filterModel.filterState.savedView, let savedView = store.savedViews[id] {
+      return filterModel.filterState.isModified(from: savedView)
+    }
+    return filterModel.filterState.isModifiedFromDefault
+  }
+
   private var menuSavedViewSectionTitle: String {
     if let savedViewId = filterModel.filterState.savedView,
       let savedView = store.savedViews[savedViewId]
     {
       let indicator: String =
-        if filterModel.filterState.modified {
+        if filterModel.filterState.isModified(from: savedView) {
           String(localized: .app(.savedViewModified(savedView.name)))
         } else {
           savedView.name
@@ -77,7 +86,7 @@ private struct FilterMenu<Content: View>: View {
 
   var body: some View {
     Menu {
-      if filterModel.filterState.filtering, filterModel.filterState.modified {
+      if filterModel.filterState.filtering, isModified {
         Section(menuSavedViewSectionTitle) {
           if let savedViewId = filterModel.filterState.savedView,
             let savedView = store.savedViews[savedViewId]

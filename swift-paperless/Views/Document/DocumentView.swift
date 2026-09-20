@@ -271,7 +271,7 @@ struct DocumentView: View {
       // Not necessarily an error, might be still loading
       return String(localized: .app(.documents))
     }
-    if filterModel.filterState.modified {
+    if filterModel.filterState.isModified(from: savedView) {
       return String(localized: .app(.savedViewModified(savedView.name)))
     } else {
       return savedView.name
@@ -619,9 +619,7 @@ struct DocumentView: View {
           // Only clear if there's actually something to clear — otherwise
           // the initial reverse-sync (below) ricochets back here and
           // wipes a perfectly valid restored filter.
-          if filterModel.filterState.savedView != nil
-            || filterModel.filterState.modified
-          {
+          if filterModel.filterState != .default {
             filterModel.filterState.clear()
           }
         case .savedView(let id):
