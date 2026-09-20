@@ -22,9 +22,25 @@ struct UploadDocumentIntent: AppIntent {
     }
   }
 
+  // `public.data` is every file with byte-stream contents, and no directories —
+  // which is why it, rather than the `public.item` default that folders also
+  // conform to.
+  //
+  // The list is a compile-time constant in the AppIntents metadata, and
+  // Shortcuts applies it *while the shortcut is being edited*, before any
+  // file's real type is known. It therefore governs which variables the field
+  // accepts, not which files the action can handle: a PDF handed over by "Get
+  // Contents of Folder" is typed generically at edit time, so anything narrower
+  // rejects it and iterating a folder becomes unexpressible.
+  //
+  // Which formats are genuinely consumable is the server's own configuration —
+  // Tika and Gotenberg decide whether office documents are parseable at all —
+  // so the server is the only authority, and it already rejects what it cannot
+  // read. A list here could only be a guess, wrong in both directions depending
+  // on the deployment.
   @Parameter(
     title: "Document",
-    supportedTypeIdentifiers: ["public.image", "com.adobe.pdf"])
+    supportedTypeIdentifiers: ["public.data"])
   var document: IntentFile
 
   @Parameter(title: "Server")
