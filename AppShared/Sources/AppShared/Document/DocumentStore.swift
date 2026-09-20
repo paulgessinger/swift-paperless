@@ -828,6 +828,15 @@ extension DocumentStore {
     return try await backend.database.queryStatus(queryKey: queryKey, serverID: backend.serverID)
   }
 
+  /// After a confirmed edit, take the document out of the cached order of the
+  /// list `filter` describes, when the edit took it out of that list's results.
+  /// The caller is the list itself: it holds the filter, and only it knows
+  /// which list is on screen. Does nothing without a caching backend.
+  public func dropFromQuery(filter: FilterState, previous: Document, updated: Document) async {
+    guard let backend = session?.backend else { return }
+    await backend.dropFromQuery(filter: filter, previous: previous, updated: updated)
+  }
+
   /// Wait until no fill or sweep is writing the query's cached order. Returns at
   /// once without a caching backend. See ``CachingBackend/waitForQueryWriters(_:)``.
   public func waitForQueryWriters(queryKey: QueryKey) async {

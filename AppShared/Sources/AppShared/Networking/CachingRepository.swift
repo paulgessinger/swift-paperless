@@ -118,6 +118,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// calling task is cancelled.
   func waitForQueryWriters(_ key: QueryKey) async
 
+  /// Take a document a confirmed edit pushed out of `filter`'s results out of
+  /// that list's cached order, so the list repaints at once instead of keeping
+  /// the row until its next fill. See the implementation for what is and isn't
+  /// decided locally.
+  func dropFromQuery(filter: FilterState, previous: Document, updated: Document) async
+
   /// Proactive one-time coverage fill (*Entire library*): page the
   /// default list and every saved view, stamping rows `.full`, so the whole
   /// active-server library browses offline even if never opened. Sequential
@@ -280,21 +286,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// still be on screen.
   private var recentlyRequestedKeys: [QueryKey] = []
 
-  /// The filter behind each of ``recentlyRequestedKeys``. A key is a one-way
-  /// hash, so this is the only way back from the list on screen to the rules
-  /// it was built from — which an edit needs to tell whether it took a
-  /// document out of that list (see `dropFromListsItLeft`).
-  private var recentlyRequestedFilters: [QueryKey: FilterState] = [:]
-
-  private func noteRequested(_ key: QueryKey, filter: FilterState) {
+  private func noteRequested(_ key: QueryKey) {
     recentlyRequestedKeys.removeAll { $0 == key }
     recentlyRequestedKeys.append(key)
-    recentlyRequestedFilters[key] = filter
     if recentlyRequestedKeys.count > QueryRetentionPolicy.recentAdHocCap {
-      let evicted = recentlyRequestedKeys.prefix(
+      recentlyRequestedKeys.removeFirst(
         recentlyRequestedKeys.count - QueryRetentionPolicy.recentAdHocCap)
-      for key in evicted { recentlyRequestedFilters[key] = nil }
-      recentlyRequestedKeys.removeFirst(evicted.count)
     }
   }
 
@@ -427,7 +424,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Pin the key before the first suspension: from here until the sweep next
     // reconsiders it, this key counts as in use even if its fill never lands a
     // single page (offline on open).
-    noteRequested(key, filter: filter)
+    noteRequested(key)
 
     // Two fills on one key used to interleave: the newcomer's page-1
     // `replaceAll: true` deletes every `query_order` row for the key, and the
@@ -1088,10 +1085,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // MARK: - Documents (pessimistic write-through + cache fallback)
 
   public func update(document: Document) async throws -> Document {
-    // The cached row as the lists holding it were built from, to judge below
-    // which of them the edit takes it out of. Read before the request, so the
-    // write-through can't have replaced it yet.
-    let previous = try? await database.document(serverID: serverID, id: document.id)
     let updated = try await wrapped.update(document: document)
     // Write the confirmed object through; the join observation repaints the row
     // in place. `update` is fetched with `full_perms` (see ApiRepository) so the
@@ -1111,114 +1104,98 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       try await database.upsertDocument(updated, serverID: serverID)
       try await database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
     }
-    // Only once the server has accepted the change: a failed update never
-    // reaches here, so the document stays in every list, as it should.
-    if let previous {
-      await dropFromListsItLeft(previous: previous, updated: updated)
-    }
     return updated
   }
 
-  /// Take an edited document out of the cached lists its new tags exclude it
-  /// from, without waiting for those lists to be refilled (#676).
+  /// Take a document a confirmed edit pushed out of `filter`'s results out of
+  /// that list's cached order, so the list on screen repaints without waiting
+  /// to be refilled (#676).
   ///
   /// The motivating case is inbox triage: removing the inbox tag from a
   /// document in an "Inbox" view. The server drops it from that view at once,
   /// but the cached order only learns that from the next fill, so until then
-  /// the document stays on screen as if the swipe had done nothing.
+  /// the document sits there as if the swipe had done nothing.
   ///
-  /// Only the tag rules are evaluated (`FilterState.tagChangeExcludes`), and
-  /// only a *change* in verdict acts: the document passed the list's tag rules
-  /// before and fails them now. Every document filter narrows independently on
-  /// the server, so failing a tag rule is conclusive whatever the rest of the
-  /// filter says; anything the evaluation can't decide exactly leaves the row
-  /// where it is, for the next fill to settle. An edit that *adds* a document
-  /// to a list isn't handled: where it would sit under the list's sort is not
-  /// knowable locally.
+  /// Acts on *one* list — the caller's, i.e. the one on screen, which is the
+  /// only one whose filter is known here (a `QueryKey` is a hash and can't be
+  /// read back into rules). That is enough on purpose: an edit only succeeds
+  /// online, there is deliberately no offline path here — no queueing, no
+  /// offline branch — and opening a list online refills it, so every other
+  /// cached list corrects itself when the user switches to it. Two lists on
+  /// screen at once (iPad) each repair their own key.
   ///
-  /// The candidates are the lists whose filters are known: the saved views,
-  /// and the filters this repository has filled (the list on screen among
-  /// them). A key is a hash, so any other cached list can't be mapped back to
-  /// its rules; those keep the row until they are next filled.
+  /// The verdict is `FilterState.stopsAccepting`: the document matched the
+  /// filter before the edit and doesn't after. Anything that can't be decided
+  /// locally leaves the row in place, for the next fill to settle. An edit that
+  /// *adds* a document to the list isn't handled either: where it would sit
+  /// under the list's sort isn't knowable here.
   ///
-  /// Best effort: a failure here leaves the row in place, which is the state
-  /// before this existed, so it is logged rather than thrown — the edit itself
-  /// has succeeded.
-  private func dropFromListsItLeft(previous: Document, updated: Document) async {
-    guard Set(previous.tags) != Set(updated.tags) else { return }
-
-    var candidates = recentlyRequestedFilters
-    let savedViews = (try? await database.elements(SavedViewRecord.self, serverID: serverID)) ?? []
-    for view in savedViews {
-      let filter = FilterState(savedView: view)
-      candidates[QueryKey(serverID: serverID, filter: filter)] = filter
-    }
-    let left = candidates.filter {
-      $0.value.tagChangeExcludes(from: previous.tags, to: updated.tags)
-    }
-    guard !left.isEmpty else { return }
+  /// Best effort — a failure leaves the row where it was, which is how this
+  /// behaved before, so it is logged rather than thrown. The edit itself has
+  /// already succeeded.
+  public func dropFromQuery(filter: FilterState, previous: Document, updated: Document) async {
+    guard filter.stopsAccepting(previous: previous, updated: updated) else { return }
+    let key = QueryKey(serverID: serverID, filter: filter)
 
     // A key mid-fill is the fill's alone to write (see `activeFills`), so it is
-    // not touched now. `withOwnership` claims without draining — it would not
-    // stop the fill, only hide it from the next one — and draining it instead
-    // would cancel the paging of the very list the user is looking at.
-    // Everything from here up to the claim is synchronous, so a key read as
-    // free is still free when `withOwnership` claims it.
-    let busy = Set(left.keys.filter { activeFills.isOwned($0) })
-    for key in busy {
-      guard let filter = left[key] else { continue }
+    // left alone now and revisited once the fill is done. `withOwnership`
+    // claims without draining — that would not stop the fill, only hide it from
+    // the next one — and draining it instead would cancel the paging of the
+    // very list the user is looking at. Nothing suspends between this check and
+    // the claim below, so a key read as free is still free when it is claimed.
+    guard !activeFills.isOwned(key) else {
       removeAfterWriters(updated.id, from: key, filter: filter)
+      return
     }
-    await removeOwningKeys(updated.id, from: Set(left.keys).subtracting(busy))
+    await removeOwningKey(updated.id, from: key)
   }
 
-  /// Remove `id` from `keys` as their owner, so a fill starting meanwhile
-  /// drains the removal instead of interleaving with it. A drained removal is
-  /// simply dropped: the fill rewrites the key from the server, which has
-  /// already applied the edit.
-  private func removeOwningKeys(_ id: UInt, from keys: Set<QueryKey>) async {
-    guard !keys.isEmpty else { return }
+  /// Remove `id` from `key` as its owner, so a fill starting meanwhile drains
+  /// the removal instead of interleaving with it. A drained removal is simply
+  /// dropped: the fill rewrites the key from the server, which has already
+  /// applied the edit.
+  private func removeOwningKey(_ id: UInt, from key: QueryKey) async {
     let database = database
     let serverID = serverID
     do {
-      let completed = try await activeFills.withOwnership(of: keys) {
-        let removed = try await database.removeDocument(id, fromQueries: keys, serverID: serverID)
+      let completed = try await activeFills.withOwnership(of: [key]) {
+        let removed = try await database.removeDocument(id, fromQueries: [key], serverID: serverID)
         if !removed.isEmpty {
           Logger.shared.info(
-            "Edited document \(id, privacy: .public) no longer matches \(removed.count, privacy: .public) cached list(s); removed it"
+            "Edited document \(id, privacy: .public) no longer matches the list it was in; removed it"
           )
         }
       }
       if !completed {
         Logger.shared.info(
-          "Removing edited document \(id, privacy: .public) from its lists was taken over by a fill"
+          "Removing edited document \(id, privacy: .public) from its list was taken over by a fill"
         )
       }
     } catch is CancellationError {
     } catch {
       Logger.shared.error(
-        "Removing edited document \(id, privacy: .public) from lists it left failed: \(error)")
+        "Removing edited document \(id, privacy: .public) from the list it left failed: \(error)")
     }
   }
 
-  /// The deferred half of `dropFromListsItLeft`, for a key a fill owned at the
-  /// time: wait for its writers to finish, then remove the document if it is
-  /// still in the list and still fails the list's tag rules.
+  /// The deferred half of ``dropFromQuery(filter:previous:updated:)``, for a
+  /// key a fill owned at the time: wait for its writers to finish, then remove
+  /// the document if it is still in the list and the list still rejects it.
   ///
   /// The re-check reads the cached row rather than trusting the edit's: the
   /// fill may have written the document since, from a page fetched before the
-  /// edit reached the server, and then the row on screen carries the old tags
+  /// edit reached the server, and then the row on screen carries the old values
   /// again and should stay until the next fill.
   private func removeAfterWriters(_ id: UInt, from key: QueryKey, filter: FilterState) {
     Task { [weak self] in
       await self?.waitForQueryWriters(key)
       guard let self else { return }
       guard let current = try? await database.document(serverID: serverID, id: id),
-        filter.tagRulesExclude(tags: current.tags)
+        filter.accepts(current) == false
       else { return }
       // Taken again while the row was read: that fill has the fresher answer.
       guard !activeFills.isOwned(key) else { return }
-      await removeOwningKeys(id, from: [key])
+      await removeOwningKey(id, from: key)
     }
   }
 
