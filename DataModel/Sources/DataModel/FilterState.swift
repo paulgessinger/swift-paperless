@@ -188,12 +188,38 @@ public struct FilterState: Equatable, Codable, Sendable {
     didSet { modified = modified || remaining != oldValue }
   }
 
-  public var sortField: SortField {
-    didSet { modified = modified || sortField != oldValue }
+  /// A sort field paired with its direction.
+  public struct Sorting: Equatable, Hashable, Codable, Sendable {
+    public var field: SortField
+    public var order: DataModel.SortOrder
+
+    public init(field: SortField, order: DataModel.SortOrder) {
+      self.field = field
+      self.order = order
+    }
   }
 
+  /// The sort the user picked, or `nil` to follow the app default.
+  ///
+  /// `nil` is not "unsorted": it is "whatever Preferences says", resolved on
+  /// every read by ``resolvedSorting`` so that changing the default reaches a
+  /// filter that never picked a sort of its own.
+  public var sorting: Sorting? {
+    didSet { modified = modified || sorting != oldValue }
+  }
+
+  /// The resolved sort field. Reading follows the app default when the filter
+  /// has not picked a sort; **writing pins it**, because a write is the user
+  /// picking one.
+  public var sortField: SortField {
+    get { resolvedSorting.field }
+    set { sorting = Sorting(field: newValue, order: resolvedSorting.order) }
+  }
+
+  /// See ``sortField``: reading resolves, writing pins.
   public var sortOrder: DataModel.SortOrder {
-    didSet { modified = modified || sortOrder != oldValue }
+    get { resolvedSorting.order }
+    set { sorting = Sorting(field: resolvedSorting.field, order: newValue) }
   }
 
   public var customField: CustomFieldQuery = .any {
@@ -229,8 +255,7 @@ public struct FilterState: Equatable, Codable, Sendable {
     storagePath: Filter,
     owner: Filter,
     tags: TagFilter,
-    sortField: SortField,
-    sortOrder: DataModel.SortOrder,
+    sorting: Sorting?,
     remaining: [FilterRule],
     savedView: UInt?,
     searchText: String?,
@@ -243,8 +268,7 @@ public struct FilterState: Equatable, Codable, Sendable {
     self.storagePath = storagePath
     self.owner = owner
     self.tags = tags
-    self.sortField = sortField
-    self.sortOrder = sortOrder
+    self.sorting = sorting
     self.remaining = remaining
     self.savedView = savedView
     self.searchText = searchText ?? ""
@@ -260,8 +284,7 @@ public struct FilterState: Equatable, Codable, Sendable {
       storagePath: .any,
       owner: .any,
       tags: .any,
-      sortField: .asn,
-      sortOrder: .descending,
+      sorting: Sorting(field: .asn, order: .descending),
       remaining: [],
       savedView: nil,
       searchText: nil,
