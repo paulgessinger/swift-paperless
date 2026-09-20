@@ -76,17 +76,19 @@ extension DocumentStore {
   /// past the deadline, and a failure is already swallowed by `sync()`, so
   /// callers just read whatever the cache holds afterwards.
   func sync(timeout: Duration) async {
-    let (stream, continuation) = AsyncStream<Void>.makeStream()
-    Task {
-      try? await sync()
-      continuation.yield()
+    // The wait is bounded; the sync is not. `sync()` joins the session's
+    // `TaskSlot`, which by design does not propagate a joiner's cancellation
+    // into the shared task — "a joiner going away must not tear down the work
+    // under the others" — so whichever child loses this race ends the *wait*
+    // only, and the sync runs on to finish writing what a later read will find.
+    // That is also why the race can be structured: cancelling these children,
+    // or the whole call, costs nothing that anyone is waiting on.
+    await withTaskGroup(of: Void.self) { group in
+      group.addTask { [self] in try? await sync() }
+      group.addTask { try? await Task.sleep(for: timeout) }
+      await group.next()
+      group.cancelAll()
     }
-    let timer = Task {
-      try? await Task.sleep(for: timeout)
-      continuation.yield()
-    }
-    for await _ in stream { break }
-    timer.cancel()
   }
 }
 
