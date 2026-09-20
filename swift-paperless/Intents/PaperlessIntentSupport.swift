@@ -34,16 +34,26 @@ enum PaperlessIntentError: LocalizedError {
   }
 }
 
-/// The intents' own database, connection manager and session registry, built once
-/// per process the same way `ShareView` does. Elements are read through a
-/// `DocumentStore`, so results come from the local cache that `sync()` keeps
+/// The intents' view onto the process's ``AppStack``. Elements are read through
+/// a `DocumentStore`, so results come from the local cache that `sync()` keeps
 /// up to date.
+///
+/// The stack is emphatically *not* the intents' own. An intent declared in the
+/// app target runs in the app's process, and `@main` builds the scene's
+/// bootstrap on every launch — including the background launch the system does
+/// to run this intent. Anything built here instead of borrowed would therefore
+/// be a *second* database, second connection manager and second session
+/// registry alongside the app's, on every run: observations that never see each
+/// other's writes, two sessions racing the same server's sync, and a `server`
+/// row cached twice. See ``AppStack`` for why each of those bites.
 @MainActor
 enum PaperlessIntentStore {
-  static let database = bootstrapDatabase()
-  static let connectionManager = ConnectionManager(database: database)
-  private static let registry = ServerSessionRegistry(
-    database: database, manager: connectionManager)
+  private static var stack: AppStack {
+    AppStackHolder.sharedWithInMemoryFallback(context: "Intents")
+  }
+
+  static var connectionManager: ConnectionManager { stack.connectionManager }
+
   private static var stores: [UUID: DocumentStore] = [:]
 
   static func store(server: PaperlessServerEntity? = nil) async throws -> DocumentStore {
@@ -54,26 +64,10 @@ enum PaperlessIntentStore {
     }
     // Activating again is cheap when nothing changed, and rebuilds the stack
     // if the connection (e.g. its token) did since the store was created.
-    let store = stores[id] ?? DocumentStore(registry: registry)
+    let store = stores[id] ?? DocumentStore(registry: stack.sessionRegistry)
     try await store.activate(connection: stored, reload: false)
     stores[id] = store
     return store
-  }
-
-  // Same fallback as the Share Extension: an unusable app-group file still
-  // yields a working (empty) database, so the intent reports "no server"
-  // instead of crashing.
-  private static func bootstrapDatabase() -> Database {
-    do {
-      return try Database()
-    } catch {
-      Logger.shared.fault("Intent database bootstrap failed (\(error)); falling back to in-memory")
-      do {
-        return try Database.inMemory()
-      } catch {
-        preconditionFailure("In-memory database fallback also failed: \(error)")
-      }
-    }
   }
 }
 
