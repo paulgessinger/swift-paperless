@@ -46,7 +46,16 @@ class DocumentListViewModel {
   var totalCount: UInt?
 
   /// True while a fill (page-1 await) or refresh is in flight.
-  private(set) var isFetching = false
+  var isFetching: Bool { fillsInFlight > 0 }
+
+  /// How many fills the list has started and not yet finished.
+  ///
+  /// Counted rather than flagged because two can overlap — a pull-to-refresh
+  /// during the initial load, a filter change during a refresh — and the
+  /// superseded one runs on to its own `defer` after the newer one has already
+  /// claimed the flag. Clearing it there said "idle" while a fill was still in
+  /// flight, and an empty cache reads that as "No documents".
+  private var fillsInFlight = 0
 
   /// The observed query was just switched to and its fill hasn't reported back
   /// yet. Without this, the element sync that precedes a filter change's fill
@@ -289,8 +298,8 @@ class DocumentListViewModel {
   /// here, the background paging via `watchCompletion` — so the list can tell a
   /// failed load from a query with no matches.
   private func runFill() async throws {
-    isFetching = true
-    defer { isFetching = false }
+    fillsInFlight += 1
+    defer { fillsInFlight -= 1 }
     fill?.cancel()
     fillGeneration += 1
     let generation = fillGeneration
