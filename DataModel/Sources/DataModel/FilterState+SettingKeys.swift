@@ -39,4 +39,45 @@ extension FilterState {
   public static var defaultSortOrder: DataModel.SortOrder {
     SettingsStore.shared[.defaultSortOrder]
   }
+
+  /// The sort a filter follows when it has not picked one.
+  public static var defaultSorting: Sorting {
+    Sorting(field: defaultSortField, order: defaultSortOrder)
+  }
+
+  /// ``sorting``, or the app default when the filter follows it.
+  public var resolvedSorting: Sorting {
+    sorting ?? Self.defaultSorting
+  }
+
+  /// Carries over a sort from a payload written before ``sorting`` became
+  /// nullable, where the pair was stored as `sortField` / `sortOrder`.
+  ///
+  /// A legacy sort equal to the defaults in force is taken as one the user
+  /// never picked, so it goes on following them; anything else is pinned,
+  /// which is how it already behaved. Idempotent: a payload written since
+  /// carries no legacy keys.
+  public mutating func adoptLegacySorting(fromPersisted data: Data) {
+    guard sorting == nil,
+      let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let rawField = object["sortField"] as? String,
+      let field = SortField(rawValue: rawField),
+      let reverse = object["sortOrder"] as? Bool
+    else { return }
+
+    let legacy = Sorting(field: field, order: .init(reverse))
+    guard legacy != Self.defaultSorting else { return }
+    sorting = legacy
+  }
+
+  /// This filter with its sort pinned to what it resolves to right now.
+  ///
+  /// Two filters address the same list when their resolved forms match, so
+  /// this is the form to compare when the question is "same query?" rather
+  /// than "same user intent?".
+  public var resolved: FilterState {
+    var copy = self
+    copy.sorting = resolvedSorting
+    return copy
+  }
 }

@@ -22,8 +22,7 @@ extension FilterState {
       storagePath: .any,
       owner: .any,
       tags: .any,
-      sortField: defaultSortField,
-      sortOrder: defaultSortOrder,
+      sorting: nil,
       remaining: [],
       savedView: nil,
       searchText: nil,
@@ -36,22 +35,23 @@ extension FilterState {
   public init(savedView: SavedView) {
     self = Self.create(using: \.default, withRules: savedView.filterRules)
     self.savedView = savedView.id
-    if let sortField = savedView.sortField {
-      self.sortField = sortField
-    }
-    sortOrder = savedView.sortOrder
+    sorting = Sorting(
+      field: savedView.sortField ?? Self.defaultSortField, order: savedView.sortOrder)
     modified = false  // if we initialize from saved view, it's not modified by definition
   }
 
-  public var defaultSorting: Bool {
-    sortField == Self.defaultSortField && sortOrder == Self.defaultSortOrder
+  /// Whether the list is sorted the way it usually is — a question about the
+  /// values, not about whether the sort is pinned. A pinned sort that matches
+  /// the default lights nothing up, because nothing looks different.
+  public var hasDefaultSorting: Bool {
+    resolvedSorting == Self.defaultSorting
   }
 
   /// Whether this filter still matches the saved view it was built from.
   ///
   /// Derived rather than latched: undoing an edit reads as unmodified again.
   public func isModified(from savedView: SavedView) -> Bool {
-    self != FilterState(savedView: savedView)
+    resolved != FilterState(savedView: savedView).resolved
   }
 
   /// Whether this filter differs from the one a fresh list opens with.
@@ -66,10 +66,10 @@ extension FilterState {
   }
 
   public var filtering: Bool {
-    ruleCount > 0 || !defaultSorting
+    ruleCount > 0 || !hasDefaultSorting
   }
 
   public var defaultAwareRuleCount: UInt {
-    UInt(ruleCount + (defaultSorting ? 0 : 1))
+    UInt(ruleCount + (hasDefaultSorting ? 0 : 1))
   }
 }

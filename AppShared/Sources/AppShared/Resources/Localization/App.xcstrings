@@ -13531,6 +13531,18 @@
         }
       }
     },
+    "sortDefault" : {
+      "comment" : "Sort menu row that hands the sort back to the app default; parameters are the default field and order",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default (%1$@, %2$@)"
+          }
+        }
+      }
+    },
     "sortMenuLabel" : {
       "extractionState" : "manual",
       "localizations" : {

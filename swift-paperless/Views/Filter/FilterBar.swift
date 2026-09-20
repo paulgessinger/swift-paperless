@@ -389,10 +389,34 @@ private struct SortMenu: View {
       .map { SortField.customField($0.id) }
   }
 
+  /// On: the sort is the app default's to change. Off, or picking any field or
+  /// order below, pins it to what it currently resolves to.
+  private var followsDefault: Binding<Bool> {
+    Binding(
+      get: { filterModel.filterState.sorting == nil },
+      set: { follows in
+        filterModel.filterState.sorting =
+          follows ? nil : filterModel.filterState.resolvedSorting
+      })
+  }
+
   var body: some View {
     @Bindable var filterModel = filterModel
 
     Menu {
+      // Hidden on a saved view: its sort is the server's, so handing it to the
+      // app default would be an edit to the view rather than a preference.
+      if filterModel.filterState.savedView == nil {
+        Toggle(isOn: followsDefault) {
+          Text(
+            .app(
+              .sortDefault(
+                filterModel.defaultSorting.field.localizedName(
+                  customFields: store.customFields),
+                filterModel.defaultSorting.order.localizedName)))
+        }
+      }
+
       Picker(
         String(localized: .app(.sortOrder)),
         selection: $filterModel.filterState.sortOrder
@@ -426,7 +450,7 @@ private struct SortMenu: View {
       }
       .pickerStyle(.menu)
     } label: {
-      Pill(active: !filterModel.filterState.defaultSorting) {
+      Pill(active: !filterModel.filterState.hasDefaultSorting) {
         Label(String(localized: .app(.sortMenuLabel)), systemImage: "arrow.up.arrow.down")
           .labelStyle(.iconOnly)
       }
