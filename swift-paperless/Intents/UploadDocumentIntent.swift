@@ -60,7 +60,14 @@ struct UploadDocumentIntent: AppIntent {
 
   init() {}
 
-  func perform() async throws -> some IntentResult {
+  // The `& ProvidesDialog` is load-bearing. AppIntents decides what a run may
+  // hand back from the *declared* return type, not the concrete one, so the
+  // conformance that `.result(dialog:)`'s container carries has to be spelled
+  // out here to count. Behind a bare `some IntentResult` the framework discards
+  // the dialog and logs "Did not declare ProvidesDialog but provided one" —
+  // a failure mode in which the upload succeeds and only the confirmation
+  // quietly goes missing.
+  func perform() async throws -> some IntentResult & ProvidesDialog {
     let uploadFile = try PaperlessIntentUploadFile.materialize(document)
     defer { uploadFile.cleanup() }
 
