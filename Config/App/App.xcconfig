@@ -22,6 +22,9 @@ PROVISIONING_PROFILE_SPECIFIER = $(SWP_APP_PROVISIONING_PROFILE)
 ENABLE_APP_SANDBOX = YES
 ENABLE_HARDENED_RUNTIME = YES
 ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES
+// Bonjour *browsing* under the Mac Catalyst sandbox needs the network-server
+// entitlement, even though the app never listens for anything.
+ENABLE_INCOMING_NETWORK_CONNECTIONS = YES
 ENABLE_USER_SELECTED_FILES = readwrite
 REGISTER_APP_GROUPS = NO
 
