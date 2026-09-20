@@ -44,6 +44,9 @@ INFOPLIST_KEY_CFBundleDisplayName = Paperless
 INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
 INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.productivity
 INFOPLIST_KEY_NSCameraUsageDescription = Your camera is used to scan for ASNs.
+// Shown for both uses of the local network: reaching a Paperless server on a
+// LAN address, which the app has always done, and discovering scanners.
+INFOPLIST_KEY_NSLocalNetworkUsageDescription = Used to reach a Paperless server on your local network and to find nearby scanners.
 INFOPLIST_KEY_NSFaceIDUsageDescription = Protect access to documents in the app
 INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*] = YES
 INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*] = YES
