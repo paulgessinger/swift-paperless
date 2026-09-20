@@ -21,15 +21,15 @@ enum PaperlessIntentError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .noConnection:
-      String(localized: .app(.uploadDocumentIntentNoConnectionError))
+      String(localized: .intents(.uploadDocumentIntentNoConnectionError))
     case .prepareFileFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentPrepareFileError(detail)))
+      String(localized: .intents(.uploadDocumentIntentPrepareFileError(detail)))
     case .loadOptionsFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentLoadOptionsError(detail)))
+      String(localized: .intents(.uploadDocumentIntentLoadOptionsError(detail)))
     case .missingElement(let kind):
-      String(localized: .app(.uploadDocumentIntentMissingElementError(kind)))
+      String(localized: .intents(.uploadDocumentIntentMissingElementError(kind)))
     case .uploadFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentUploadError(detail)))
+      String(localized: .intents(.uploadDocumentIntentUploadError(detail)))
     }
   }
 }

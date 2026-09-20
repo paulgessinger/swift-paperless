@@ -1,0 +1,222 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "entityTypeCorrespondent" : {
+      "comment" : "Name of the correspondent item type, shown by the Shortcuts app when picking one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correspondent"
+          }
+        }
+      }
+    },
+    "entityTypeDocumentType" : {
+      "comment" : "Name of the document type item type, shown by the Shortcuts app when picking one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document Type"
+          }
+        }
+      }
+    },
+    "entityTypeServer" : {
+      "comment" : "Name of the server item type, shown by the Shortcuts app when picking one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        }
+      }
+    },
+    "entityTypeTag" : {
+      "comment" : "Name of the tag item type, shown by the Shortcuts app when picking one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentCorrespondentParameter" : {
+      "comment" : "Label of the correspondent field of the \"Upload Document\" action in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correspondent"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentDescription" : {
+      "comment" : "One-line description of the \"Upload Document\" action, shown in the Shortcuts action list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploads a document to a Paperless server."
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentDocumentParameter" : {
+      "comment" : "Label of the file field of the \"Upload Document\" action in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentDocumentTypeParameter" : {
+      "comment" : "Label of the document type field of the \"Upload Document\" action in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document Type"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentLoadOptionsError" : {
+      "comment" : "Shown in the Shortcuts app when the tag/document type/correspondent list cannot be loaded. %@ is the underlying error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not load options from Paperless: %@"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentMissingElementError" : {
+      "comment" : "Shown when a tag, document type or correspondent saved in a shortcut no longer exists. %@ is the kind of item, e.g. \"Tag\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentNoConnectionError" : {
+      "comment" : "Shown when a shortcut runs but no Paperless server has been set up in the app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentPrepareFileError" : {
+      "comment" : "Shown when the file handed to the shortcut cannot be read. %@ is the underlying error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The document file could not be prepared for upload: %@"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentServerParameter" : {
+      "comment" : "Label of the server field of the \"Upload Document\" action in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentSuccess" : {
+      "comment" : "Confirmation the Shortcuts app speaks or shows after the upload succeeds.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploaded document to Paperless."
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentTagsParameter" : {
+      "comment" : "Label of the tags field of the \"Upload Document\" action in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentTitle" : {
+      "comment" : "Name of the \"Upload Document\" action as it appears in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload Document"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentTitleParameter" : {
+      "comment" : "Label of the document title field of the \"Upload Document\" action in the Shortcuts app.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
+          }
+        }
+      }
+    },
+    "uploadDocumentIntentUploadError" : {
+      "comment" : "Shown when the upload itself fails. %@ is the underlying error.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload failed: %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
