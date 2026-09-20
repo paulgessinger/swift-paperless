@@ -107,6 +107,10 @@ class DocumentListViewModel {
   @ObservationIgnored private nonisolated(unsafe) var documentTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var statusTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var completionTask: Task<Void, Never>?
+  @ObservationIgnored private nonisolated(unsafe) var staleResyncTask: Task<Void, Never>?
+  /// The observed query's order-stale flag as last seen, `nil` until the
+  /// status observation first reports for it.
+  @ObservationIgnored private var lastOrderStale: Bool?
   /// Bumped whenever the list moves on from a fill (a newer fill, a query
   /// switch, a teardown), so an older fill's late outcome is dropped rather
   /// than reported against whatever is on screen now.
@@ -423,6 +427,9 @@ class DocumentListViewModel {
     replacementStoppedShort = false
     isCacheComplete = false
     awaitingFill = true
+    lastOrderStale = nil
+    staleResyncTask?.cancel()
+    staleResyncTask = nil
     startStatusObservation(key)
     startDocumentObservation(key, limit: prefixLimit)
   }
@@ -456,6 +463,7 @@ class DocumentListViewModel {
           guard let self else { break }
           totalCount = status.totalCount
           isCacheComplete = status.isComplete
+          noteOrderStale(status.orderStale, for: key)
         }
       } catch is CancellationError {
       } catch {
@@ -464,9 +472,64 @@ class DocumentListViewModel {
     }
   }
 
+  // MARK: - Stale order
+
+  /// The cached order of the list on screen was marked stale: a document it
+  /// lists changed — on the server, seen by the changed-documents delta, or by
+  /// an edit made here — in a way that may move it within the list or out of
+  /// it. Re-sync the query's membership so the list matches the server again.
+  ///
+  /// A membership rewrite, not a refill. The documents are already current:
+  /// whatever marked the key wrote their rows through in the same transaction
+  /// that marked it. What is out of date is only the *ordering*, and one id
+  /// request buys the server's whole answer — where a refill would re-download
+  /// a page of full documents to learn the same thing.
+  ///
+  /// Not straight away: something may be writing the query already — the
+  /// list's own fill still paging, the library sweep, the membership sweep —
+  /// and taking the key over would cancel it. Wait for those writers, then
+  /// rewrite only if none of them rewrote the whole order in the meantime.
+  private func noteOrderStale(_ isStale: Bool, for key: QueryKey) {
+    let wasStale = lastOrderStale
+    lastOrderStale = isStale
+    guard
+      DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: wasStale, isStale: isStale, isWidened: isWindowWidened),
+      staleResyncTask == nil
+    else { return }
+
+    staleResyncTask = Task { @MainActor [weak self] in
+      guard let store = self?.store else { return }
+      // A cancelled task was already replaced (or dropped) by whoever
+      // cancelled it, so clearing the slot would clear its successor.
+      defer { if !Task.isCancelled { self?.staleResyncTask = nil } }
+      await store.waitForQueryWriters(queryKey: key)
+      let status = try? await store.queryStatus(queryKey: key)
+      guard let self, !Task.isCancelled, queryKey == key, let status,
+        DocumentListFillTracking.resyncsMembershipAfterWriters(
+          isStale: status.orderStale, isWidened: isWindowWidened)
+      else { return }
+      Logger.shared.info("Document list order went stale; re-syncing its membership")
+      do {
+        try await store.refreshDocumentQueryMembership(filter: filterState)
+      } catch {
+        // Nothing to show the user: the list keeps the rows it has, the flag
+        // stays set, and the next refresh — or the next change — tries again.
+        // Offline is the common case here and is not a load failure.
+        Logger.shared.error("Re-syncing a stale document list failed: \(error)")
+      }
+    }
+  }
+
+  /// The list observes more rows than a fill's first page writes.
+  private var isWindowWidened: Bool { prefixLimit > initialLimit }
+
   private func teardown() {
     documentTask?.cancel()
     documentTask = nil
+    staleResyncTask?.cancel()
+    staleResyncTask = nil
+    lastOrderStale = nil
     statusTask?.cancel()
     statusTask = nil
     completionTask?.cancel()

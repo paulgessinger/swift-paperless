@@ -44,3 +44,4 @@
 - Turning off "Entire library" offline browsing now stops the download already in progress, instead of letting it carry on re-downloading data that was just removed
 - The Offline & Sync screen now shows how much space the offline data takes up on your device: the database, downloaded documents and thumbnails
 - Thumbnails are no longer cached twice on disk
+- A document list on screen now re-orders itself when the app picks up a change to one of its documents made elsewhere, for example on the web interface, so a document that no longer matches the list's filter disappears and one whose sorted field changed moves to its new place. Editing a document in the app, such as removing its inbox tag, updates the list the same way. The list is only re-ordered, not re-downloaded, so it happens without reloading what is on screen

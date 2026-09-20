@@ -471,6 +471,36 @@ struct DocumentCacheTests {
     #expect(removed == [1])
   }
 
+  @Test("documentIDsWithoutRows keeps the caller's order and drops repeats")
+  func documentIDsWithoutRows() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments([doc(2, "B"), doc(4, "D")], serverID: server)
+
+    // The ids a membership rewrite would write as skeletons, top of the list
+    // first — which is the order a bounded hydration fetches them in.
+    #expect(
+      try await database.documentIDsWithoutRows(serverID: server, among: [1, 2, 3, 4, 5, 3])
+        == [1, 3, 5])
+    #expect(try await database.documentIDsWithoutRows(serverID: server, among: [2, 4]) == [])
+    #expect(try await database.documentIDsWithoutRows(serverID: server, among: []) == [])
+  }
+
+  @Test("documentIDsWithoutRows doesn't count another server's rows as cached")
+  func documentIDsWithoutRowsIsPerServer() async throws {
+    let server = UUID()
+    let other = UUID()
+    let database = try database(server)
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: other,
+        url: URL(string: "https://other.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "bob")))
+    try await database.upsertDocuments([doc(1, "A")], serverID: other)
+
+    #expect(try await database.documentIDsWithoutRows(serverID: server, among: [1]) == [1])
+  }
+
   // MARK: - Diagnostics (cached document count)
 
   @Test("documentCount reflects the number of cached document rows for a server")

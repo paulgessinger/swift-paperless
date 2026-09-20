@@ -485,6 +485,23 @@ extension Database {
       .fetchSet(db)
   }
 
+  /// Which of `ids` have no cached `document` row — the ids a membership rewrite
+  /// would write into `query_order` as skeletons.
+  ///
+  /// The order of `ids` is kept and repeats are dropped, so a caller that can
+  /// only afford to fetch a few of them fetches the ones nearest the top of the
+  /// list, which is what the user is looking at.
+  public func documentIDsWithoutRows(serverID: UUID, among ids: [UInt]) async throws -> [UInt] {
+    guard !ids.isEmpty else { return [] }
+    return try await wrappingAsync("documentIDsWithoutRows") {
+      try await writer.read { db in
+        let cached = try Self.fetchAllDocumentIDs(db, serverID: serverID)
+        var seen: Set<UInt> = []
+        return ids.filter { seen.insert($0).inserted && !cached.contains($0) }
+      }
+    }
+  }
+
   /// Count of `document` rows cached for a server — a diagnostic surface (the
   /// Offline & Sync screen) so the proactive fill and the downgrade GC's
   /// effect are visible without a debugger.

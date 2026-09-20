@@ -140,4 +140,43 @@ public enum DocumentListFillTracking {
   public static func replacementStoppedShort(isCacheComplete: Bool) -> Bool {
     !isCacheComplete
   }
+
+  /// Whether the list on screen should re-sync its query's membership because
+  /// the cached order was just marked stale — a changed-documents delta or an
+  /// edit moved a document the order lists, so it may now sit in the wrong
+  /// place or not belong at all.
+  ///
+  /// Only on the flip to stale, not on a flag already set when the list
+  /// subscribed: opening or switching to a list already fills it, and a fill's
+  /// first page is what clears the flag.
+  ///
+  /// Not while the list's window has been widened past the first page. The
+  /// rewrite replaces the whole order in one write, and the cache has objects
+  /// behind at most the pages that were fetched, so a user scrolled further
+  /// down could be left looking at placeholders. The flag stays set and the
+  /// next refresh (pull, reopen, filter change) picks it up.
+  ///
+  /// - Parameters:
+  ///   - wasStale: The flag's previous value, or `nil` for the first status
+  ///     the list observed for this query.
+  ///   - isStale: The flag's value now.
+  ///   - isWidened: The list observes more rows than a fill's first page
+  ///     writes.
+  public static func resyncsMembershipForStaleOrder(
+    wasStale: Bool?, isStale: Bool, isWidened: Bool
+  ) -> Bool {
+    guard let wasStale, !wasStale, isStale else { return false }
+    return !isWidened
+  }
+
+  /// After waiting out whoever was writing the query when it went stale,
+  /// whether the list still has to re-sync the membership itself.
+  ///
+  /// A whole-order rewrite in the meantime (the membership sweep, or a fill
+  /// whose first page landed after the change) has already cleared the flag.
+  /// A fill that was past its first page has not: its later pages keep the
+  /// flag, since they never revisit the rows it is about.
+  public static func resyncsMembershipAfterWriters(isStale: Bool, isWidened: Bool) -> Bool {
+    isStale && !isWidened
+  }
 }
