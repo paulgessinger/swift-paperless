@@ -9,8 +9,15 @@ import DataModel
 import Foundation
 
 struct UploadDocumentIntent: AppIntent {
-  static let title: LocalizedStringResource = "Upload Document"
-  static let description = IntentDescription("Uploads a document to a Paperless server.")
+  // Metadata strings are spelled out as literal resources rather than going
+  // through the generated `.intents(…)` accessors below. `appintentsmetadataprocessor`
+  // resolves them at build time from the source text, so the key, table and
+  // bundle all have to be literal — an accessor is a function call returning a
+  // struct, and there is nothing for the extractor to read. Same catalog either
+  // way; only the spelling differs.
+  static let title = LocalizedStringResource("uploadDocumentIntentTitle", table: "Intents")
+  static let description = IntentDescription(
+    LocalizedStringResource("uploadDocumentIntentDescription", table: "Intents"))
   static let openAppWhenRun = false
 
   static var parameterSummary: some ParameterSummary {
@@ -45,24 +52,29 @@ struct UploadDocumentIntent: AppIntent {
   // thing an upload cannot run without, and the only one a previous action
   // plausibly produces.
   @Parameter(
-    title: "Document",
+    title: LocalizedStringResource("uploadDocumentIntentDocumentParameter", table: "Intents"),
     supportedTypeIdentifiers: ["public.data"],
     inputConnectionBehavior: .connectToPreviousIntentResult)
   var document: IntentFile
 
-  @Parameter(title: "Server")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentServerParameter", table: "Intents"))
   var server: PaperlessServerEntity
 
-  @Parameter(title: "Title")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentTitleParameter", table: "Intents"))
   var title: String?
 
-  @Parameter(title: "Document Type")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentDocumentTypeParameter", table: "Intents"))
   var documentType: PaperlessDocumentTypeEntity?
 
-  @Parameter(title: "Correspondent")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentCorrespondentParameter", table: "Intents"))
   var correspondent: PaperlessCorrespondentEntity?
 
-  @Parameter(title: "Tags")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentTagsParameter", table: "Intents"))
   var tags: [PaperlessTagEntity]?
 
   init() {}
@@ -104,7 +116,7 @@ struct UploadDocumentIntent: AppIntent {
       throw PaperlessIntentError.uploadFailed(error.localizedDescription)
     }
 
-    return .result(dialog: IntentDialog(.app(.uploadDocumentIntentSuccess)))
+    return .result(dialog: IntentDialog(.intents(.uploadDocumentIntentSuccess)))
   }
 }
 

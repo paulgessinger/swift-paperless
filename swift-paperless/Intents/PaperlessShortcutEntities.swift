@@ -10,7 +10,8 @@ import Foundation
 import Networking
 
 struct PaperlessServerEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Server")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeServer", table: "Intents"))
   static let defaultQuery = PaperlessServerQuery()
 
   let connection: StoredConnection
@@ -103,7 +104,8 @@ struct PaperlessServerQuery: EntityStringQuery {
 }
 
 struct PaperlessDocumentTypeEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Document Type")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeDocumentType", table: "Intents"))
   static let defaultQuery = PaperlessDocumentTypeQuery()
 
   let documentType: DocumentType
@@ -147,7 +149,8 @@ struct PaperlessDocumentTypeQuery: EntityStringQuery {
 }
 
 struct PaperlessCorrespondentEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Correspondent")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeCorrespondent", table: "Intents"))
   static let defaultQuery = PaperlessCorrespondentQuery()
 
   let correspondent: Correspondent
@@ -191,7 +194,8 @@ struct PaperlessCorrespondentQuery: EntityStringQuery {
 }
 
 struct PaperlessTagEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Tag")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeTag", table: "Intents"))
   static let defaultQuery = PaperlessTagQuery()
 
   let tag: Tag
