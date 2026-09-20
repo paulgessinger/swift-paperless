@@ -62,6 +62,18 @@ extension FilterState {
     sortField == Self.defaultSortField && sortOrder == Self.defaultSortOrder
   }
 
+  /// Whether this filter still matches the saved view it was built from.
+  ///
+  /// Derived rather than latched: undoing an edit reads as unmodified again.
+  public func isModified(from savedView: SavedView) -> Bool {
+    self != FilterState(savedView: savedView)
+  }
+
+  /// Whether this filter differs from the one a fresh list opens with.
+  public var isModifiedFromDefault: Bool {
+    self != .default
+  }
+
   // MARK: Methods
 
   public mutating func clear() {
