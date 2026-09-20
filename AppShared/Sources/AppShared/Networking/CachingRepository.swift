@@ -1137,12 +1137,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     guard filter.stopsAccepting(previous: previous, updated: updated) else { return }
     let key = QueryKey(serverID: serverID, filter: filter)
 
-    // A key mid-fill is the fill's alone to write (see `activeFills`), so it is
-    // left alone now and revisited once the fill is done. `withOwnership`
-    // claims without draining — that would not stop the fill, only hide it from
-    // the next one — and draining it instead would cancel the paging of the
-    // very list the user is looking at. Nothing suspends between this check and
-    // the claim below, so a key read as free is still free when it is claimed.
+    // A key someone else owns — a fill, or the membership sweep, which claims
+    // the key before the fetch it rewrites from — is theirs alone to write (see
+    // `activeFills`), so it is left alone now and revisited once they are done.
+    // `withOwnership` claims without draining — that would not stop the fill,
+    // only hide it from the next one — and draining it instead would cancel the
+    // paging of the very list the user is looking at. Nothing suspends between
+    // this check and the claim below, so a key read as free is still free when
+    // it is claimed.
     guard !activeFills.isOwned(key) else {
       removeAfterWriters(updated.id, from: key, filter: filter)
       return
@@ -1417,18 +1419,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         continue
       }
       do {
-        // Ordered, not the id-set projection: these ids become `query_order`
-        // positions verbatim, so the query's own sort has to survive the round
-        // trip or the sweep rewrites every cached list to id order.
-        let ids = try await wrapped.orderedDocumentIDs(filter: filter)
-        // Re-check after the fetch: that suspension is exactly the window a
-        // fill can start in, and the guard above would then be stale.
-        guard !isFilling(key) else {
-          Logger.sync.info(
-            "Membership sweep: '\(name ?? "default", privacy: .public)' began filling; skipping")
-          continue
-        }
-        guard try await replaceQueryOrderOwningKey(key, orderedIDs: ids) else {
+        guard try await rewriteMembershipOwningKey(key, filter: filter) else {
           Logger.sync.info(
             "Membership sweep: '\(name ?? "default", privacy: .public)' was taken over mid-write; skipping"
           )
@@ -1459,24 +1450,39 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  /// Rewrite `key`'s membership while *owning* the key, and report whether the
-  /// rewrite stood.
+  /// Fetch `filter`'s membership and rewrite `key` from it while *owning* the
+  /// key for both halves, and report whether the rewrite stood.
   ///
-  /// The two `isFilling` guards around the caller used to be enough on their
-  /// own, because the write was a blocking main-actor call: nothing could claim
-  /// the key between the last check and the committed rewrite. Now that the
-  /// write suspends, that window is real — a fill could start inside it and
-  /// interleave its page-1 `replaceAll` with this delete-all-and-reinsert,
-  /// producing exactly the garbled merge the guards exist to prevent. Claiming
-  /// the key for the duration closes it again: a fill starting meanwhile drains
-  /// this write (`drainFill`) instead of racing it, and the drained sweep leaves
-  /// the key to the fill, which writes the better ordering anyway.
+  /// The `isFilling` guard at the caller used to be enough on its own, because
+  /// the write was a blocking main-actor call: nothing could claim the key
+  /// between the check and the committed rewrite. Now that the write suspends,
+  /// that window is real — a fill could start inside it and interleave its
+  /// page-1 `replaceAll` with this delete-all-and-reinsert, producing exactly
+  /// the garbled merge the guard exists to prevent. Claiming the key for the
+  /// duration closes it again: a fill starting meanwhile drains this write
+  /// (`drainFill`) instead of racing it, and the drained sweep leaves the key to
+  /// the fill, which writes the better ordering anyway.
+  ///
+  /// The *fetch* is inside the claim for the same reason page 1 of a fill is
+  /// (see ``fillQuery(filter:category:)``): what this writes is a snapshot the
+  /// server took when it answered, so anything that changed the key's rows while
+  /// the answer was in flight is about to be overwritten by an older truth.
+  /// Fetching before claiming used to leave that gap open for a whole network
+  /// round trip, and ``dropFromQuery(filter:previous:updated:)`` — which reads
+  /// the key as free and removes a row the user's own edit just pushed out of
+  /// the list — would land in it and be undone by this rewrite. Owning the key
+  /// from before the fetch turns that into the deferral the removal already
+  /// knows how to do: it waits for this sweep and removes the row afterwards.
+  /// The other order is safe by itself — a removal that lands before the claim
+  /// is on the server before this fetch is issued, so the answer already
+  /// excludes it.
   ///
   /// - Returns: `false` if a fill took the key over, so the caller skips the
   ///   view rather than clearing its recorded sync error.
-  private func replaceQueryOrderOwningKey(
-    _ key: QueryKey, orderedIDs: [UInt]
+  private func rewriteMembershipOwningKey(
+    _ key: QueryKey, filter: FilterState
   ) async throws -> Bool {
+    let wrapped = wrapped
     let database = database
     let serverID = serverID
     // `withOwnership` runs the write on an unstructured task — which is what
@@ -1486,9 +1492,18 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // recorded sync error and — on the last view — the loop would simply run
     // out, so `ServerSession` would count a cancelled membership sweep as a
     // completed one and advance its freshness stamps on the strength of it.
-    return try await activeFills.withOwnership(of: [key]) {
+    //
+    // `cancellingWithCaller` because the fetch now runs in there too: a
+    // cancelled reconcile means to stop using the network, and an unstructured
+    // task inherits no cancellation. (It does inherit task-locals, so the fetch
+    // is still billed to `NetworkTransfer`'s reconcile category.)
+    return try await activeFills.withOwnership(of: [key], cancellingWithCaller: true) {
+      // Ordered, not the id-set projection: these ids become `query_order`
+      // positions verbatim, so the query's own sort has to survive the round
+      // trip or the sweep rewrites every cached list to id order.
+      let ids = try await wrapped.orderedDocumentIDs(filter: filter)
       try await database.replaceQueryOrder(
-        queryKey: key, serverID: serverID, orderedIDs: orderedIDs)
+        queryKey: key, serverID: serverID, orderedIDs: ids)
     }
   }
 
