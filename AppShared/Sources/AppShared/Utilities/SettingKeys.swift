@@ -29,18 +29,6 @@ extension SettingKey {
     .init("enableBiometricAppLock", default: false)
   }
 
-  public static var defaultSearchMode: SettingKey<FilterState.SearchMode> {
-    .init("defaultSearchMode", default: .titleContent)
-  }
-
-  public static var defaultSortField: SettingKey<SortField> {
-    .init("defaultSortField", default: .added)
-  }
-
-  public static var defaultSortOrder: SettingKey<DataModel.SortOrder> {
-    .init("defaultSortOrder", default: .descending)
-  }
-
   public static var filterBarConfiguration: SettingKey<FilterBarConfiguration> {
     .init("filterBarConfiguration", default: .default)
   }
