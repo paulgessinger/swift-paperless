@@ -1,0 +1,42 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Upload a document to ${applicationName}" : {
+      "comment" : "Spoken Siri phrase that starts the upload action. Must read as a natural spoken command and must keep the ${applicationName} placeholder, which Siri replaces with the app name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload a document to ${applicationName}"
+          }
+        }
+      }
+    },
+    "Upload Document" : {
+      "comment" : "Short name of the upload action, shown under its tile on the Shortcuts app gallery.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload Document"
+          }
+        }
+      }
+    },
+    "Upload document to ${applicationName}" : {
+      "comment" : "Spoken Siri phrase that starts the upload action. Must read as a natural spoken command and must keep the ${applicationName} placeholder, which Siri replaces with the app name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload document to ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
