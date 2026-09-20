@@ -19,8 +19,9 @@ import Foundation
 ///   never match yesterday's cached rows.
 /// - The canonical input is `FilterRule.queryItems(for:)` (which already sorts
 ///   multi-value rule values) re-sorted as `name=value` lines, so it is
-///   independent of dictionary iteration order and of the transient
-///   `FilterState.modified` flag (which is not a query parameter).
+///   independent of dictionary iteration order. The sort is hashed as the
+///   filter *resolves* it, so a filter following the app default and one
+///   pinning the same value address the same cached query.
 ///
 /// Virtual / client-defined views (e.g. a pinned "Downloaded" list) use
 /// a ``init(sentinel:)`` well-known key instead of a hash, since they have no

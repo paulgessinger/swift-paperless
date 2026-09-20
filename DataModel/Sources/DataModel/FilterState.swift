@@ -172,21 +172,13 @@ public struct FilterState: Equatable, Codable, Sendable {
     }
   }
 
-  public var correspondent: Filter = .any {
-    didSet { modified = modified || correspondent != oldValue }
-  }
-  public var documentType: Filter = .any {
-    didSet { modified = modified || documentType != oldValue }
-  }
-  public var storagePath: Filter = .any {
-    didSet { modified = modified || storagePath != oldValue }
-  }
-  public var owner: Filter = .any { didSet { modified = modified || owner != oldValue } }
+  public var correspondent: Filter = .any
+  public var documentType: Filter = .any
+  public var storagePath: Filter = .any
+  public var owner: Filter = .any
 
-  public var tags: TagFilter = .any { didSet { modified = modified || tags != oldValue } }
-  public var remaining: [FilterRule] = [] {
-    didSet { modified = modified || remaining != oldValue }
-  }
+  public var tags: TagFilter = .any
+  public var remaining: [FilterRule] = []
 
   /// A sort field paired with its direction.
   public struct Sorting: Equatable, Hashable, Codable, Sendable {
@@ -204,9 +196,7 @@ public struct FilterState: Equatable, Codable, Sendable {
   /// `nil` is not "unsorted": it is "whatever Preferences says", resolved on
   /// every read by ``resolvedSorting`` so that changing the default reaches a
   /// filter that never picked a sort of its own.
-  public var sorting: Sorting? {
-    didSet { modified = modified || sorting != oldValue }
-  }
+  public var sorting: Sorting?
 
   /// The resolved sort field. Reading follows the app default when the filter
   /// has not picked a sort; **writing pins it**, because a write is the user
@@ -222,32 +212,17 @@ public struct FilterState: Equatable, Codable, Sendable {
     set { sorting = Sorting(field: resolvedSorting.field, order: newValue) }
   }
 
-  public var customField: CustomFieldQuery = .any {
-    didSet { modified = modified || customField != oldValue }
-  }
+  public var customField: CustomFieldQuery = .any
 
   public var savedView: UInt? = nil
 
-  @EquatableNoop
-  public var modified = false
+  public var searchText: String = ""
 
-  public var searchText: String = "" {
-    didSet {
-      modified = modified || searchText != oldValue
-    }
-  }
+  public var searchMode: SearchMode
 
-  public var searchMode: SearchMode {
-    didSet { modified = modified || searchMode != oldValue }
-  }
+  public var asn: AsnFilter
 
-  public var asn: AsnFilter {
-    didSet { modified = modified || asn != oldValue }
-  }
-
-  public var date: DateFilter = .init() {
-    didSet { modified = modified || date != oldValue }
-  }
+  public var date: DateFilter = .init()
 
   public init(
     correspondent: Filter,
