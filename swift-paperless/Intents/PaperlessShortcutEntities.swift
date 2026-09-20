@@ -52,7 +52,8 @@ struct PaperlessServerEntity: AppEntity {
 }
 
 struct PaperlessServerQuery: EntityStringQuery {
-  func entities(for identifiers: [PaperlessServerEntity.ID]) async throws -> [PaperlessServerEntity] {
+  func entities(for identifiers: [PaperlessServerEntity.ID]) async throws -> [PaperlessServerEntity]
+  {
     guard !identifiers.isEmpty else { return [] }
     let ids = Set(identifiers)
     return await allEntities().filter { ids.contains($0.id) }
@@ -78,7 +79,8 @@ struct PaperlessServerQuery: EntityStringQuery {
     let allConnections = Array(connectionManager.connections.values)
     let activeConnectionId = connectionManager.activeConnectionId
 
-    return allConnections
+    return
+      allConnections
       .sorted {
         if $0.id == activeConnectionId { return true }
         if $1.id == activeConnectionId { return false }
