@@ -52,3 +52,4 @@
 - The document list no longer briefly says you have no documents while it is still loading on launch
 - A deleted document no longer reappears in a document list, as an empty placeholder or as a document that still opens, when a list update was running at the moment it was deleted
 - New app icon. The previous icon is still available in Settings as an alternative icon
+- A new "Upload Document" action in the Shortcuts app uploads a file to Paperless without opening the app, letting you automate uploads. You can pick the target server, and optionally set a title, document type, correspondent and tags; leaving the title empty lets the server derive one from the filename
