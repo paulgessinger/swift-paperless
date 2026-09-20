@@ -102,6 +102,54 @@ public struct DetailFillOutcome: Sendable {
   public static let complete = DetailFillOutcome(failure: nil, failed: 0)
 }
 
+/// How far a membership rewrite goes to put objects behind the ids it writes.
+/// Non-generic so the constant is legal (it wouldn't be on the generic
+/// `CachingRepository`), same as ``LibraryCoverage`` above.
+enum MembershipRewritePolicy {
+  /// How many missing objects a single-key rewrite fetches before leaving the
+  /// rest as skeletons.
+  ///
+  /// A fill's page is *one* request for up to 250 documents; hydration is one
+  /// request per document, so it is only the cheaper answer while the missing
+  /// set is tiny — which is what it is, since the change that marked the list
+  /// stale wrote its own document row in the same transaction. Ten leaves room
+  /// for a handful of ids that entered the list without ever being cached and
+  /// still bounds the worst case at ten round trips instead of the whole page
+  /// of full documents the refill this replaced used to pull. Anything past it
+  /// stays a skeleton until the next fill of the list, which is where a cache
+  /// this thin belongs anyway.
+  static let hydrationLimit = 10
+}
+
+/// What a membership rewrite does about ids the cache has no `document` row
+/// for. They become skeleton rows either way — the question is only whether
+/// this rewrite pays to fill some of them in first.
+enum MembershipHydration {
+  /// Leave every missing id a skeleton: the proactive library fill owns
+  /// putting objects behind them, in pages.
+  case deferToFill
+  /// Fetch the objects for the first `limit` missing ids, top of the list
+  /// first, and leave the rest skeletons.
+  case fetchMissing(limit: Int)
+}
+
+/// Why a membership rewrite did not stand.
+enum MembershipRewriteOutcome: Equatable {
+  case rewritten
+  /// A fill owns the key and writes a strictly better ordering.
+  case leftToFill
+  /// A fill took the key over while the rewrite was being written.
+  case takenOver
+
+  var reason: String {
+    switch self {
+    case .rewritten: "rewritten"
+    case .leftToFill: "is mid-fill"
+    case .takenOver: "was taken over mid-write"
+    }
+  }
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
@@ -183,6 +231,24 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// added (their detail arrives via R3δ in the same reconcile). No-op unless
   /// *Entire library* is enabled.
   func reconcileSavedViewMembership() async throws
+
+  /// Re-sync **one** list's cached membership (`query_order`) from the same
+  /// cheap Tier-0 id projection the sweep above uses, and fetch the objects
+  /// behind the few ids the cache cannot back.
+  ///
+  /// What a list on screen does when its cached order is marked stale. The
+  /// documents are already current — whatever marked the key wrote their rows
+  /// in the same transaction — so what is missing is only the server's
+  /// ordering, which one id request buys. Runs in both offline modes: the flag
+  /// is set in both, and this is about the list the user is looking at, not
+  /// about coverage.
+  ///
+  /// The rewrite clears the stale flag as part of its own write.
+  ///
+  /// - Returns: `false` if a fill owns the key — it writes a better ordering
+  ///   anyway, so the caller leaves the list to it.
+  @discardableResult
+  func refreshQueryMembership(filter: FilterState) async throws -> Bool
 
   /// Reachability GC for cached query keys: delete `query_order` / `query_meta`
   /// / `query_sync_error` for every key that is no longer reachable (the default
@@ -1362,6 +1428,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // rewrite of the whole order from the server — the membership sweep
         // right behind this pass (*Entire library*: the default list and saved
         // views), or the next fill of the list, which every open of it starts.
+        // A list already on screen doesn't wait for either: seeing the mark, it
+        // re-syncs its own membership (`DocumentListViewModel`), which is the
+        // same whole-order rewrite for one key.
         let marked = try await database.applyChangedDocuments(toUpsert, serverID: serverID)
         if marked > 0 {
           Logger.sync.info(
@@ -1394,33 +1463,17 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     for (name, filter) in views {
       try Task.checkCancellation()
       let key = QueryKey(serverID: serverID, filter: filter)
-      // A fill owning this key is writing the same `query_order` rows page by
-      // page, and it writes a strictly better ordering than this Tier-0
-      // projection — it carries full document detail, and its page-1 replace has
-      // already re-baselined the key. Interleaving `replaceQueryOrder`'s
-      // delete-all-and-reinsert with the fill's appends silently merges two
-      // orderings into a garbled one, so leave the key to the fill; the next
-      // sweep picks it up.
-      guard !isFilling(key) else {
-        Logger.sync.info(
-          "Membership sweep: '\(name ?? "default", privacy: .public)' is mid-fill; skipping")
-        continue
-      }
       do {
-        // Ordered, not the id-set projection: these ids become `query_order`
-        // positions verbatim, so the query's own sort has to survive the round
-        // trip or the sweep rewrites every cached list to id order.
-        let ids = try await wrapped.orderedDocumentIDs(filter: filter)
-        // Re-check after the fetch: that suspension is exactly the window a
-        // fill can start in, and the guard above would then be stale.
-        guard !isFilling(key) else {
+        // The sweep hydrates nothing: on a cold or downgraded cache *every* id
+        // can be missing, and fetching those objects here would turn the cheap
+        // id sync into a full fill of every saved view — which is `fillLibrary`'s
+        // job, done in pages rather than one request per document. A skeleton
+        // row is the designed state until then.
+        let outcome = try await rewriteQueryMembership(
+          key, filter: filter, label: name ?? "default", hydrating: .deferToFill)
+        guard outcome == .rewritten else {
           Logger.sync.info(
-            "Membership sweep: '\(name ?? "default", privacy: .public)' began filling; skipping")
-          continue
-        }
-        guard try await replaceQueryOrderOwningKey(key, orderedIDs: ids) else {
-          Logger.sync.info(
-            "Membership sweep: '\(name ?? "default", privacy: .public)' was taken over mid-write; skipping"
+            "Membership sweep: '\(name ?? "default", privacy: .public)' \(outcome.reason, privacy: .public); skipping"
           )
           continue
         }
@@ -1445,6 +1498,86 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // records an outcome; that is the backstop for this whole family of
       // one-`await`-too-late windows, not a reason to leave them open.
       try Task.checkCancellation()
+    }
+  }
+
+  public func refreshQueryMembership(filter: FilterState) async throws -> Bool {
+    let key = QueryKey(serverID: serverID, filter: filter)
+    // Pin the key: this is a list the user is looking at, so the reachability
+    // sweep must not decide it is an abandoned ad-hoc filter mid-rewrite.
+    noteRequested(key)
+    // Hydrating here is affordable precisely because this is one key whose
+    // membership is already almost right: the document whose change marked it
+    // was written to the cache by the same transaction that marked, so the ids
+    // entering the window on this change normally have their rows already.
+    // What is left is the occasional id that entered the list without ever
+    // being cached — under *Recently browsed* the delta skips documents it has
+    // no row for — and the bound keeps that from becoming a burst of round
+    // trips.
+    let outcome = try await rewriteQueryMembership(
+      key, filter: filter, label: "list on screen",
+      hydrating: .fetchMissing(limit: MembershipRewritePolicy.hydrationLimit))
+    return outcome == .rewritten
+  }
+
+  /// Re-sync one cached query's ordered membership from the server's id list.
+  ///
+  /// The cheap half of a fill: `orderedDocumentIDs` is the Tier-0 `fields=id`
+  /// projection, so one request buys the query's whole answer in its own sort
+  /// order, and ``Database/replaceQueryOrder(queryKey:serverID:orderedIDs:)``
+  /// writes it as the key's positions verbatim. What it does *not* buy is the
+  /// documents themselves — `hydrating` decides what to do about the ids the
+  /// cache cannot back.
+  ///
+  /// A fill owning this key is writing the same `query_order` rows page by page,
+  /// and it writes a strictly better ordering than this Tier-0 projection — it
+  /// carries full document detail, and its page-1 replace has already
+  /// re-baselined the key. Interleaving `replaceQueryOrder`'s
+  /// delete-all-and-reinsert with the fill's appends silently merges two
+  /// orderings into a garbled one, so an owned key is left to the fill; the next
+  /// sweep (or the next mark) picks it up. The check is asked again after every
+  /// suspension, because each one is a window a fill can start in.
+  private func rewriteQueryMembership(
+    _ key: QueryKey, filter: FilterState, label: String, hydrating: MembershipHydration
+  ) async throws -> MembershipRewriteOutcome {
+    guard !isFilling(key) else { return .leftToFill }
+    // Ordered, not the id-set projection: these ids become `query_order`
+    // positions verbatim, so the query's own sort has to survive the round trip
+    // or the rewrite reduces the cached list to id order.
+    let ids = try await wrapped.orderedDocumentIDs(filter: filter)
+    guard !isFilling(key) else { return .leftToFill }
+    try await hydrate(ids, policy: hydrating, label: label)
+    guard !isFilling(key) else { return .leftToFill }
+    return try await replaceQueryOrderOwningKey(key, orderedIDs: ids) ? .rewritten : .takenOver
+  }
+
+  /// Fetch objects for the ids `ids` has no cached row behind, as far as
+  /// `policy` allows. Writes `document` rows only — no `query_order` row, so it
+  /// needs no ownership of any key and cannot garble an ordering.
+  ///
+  /// Soft-fail per id: a document that can't be fetched stays a skeleton, which
+  /// is what it would have been anyway.
+  private func hydrate(
+    _ ids: [UInt], policy: MembershipHydration, label: String
+  ) async throws {
+    guard case .fetchMissing(let limit) = policy, limit > 0 else { return }
+    let missing = try await database.documentIDsWithoutRows(serverID: serverID, among: ids)
+    guard !missing.isEmpty else { return }
+    if missing.count > limit {
+      Logger.sync.info(
+        "Membership rewrite: '\(label, privacy: .public)' is missing \(missing.count, privacy: .public) objects; hydrating the first \(limit, privacy: .public)"
+      )
+    }
+    for id in missing.prefix(limit) {
+      try Task.checkCancellation()
+      do {
+        // `document(id:)` is the caching form: it writes the row through.
+        _ = try await document(id: id)
+      } catch {
+        Logger.sync.info(
+          "Membership rewrite: '\(label, privacy: .public)' could not hydrate \(id, privacy: .public) (\(error)); leaving a placeholder"
+        )
+      }
     }
   }
 

@@ -57,4 +57,50 @@ struct DocumentListFillTrackingTests {
       fillFailed: false)
     #expect(following.content == .loading)
   }
+
+  @Test(
+    "The list re-syncs its membership when its order flips to stale",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func staleFlipResyncs() {
+    #expect(
+      DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: false, isStale: true, isWidened: false))
+  }
+
+  @Test("A flag already set when the list subscribed is left to the list's own fill")
+  func initialStaleIsLeftToFill() {
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: nil, isStale: true, isWidened: false))
+  }
+
+  @Test("Only the flip counts, not the flag staying set or clearing")
+  func onlyTheFlip() {
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: true, isStale: true, isWidened: false))
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: true, isStale: false, isWidened: false))
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: false, isStale: false, isWidened: false))
+  }
+
+  @Test("A list scrolled past its first page isn't rewritten from under the user")
+  func widenedListWaits() {
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: false, isStale: true, isWidened: true))
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipAfterWriters(isStale: true, isWidened: true))
+  }
+
+  @Test("After the query's writers finish, the list rewrites only if nothing cleared the flag")
+  func afterWriters() {
+    #expect(
+      DocumentListFillTracking.resyncsMembershipAfterWriters(isStale: true, isWidened: false))
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipAfterWriters(isStale: false, isWidened: false))
+  }
 }
