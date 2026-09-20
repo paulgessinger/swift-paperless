@@ -76,7 +76,8 @@ class DocumentListViewModel {
   var state: DocumentListState {
     DocumentListState(
       hasRows: !documents.isEmpty,
-      isFetching: isFetching || awaitingFill || isFollowingReplacement,
+      isFetching: isFetching || awaitingFill,
+      isFillTakenOver: isFollowingReplacement,
       totalCount: totalCount,
       isCacheComplete: isCacheComplete,
       fillFailed: fillError != nil || replacementStoppedShort)
@@ -314,13 +315,49 @@ class DocumentListViewModel {
       awaitingFill = false
       watchCompletion(of: handle, generation: generation)
     } catch {
-      if generation == fillGeneration {
+      // Page 1 ends the same three ways the background paging does, so it is
+      // judged by the same rule — this is `watchCompletion`'s counterpart for
+      // the leg the caller awaits. A cancellation here is another fill draining
+      // ours before it landed (the proactive library sweep takes the default
+      // list and the saved views over, and `fillQuery` drains the incumbent);
+      // dropping it left the list with no outcome at all — no rows, nothing
+      // fetching, no failure — which reads as "No documents" on a cold launch
+      // until the replacement's rows arrive.
+      let end: DocumentListFillTracking.End = error.isCancellationError ? .cancelled : .failed
+      switch DocumentListFillTracking.followUp(
+        after: end, isCurrent: generation == fillGeneration)
+      {
+      case .none:
+        break
+      case .recordFailure:
         awaitingFill = false
-        if !error.isCancellationError {
-          fillError = error
+        fillError = error
+      case .followReplacement:
+        awaitingFill = false
+        // Flipped here rather than inside the task below: between the two the
+        // list would otherwise read as empty-and-idle for a render pass, which
+        // is the flash being closed.
+        isFollowingReplacement = true
+        if let queryKey {
+          startFollowingReplacement(of: queryKey, generation: generation)
+        } else {
+          // Nothing subscribed to follow; don't strand the placeholders.
+          isFollowingReplacement = false
         }
       }
       throw error
+    }
+  }
+
+  /// Arm the follow-up for a replacement the list holds no handle for: its own
+  /// fill was drained before page 1 landed, so `watchCompletion` — which needs
+  /// that handle — never ran. Uses the completion slot, so a query switch, a
+  /// newer fill or a teardown cancels this exactly as it cancels the
+  /// handle-based follow.
+  private func startFollowingReplacement(of key: QueryKey, generation: Int) {
+    completionTask?.cancel()
+    completionTask = Task { @MainActor [weak self] in
+      await self?.followReplacement(of: key, generation: generation)
     }
   }
 

@@ -10,12 +10,12 @@ import Testing
 @Suite
 struct DocumentListStateTests {
   private func state(
-    hasRows: Bool = false, isFetching: Bool = false, totalCount: UInt? = nil,
-    isCacheComplete: Bool = false, fillFailed: Bool = false
+    hasRows: Bool = false, isFetching: Bool = false, isFillTakenOver: Bool = false,
+    totalCount: UInt? = nil, isCacheComplete: Bool = false, fillFailed: Bool = false
   ) -> DocumentListState {
     DocumentListState(
-      hasRows: hasRows, isFetching: isFetching, totalCount: totalCount,
-      isCacheComplete: isCacheComplete, fillFailed: fillFailed)
+      hasRows: hasRows, isFetching: isFetching, isFillTakenOver: isFillTakenOver,
+      totalCount: totalCount, isCacheComplete: isCacheComplete, fillFailed: fillFailed)
   }
 
   @Test(
@@ -44,6 +44,31 @@ struct DocumentListStateTests {
     // A retry after a failure shows progress rather than the stale error.
     #expect(state(isFetching: true, fillFailed: true).content == .loading)
     #expect(state(totalCount: 12).content == .loading)
+  }
+
+  @Test(
+    "A query another fill took over is still being filled, so it isn't empty",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/692", id: 692))
+  func takenOverFillIsLoading() {
+    // The cold-launch tuple: the list's own page-1 fill was drained before it
+    // wrote anything, so there are no rows, no total and no failure to go on.
+    // Without the takeover this is the one combination that reads as a real
+    // zero-match answer.
+    #expect(state().content == .empty)
+    #expect(state(isFillTakenOver: true).content == .loading)
+    // The takeover outlives the list's own fetch: `isFetching` goes false as
+    // soon as the drained fill throws, so it cannot be what holds the
+    // placeholders up.
+    #expect(state(isFetching: false, isFillTakenOver: true, totalCount: 0).content == .loading)
+    // A stale failure from the attempt that was drained doesn't win over a
+    // replacement that is still running.
+    #expect(state(isFillTakenOver: true, fillFailed: true).content == .loading)
+  }
+
+  @Test("Rows under a takeover aren't flagged incomplete until it has an outcome")
+  func takenOverFillHidesIncompleteNotice() {
+    #expect(
+      !state(hasRows: true, isFillTakenOver: true, totalCount: 900, fillFailed: true).isIncomplete)
   }
 
   @Test(

@@ -54,7 +54,14 @@ public struct DocumentListState: Equatable, Sendable {
 
   /// - Parameters:
   ///   - hasRows: The observed cache prefix is non-empty.
-  ///   - isFetching: A fill for the observed query is pending or in flight.
+  ///   - isFetching: A fill *the list itself started* is pending or in flight.
+  ///   - isFillTakenOver: Another fill owns the observed query — it drained the
+  ///     list's — and the list is waiting on it (see
+  ///     ``DocumentListFillTracking``). Kept apart from `isFetching` because the
+  ///     list isn't the one fetching, and folded in *here* rather than at the
+  ///     call site so "something is still filling this query" can't be dropped
+  ///     on the way in: an empty cache under a running fill is an absence of
+  ///     data, not an absence of matches.
   ///   - totalCount: The server's total as last recorded for the query.
   ///   - isCacheComplete: A fill has paged the query to the end and nothing has
   ///     truncated it since.
@@ -62,18 +69,21 @@ public struct DocumentListState: Equatable, Sendable {
   ///     1 or while paging the rest — or another fill took the query over and
   ///     ended without completing it (see ``DocumentListFillTracking``).
   public init(
-    hasRows: Bool, isFetching: Bool, totalCount: UInt?, isCacheComplete: Bool, fillFailed: Bool
+    hasRows: Bool, isFetching: Bool, isFillTakenOver: Bool, totalCount: UInt?,
+    isCacheComplete: Bool, fillFailed: Bool
   ) {
+    let isBeingFilled = isFetching || isFillTakenOver
+
     if hasRows {
       content = .documents
       // Hidden while a retry runs, so the retry visibly does something; it
       // comes back if that attempt fails too.
-      isIncomplete = fillFailed && !isCacheComplete && !isFetching
+      isIncomplete = fillFailed && !isCacheComplete && !isBeingFilled
       return
     }
 
     isIncomplete = false
-    if isFetching {
+    if isBeingFilled {
       content = .loading
     } else if fillFailed {
       // An empty *complete* cache is a real zero-match answer from an earlier
@@ -98,8 +108,14 @@ public struct DocumentListState: Equatable, Sendable {
 /// the list never gets its handle. Dropping the cancellation left the list
 /// with no outcome at all: partial rows without the incomplete notice, or
 /// placeholders forever over an empty prefix.
+///
+/// Both legs of a fill end this way and are judged by the same rule: the
+/// awaited page 1 and the background paging behind it. A takeover that lands
+/// while page 1 is still in flight leaves the list nothing at all — no rows, no
+/// fetch, no failure — which is the one combination that reads as a real
+/// zero-match answer, so it has to be followed just like the other.
 public enum DocumentListFillTracking {
-  /// How the tracked fill's background paging ended.
+  /// How the tracked fill's leg ended.
   public enum End: Equatable, Sendable {
     /// Paged to the end of the query.
     case finished
