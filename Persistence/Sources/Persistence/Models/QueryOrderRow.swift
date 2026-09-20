@@ -32,6 +32,11 @@ struct QueryMetaRow: FetchableRecord, PersistableRecord, TableRecord, Codable, S
   var totalCount: UInt?
   var orderStale: Bool
   var filledAt: Date?
+  /// How many times this list's order has been marked stale — the counter a
+  /// whole-order rewrite compares against to tell a mark it accounted for from
+  /// one that landed while its request was in flight. See
+  /// ``QueryOrderGeneration``.
+  var orderGeneration: Int
 
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
@@ -39,7 +44,23 @@ struct QueryMetaRow: FetchableRecord, PersistableRecord, TableRecord, Codable, S
     case totalCount = "total_count"
     case orderStale = "order_stale"
     case filledAt = "filled_at"
+    case orderGeneration = "order_generation"
   }
+}
+
+/// What a cached list's order-stale counter read at some moment — the evidence
+/// a whole-order rewrite carries from before its request to its write.
+///
+/// Opaque on purpose: it is only ever captured and compared, never counted
+/// with. Captured with
+/// ``Database/queryOrderGeneration(queryKey:serverID:)`` *before* asking the
+/// server for the list's answer, then handed back to the write, which clears
+/// the stale flag only if the counter has not moved since. A mark landing in
+/// between advances it, and the flag survives to be acted on.
+public struct QueryOrderGeneration: Equatable, Sendable {
+  let value: Int
+
+  init(_ value: Int) { self.value = value }
 }
 
 /// When a list was last put on screen (`query_meta.viewed_at`), as a record of

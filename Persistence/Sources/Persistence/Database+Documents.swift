@@ -76,10 +76,12 @@ extension Database {
   ///   sweep lists ids before their objects arrive): its position came from a
   ///   copy of the document the cache never saw, so it is marked too.
   ///
-  /// Marking only flips `query_meta.order_stale`; it rewrites no `query_order`
-  /// row, so it can't garble a fill writing the same key. The flag survives
-  /// that fill's later pages and is cleared only by a rewrite of the whole
-  /// order (a fill's page 1, or the membership sweep).
+  /// Marking only flips `query_meta.order_stale` (and bumps
+  /// `order_generation`); it rewrites no `query_order` row, so it can't garble
+  /// a fill writing the same key. The flag survives that fill's later pages and
+  /// is cleared only by a rewrite of the whole order (a fill's page 1, or a
+  /// membership rewrite) — and then only if the counter says no mark landed
+  /// while that rewrite was waiting on the server.
   ///
   /// One transaction rather than an upsert followed by an invalidation,
   /// because the two are no longer separated by nothing: the `async` accessors
@@ -130,20 +132,23 @@ extension Database {
   ///   positions.
   public func writeQueryPage(
     queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int, totalCount: UInt?, replaceAll: Bool
+    startPosition: Int, totalCount: UInt?, replaceAll: Bool,
+    clearingStaleIf generation: QueryOrderGeneration? = nil
   ) async throws {
     try await wrappingAsync("writeQueryPage") {
       try await writer.write {
         try Self.writeQueryPage(
           $0, queryKey: queryKey, serverID: serverID, documents: documents,
-          startPosition: startPosition, totalCount: totalCount, replaceAll: replaceAll)
+          startPosition: startPosition, totalCount: totalCount, replaceAll: replaceAll,
+          clearingStaleIf: generation)
       }
     }
   }
 
   private static func writeQueryPage(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int, totalCount: UInt?, replaceAll: Bool
+    startPosition: Int, totalCount: UInt?, replaceAll: Bool,
+    clearingStaleIf generation: QueryOrderGeneration?
   ) throws {
     if replaceAll {
       try QueryOrderRow
@@ -164,7 +169,7 @@ extension Database {
     // here would let the fill's tail vouch for its head.
     let orderStale =
       replaceAll
-      ? false
+      ? try clearsOrderStale(db, serverID: serverID, queryKey: queryKey, ifGeneration: generation)
       : try QueryMetaRow
         .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
         .fetchOne(db)?.orderStale ?? false
@@ -174,6 +179,34 @@ extension Database {
       stamp: replaceAll ? .cleared : .unchanged)
   }
 
+  /// What a whole-order rewrite should leave `order_stale` at: `false` normally,
+  /// but the flag as it stands if a mark landed after `generation` was captured.
+  ///
+  /// The rewrite's answer came from the server before the capture's request went
+  /// out, so a mark that arrived since describes a change that answer predates.
+  /// Clearing it would swallow it, and nothing would re-mark the key — the list
+  /// would stay wrong until some other document in it changed or the user
+  /// pulled to refresh.
+  ///
+  /// No captured generation means the caller computed the order without
+  /// suspending (seeding, tests), so there is no in-flight window to worry
+  /// about and the flag clears unconditionally.
+  private static func clearsOrderStale(
+    _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey,
+    ifGeneration generation: QueryOrderGeneration?
+  ) throws -> Bool {
+    guard let generation else { return false }
+    let meta =
+      try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .fetchOne(db)
+    guard meta?.orderGeneration ?? 0 == generation.value else {
+      // Marked since the capture. The mark set the flag; leave it as it stands.
+      return meta?.orderStale ?? true
+    }
+    return false
+  }
+
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
   /// per-saved-view / default-list membership sweep) **without** creating or
   /// modifying `document` rows. Ids are written in order, a repeat skipped —
@@ -181,18 +214,21 @@ extension Database {
   /// becomes a skeleton row (it gets its object via R3δ / the next fill).
   /// `totalCount` records the server's full count for the scrollbar extent.
   public func replaceQueryOrder(
-    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
+    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt],
+    clearingStaleIf generation: QueryOrderGeneration? = nil
   ) async throws {
     try await wrappingAsync("replaceQueryOrder") {
       try await writer.write {
         try Self.replaceQueryOrder(
-          $0, queryKey: queryKey, serverID: serverID, orderedIDs: orderedIDs)
+          $0, queryKey: queryKey, serverID: serverID, orderedIDs: orderedIDs,
+          clearingStaleIf: generation)
       }
     }
   }
 
   private static func replaceQueryOrder(
-    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt],
+    clearingStaleIf generation: QueryOrderGeneration?
   ) throws {
     try QueryOrderRow
       .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
@@ -205,7 +241,27 @@ extension Database {
     }
     try setQueryMeta(
       db, serverID: serverID, queryKey: queryKey,
-      totalCount: UInt(orderedIDs.count), orderStale: false, stamp: .unchanged)
+      totalCount: UInt(orderedIDs.count),
+      orderStale: try clearsOrderStale(
+        db, serverID: serverID, queryKey: queryKey, ifGeneration: generation),
+      stamp: .unchanged)
+  }
+
+  /// This list's order-stale counter as it stands — captured by a whole-order
+  /// rewrite *before* it asks the server for the list's answer, and handed back
+  /// to the write so it can tell a mark it accounted for from one that landed
+  /// while it was waiting. See ``QueryOrderGeneration``.
+  public func queryOrderGeneration(
+    queryKey: QueryKey, serverID: UUID
+  ) async throws -> QueryOrderGeneration {
+    try await wrappingAsync("queryOrderGeneration") {
+      try await writer.read { db in
+        QueryOrderGeneration(
+          try QueryMetaRow
+            .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+            .fetchOne(db)?.orderGeneration ?? 0)
+      }
+    }
   }
 
   /// Mark every cached query containing `remoteID` order-stale under its active
@@ -227,6 +283,12 @@ extension Database {
 
   /// Flag every cached query listing any of `remoteIDs` as order-stale, and
   /// return how many were not already flagged.
+  ///
+  /// `order_generation` is bumped on *every* mark, including a key that was
+  /// already stale. The counter answers "has anything been marked since?" for a
+  /// whole-order rewrite that captured it before its request; a mark that
+  /// skipped the bump because the flag happened to be set already would be one
+  /// the rewrite then cleared, which is the whole defect it exists to close.
   @discardableResult
   private static func markOrderStale(
     _ db: GRDB.Database, containingAnyOf remoteIDs: [UInt], serverID: UUID
@@ -236,13 +298,18 @@ extension Database {
       QueryOrderRow
       .select(Column("query_key"), as: String.self)
       .filter(Column("server_id") == serverID && remoteIDs.contains(Column("remote_id")))
-    return
-      try QueryMetaRow
-      .filter(
-        Column("server_id") == serverID && containing.contains(Column("query_key"))
-          && Column("order_stale") == false
-      )
-      .updateAll(db, Column("order_stale").set(to: true))
+    let marked =
+      QueryMetaRow
+      .filter(Column("server_id") == serverID && containing.contains(Column("query_key")))
+    // Counted before the update, since the update is what makes them all stale.
+    let newlyStale = try marked.filter(Column("order_stale") == false).fetchCount(db)
+    try marked.updateAll(
+      db,
+      [
+        Column("order_stale").set(to: true),
+        Column("order_generation").set(to: Column("order_generation") + 1),
+      ])
+    return newlyStale
   }
 
   /// Delete documents absent from the server's authoritative id set (the
@@ -733,22 +800,25 @@ extension Database {
     _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey,
     totalCount: UInt?, orderStale: Bool, stamp: FillStamp
   ) throws {
+    // A record `upsert` rewrites every column, so anything this write doesn't
+    // own has to be carried forward explicitly — the fill stamp when `stamp`
+    // says to keep it, and the stale counter always, since only a mark moves
+    // it. Same transaction as the caller's write, so no other writer can slip
+    // in between the read and the upsert.
+    let existing =
+      try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .fetchOne(db)
     let filledAt: Date?
     switch stamp {
     case .cleared: filledAt = nil
     case .completed: filledAt = Date()
-    case .unchanged:
-      // A record `upsert` rewrites every column, so carrying the stamp forward
-      // has to be explicit. Same transaction as the caller's write, so no other
-      // writer can slip in between the read and the upsert.
-      filledAt =
-        try QueryMetaRow
-        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-        .fetchOne(db)?.filledAt
+    case .unchanged: filledAt = existing?.filledAt
     }
     try QueryMetaRow(
       serverId: serverID, queryKey: queryKey.rawValue,
-      totalCount: totalCount, orderStale: orderStale, filledAt: filledAt
+      totalCount: totalCount, orderStale: orderStale, filledAt: filledAt,
+      orderGeneration: existing?.orderGeneration ?? 0
     ).upsert(db)
   }
 }
