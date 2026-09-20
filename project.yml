@@ -31,6 +31,8 @@ packages:
     path: Networking
   Persistence:
     path: Persistence
+  Scanning:
+    path: Scanning
   AppShared:
     path: AppShared
   Nuke:
@@ -73,6 +75,10 @@ targets:
       - package: DataModel
       - package: Networking
       - package: Persistence
+      # App target only. The ShareExtension has no use for scanner discovery,
+      # and keeping it out of AppShared is what keeps SwiftESCL out of the
+      # extension binary.
+      - package: Scanning
 
   ShareExtension:
     type: app-extension

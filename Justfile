@@ -124,10 +124,10 @@ build os=default_os device=default_device: generate
 _test_swift package:
   swift test --package-path {{package}}
 
-# Host-runnable package tests (Common, DataModel, Networking, Persistence) run
-# natively on macOS via `swift test`. AppShared is iOS-only and has no test
-# target of its own.
-test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking") (_test_swift "Persistence")
+# Host-runnable package tests (Common, DataModel, Networking, Persistence,
+# Scanning) run natively on macOS via `swift test`. AppShared is iOS-only and
+# has no test target of its own.
+test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking") (_test_swift "Persistence") (_test_swift "Scanning")
 
 lint-format:
   find . -name '*.swift' \
