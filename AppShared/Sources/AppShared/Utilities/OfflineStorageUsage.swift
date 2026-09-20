@@ -48,14 +48,18 @@ public struct OfflineStorageUsage: Sendable, Equatable {
       thumbnails: measureThumbnails())
   }
 
-  /// The app-group `DataCache` the image pipelines write to, plus Nuke's own
-  /// `URLCache`.
+  /// The app-group `DataCache` the image pipelines write to, plus whatever is
+  /// left in Nuke's `URLCache`.
   ///
-  /// Both, because `DocumentStore.makeImagePipeline` adds the `DataCache`
-  /// without disabling the `URLCache` that Nuke's `DataLoader` installs by
-  /// default, so a thumbnail can sit in each. The `URLCache` lives in this
-  /// process's own caches directory, so the Share Extension's copy isn't
-  /// counted — it's small and not something the app can see anyway.
+  /// The `URLCache` is switched off wherever the `DataCache` exists, so nothing
+  /// adds to it any more in the app or the share extension. It is still read,
+  /// because what a build from before that change wrote is still on disk: the
+  /// app never empties it, and iOS keeps charging it to the app until it
+  /// decides to evict it, so a figure that ignored it would understate what the
+  /// system's storage screen shows. It also stays the only cache where there is
+  /// no app-group container at all (previews, host tests). It lives in this
+  /// process's own caches directory, so the share extension's copy isn't
+  /// counted; it's small and not something the app can see anyway.
   private static func measureThumbnails() -> DiskUsage {
     var usage = DocumentStore.thumbnailCacheURL().map { DiskUsage.measure($0) } ?? .zero
     // `URLCache` reports bytes only; its on-disk layout is private, so no file count.
