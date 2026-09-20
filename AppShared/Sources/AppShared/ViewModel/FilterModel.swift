@@ -57,7 +57,7 @@ public final class FilterModel {
   {
     didSet {
       Logger.shared.trace("FilterState modified")
-      if filterState == oldValue, filterState.modified == oldValue.modified {
+      if filterState == oldValue {
         return
       }
 

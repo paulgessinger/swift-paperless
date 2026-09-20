@@ -37,7 +37,6 @@ extension FilterState {
     self.savedView = savedView.id
     sorting = Sorting(
       field: savedView.sortField ?? Self.defaultSortField, order: savedView.sortOrder)
-    modified = false  // if we initialize from saved view, it's not modified by definition
   }
 
   /// Whether the list is sorted the way it usually is — a question about the

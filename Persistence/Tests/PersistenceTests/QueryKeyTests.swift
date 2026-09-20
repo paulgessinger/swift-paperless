@@ -16,12 +16,12 @@ struct QueryKeyTests {
         == QueryKey(serverID: server, filter: filter).rawValue)
   }
 
-  @Test("ignores the transient `modified` flag")
-  func ignoresModified() {
-    let a = FilterState.empty
-    var b = FilterState.empty
-    b.modified = true
-    #expect(QueryKey(serverID: server, filter: a) == QueryKey(serverID: server, filter: b))
+  @Test("follows the default sort and pins the same value to one key")
+  func resolvedSortingIsWhatCounts() {
+    let following = FilterState.empty.with { $0.sorting = nil }
+    let pinned = FilterState.empty.with { $0.sorting = FilterState.defaultSorting }
+    #expect(
+      QueryKey(serverID: server, filter: following) == QueryKey(serverID: server, filter: pinned))
   }
 
   @Test("changes when the sort order flips")
