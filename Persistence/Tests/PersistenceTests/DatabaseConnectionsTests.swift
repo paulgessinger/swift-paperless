@@ -76,6 +76,25 @@ struct DatabaseConnectionsTests {
     #expect(all.first?.friendlyName == "After")
   }
 
+  @Test("a mode change is visible to the very next connection(id:) read")
+  func offlineBrowsingModeIsReadBackImmediately() throws {
+    // What the long-running sweeps in `CachingRepository` rely on to notice a
+    // downgrade mid-pass: they re-read this row rather than caching the mode,
+    // so `ConnectionManager`'s write has to be visible to the next read with no
+    // observation tick in between. If this ever went through a snapshot, a fill
+    // would keep writing rows behind `reclaimAfterDowngrade`.
+    let database = try makeDatabase()
+    let id = UUID()
+    var stored = record(id: id)
+    stored.offlineBrowsingMode = "entireLibrary"
+    try database.upsertConnection(stored)
+    #expect(try database.connection(id: id)?.offlineBrowsingMode == "entireLibrary")
+
+    stored.offlineBrowsingMode = "recentlyBrowsed"
+    try database.upsertConnection(stored)
+    #expect(try database.connection(id: id)?.offlineBrowsingMode == "recentlyBrowsed")
+  }
+
   @Test("deleteConnection reports whether a row went away")
   func deleteReportsOutcome() throws {
     let database = try makeDatabase()
