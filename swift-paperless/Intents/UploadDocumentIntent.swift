@@ -80,9 +80,13 @@ struct UploadDocumentIntent: AppIntent {
 
     do {
       let store = try await PaperlessIntentStore.store(server: server)
-      // Opportunistic: refresh the element cache while the upload runs, so the
-      // next shortcut run sees current tags/types/correspondents.
-      Task { try? await store.sync(userInitiated: true) }
+      // Uploads, and nothing else. Keeping this server's caches current belongs
+      // to the app's foreground sync and the `SyncEngine`'s sweeps, which weigh
+      // the per-server `syncOverCellular` gate and the 300 s reconcile throttle
+      // — budgets an automation firing once per file would walk straight
+      // through. An upload has nothing to contribute to those caches in any
+      // case: the server consumes it asynchronously, so the new document does
+      // not exist yet by the time a sync started here would look for it.
       try await store.repository.create(
         document: document,
         file: uploadFile.url,
