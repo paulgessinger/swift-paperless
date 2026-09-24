@@ -58,7 +58,7 @@ struct DeltaOrderStalenessTests {
     #expect(try await isStale(database, server, key) == false)
   }
 
-  @Test("A relevant change marks every list containing the document, and only those")
+  @Test("A changed modified date marks every list containing the document, and only those")
   func relevantChange() async throws {
     let server = UUID()
     let database = try database(server)
@@ -79,8 +79,8 @@ struct DeltaOrderStalenessTests {
     #expect(try await database.document(serverID: server, id: 1)?.title == "Renamed")
   }
 
-  @Test("A change to a field no filter or sort reads marks nothing")
-  func irrelevantChange() async throws {
+  @Test("A refresh that leaves modified alone marks nothing")
+  func unchangedModified() async throws {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "list")

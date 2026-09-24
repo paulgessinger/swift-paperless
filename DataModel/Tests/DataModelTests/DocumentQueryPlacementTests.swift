@@ -27,53 +27,28 @@ struct DocumentQueryPlacementTests {
     #expect(!Self.base.queryPlacementMayDiffer(from: Self.base))
   }
 
-  @Test("Tags are compared as a set, not in server order")
-  func tagOrder() {
-    var reordered = Self.base
-    reordered.tags = [2, 1]
-    #expect(!reordered.queryPlacementMayDiffer(from: Self.base))
-  }
-
-  @Test(
-    "Every field a filter or sort can reference counts",
-    arguments: [
-      "title", "asn", "correspondent", "documentType", "storagePath", "tags", "created",
-      "added", "modified", "owner", "permissions", "notes", "pageCount", "customFields",
-      "originalFileName",
-    ])
-  func relevantField(_ field: String) throws {
+  @Test("A changed modified date counts, down to sub-second precision")
+  func modifiedChanged() {
     var changed = Self.base
-    switch field {
-    case "title": changed.title = "Receipt"
-    case "asn": changed.asn = nil
-    case "correspondent": changed.correspondent = 9
-    case "documentType": changed.documentType = 9
-    case "storagePath": changed.storagePath = nil
-    case "tags": changed.tags = [1]
-    case "created": changed.created = Date(timeIntervalSince1970: 1001)
-    case "added": changed.added = nil
-    case "modified": changed.modified = Date(timeIntervalSince1970: 3000.5)
-    case "owner": changed.owner = .none
-    case "permissions": changed.permissions = Permissions()
-    case "notes": changed.notes = NotesPayload(count: 2)
-    case "pageCount": changed.pageCount = 4
-    case "customFields":
-      changed.customFields = CustomFieldRawEntryList([
-        CustomFieldRawEntry(field: 1, value: .integer(6))
-      ])
-    case "originalFileName": changed.originalFileName = "a.png"
-    default: Issue.record("unhandled field \(field)")
-    }
+    changed.modified = Date(timeIntervalSince1970: 3000.5)
     #expect(changed.queryPlacementMayDiffer(from: Self.base))
   }
 
-  @Test("Fields no filter or sort can reference don't count")
-  func irrelevantFields() {
+  @Test("Gaining or losing a modified date counts")
+  func modifiedAppearsOrDisappears() {
+    var missing = Self.base
+    missing.modified = nil
+    #expect(missing.queryPlacementMayDiffer(from: Self.base))
+    #expect(Self.base.queryPlacementMayDiffer(from: missing))
+  }
+
+  @Test("Other fields don't count on their own: the server bumps modified with them")
+  func otherFieldsFollowModified() {
     var changed = Self.base
+    changed.title = "Receipt"
+    changed.tags = [1]
+    changed.correspondent = 9
     changed.archivedFileName = "renamed.pdf"
-    changed.versions.append(
-      DocumentVersion(id: 2, added: Date(timeIntervalSince1970: 4000), isRoot: false))
-    changed.setPermissions = Permissions(change: .init(users: [5]))
     #expect(!changed.queryPlacementMayDiffer(from: Self.base))
   }
 }
