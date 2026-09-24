@@ -26,10 +26,23 @@ jobs:
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
+      # Keyed on the Swift toolchain so an image update rebuilds swift-format;
+      # see the lint job in build.yml.
+      - name: Read Swift version
+        id: swift-version
+        run: echo "hash=$(swift --version 2>&1 | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache prek hooks
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/prek
+          key: prek-${{ runner.os }}-${{ runner.arch }}-swift-${{ steps.swift-version.outputs.hash }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
       - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
         with:
           prek-version: '0.3.x'
           install-only: true
+          cache: false
 
       - name: Generate filter rules
         run: |
