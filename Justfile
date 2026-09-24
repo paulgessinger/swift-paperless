@@ -79,8 +79,8 @@ deliver-preview:
     --app_version "$(just get-version)" \
     --force
 
-default_os := '26.2'
-default_device := 'iPhone 17 Pro'
+default_os := '27.0'
+default_device := 'iPhone 18 Pro'
 build os=default_os device=default_device: generate
   #!/bin/bash
   xcodebuild -scheme swift-paperless -project ./swift-paperless.xcodeproj -configuration Release -destination "platform=iOS Simulator,OS={{os}},name={{device}}" | xcbeautify

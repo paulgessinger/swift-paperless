@@ -20,8 +20,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - macos: macos-26
-            ios: "26.2"
+          - macos: xcode-27
+            ios: "27.0"
             xcode: default
       fail-fast: false
     name: "iOS ${{ matrix.ios }} (Xcode ${{ matrix.xcode }}, ${{ matrix.macos }})"
@@ -54,14 +54,14 @@ jobs:
           xcodebuild -showdestinations -scheme swift-paperless -project ./swift-paperless.xcodeproj
           xcodebuild build \
             -scheme swift-paperless \
-            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=${{ matrix.ios }}" \
+            -destination "platform=iOS Simulator,name=iPhone 18 Pro,OS=${{ matrix.ios }}" \
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGN_IDENTITY="" \
             | xcbeautify
 
   test:
     name: "swift tests ${{ matrix.package }}"
-    runs-on: macos-26
+    runs-on: xcode-27
 
     strategy:
       matrix:
