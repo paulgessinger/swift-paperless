@@ -420,17 +420,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // single page (offline on open).
     noteRequested(key)
 
-    // Two fills on one key used to interleave: the newcomer's page-1
-    // `replaceAll: true` deletes every `query_order` row for the key, and the
-    // older fill then keeps appending from its own position counter, leaving a
-    // hole only a later full fill repairs. Neither write errors — the primary
-    // key is ON CONFLICT REPLACE and the unique key ON CONFLICT IGNORE — so
-    // nothing notices. Routine rather than hypothetical since the foreground
-    // library fill started paging `[(nil, .default)] + savedViews`, the very
-    // keys an open list is filling.
-    await drainFill(for: key)
-
-    let source = try wrapped.documents(filter: filter)
     let pageSize = Endpoint.defaultDocumentPageSize
     let database = database
     let serverID = serverID
@@ -444,62 +433,86 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Detached tasks inherit no task-local, so re-establish the caller's
     // category here rather than reading the (default) ambient one.
     let (firstPage, pageOne) = AsyncThrowingStream<UInt?, any Error>.makeStream()
-    let task = Task.detached(priority: .utility) {
-      try await NetworkTransfer.$category.withValue(category) {
-        var position = 0
-        do {
-          let batch = try await source.fetch(limit: pageSize)
-          let total = await source.totalCount
-          try await database.writeQueryPage(
-            queryKey: key, serverID: serverID, documents: batch,
-            startPosition: 0, totalCount: total, replaceAll: true)
-          position = batch.count
-          pageOne.yield(total)
-          pageOne.finish()
-        } catch {
-          // Page 1 is the caller's problem, not the background's: offline on
-          // open means the list falls back to whatever is already cached. The
-          // caller sees it through the stream, so this task ends quietly.
-          pageOne.finish(throwing: error)
-          return
-        }
 
-        // Background-page the rest to disk (append). When this completes the
-        // whole view is local; scrolling then needs no network (v1).
-        while true {
-          // Cancellation ends the fill as an error, not as a quiet `break`.
-          // The key is truncated either way, and a silent stop is exactly how
-          // a caller came to treat a 250-row order as the whole query.
-          try Task.checkCancellation()
-          if await source.isExhausted { break }
-          let batch = try await source.fetch(limit: pageSize)
-          if batch.isEmpty { break }
-          // Re-check between the fetch returning and the write. Cancellation is
-          // how a newer fill takes the key over, and by now its page-1 replace
-          // may already have landed — writing here would graft our stale
-          // positions onto its rows.
-          try Task.checkCancellation()
-          try await database.writeQueryPage(
-            queryKey: key, serverID: serverID, documents: batch,
-            startPosition: position, totalCount: await source.totalCount,
-            replaceAll: false)
-          position += batch.count
-        }
+    // Two fills on one key used to interleave: the newcomer's page-1
+    // `replaceAll: true` deletes every `query_order` row for the key, and the
+    // older fill then keeps appending from its own position counter, leaving a
+    // hole only a later full fill repairs. Neither write errors — the primary
+    // key is ON CONFLICT REPLACE and the unique key ON CONFLICT IGNORE — so
+    // nothing notices. Routine rather than hypothetical since the foreground
+    // library fill started paging `[(nil, .default)] + savedViews`, the very
+    // keys an open list is filling.
+    //
+    // So the fill takes the key over: `takeOver` cancels whatever owns it and
+    // awaits it actually stopping (cancellation is cooperative — a fill only
+    // checks between pages), *until nobody does*, then registers this fill
+    // without suspending in between. Draining just once was not enough: a
+    // second fill for the key, waiting on the same owner, resumed after the
+    // first had claimed and replaced it without stopping it (#735).
+    //
+    // If *we* are cancelled while waiting there — the user switched away from
+    // this request — `takeOver` throws instead of claiming. That matters here
+    // specifically: the fill we would start is one the cancellation handler
+    // below stops the moment it exists, so taking the key over would cancel a
+    // live sibling fill for nothing and leave the key with no refresh at all.
+    let task = try await activeFills.takeOver(key) {
+      let source = try wrapped.documents(filter: filter)
+      return Task.detached(priority: .utility) {
+        try await NetworkTransfer.$category.withValue(category) {
+          var position = 0
+          do {
+            let batch = try await source.fetch(limit: pageSize)
+            let total = await source.totalCount
+            try await database.writeQueryPage(
+              queryKey: key, serverID: serverID, documents: batch,
+              startPosition: 0, totalCount: total, replaceAll: true)
+            position = batch.count
+            pageOne.yield(total)
+            pageOne.finish()
+          } catch {
+            // Page 1 is the caller's problem, not the background's: offline on
+            // open means the list falls back to whatever is already cached. The
+            // caller sees it through the stream, so this task ends quietly.
+            pageOne.finish(throwing: error)
+            return
+          }
 
-        // Reached the end of the query: the cached order is now its complete
-        // membership, and only here is that recorded. Page 1's `replaceAll`
-        // cleared the stamp, so anything that stopped us short leaves the key
-        // marked incomplete for the next pass to redo.
-        //
-        // The pages and this stamp are separate transactions, which is safe
-        // because `activeFills` makes this fill the key's sole writer for the
-        // whole run: another fill drains us first, and the membership sweep
-        // steps over an owned key.
-        try await database.markQueryFillComplete(queryKey: key, serverID: serverID)
+          // Background-page the rest to disk (append). When this completes the
+          // whole view is local; scrolling then needs no network (v1).
+          while true {
+            // Cancellation ends the fill as an error, not as a quiet `break`.
+            // The key is truncated either way, and a silent stop is exactly how
+            // a caller came to treat a 250-row order as the whole query.
+            try Task.checkCancellation()
+            if await source.isExhausted { break }
+            let batch = try await source.fetch(limit: pageSize)
+            if batch.isEmpty { break }
+            // Re-check between the fetch returning and the write. Cancellation is
+            // how a newer fill takes the key over, and by now its page-1 replace
+            // may already have landed — writing here would graft our stale
+            // positions onto its rows.
+            try Task.checkCancellation()
+            try await database.writeQueryPage(
+              queryKey: key, serverID: serverID, documents: batch,
+              startPosition: position, totalCount: await source.totalCount,
+              replaceAll: false)
+            position += batch.count
+          }
+
+          // Reached the end of the query: the cached order is now its complete
+          // membership, and only here is that recorded. Page 1's `replaceAll`
+          // cleared the stamp, so anything that stopped us short leaves the key
+          // marked incomplete for the next pass to redo.
+          //
+          // The pages and this stamp are separate transactions, which is safe
+          // because `activeFills` makes this fill the key's sole writer for the
+          // whole run: another fill drains us first, and the membership sweep
+          // steps over an owned key.
+          try await database.markQueryFillComplete(queryKey: key, serverID: serverID)
+        }
       }
     }
 
-    activeFills.claim(key, by: task)
     Task { [weak self] in
       do {
         try await task.value
@@ -530,15 +543,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
 
-  /// Stop the fill that currently owns `key` and wait for it to actually stop.
-  /// Cancellation is cooperative — the loop only checks between pages — so
-  /// returning without the await would leave a writer alive across the caller's
-  /// own write, which is the whole problem being fixed. The departing fill's
-  /// outcome is its own business (its registration task logs it).
-  private func drainFill(for key: QueryKey) async {
-    await activeFills.drain(key)
-  }
-
   /// Whether a fill (or the membership sweep's own rewrite) currently owns this
   /// key's `query_order`.
   private func isFilling(_ key: QueryKey) -> Bool { activeFills.isOwned(key) }
@@ -548,10 +552,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // The owner's outcome is its own caller's to report; this only waits.
       _ = try? await owner.value
       // A finished owner is retracted by a separate main-actor job (its
-      // registration task, `drainFill`, or a sweep's `defer`), which may not
-      // have run yet. A drained owner's successor registers in the same job as
-      // that retraction, so there's no gap in which an in-progress takeover
-      // reads as "nobody". Back off briefly rather than spin on the stale entry.
+      // registration task, a taking-over fill's `takeOver`, or a sweep's
+      // `defer`), which may not have run yet. When `takeOver` is the one that
+      // retracts it, the successor registers in that same job, so the takeover
+      // does not read as "nobody". Back off briefly rather than spin on the
+      // stale entry.
       if activeFills.owner(of: key) == owner {
         try? await Task.sleep(for: .milliseconds(20))
       }
@@ -1371,7 +1376,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// interleave its page-1 `replaceAll` with this delete-all-and-reinsert,
   /// producing exactly the garbled merge the guards exist to prevent. Claiming
   /// the key for the duration closes it again: a fill starting meanwhile drains
-  /// this write (`drainFill`) instead of racing it, and the drained sweep leaves
+  /// this write (`KeyOwnership.takeOver`) instead of racing it, and the drained sweep leaves
   /// the key to the fill, which writes the better ordering anyway.
   ///
   /// - Returns: `false` if a fill took the key over, so the caller skips the
@@ -1449,7 +1454,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // in-use guarantee hold. `activeFills` and `recentlyRequestedKeys` are
     // main-actor state read *after* the last `await`, so a fill that started
     // during either read above is already in one of them, and a fill that starts
-    // after the claim has to drain this sweep (`drainFill`) before it writes.
+    // after the claim has to drain this sweep (`takeOver`) before it writes.
     var reachable: Set<QueryKey> = [QueryKey(serverID: serverID, filter: .default)]
     for view in savedViews {
       reachable.insert(QueryKey(serverID: serverID, filter: FilterState(savedView: view)))
