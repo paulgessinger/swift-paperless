@@ -203,6 +203,29 @@ struct DocumentObservationTests {
   }
 
   @Test(
+    "observeQueryStatus re-emits when a key that is already stale is marked again",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func queryStatusRemark() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server)
+    let key = QueryKey(sentinel: "q")
+    try await database.writeQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      startPosition: 0, totalCount: 2, replaceAll: true)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    let first = try await firstValue(
+      from: database.observeQueryStatus(queryKey: key, serverID: server))
+    let remarked = try await value(
+      from: database.observeQueryStatus(queryKey: key, serverID: server)
+    ) {
+      try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    }
+    #expect(first.orderStale && remarked.orderStale)
+    #expect(remarked.orderGeneration != first.orderGeneration)
+  }
+
+  @Test(
     "observeQueryStatus reports completeness only once a fill reaches the end",
     .bug("https://github.com/paulgessinger/swift-paperless/issues/692", id: 692))
   func queryStatusCompleteness() async throws {

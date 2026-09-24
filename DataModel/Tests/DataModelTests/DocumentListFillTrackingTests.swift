@@ -64,34 +64,46 @@ struct DocumentListFillTrackingTests {
   func staleFlipResyncs() {
     #expect(
       DocumentListFillTracking.resyncsMembershipForStaleOrder(
-        wasStale: false, isStale: true, isWidened: false))
+        wasStale: false, isStale: true, isNewMark: true, isWidened: false))
+  }
+
+  @Test(
+    "A new mark on an order that is still stale re-syncs again",
+    .bug("https://github.com/paulgessinger/swift-paperless/pull/742"))
+  func remarkResyncs() {
+    #expect(
+      DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: true, isStale: true, isNewMark: true, isWidened: false))
   }
 
   @Test("A flag already set when the list subscribed is left to the list's own fill")
   func initialStaleIsLeftToFill() {
     #expect(
       !DocumentListFillTracking.resyncsMembershipForStaleOrder(
-        wasStale: nil, isStale: true, isWidened: false))
+        wasStale: nil, isStale: true, isNewMark: false, isWidened: false))
   }
 
-  @Test("Only the flip counts, not the flag staying set or clearing")
-  func onlyTheFlip() {
+  @Test("A status that brings no new mark doesn't re-sync")
+  func noNewMark() {
     #expect(
       !DocumentListFillTracking.resyncsMembershipForStaleOrder(
-        wasStale: true, isStale: true, isWidened: false))
+        wasStale: true, isStale: true, isNewMark: false, isWidened: false))
     #expect(
       !DocumentListFillTracking.resyncsMembershipForStaleOrder(
-        wasStale: true, isStale: false, isWidened: false))
+        wasStale: true, isStale: false, isNewMark: false, isWidened: false))
     #expect(
       !DocumentListFillTracking.resyncsMembershipForStaleOrder(
-        wasStale: false, isStale: false, isWidened: false))
+        wasStale: false, isStale: false, isNewMark: false, isWidened: false))
   }
 
   @Test("A list scrolled past its first page isn't rewritten from under the user")
   func widenedListWaits() {
     #expect(
       !DocumentListFillTracking.resyncsMembershipForStaleOrder(
-        wasStale: false, isStale: true, isWidened: true))
+        wasStale: false, isStale: true, isNewMark: true, isWidened: true))
+    #expect(
+      !DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: true, isStale: true, isNewMark: true, isWidened: true))
     #expect(
       !DocumentListFillTracking.resyncsMembershipAfterWriters(isStale: true, isWidened: true))
   }

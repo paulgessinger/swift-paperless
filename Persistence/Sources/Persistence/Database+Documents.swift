@@ -716,7 +716,8 @@ extension Database {
       totalCount: meta?.totalCount, localCount: localCount,
       orderStale: meta?.orderStale ?? false,
       isComplete: isOrderComplete(
-        filledAt: meta?.filledAt, lastPosition: lastPosition, totalCount: meta?.totalCount))
+        filledAt: meta?.filledAt, lastPosition: lastPosition, totalCount: meta?.totalCount),
+      orderGeneration: QueryOrderGeneration(meta?.orderGeneration ?? 0))
   }
 
   /// Whether a cached order is its query's whole membership.

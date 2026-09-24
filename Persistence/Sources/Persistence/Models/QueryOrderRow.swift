@@ -61,6 +61,9 @@ public struct QueryOrderGeneration: Equatable, Sendable {
   let value: Int
 
   init(_ value: Int) { self.value = value }
+
+  /// A key nothing has marked yet.
+  public static let initial = QueryOrderGeneration(0)
 }
 
 /// When a list was last put on screen (`query_meta.viewed_at`), as a record of
@@ -103,11 +106,18 @@ public struct QueryStatus: Equatable, Sendable {
   /// total). The list uses this to tell a truncated cache from a complete one
   /// when its fill fails.
   public var isComplete: Bool
+  /// Advances on every mark, including one on a key that is already stale, so
+  /// an observer sees a new mark even when `orderStale` doesn't change.
+  public var orderGeneration: QueryOrderGeneration
 
-  public init(totalCount: UInt?, localCount: Int, orderStale: Bool, isComplete: Bool = false) {
+  public init(
+    totalCount: UInt?, localCount: Int, orderStale: Bool, isComplete: Bool = false,
+    orderGeneration: QueryOrderGeneration = .initial
+  ) {
     self.totalCount = totalCount
     self.localCount = localCount
     self.orderStale = orderStale
     self.isComplete = isComplete
+    self.orderGeneration = orderGeneration
   }
 }
