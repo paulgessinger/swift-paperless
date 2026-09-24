@@ -20,6 +20,9 @@ let package = Package(
     .package(url: "https://github.com/swiftlang/swift-syntax", exact: "602.0.0"),
     .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.6.4"),
     .package(url: "https://github.com/SwiftyLab/MetaCodable", exact: "1.6.0"),
+    // swift-collections 1.7.0 makes MetaCodable's macro plugin need the macOS 27
+    // Swift runtime when built with Xcode 27, so it fails to load on macOS 26.
+    .package(url: "https://github.com/apple/swift-collections.git", "1.0.4"..<"1.7.0"),
   ],
   targets: [
     .macro(
@@ -28,6 +31,8 @@ let package = Package(
         .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
         .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
         .product(name: "SwiftBasicFormat", package: "swift-syntax"),
+        // Only here so the swift-collections cap above applies to every consumer.
+        .product(name: "OrderedCollections", package: "swift-collections"),
       ]
     ),
     .target(
