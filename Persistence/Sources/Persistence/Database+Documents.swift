@@ -50,9 +50,9 @@ extension Database {
   /// filter and sort, taken when it was filled. The rule:
   ///
   /// > Every cached query that lists a refreshed document is marked
-  /// > order-stale when the refresh changed a field a filter or sort can
-  /// > reference (`Document.queryPlacementMayDiffer(from:)`), or when there
-  /// > was no cached row to compare with.
+  /// > order-stale when the refresh changed its `modified` date
+  /// > (`Document.queryPlacementMayDiffer(from:)`), or when there was no
+  /// > cached row to compare with.
   ///
   /// - *Compared, not assumed.* The delta re-fetches from its watermark's day,
   ///   so most of what it applies is identical to the cached row; marking on
