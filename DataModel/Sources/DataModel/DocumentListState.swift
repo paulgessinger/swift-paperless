@@ -146,9 +146,15 @@ public enum DocumentListFillTracking {
   /// edit moved a document the order lists, so it may now sit in the wrong
   /// place or not belong at all.
   ///
-  /// Only on the flip to stale, not on a flag already set when the list
-  /// subscribed: opening or switching to a list already fills it, and a fill's
-  /// first page is what clears the flag.
+  /// On every new mark the list sees: the flip to stale, and a further mark on
+  /// an order that is already stale. The second matters because a flag that
+  /// stayed set means nothing has re-synced the list yet — a re-sync failed
+  /// offline, or a mark landed while one was in flight — and without it the
+  /// list would wait for a manual refresh.
+  ///
+  /// Not on a flag already set when the list subscribed: opening or switching
+  /// to a list already fills it, and a fill's first page is what clears the
+  /// flag.
   ///
   /// Not while the list's window has been widened past the first page. The
   /// rewrite replaces the whole order in one write, and the cache has objects
@@ -160,13 +166,14 @@ public enum DocumentListFillTracking {
   ///   - wasStale: The flag's previous value, or `nil` for the first status
   ///     the list observed for this query.
   ///   - isStale: The flag's value now.
+  ///   - isNewMark: The order was marked since the previous status.
   ///   - isWidened: The list observes more rows than a fill's first page
   ///     writes.
   public static func resyncsMembershipForStaleOrder(
-    wasStale: Bool?, isStale: Bool, isWidened: Bool
+    wasStale: Bool?, isStale: Bool, isNewMark: Bool, isWidened: Bool
   ) -> Bool {
-    guard let wasStale, !wasStale, isStale else { return false }
-    return !isWidened
+    guard let wasStale, isStale, !isWidened else { return false }
+    return !wasStale || isNewMark
   }
 
   /// After waiting out whoever was writing the query when it went stale,
