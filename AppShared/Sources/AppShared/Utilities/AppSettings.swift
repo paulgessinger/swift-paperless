@@ -23,7 +23,9 @@ import os
 /// `@Observable` to manage.
 ///
 /// Settings that belong to a single server connection do not live here — those
-/// are stored with the connection in the database.
+/// are stored with the connection in the database. The exception is
+/// ``defaultUploadTags``, a plain per-connection map that the ShareExtension
+/// has to read without a schema change.
 @MainActor
 public final class AppSettings: Observable {
   public static let shared = AppSettings()
@@ -93,6 +95,18 @@ public final class AppSettings: Observable {
 
   @Setting(.currentAppVersion)
   public var currentAppVersion: AppVersion?
+
+  @Setting(.defaultUploadTags)
+  public var defaultUploadTags: [String: [UInt]]
+
+  /// The tags to preselect when uploading a document to the given server.
+  public func defaultUploadTags(for connectionId: UUID) -> [UInt] {
+    defaultUploadTags[connectionId.uuidString] ?? []
+  }
+
+  public func setDefaultUploadTags(_ tags: [UInt], for connectionId: UUID) {
+    defaultUploadTags[connectionId.uuidString] = tags.isEmpty ? nil : tags
+  }
 
   /// Forgets the recorded app version, so the next launch behaves like an
   /// upgrade from an unknown version. Used by the debug menu to bring the
