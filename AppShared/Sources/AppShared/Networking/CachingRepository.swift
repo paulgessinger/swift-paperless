@@ -36,28 +36,6 @@ import os
 /// backstop — in particular a cold launch after a long quiet period (few/no
 /// activation sweeps) finds a stale marker and re-fills. Non-generic so the
 /// `static` constant is legal (it wouldn't be on the generic `CachingRepository`).
-/// Policy for the proactive per-document detail fill. Non-generic for the same
-/// reason as ``LibraryCoverage``.
-enum DetailFillPolicy {
-  /// How many documents the detail fill gets through between re-reads of the
-  /// server's offline browsing mode, to notice a downgrade mid-pass.
-  ///
-  /// Not per document. The mode lives in the `server` row, whose accessors are
-  /// the *only* blocking ones in `Persistence`, and the rule that exempts them
-  /// (see `Database+Connections`) rests on that table being read from Login and
-  /// Settings flows rather than from a sync loop. This loop runs over the whole
-  /// library, so a read per document would be exactly the pattern that
-  /// exemption excludes: tens of thousands of blocking main-actor hops
-  /// contending with the writer queue the fill's own write-through is using.
-  ///
-  /// Counted rather than timed, because what a stale mode costs is measured in
-  /// *rows written* behind `reclaimAfterDowngrade`, not in seconds — a slow
-  /// link overshoots by fewer rows, not more. Thirty-two bounds that overshoot
-  /// at a few dozen documents, for one row read per thirty-two network round
-  /// trips, which is nothing beside them.
-  static let downgradeCheckStride = 32
-}
-
 enum LibraryCoverage {
   /// Re-run the full fill at most this often as a backstop (the cheap activation
   /// sweeps keep things current in between). Daily rather than weekly: the delta
@@ -773,7 +751,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let permissions = try? await database.uiSettings(serverID: serverID)?.permissions
     let canViewNotes = permissions?.test(.view, for: .note) ?? true
 
-    let downgraded = try await NetworkTransfer.$category.withValue(.fill) { () -> Bool in
+    try await NetworkTransfer.$category.withValue(.fill) {
       let missingMetadata =
         (try? await database.documentIDsMissingFileMetadata(
           serverID: serverID, excluding: detailFillFailures)) ?? []
@@ -813,20 +791,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
 
-      // A downgrade mid-pass means the rest of these documents are no longer
-      // wanted, and `reclaimAfterDowngrade` runs right behind us — continuing
-      // would write back rows it has just reclaimed. `fillLibrary` checks this
-      // per view; there are thousands of documents, so this one is strided (see
-      // `DetailFillPolicy.downgradeCheckStride`). `done` already counts across
-      // both loops.
-      @MainActor func leftEntireLibrary() -> Bool {
-        guard done.isMultiple(of: DetailFillPolicy.downgradeCheckStride) else { return false }
-        return offlineBrowsingMode != .entireLibrary
-      }
-
       for id in missingMetadata {
         try Task.checkCancellation()
-        if leftEntireLibrary() { return true }
         do {
           _ = try await metadata(documentId: id)
           fetchedMetadata += 1
@@ -840,7 +806,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for id in needsNotes {
         try Task.checkCancellation()
-        if leftEntireLibrary() { return true }
         do {
           _ = try await notes(documentId: id)
           fetchedNotes += 1
@@ -851,32 +816,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         done += 1
         reportThrottled()
       }
-      return false
     }
 
     Logger.sync.info(
       "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(self.detailFillFailures.count, privacy: .public) documents excluded"
     )
-
-    // Stopping because the user turned the feature off is not a failure, and —
-    // unlike the exclusions, which outlive a pass — what the fill learned about
-    // this server no longer describes anything that is still wanted. Dropping
-    // both is what `reclaimAfterDowngrade` does to the coverage marker, for the
-    // same reason: were the user to switch *Entire library* back on later in
-    // the same session, a sticky failure from before the downgrade would report
-    // a broken fill before the new one had made a single request.
-    //
-    // So a downgrade outranks an absorbed failure here, and returning `nil`
-    // gets `recordSuccess(at: .detailFill)` from `ServerSession`, exactly like
-    // its own entry guard and `fillLibrary`'s ("a fill failure from before says
-    // nothing now"). Holding the failure instead would be inconsistent *and*
-    // futile: the next pass hits that entry guard and clears it anyway.
-    if downgraded {
-      Logger.sync.info("Detail fill: mode left Entire library mid-pass; stopping")
-      detailFillFailures.removeAll()
-      detailFillFailure = nil
-      return nil
-    }
     return detailFillFailure
   }
 
