@@ -16608,6 +16608,270 @@
           }
         }
       }
+    },
+    "networkScannerColorMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Color"
+          }
+        }
+      }
+    },
+    "networkScannerColorModeBlackWhite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Black & white"
+          }
+        }
+      }
+    },
+    "networkScannerColorModeColor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Color"
+          }
+        }
+      }
+    },
+    "networkScannerColorModeGray" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Grayscale"
+          }
+        }
+      }
+    },
+    "networkScannerErrorBusy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The scanner is busy with another job."
+          }
+        }
+      }
+    },
+    "networkScannerErrorMalformed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The scanner returned data the app could not read."
+          }
+        }
+      }
+    },
+    "networkScannerErrorNoPages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The scanner did not return any pages. Check that the feeder is loaded."
+          }
+        }
+      }
+    },
+    "networkScannerErrorReported" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The scanner reported a problem: %@"
+          }
+        }
+      }
+    },
+    "networkScannerErrorTimedOut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The scan took too long and was cancelled."
+          }
+        }
+      }
+    },
+    "networkScannerErrorUnreachable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The scanner did not respond. It may be asleep or no longer on the network."
+          }
+        }
+      }
+    },
+    "networkScannerLoadingCapabilities" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Contacting scanner…"
+          }
+        }
+      }
+    },
+    "networkScannerNoneFound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No scanners found"
+          }
+        }
+      }
+    },
+    "networkScannerNoneFoundHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Make sure the scanner is switched on and on the same network. If you denied local network access, enable it in Settings → Privacy & Security → Local Network."
+          }
+        }
+      }
+    },
+    "networkScannerResolution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Resolution"
+          }
+        }
+      }
+    },
+    "networkScannerResolutionValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld dpi"
+          }
+        }
+      }
+    },
+    "networkScannerScanButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan"
+          }
+        }
+      }
+    },
+    "networkScannerSearching" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Looking for scanners…"
+          }
+        }
+      }
+    },
+    "networkScannerScanning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scanning…"
+          }
+        }
+      }
+    },
+    "networkScannerSource" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Source"
+          }
+        }
+      }
+    },
+    "networkScannerSourceFeeder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document feeder"
+          }
+        }
+      }
+    },
+    "networkScannerSourceFeederDuplex" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Document feeder (both sides)"
+          }
+        }
+      }
+    },
+    "networkScannerSourceFlatbed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Flatbed"
+          }
+        }
+      }
+    },
+    "networkScannerTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network scanner"
+          }
+        }
+      }
+    },
+    "scanNetworkDocument" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scan on network scanner"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
