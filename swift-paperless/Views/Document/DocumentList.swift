@@ -83,7 +83,7 @@ struct DocumentList: View {
     _viewModel = State(
       initialValue: DocumentListViewModel(
         store: store,
-        filterState: filterModel.filterState,
+        filterState: filterModel.resolvedFilterState,
         errorController: errorController))
   }
 
@@ -383,7 +383,7 @@ struct DocumentList: View {
     .animation(.default, value: viewModel.noPermissions)
     .animation(.default, value: viewModel.state)
 
-    .onChange(of: filterModel.filterState) { _, filter in
+    .onChange(of: filterModel.resolvedFilterState) { _, filter in
       Task {
         await viewModel.refresh(filter: filter)
       }
