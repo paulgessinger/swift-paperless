@@ -497,7 +497,15 @@ class DocumentListViewModel {
     var document = document
     let inboxTagIDs = Set(store.tags.values.filter(\.isInboxTag).map(\.id))
     document.tags.removeAll { inboxTagIDs.contains($0) }
-    _ = try? await store.updateDocument(document)
+    // A failed update changes nothing locally, so the row simply stays put —
+    // indistinguishable from the swipe having been ignored. Report it like the
+    // other user-initiated writes on this list do.
+    do {
+      _ = try await store.updateDocument(document)
+    } catch let error where !error.isCancellationError {
+      Logger.shared.error("Removing inbox tags failed: \(error)")
+      errorController.push(mutationError: error)
+    } catch {}
   }
 
   // MARK: - Thumbnail prefetch
