@@ -29,13 +29,6 @@ import Persistence
 import SwiftUI
 import os
 
-/// Freshness policy for the per-server proactive full-library fill.
-///
-/// The fill is skipped while the last-completed timestamp (in `server_sync_state`)
-/// is younger than ``maxAge``, so it runs once and then re-runs only as a periodic
-/// backstop — in particular a cold launch after a long quiet period (few/no
-/// activation sweeps) finds a stale marker and re-fills. Non-generic so the
-/// `static` constant is legal (it wouldn't be on the generic `CachingRepository`).
 /// Policy for the proactive per-document detail fill. Non-generic for the same
 /// reason as ``LibraryCoverage``.
 enum DetailFillPolicy {
@@ -46,6 +39,13 @@ enum DetailFillPolicy {
   static let downgradeCheckStride = 32
 }
 
+/// Freshness policy for the per-server proactive full-library fill.
+///
+/// The fill is skipped while the last-completed timestamp (in `server_sync_state`)
+/// is younger than ``maxAge``, so it runs once and then re-runs only as a periodic
+/// backstop — in particular a cold launch after a long quiet period (few/no
+/// activation sweeps) finds a stale marker and re-fills. Non-generic so the
+/// `static` constant is legal (it wouldn't be on the generic `CachingRepository`).
 enum LibraryCoverage {
   /// Re-run the full fill at most this often as a backstop (the cheap activation
   /// sweeps keep things current in between). Daily rather than weekly: the delta
