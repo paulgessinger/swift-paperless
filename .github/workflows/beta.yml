@@ -1,13 +1,16 @@
 name: TestFlight
 
-# Cutting a beta needs no commit and no tag: dispatch this workflow against a ref
-# that is already on GitHub (from the Actions tab, or `just beta`). CI asks App
-# Store Connect for the build number, builds, signs, uploads, and only then
-# records what shipped by creating the `builds/<version>/<build>` tag and its
-# prerelease at the built commit. A failed upload therefore leaves no tag.
+# Always dispatch the workflow on main. source_ref selects application code;
+# tooling stays on the workflow revision, including for maintenance releases.
+run-name: TestFlight ${{ inputs.source_ref }}
 on:
   workflow_dispatch:
     inputs:
+      source_ref:
+        description: "Application commit, tag, or branch to build (just pins this to a SHA)"
+        type: string
+        required: true
+        default: main
       build_number:
         description: "Build number to use (default: the next one App Store Connect expects). Set to re-run a failed upload at a known number."
         type: string
@@ -16,6 +19,11 @@ on:
         description: "Build and export only — no upload to TestFlight, no tag"
         type: boolean
         default: false
+
+# App-wide: all versions share the build-number allocator and signing assets.
+concurrency:
+  group: app-store-connect
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -29,9 +37,17 @@ jobs:
       # upload. The checkout stays credential-less; `gh` uses the job token.
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout release tooling
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
+          path: tooling
+
+      - name: Checkout application source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_ref }}
+          path: source
           persist-credentials: false
           # Full history and tags: the release notes for this build are the
           # bullets current_changelog.txt gained since the previous build tag.
@@ -39,7 +55,7 @@ jobs:
 
       - name: Read Xcode version
         id: xcode-version
-        run: echo "version=$(cat .xcode-version)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(cat source/.xcode-version)" >> "$GITHUB_OUTPUT"
 
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
@@ -58,6 +74,8 @@ jobs:
           DIST_CERTIFICATE_P12_BASE64: ${{ secrets.DIST_CERTIFICATE_P12_BASE64 }}
           DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_ROOT: ${{ github.workspace }}/source
           # Read into the environment rather than interpolated into the script.
           BUILD_NUMBER: ${{ inputs.build_number }}
           DRY_RUN: ${{ inputs.dry_run }}
@@ -71,4 +89,4 @@ jobs:
           else
             args+=(--publish)
           fi
-          scripts/beta_ci.sh "${args[@]}"
+          tooling/scripts/beta_ci.sh "${args[@]}"
