@@ -41,3 +41,4 @@
 - When a document list can't be loaded, for example after changing the filter or switching saved views while the server is unreachable, the list now says so and offers to retry, instead of showing "No documents". A list that only partly loaded shows a notice above the documents it has
 - A swipe to remove a document's inbox tags now tells you when the change could not be saved, instead of silently leaving the tags in place
 - The Offline & Sync screen now lists which parts of the last sync failed and why, clearing each as it succeeds again. Being offline doesn't count as a failure, so syncing without a connection no longer marks every saved view as failed
+- Turning off "Entire library" offline browsing now stops the download already in progress, instead of letting it carry on re-downloading data that was just removed
