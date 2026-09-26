@@ -124,9 +124,23 @@ jobs:
         with:
           persist-credentials: false
 
+      # prek builds swift-format against the runner's Swift toolchain, and the
+      # binary misbehaves once the image ships a newer Swift. prek-action's own
+      # cache key ignores the toolchain, so cache the hooks here instead.
+      - name: Read Swift version
+        id: swift-version
+        run: echo "hash=$(swift --version 2>&1 | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache prek hooks
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/prek
+          key: prek-${{ runner.os }}-${{ runner.arch }}-swift-${{ steps.swift-version.outputs.hash }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
       - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
         with:
           prek-version: '0.3.x'
+          cache: false
 
   # The only check branch protection requires. The other job names embed matrix
   # values (iOS/Xcode/runner versions) that change with every toolchain bump;
