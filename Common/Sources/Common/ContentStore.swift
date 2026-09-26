@@ -261,6 +261,50 @@ public struct ContentStore: Sendable {
     return report
   }
 
+  // MARK: - Usage
+
+  /// Disk taken by the store, as a whole and per server.
+  public struct Usage: Sendable, Equatable {
+    /// Everything under the store root, including anything not filed under a
+    /// server (so the total never hides space the per-server rows can't place).
+    public var total: DiskUsage = .zero
+    public var byServer: [UUID: DiskUsage] = [:]
+
+    public init(total: DiskUsage = .zero, byServer: [UUID: DiskUsage] = [:]) {
+      self.total = total
+      self.byServer = byServer
+    }
+  }
+
+  /// Measure the store with a full directory walk — slow for a large store, so
+  /// call it off the main actor.
+  ///
+  /// Per-server figures come straight from the layout: every blob lives under
+  /// its server's directory, so attributing it costs nothing beyond the walk
+  /// that the total needs anyway, and doesn't need the database at all.
+  ///
+  /// ``DiskUsage/files`` counts blobs only. The metadata sidecar next to each
+  /// one still adds to the bytes, but counting it would double the number of
+  /// downloads the user is told about.
+  public func usage() -> Usage {
+    var usage = Usage()
+    for entry in contents(of: canonicalRoot) {
+      let measured = DiskUsage.measure(entry, counting: Self.isBlob)
+      usage.total += measured
+      if let serverID = UUID(uuidString: entry.lastPathComponent) {
+        usage.byServer[serverID, default: .zero] += measured
+      }
+    }
+    return usage
+  }
+
+  private static let blobNames = Set(
+    Kind.allCases.map { "\($0.rawValue).\($0.fileExtension)" })
+
+  private static func isBlob(_ url: URL) -> Bool {
+    blobNames.contains(url.lastPathComponent)
+  }
+
   private func contents(of directory: URL) -> [URL] {
     // No `.skipsHiddenFiles`: this listing also feeds the grace-window check,
     // which has to see *everything* a concurrent writer may have just put there.
