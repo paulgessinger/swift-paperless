@@ -260,20 +260,6 @@ public final class ServerSession {
     )
   }
 
-  /// Record a failure a phase is *still* reporting from an earlier attempt —
-  /// the detail fill's excluded documents — without disturbing an entry that is
-  /// already standing.
-  ///
-  /// The site is genuinely still broken, so the entry must not be cleared. But
-  /// the pass that re-reported it made no request about it: restamping would
-  /// show a stale failure as having just happened, and counting it would
-  /// escalate an unreachable server to `.error` off passes that never went near
-  /// the network.
-  private func recordUnresolved(_ error: any Error, at site: SyncFailureSite) {
-    guard failureLedger[site] == nil else { return }
-    recordFailure(error, at: site)
-  }
-
   /// Record that `site` completed, clearing whatever failure it had.
   private func recordSuccess(at site: SyncFailureSite) {
     // Same reason as above for checking first.
@@ -671,20 +657,16 @@ public final class ServerSession {
     }
     return await detailFillSlot.joinOrStart { [weak self] in
       do {
-        let absorbed = try await NetworkTransfer.$category.withValue(.fill) {
+        let outcome = try await NetworkTransfer.$category.withValue(.fill) {
           try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
         }
         // As in `fillLibrary`: `true` is a claim the pass finished.
         try Task.checkCancellation()
-        // A document the server won't serve is skipped, not retried, so the
-        // pass *did* finish — same rule as a saved view the library fill can't
-        // read, which must not pin "last full sync" at Never either. But the
-        // details are still missing, so the failure that excluded it is
-        // reported rather than cleared. (`nil` when nothing was worth
-        // surfacing: a pass that simply ran out of network reports nothing.)
-        if let absorbed {
-          self?.recordUnresolved(absorbed, at: .detailFill)
-        } else {
+        // Clear the entry only once nothing is missing. Documents left over
+        // with no new failure keep the entry from the pass that failed on them.
+        if let failure = outcome.failure {
+          self?.recordFailure(failure, at: .detailFill)
+        } else if outcome.unresolved == 0 {
           self?.recordSuccess(at: .detailFill)
         }
         return true

@@ -78,6 +78,20 @@ enum QueryRetentionPolicy {
   static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
+/// How a detail-fill pass that ran to the end left things.
+public struct DetailFillOutcome: Sendable {
+  /// The first failure this pass hit that is worth surfacing (see
+  /// `SyncFailureClass.firstSurfaced`); `nil` if nothing failed, or only for
+  /// reasons that aren't shown (offline, 401/403).
+  public var failure: (any Error)?
+
+  /// Documents still missing notes or file metadata after this pass: the ones
+  /// that failed in it, plus the ones an earlier pass excluded.
+  public var unresolved: Int
+
+  public static let complete = DetailFillOutcome(failure: nil, unresolved: 0)
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
@@ -153,15 +167,11 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// restarts; uncapped, reporting progress, stopped only by cancellation. Runs
   /// after `fillLibrary`. No-op unless *Entire library* is enabled.
   ///
-  /// A document whose `/notes/` or `/metadata/` fails doesn't abort the pass —
-  /// it is skipped and excluded from further attempts this session. Returns the
-  /// failure that got it excluded (`nil` when there was none worth surfacing,
-  /// which is what keeps a mid-pass loss of network off the screen), so the
-  /// caller can report a fill that finished but left details missing. Sticky
-  /// for as long as the exclusions are: a later pass finds nothing missing only
-  /// *because* those documents are excluded, so it must not read as a success.
+  /// A document whose `/notes/` or `/metadata/` fails doesn't abort the pass.
+  /// Throws only when cancelled; otherwise the pass ran to the end and the
+  /// outcome says what it left missing.
   @discardableResult
-  func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> (any Error)?
+  func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> DetailFillOutcome
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -223,7 +233,7 @@ extension CachingBackend {
   }
 
   @discardableResult
-  public func fillDocumentDetails() async throws -> (any Error)? {
+  public func fillDocumentDetails() async throws -> DetailFillOutcome {
     try await fillDocumentDetails(progress: nil)
   }
 
@@ -707,24 +717,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try? await database.setLibraryCoverageAt(Date(), serverID: serverID)
   }
 
-  // Documents whose detail fetch failed this session. Without this, a document
-  // the server will never serve — a `/notes/` the user has no permission for, a
-  // `/metadata/` that 500s on one bad file — is retried on every foreground for
-  // as long as the app runs. Per-session (not persisted) so a transient failure
-  // clears on the next launch rather than sticking forever.
-  private var detailFillFailures: Set<UInt> = []
-
-  // The first failure worth surfacing among them (see
-  // `SyncFailureClass.firstSurfaced`), with the same lifetime as the exclusions
-  // above and for the same reason: once a document is excluded, a later pass
-  // finds nothing missing *because* of that failure, and reporting it as a
-  // clean fill would clear an error whose cause is still there. Offline never
-  // lands here — a pass that ran out of network absorbed nothing to report.
-  private var detailFillFailure: (any Error)?
+  // Documents excluded from the detail fill for the rest of this session,
+  // because the server refused or botched their `/notes/` or `/metadata/`.
+  // Retrying those on every foreground would repeat a request that won't
+  // succeed. Cleared on relaunch, on a rebuilt repository, and when *Entire
+  // library* is turned off. A connectivity failure doesn't exclude: the next
+  // pass retries it.
+  private var detailFillExclusions: Set<UInt> = []
 
   @discardableResult
-  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> (any Error)? {
-    guard offlineBrowsingMode == .entireLibrary else { return nil }
+  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws
+    -> DetailFillOutcome
+  {
+    guard offlineBrowsingMode == .entireLibrary else {
+      detailFillExclusions.removeAll()
+      return .complete
+    }
     // Before the seed and the two "what's missing" reads: they're quick, but a
     // gap here shows up as the activity flicking back to "Idle".
     progress?(SyncActivity(stage: .detailFill))
@@ -736,12 +744,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
     // Then fetch only what's genuinely missing. One failure (or going offline
     // mid-pass) doesn't abort the rest; the still-missing set simply shrinks
-    // and the next pass resumes. The failure is *remembered* rather than
-    // dropped, though: a 500 on one document's `/metadata/` leaves the fill
-    // incomplete, and a pass that reports "done" over it is exactly the silence
-    // #663 is about.
+    // and the next pass resumes.
     var fetchedMetadata = 0
     var fetchedNotes = 0
+    var failure: (any Error)?
+    var failed = 0
     defer { progress?(nil) }
 
     // Notes are a separate resource with their own permission. Without this the
@@ -751,15 +758,21 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let permissions = try? await database.uiSettings(serverID: serverID)?.permissions
     let canViewNotes = permissions?.test(.view, for: .note) ?? true
 
+    let excludedAtStart = detailFillExclusions
+    var stillExcluded = 0
+
     try await NetworkTransfer.$category.withValue(.fill) {
-      let missingMetadata =
-        (try? await database.documentIDsMissingFileMetadata(
-          serverID: serverID, excluding: detailFillFailures)) ?? []
-      let needsNotes: [UInt] =
+      let allMissingMetadata =
+        (try? await database.documentIDsMissingFileMetadata(serverID: serverID)) ?? []
+      let allNeedingNotes: [UInt] =
         canViewNotes
-        ? (try? await database.documentIDsNeedingNotesFetch(
-          serverID: serverID, excluding: detailFillFailures)) ?? []
+        ? (try? await database.documentIDsNeedingNotesFetch(serverID: serverID)) ?? []
         : []
+      let missingMetadata = allMissingMetadata.filter { !excludedAtStart.contains($0) }
+      let needsNotes = allNeedingNotes.filter { !excludedAtStart.contains($0) }
+      stillExcluded =
+        (allMissingMetadata.count - missingMetadata.count)
+        + (allNeedingNotes.count - needsNotes.count)
 
       // Both discovery reads swallow their error, and a cancelled read is an
       // error — so a pass cancelled here would come back with two empty lists,
@@ -791,14 +804,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
 
+      @MainActor func absorb(_ error: any Error, for id: UInt) {
+        failed += 1
+        failure = SyncFailureClass.firstSurfaced(failure, error)
+        switch SyncFailureClass(error) {
+        case .routine, .degraded: detailFillExclusions.insert(id)
+        case .cancelled, .offline, .unreachable: break
+        }
+      }
+
       for id in missingMetadata {
         try Task.checkCancellation()
         do {
           _ = try await metadata(documentId: id)
           fetchedMetadata += 1
         } catch {
-          detailFillFailures.insert(id)
-          detailFillFailure = SyncFailureClass.firstSurfaced(detailFillFailure, error)
+          absorb(error, for: id)
         }
         done += 1
         reportThrottled()
@@ -810,8 +831,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           _ = try await notes(documentId: id)
           fetchedNotes += 1
         } catch {
-          detailFillFailures.insert(id)
-          detailFillFailure = SyncFailureClass.firstSurfaced(detailFillFailure, error)
+          absorb(error, for: id)
         }
         done += 1
         reportThrottled()
@@ -819,9 +839,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
 
     Logger.sync.info(
-      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(self.detailFillFailures.count, privacy: .public) documents excluded"
+      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(failed, privacy: .public) failed, \(stillExcluded, privacy: .public) previously excluded"
     )
-    return detailFillFailure
+    return DetailFillOutcome(failure: failure, unresolved: failed + stillExcluded)
   }
 
   /// A short, user-facing reason for a failed view sync — prefers the server's
