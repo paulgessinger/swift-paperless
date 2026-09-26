@@ -36,6 +36,16 @@ import os
 /// backstop — in particular a cold launch after a long quiet period (few/no
 /// activation sweeps) finds a stale marker and re-fills. Non-generic so the
 /// `static` constant is legal (it wouldn't be on the generic `CachingRepository`).
+/// Policy for the proactive per-document detail fill. Non-generic for the same
+/// reason as ``LibraryCoverage``.
+enum DetailFillPolicy {
+  /// How many documents the detail fill gets through between re-reads of the
+  /// server's offline browsing mode, to notice a downgrade mid-pass. Not per
+  /// document: the `server` row's accessors block, and this loop runs over the
+  /// whole library.
+  static let downgradeCheckStride = 32
+}
+
 enum LibraryCoverage {
   /// Re-run the full fill at most this often as a backstop (the cheap activation
   /// sweeps keep things current in between). Daily rather than weekly: the delta
@@ -732,7 +742,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let permissions = try? await database.uiSettings(serverID: serverID)?.permissions
     let canViewNotes = permissions?.test(.view, for: .note) ?? true
 
-    try await NetworkTransfer.$category.withValue(.fill) {
+    let downgraded = try await NetworkTransfer.$category.withValue(.fill) { () -> Bool in
       // These throw: an empty list read as "nothing missing" would clear the
       // detail fill's sync error.
       let missingMetadata = try await database.documentIDsMissingFileMetadata(serverID: serverID)
@@ -761,6 +771,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
 
+      // A downgrade mid-pass means the rest is no longer wanted, and
+      // `reclaimAfterDowngrade` runs right behind us.
+      @MainActor func leftEntireLibrary() -> Bool {
+        guard done.isMultiple(of: DetailFillPolicy.downgradeCheckStride) else { return false }
+        return offlineBrowsingMode != .entireLibrary
+      }
+
       @MainActor func absorb(_ error: any Error) {
         failed += 1
         failure = SyncFailureClass.firstSurfaced(failure, error)
@@ -768,6 +785,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for id in missingMetadata {
         try Task.checkCancellation()
+        if leftEntireLibrary() { return true }
         do {
           _ = try await metadata(documentId: id)
           fetchedMetadata += 1
@@ -780,6 +798,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for id in needsNotes {
         try Task.checkCancellation()
+        if leftEntireLibrary() { return true }
         do {
           _ = try await notes(documentId: id)
           fetchedNotes += 1
@@ -789,11 +808,16 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         done += 1
         reportThrottled()
       }
+      return false
     }
 
     Logger.sync.info(
       "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(failed, privacy: .public) failed"
     )
+    if downgraded {
+      Logger.sync.info("Detail fill: mode left Entire library mid-pass; stopping")
+      return .complete
+    }
     return DetailFillOutcome(failure: failure, failed: failed)
   }
 
