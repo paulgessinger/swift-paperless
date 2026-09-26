@@ -78,15 +78,38 @@ enum QueryRetentionPolicy {
   static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
+/// How a detail-fill pass that ran to the end left things.
+public struct DetailFillOutcome: Sendable {
+  /// The first failure this pass hit that is worth surfacing (see
+  /// `SyncFailureClass.firstSurfaced`); `nil` if nothing failed, or only for
+  /// reasons that aren't shown (offline, 401/403).
+  public var failure: (any Error)?
+
+  /// How many fetches failed in this pass, whatever the reason. Those
+  /// documents are still missing, and the next pass tries them again.
+  public var failed: Int
+
+  public static let complete = DetailFillOutcome(failure: nil, failed: 0)
+}
+
 /// The cache control surface the store reaches for, kept off the `Repository`
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
 /// to direct-network behavior.
 @MainActor
 public protocol CachingBackend: AnyObject, Sendable {
+  /// Fetch the permissions / UI-settings singleton and write it to the cache.
+  ///
+  /// Called immediately before ``syncElements(progress:)``, as its own step so
+  /// the caller can record its outcome independently of the element phase.
+  func syncUISettings() async throws
+
   /// Fetch every element collection from the network and reconcile it into the
   /// local cache. Throws if the sync as a whole fails (e.g. offline); a single
   /// resource the user lacks permission for is skipped, not fatal.
+  ///
+  /// Gated on the *cached* permission matrix, which ``syncUISettings()`` has
+  /// just refreshed — or failed to, leaving the last known one, or none at all.
   func syncElements(progress: SyncProgressReporter?) async throws
 
   /// Eager full-fill of a document list: await page 1 (so the first
@@ -137,7 +160,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// request. Driven off what's still missing, so it resumes rather than
   /// restarts; uncapped, reporting progress, stopped only by cancellation. Runs
   /// after `fillLibrary`. No-op unless *Entire library* is enabled.
-  func fillDocumentDetails(progress: SyncProgressReporter?) async throws
+  ///
+  /// A document whose `/notes/` or `/metadata/` fails doesn't abort the pass,
+  /// and is tried again on the next one. Throws when cancelled or when the
+  /// cache can't say what's missing; otherwise the pass ran to the end.
+  @discardableResult
+  func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> DetailFillOutcome
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -198,7 +226,8 @@ extension CachingBackend {
     try await fillLibrary(force: force, progress: nil)
   }
 
-  public func fillDocumentDetails() async throws {
+  @discardableResult
+  public func fillDocumentDetails() async throws -> DetailFillOutcome {
     try await fillDocumentDetails(progress: nil)
   }
 
@@ -314,12 +343,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   // MARK: - CachingBackend
 
   public func syncElements(progress: SyncProgressReporter?) async throws {
-    // Sync UI settings *first*: its permission matrix gates the rest, so we
-    // don't ask the server for collections the user can't view (doomed 403s).
-    // When the matrix is unavailable (uiSettings failed and nothing is cached),
-    // `gate` is nil and we fetch everything, relying on the per-resource
-    // 403/401-skip in `syncCollection` as a fallback.
-    let gate = await syncUISettings()
+    // The permission matrix gates the rest, so we don't ask the server for
+    // collections the user can't view (doomed 403s). It comes from the cache,
+    // which `syncUISettings` — called by the session immediately before this —
+    // has just refreshed. When it is unavailable (that fetch failed and nothing
+    // was cached), `gate` is nil and we fetch everything, relying on the
+    // per-resource 403/401-skip in `syncCollection` as a fallback.
+    let gate = try? await database.uiSettings(serverID: serverID)?.permissions
     func canView(_ resource: UserPermissions.Resource) -> Bool {
       gate?.test(.view, for: resource) ?? true
     }
@@ -522,7 +552,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // `fillLibrary` awaits the fill and reports its failure where the user
         // can see it. The interactive path doesn't await the background paging
         // at all, so without this its failures would be entirely silent.
-        Logger.sync.error("Background query fill failed: \(error)")
+        // Classified rather than a flat `.error`: a list opened offline pages
+        // into a dead network, which is routine (see `SyncFailureClass`).
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(), "Background query fill failed: \(error)")
       }
       // Retract only our own registration: a newer fill may have drained and
       // replaced us while this was waiting.
@@ -583,6 +616,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
 
     var succeeded = 0
+    // Whether every view that failed did so because the device is offline. A
+    // pass like that is the network, not the library, and says so at `.info`.
+    var failedOnlyOffline = true
     Logger.sync.info(
       "Library fill: \(views.count, privacy: .public) view(s) for server \(self.serverLogLabel, privacy: .public)"
     )
@@ -632,6 +668,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           Logger.sync.warning(
             "Library fill: '\(name ?? "default", privacy: .public)' ended incomplete; not counting it as covered"
           )
+          failedOnlyOffline = false
           continue
         }
         try? await database.clearQuerySyncError(serverID: serverID, queryKey: key.rawValue)
@@ -640,13 +677,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         throw CancellationError()
       } catch {
         // A rejected view (e.g. an advanced full-text query the server won't run)
-        // must not block the *whole* library's coverage. Record it so the
-        // Offline & Sync screen can warn, and carry on.
-        Logger.sync.warning(
+        // must not block the *whole* library's coverage.
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(),
           "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
-        try? await database.recordQuerySyncError(
-          serverID: serverID, queryKey: key.rawValue, savedViewName: name,
-          message: Self.syncFailureMessage(error))
+        if await recordViewFailure(error, key: key, name: name) {
+          failedOnlyOffline = false
+        }
       }
     }
 
@@ -657,22 +694,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // empty cache — the ordinary shape of Wi-Fi with the server unreachable,
     // since neither `isExpensive` nor `isConstrained` means reachable.
     guard succeeded > 0 else {
-      Logger.sync.warning(
+      Logger.sync.log(
+        level: failedOnlyOffline ? .info : .error,
         "Library fill: all \(views.count, privacy: .public) views failed; leaving coverage unset")
       return
     }
     try? await database.setLibraryCoverageAt(Date(), serverID: serverID)
   }
 
-  // Documents whose detail fetch failed this session. Without this, a document
-  // the server will never serve — a `/notes/` the user has no permission for, a
-  // `/metadata/` that 500s on one bad file — is retried on every foreground for
-  // as long as the app runs. Per-session (not persisted) so a transient failure
-  // clears on the next launch rather than sticking forever.
-  private var detailFillFailures: Set<UInt> = []
-
-  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws {
-    guard offlineBrowsingMode == .entireLibrary else { return }
+  @discardableResult
+  public func fillDocumentDetails(progress: SyncProgressReporter?) async throws
+    -> DetailFillOutcome
+  {
+    guard offlineBrowsingMode == .entireLibrary else { return .complete }
     // Before the seed and the two "what's missing" reads: they're quick, but a
     // gap here shows up as the activity flicking back to "Idle".
     progress?(SyncActivity(stage: .detailFill))
@@ -682,11 +716,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // out of the fetch set below.
     let seeded = (try? await database.seedEmptyNotesForZeroCountDocuments(serverID: serverID)) ?? 0
 
-    // Then fetch only what's genuinely missing, capped per pass. `try?` per doc
-    // so one failure (or going offline mid-pass) doesn't abort the rest; the
-    // still-missing set simply shrinks and the next pass resumes.
+    // Then fetch only what's genuinely missing. One failure (or going offline
+    // mid-pass) doesn't abort the rest; whatever failed is still missing, so
+    // the next pass tries it again.
     var fetchedMetadata = 0
     var fetchedNotes = 0
+    var failure: (any Error)?
+    var failed = 0
     defer { progress?(nil) }
 
     // Notes are a separate resource with their own permission. Without this the
@@ -697,22 +733,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let canViewNotes = permissions?.test(.view, for: .note) ?? true
 
     try await NetworkTransfer.$category.withValue(.fill) {
-      let missingMetadata =
-        (try? await database.documentIDsMissingFileMetadata(
-          serverID: serverID, excluding: detailFillFailures)) ?? []
-      let needsNotes: [UInt] =
-        canViewNotes
-        ? (try? await database.documentIDsNeedingNotesFetch(
-          serverID: serverID, excluding: detailFillFailures)) ?? []
-        : []
-
-      // Both discovery reads swallow their error, and a cancelled read is an
-      // error — so a pass cancelled here would come back with two empty lists,
-      // skip both loops (and the `checkCancellation` inside them), and return
-      // normally, which `ServerSession` records as a completed detail fill. Ask
-      // once, explicitly, before the emptiness can be mistaken for "nothing
-      // left to do".
-      try Task.checkCancellation()
+      // These throw: an empty list read as "nothing missing" would clear the
+      // detail fill's sync error.
+      let missingMetadata = try await database.documentIDsMissingFileMetadata(serverID: serverID)
+      let needsNotes =
+        canViewNotes ? try await database.documentIDsNeedingNotesFetch(serverID: serverID) : []
 
       // The pass is uncapped: a first cold fill of a large library is meant to
       // run to completion, and the Offline & Sync screen reports it rather than
@@ -736,12 +761,18 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }
 
+      @MainActor func absorb(_ error: any Error) {
+        failed += 1
+        failure = SyncFailureClass.firstSurfaced(failure, error)
+      }
+
       for id in missingMetadata {
         try Task.checkCancellation()
-        if (try? await metadata(documentId: id)) != nil {
+        do {
+          _ = try await metadata(documentId: id)
           fetchedMetadata += 1
-        } else {
-          detailFillFailures.insert(id)
+        } catch {
+          absorb(error)
         }
         done += 1
         reportThrottled()
@@ -749,10 +780,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       for id in needsNotes {
         try Task.checkCancellation()
-        if (try? await notes(documentId: id)) != nil {
+        do {
+          _ = try await notes(documentId: id)
           fetchedNotes += 1
-        } else {
-          detailFillFailures.insert(id)
+        } catch {
+          absorb(error)
         }
         done += 1
         reportThrottled()
@@ -760,8 +792,21 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
 
     Logger.sync.info(
-      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata"
+      "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(failed, privacy: .public) failed"
     )
+    return DetailFillOutcome(failure: failure, failed: failed)
+  }
+
+  /// Record a saved view's failure for the Offline & Sync screen, unless the
+  /// device is offline: that says nothing about the view. An error the view
+  /// already has stays until it next syncs. Returns whether it was recorded.
+  @discardableResult
+  private func recordViewFailure(_ error: any Error, key: QueryKey, name: String?) async -> Bool {
+    guard SyncFailureClass(error) != .offline else { return false }
+    try? await database.recordQuerySyncError(
+      serverID: serverID, queryKey: key.rawValue, savedViewName: name,
+      message: Self.syncFailureMessage(error))
+    return true
   }
 
   /// A short, user-facing reason for a failed view sync — prefers the server's
@@ -777,26 +822,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let domains = try await fetch()
       try await database.replaceElements(domains, of: type, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
+      // Routine (see `SyncFailureClass`): a collection this user may not see.
+      // Anything else propagates and fails the element phase, which
+      // `ServerSession` logs and records at the level the rule gives it.
       Logger.sync.info(
         "Skipping \(R.databaseTableName, privacy: .public) sync: \(error)")
     }
   }
 
-  /// Fetch the UI settings singleton and return its permission matrix to gate
-  /// the rest of the sync. Never throws: on any failure it falls back to the
-  /// last cached matrix, or `nil` if none exists (caller then fetches every
-  /// collection and relies on per-resource 403/401-skip, as before). A
-  /// uiSettings failure therefore degrades gating without aborting the sync.
-  private func syncUISettings() async -> UserPermissions? {
-    do {
-      let settings = try await wrapped.uiSettings()
-      try await database.setUISettings(settings, serverID: serverID)
-      return settings.permissions
-    } catch {
-      Logger.sync.info(
-        "uiSettings sync failed (\(error)); gating sync on cached permissions")
-      return try? await database.uiSettings(serverID: serverID)?.permissions
-    }
+  /// Fetch the UI settings singleton and write it through to the cache.
+  ///
+  /// Throws without logging: the session records and logs the failure at
+  /// `.uiSettings`. Not fatal — `syncElements` carries on from the last cached
+  /// permission matrix.
+  public func syncUISettings() async throws {
+    let settings = try await wrapped.uiSettings()
+    try await database.setUISettings(settings, serverID: serverID)
   }
 
   private func syncServerConfiguration() async throws {
@@ -804,6 +845,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let config = try await wrapped.serverConfiguration()
       try await database.setServerConfiguration(config, serverID: serverID)
     } catch let error where Self.isSkippable(error) {
+      // Routine, as in `syncCollection`.
       Logger.sync.info("Skipping serverConfiguration sync: \(error)")
     }
   }
@@ -1142,7 +1184,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // rather than failing the open. Mirrors the element offline-first policy.
       // A permission failure isn't caught here at all, so it propagates.
       if let cached = try await database.document(serverID: serverID, id: id) {
-        Logger.shared.info("document(id:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "document(id:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
@@ -1156,7 +1200,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
       if let cached = try await database.document(serverID: serverID, asn: asn) {
-        Logger.shared.info("document(asn:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "document(asn:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
@@ -1345,12 +1391,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       } catch is CancellationError {
         throw CancellationError()
       } catch {
-        Logger.sync.info(
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(),
           "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
         )
-        try? await database.recordQuerySyncError(
-          serverID: serverID, queryKey: key.rawValue, savedViewName: name,
-          message: Self.syncFailureMessage(error))
+        await recordViewFailure(error, key: key, name: name)
       }
       // Both branches above end on a `try?`, which swallows cancellation along
       // with everything else. On any view but the last, the check at the top of
@@ -1575,7 +1620,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return fetched
     } catch let error where Self.mayServeCache(after: error) {
       if let cached = try await database.fileMetadata(serverID: serverID, versionID: versionID) {
-        Logger.shared.info("metadata(documentId:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "metadata(documentId:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
@@ -1591,7 +1638,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       // `nil` (never cached) is distinct from `[]` (cached, no notes): only the
       // former propagates the network error.
       if let cached = try await database.notes(serverID: serverID, documentID: documentId) {
-        Logger.shared.info("notes(documentId:) network failed (\(error)); serving cached")
+        Logger.shared.log(
+          level: SyncFailureClass(error).readFallbackLogLevel,
+          "notes(documentId:) network failed (\(error)); serving cached")
         return cached
       }
       throw error

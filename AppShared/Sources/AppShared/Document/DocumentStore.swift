@@ -80,7 +80,17 @@ public final class DocumentStore: Sendable {
   /// The last automatic (non-user-initiated) sync failure, kept so the UI can
   /// surface a degraded state without tearing down the cached display.
   /// User-initiated syncs rethrow instead (the caller toasts, as before).
+  ///
+  /// Narrower than ``syncFailures``, which is what the Offline & Sync screen
+  /// renders: this only ever sees a thrown element-sync failure on this store's
+  /// own path.
   public private(set) var lastSyncError: (any DisplayableError)?
+
+  /// Which parts of the active server's sync last failed — element sync, the
+  /// permissions fetch, each reconcile sweep, the fills — whoever ran them.
+  /// Offline and permission failures never appear here; see
+  /// ``ServerSession/syncFailures``.
+  public var syncFailures: [SyncFailureLedger.Entry] { session?.syncFailures ?? [] }
 
   /// Every sync stage running right now on the active server, in a fixed order;
   /// empty when idle. Drives the stage rows and progress bars on the Offline &
@@ -510,7 +520,8 @@ public final class DocumentStore: Sendable {
       if let displayable = error as? any DisplayableError, self.session === session {
         lastSyncError = displayable
       }
-      Logger.sync.error("Background sync failed (suppressed): \(error)")
+      // The session already logged this at the level `SyncFailureClass` gives it.
+      Logger.sync.info("Background sync failed (suppressed): \(error)")
     }
   }
 
