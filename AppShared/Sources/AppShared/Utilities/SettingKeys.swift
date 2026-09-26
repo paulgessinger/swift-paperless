@@ -45,6 +45,15 @@ extension SettingKey {
     .init("filterBarConfiguration", default: .default)
   }
 
+  /// Tags that are preselected when uploading a new document, keyed by the
+  /// connection's id: tag ids only mean something on the server they came
+  /// from.
+  ///
+  /// `.shared` because the ShareExtension's upload form reads it.
+  public static var defaultUploadTags: SettingKey<[String: [UInt]]> {
+    .init("defaultUploadTags", default: [:], scope: .shared)
+  }
+
   /// The version this install last launched, which drives the release-notes
   /// sheet. Per-install by definition.
   public static var currentAppVersion: SettingKey<AppVersion?> {

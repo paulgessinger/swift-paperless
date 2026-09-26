@@ -136,6 +136,12 @@ public struct CreateDocumentView: View {
   @State private var status = Status.none
   @State private var isAsnValid = true
 
+  // `.task` runs again whenever a picker is popped off the navigation stack,
+  // which must not overwrite the tags the user picked in the meantime.
+  @State private var didApplyDefaultTags = false
+
+  private let appSettings = AppSettings.shared
+
   @AppStorage("IncludeDocumentCreatedDate", store: .group)
   private var includeCreatedDate = true
 
@@ -194,11 +200,27 @@ public struct CreateDocumentView: View {
     callback()
   }
 
+  /// Preselects the tags configured as upload defaults for the active server.
+  private func applyDefaultTags() {
+    guard let id = connectionManager.activeConnectionId else {
+      document.tags = []
+      return
+    }
+    document.tags = appSettings.defaultUploadTags(for: id)
+  }
+
+  /// Drops tags the server no longer knows about, e.g. a default tag that was
+  /// deleted in the meantime, so the upload does not fail on them.
+  private func removeUnknownTags() {
+    guard !store.tags.isEmpty else { return }
+    document.tags.removeAll { store.tags[$0] == nil }
+  }
+
   private func resetDocument() {
     document.asn = nil
     document.documentType = nil
     document.correspondent = nil
-    document.tags = []
+    applyDefaultTags()
     document.storagePath = nil
     document.created = includeCreatedDate ? .now : nil
   }
@@ -439,8 +461,13 @@ public struct CreateDocumentView: View {
         }
       }
       .task {
+        if !didApplyDefaultTags {
+          didApplyDefaultTags = true
+          applyDefaultTags()
+        }
         do {
           try await store.sync()
+          removeUnknownTags()
         } catch {
           errorController.push(error: error)
         }
