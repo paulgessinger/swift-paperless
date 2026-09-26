@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 // This is here because URLSession.shared.data is otherwise not callable from nonisolated without a warning
 // https://forums.developer.apple.com/forums/thread/727823
@@ -31,8 +32,10 @@ extension URLSession {
       let callback: (@Sendable (Double) -> Void)?
       let onTransfer: (@Sendable (Int64, Int64) -> Void)?
 
-      @MainActor
-      private var progressObservation: NSKeyValueObservation? = nil
+      // Observed right in `didCreateTask`, before the transfer starts: attached
+      // any later, a fast transfer can finish first and report nothing.
+      private let progressObservation = OSAllocatedUnfairLock<NSKeyValueObservation?>(
+        uncheckedState: nil)
 
       init(
         _ callback: (@Sendable (Double) -> Void)? = nil,
@@ -43,13 +46,11 @@ extension URLSession {
       }
 
       func urlSession(_: URLSession, didCreateTask task: URLSessionTask) {
-        // task is Sendable, so we send that to the main actor and then store the observation in the main isolated variable
-        Task { @MainActor in
-          let callback = callback
-          progressObservation = task.progress.observe(\.fractionCompleted) { progress, _ in
-            callback?(progress.fractionCompleted)
-          }
+        guard let callback else { return }
+        let observation = task.progress.observe(\.fractionCompleted) { progress, _ in
+          callback(progress.fractionCompleted)
         }
+        progressObservation.withLockUnchecked { $0 = observation }
       }
 
       func urlSession(

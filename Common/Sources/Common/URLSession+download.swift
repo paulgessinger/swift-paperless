@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 extension URLSession {
   /// Streams the response of `request` to a temp file on disk and reports
@@ -29,8 +30,10 @@ extension URLSession {
       let callback: (@Sendable (Double) -> Void)?
       let onTransfer: (@Sendable (Int64, Int64) -> Void)?
 
-      @MainActor
-      private var progressObservation: NSKeyValueObservation? = nil
+      // Observed right in `didCreateTask`, before the transfer starts: attached
+      // any later, a fast transfer can finish first and report nothing.
+      private let progressObservation = OSAllocatedUnfairLock<NSKeyValueObservation?>(
+        uncheckedState: nil)
 
       init(
         _ callback: (@Sendable (Double) -> Void)? = nil,
@@ -49,13 +52,11 @@ extension URLSession {
       }
 
       func urlSession(_: URLSession, didCreateTask task: URLSessionTask) {
-        Task { @MainActor in
-          let callback = callback
-          progressObservation = task.progress.observe(\.fractionCompleted) {
-            progress, _ in
-            callback?(progress.fractionCompleted)
-          }
+        guard let callback else { return }
+        let observation = task.progress.observe(\.fractionCompleted) { progress, _ in
+          callback(progress.fractionCompleted)
         }
+        progressObservation.withLockUnchecked { $0 = observation }
       }
     }
 
