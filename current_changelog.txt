@@ -44,3 +44,4 @@
 - Turning off "Entire library" offline browsing now stops the download already in progress, instead of letting it carry on re-downloading data that was just removed
 - The Offline & Sync screen now shows how much space the offline data takes up on your device: the database, downloaded documents and thumbnails
 - Thumbnails are no longer cached twice on disk
+- A new "Upload Document" action in the Shortcuts app uploads a file to Paperless without opening the app, letting you automate uploads. You can pick the target server, and optionally set a title, document type, correspondent and tags; leaving the title empty lets the server derive one from the filename

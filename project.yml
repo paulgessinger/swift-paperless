@@ -73,6 +73,14 @@ targets:
       - package: DataModel
       - package: Networking
       - package: Persistence
+    # Generates the typed accessors for the app target's own string catalogs, the
+    # same way AppShared's package manifest does for its. The App Intents metadata
+    # is why the app target has catalogs at all: `appintentsmetadataprocessor`
+    # refuses any `LocalizedStringResource` that is not in the main bundle, which
+    # AppShared's package resource bundle is not.
+    buildToolPlugins:
+      - plugin: XCStringsToolPlugin
+        package: xcstrings-tool-plugin
 
   ShareExtension:
     type: app-extension

@@ -21,29 +21,39 @@ enum PaperlessIntentError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .noConnection:
-      String(localized: .app(.uploadDocumentIntentNoConnectionError))
+      String(localized: .intents(.uploadDocumentIntentNoConnectionError))
     case .prepareFileFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentPrepareFileError(detail)))
+      String(localized: .intents(.uploadDocumentIntentPrepareFileError(detail)))
     case .loadOptionsFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentLoadOptionsError(detail)))
+      String(localized: .intents(.uploadDocumentIntentLoadOptionsError(detail)))
     case .missingElement(let kind):
-      String(localized: .app(.uploadDocumentIntentMissingElementError(kind)))
+      String(localized: .intents(.uploadDocumentIntentMissingElementError(kind)))
     case .uploadFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentUploadError(detail)))
+      String(localized: .intents(.uploadDocumentIntentUploadError(detail)))
     }
   }
 }
 
-/// The intents' own database, connection manager and session registry, built once
-/// per process the same way `ShareView` does. Elements are read through a
-/// `DocumentStore`, so results come from the local cache that `sync()` keeps
+/// The intents' view onto the process's ``AppStack``. Elements are read through
+/// a `DocumentStore`, so results come from the local cache that `sync()` keeps
 /// up to date.
+///
+/// The stack is emphatically *not* the intents' own. An intent declared in the
+/// app target runs in the app's process, and `@main` builds the scene's
+/// bootstrap on every launch — including the background launch the system does
+/// to run this intent. Anything built here instead of borrowed would therefore
+/// be a *second* database, second connection manager and second session
+/// registry alongside the app's, on every run: observations that never see each
+/// other's writes, two sessions racing the same server's sync, and a `server`
+/// row cached twice. See ``AppStack`` for why each of those bites.
 @MainActor
 enum PaperlessIntentStore {
-  static let database = bootstrapDatabase()
-  static let connectionManager = ConnectionManager(database: database)
-  private static let registry = ServerSessionRegistry(
-    database: database, manager: connectionManager)
+  private static var stack: AppStack {
+    AppStackHolder.sharedWithInMemoryFallback(context: "Intents")
+  }
+
+  static var connectionManager: ConnectionManager { stack.connectionManager }
+
   private static var stores: [UUID: DocumentStore] = [:]
 
   static func store(server: PaperlessServerEntity? = nil) async throws -> DocumentStore {
@@ -54,26 +64,10 @@ enum PaperlessIntentStore {
     }
     // Activating again is cheap when nothing changed, and rebuilds the stack
     // if the connection (e.g. its token) did since the store was created.
-    let store = stores[id] ?? DocumentStore(registry: registry)
+    let store = stores[id] ?? DocumentStore(registry: stack.sessionRegistry)
     try await store.activate(connection: stored, reload: false)
     stores[id] = store
     return store
-  }
-
-  // Same fallback as the Share Extension: an unusable app-group file still
-  // yields a working (empty) database, so the intent reports "no server"
-  // instead of crashing.
-  private static func bootstrapDatabase() -> Database {
-    do {
-      return try Database()
-    } catch {
-      Logger.shared.fault("Intent database bootstrap failed (\(error)); falling back to in-memory")
-      do {
-        return try Database.inMemory()
-      } catch {
-        preconditionFailure("In-memory database fallback also failed: \(error)")
-      }
-    }
   }
 }
 
@@ -82,17 +76,19 @@ extension DocumentStore {
   /// past the deadline, and a failure is already swallowed by `sync()`, so
   /// callers just read whatever the cache holds afterwards.
   func sync(timeout: Duration) async {
-    let (stream, continuation) = AsyncStream<Void>.makeStream()
-    Task {
-      try? await sync()
-      continuation.yield()
+    // The wait is bounded; the sync is not. `sync()` joins the session's
+    // `TaskSlot`, which by design does not propagate a joiner's cancellation
+    // into the shared task — "a joiner going away must not tear down the work
+    // under the others" — so whichever child loses this race ends the *wait*
+    // only, and the sync runs on to finish writing what a later read will find.
+    // That is also why the race can be structured: cancelling these children,
+    // or the whole call, costs nothing that anyone is waiting on.
+    await withTaskGroup(of: Void.self) { group in
+      group.addTask { [self] in try? await sync() }
+      group.addTask { try? await Task.sleep(for: timeout) }
+      await group.next()
+      group.cancelAll()
     }
-    let timer = Task {
-      try? await Task.sleep(for: timeout)
-      continuation.yield()
-    }
-    for await _ in stream { break }
-    timer.cancel()
   }
 }
 

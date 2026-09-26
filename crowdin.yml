@@ -9,3 +9,8 @@ files:
     # builds; it only holds junk (real strings live in App.xcstrings), so never sync it.
     ignore:
       - "**/Localizable.xcstrings"
+  # App Intents strings live in the app target because the metadata extractor
+  # only accepts main-bundle resources; they need translating like any other.
+  - source: swift-paperless/Localization/*.xcstrings
+    translation: swift-paperless/Localization/%original_file_name%
+    multilingual: true
