@@ -241,3 +241,8 @@ configured fonts; pass one explicitly, e.g.
 `docs/panorama.png` is a symlink to the top-level `panorama.png`, so regenerating
 it updates both the README and the docs site.
 <!-- --8<-- [end:maintenance] -->
+
+## Release tooling
+
+See [building releases](docs/development/releases.md) for the shared
+CI pipeline and the `just beta` / `just release` commands.

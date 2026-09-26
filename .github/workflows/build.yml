@@ -5,10 +5,14 @@ on:
     branches:
       - main
       - develop
+      - "develop/**"
+      - "release/**"
   pull_request:
     branches:
       - main
       - develop
+      - "develop/**"
+      - "release/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -55,7 +59,9 @@ jobs:
         run: xcodegen generate
 
       - name: Cache SwiftPM sources
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        # Validation only, including release/**: no artifacts are published here.
+        # actions/cache v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # zizmor: ignore[cache-poisoning]
         with:
           path: SourcePackages
           key: spm-xcode-${{ runner.os }}-${{ steps.xcode-version.outputs.version }}-${{ hashFiles('**/Package.swift', 'project.yml') }}
@@ -101,7 +107,9 @@ jobs:
           xcode-version: "${{ steps.xcode-version.outputs.version }}"
 
       - name: Cache SwiftPM build
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        # Validation only, including release/**: no artifacts are published here.
+        # actions/cache v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # zizmor: ignore[cache-poisoning]
         with:
           path: ${{ matrix.package }}/.build
           key: spm-${{ runner.os }}-${{ steps.xcode-version.outputs.version }}-${{ matrix.package }}-${{ hashFiles(format('{0}/Package.swift', matrix.package)) }}
@@ -132,7 +140,9 @@ jobs:
         run: echo "hash=$(swift --version 2>&1 | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
 
       - name: Cache prek hooks
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        # Validation only, including release/**: no artifacts are published here.
+        # actions/cache v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # zizmor: ignore[cache-poisoning]
         with:
           path: ~/.cache/prek
           key: prek-${{ runner.os }}-${{ runner.arch }}-swift-${{ steps.swift-version.outputs.hash }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -142,6 +152,16 @@ jobs:
           prek-version: '0.3.x'
           cache: false
 
+  release-tools:
+    name: Release tooling tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s scripts/tests -p 'test_release*.py'
+
   # The only check branch protection requires. The other job names embed matrix
   # values (iOS/Xcode/runner versions) that change with every toolchain bump;
   # gating on this one job keeps the required-check list stable. `always()` is
@@ -150,7 +170,7 @@ jobs:
   all-green:
     name: CI
     if: always()
-    needs: [build, test, lint]
+    needs: [build, test, lint, release-tools]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

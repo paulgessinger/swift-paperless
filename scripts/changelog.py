@@ -34,7 +34,8 @@ from typing import Annotated
 import regex
 import typer
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+TOOL_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(os.environ.get("SOURCE_ROOT", TOOL_ROOT)).resolve()
 NOTES_FILE = "current_changelog.txt"
 ARCHIVE_FILE = "changelog.txt"
 VERSION_XCCONFIG = "Config/Shared/Version.xcconfig"
@@ -288,7 +289,7 @@ def test_notes(
     scoped to the version in flight. Trimming to App Store Connect's limit drops
     whole builds off the oldest end.
     """
-    header = (REPO_ROOT / TEST_NOTES_HEADER).read_text().strip()
+    header = (TOOL_ROOT / TEST_NOTES_HEADER).read_text().strip()
     version = version_at(ref)
     if not version:
         print(fit_text(header))

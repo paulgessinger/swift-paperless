@@ -35,9 +35,10 @@ VERSION_XCCONFIG="Config/Shared/Version.xcconfig"
 BUILD_DIR="build"
 ARCHIVE_PATH="$BUILD_DIR/$SCHEME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
-EXPORT_OPTIONS="scripts/ExportOptions.plist"
-ARCHIVE_SIGNING_CONFIG="scripts/CIArchiveSigning.xcconfig"
-CHANGELOG="scripts/changelog.py"
+TOOL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+EXPORT_OPTIONS="$TOOL_ROOT/scripts/ExportOptions.plist"
+ARCHIVE_SIGNING_CONFIG="$TOOL_ROOT/scripts/CIArchiveSigning.xcconfig"
+CHANGELOG="$TOOL_ROOT/scripts/changelog.py"
 
 # App Store provisioning profiles referenced (by name) in ExportOptions.plist.
 # Created once via `asc` and bound to the Apple Distribution certs; we install
@@ -85,7 +86,8 @@ fi
 # Remember where we were invoked (to resolve relative paths given on the CLI/env),
 # then run from the repo root regardless of where we were invoked.
 invocation_dir="$PWD"
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${SOURCE_ROOT:-$TOOL_ROOT}"
+export SOURCE_ROOT="$PWD"
 
 # Read a setting from Version.xcconfig. Anchored so the comments above the
 # settings — which name them — cannot be picked up instead.
@@ -226,9 +228,9 @@ fi
 # commit. Without ASC credentials (a local --no-upload smoke test) the
 # placeholder is used as-is.
 if [ -z "$build_number" ] && [ -n "$app_id" ]; then
-  build_number="$(scripts/next_build_number.sh "$app_id")"
+  build_number="$("$TOOL_ROOT/scripts/next_build_number.sh" "$app_id")"
 elif [ -n "$build_number" ] && [ -n "$app_id" ]; then
-  next="$(scripts/next_build_number.sh "$app_id")"
+  next="$("$TOOL_ROOT/scripts/next_build_number.sh" "$app_id")"
   if [ "$build_number" -lt "$next" ] && [ "${ALLOW_BUILD_NUMBER_MISMATCH:-0}" != "1" ]; then
     echo "error: --build-number $build_number is below the next free number ($next)" >&2
     echo "       App Store Connect will reject it; set ALLOW_BUILD_NUMBER_MISMATCH=1 to try anyway" >&2
@@ -251,7 +253,7 @@ elif [ "$build_number" != "$current" ]; then
   echo "==> Build number: $current (placeholder) -> $build_number (restored on exit)"
   _version_backup="$(mktemp)"
   cp "$VERSION_XCCONFIG" "$_version_backup"
-  uv run bump.py build "$VERSION_XCCONFIG" "$build_number"
+  uv run "$TOOL_ROOT/bump.py" build "$VERSION_XCCONFIG" "$build_number"
 fi
 current="$build_number"
 
