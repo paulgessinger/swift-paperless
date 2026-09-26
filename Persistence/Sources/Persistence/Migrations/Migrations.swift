@@ -91,6 +91,10 @@ enum Migrations {
       try V10_AddQueryViewedAt.run(db)
     }
 
+    migrator.registerMigration("v11_add_query_order_generation") { db in
+      try V11_AddQueryOrderGeneration.run(db)
+    }
+
     return migrator
   }
 }

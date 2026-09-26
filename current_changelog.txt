@@ -44,3 +44,4 @@
 - Turning off "Entire library" offline browsing now stops the download already in progress, instead of letting it carry on re-downloading data that was just removed
 - The Offline & Sync screen now shows how much space the offline data takes up on your device: the database, downloaded documents and thumbnails
 - Thumbnails are no longer cached twice on disk
+- Document lists now update when one of their documents changes, whether in the app or on the server: a document that no longer matches the filter disappears, and one whose sort field changed moves to its new place
