@@ -3478,55 +3478,55 @@
       }
     },
     "offlineStorageThisServer" : {
-      "comment" : "Row label in the Storage section, shown when several servers have downloads: the part of the downloaded document files that belongs to the server currently selected",
+      "comment" : "Caption under the Downloaded documents row, shown when several servers have downloads. %1$@ is the file count across all servers (e.g. \"1,234 files\"), %2$@ is the size of the downloaded files that belong to the server currently selected (e.g. \"310 MB\")",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloaded for this server"
+            "value" : "%1$@ · %2$@ for this server"
           }
         }
       }

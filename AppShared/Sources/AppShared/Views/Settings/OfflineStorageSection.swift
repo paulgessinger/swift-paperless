@@ -23,17 +23,10 @@ struct OfflineStorageSection: View {
       sizeRow(String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes)
       sizeRow(
         String(localized: .settings(.offlineStorageDocuments)), bytes: usage?.content.total.bytes,
-        files: usage?.content.total.files)
+        caption: documentsCaption)
       sizeRow(
         String(localized: .settings(.offlineStorageThumbnails)), bytes: usage?.thumbnails.bytes)
       sizeRow(String(localized: .settings(.offlineSyncTotal)), bytes: usage?.totalBytes)
-      // Only worth a row once another server has downloads too; with just the
-      // one it would repeat the row above.
-      if let thisServer = activeServerContent, let usage, thisServer != usage.content.total {
-        sizeRow(
-          String(localized: .settings(.offlineStorageThisServer)), bytes: thisServer.bytes,
-          files: thisServer.files)
-      }
     } header: {
       Text(.settings(.offlineStorageHeader))
     } footer: {
@@ -57,13 +50,24 @@ struct OfflineStorageSection: View {
     }
   }
 
-  private var activeServerContent: DiskUsage? {
-    guard let usage, let id = connectionManager.activeConnectionId else { return nil }
-    return usage.content.byServer[id] ?? .zero
+  /// The file count, plus the active server's share once another server has
+  /// downloads too. The share belongs here rather than under Total: the
+  /// database and thumbnails are shared and can't be split by server.
+  private var documentsCaption: Text? {
+    guard let usage else { return nil }
+    let total = usage.content.total
+    let files = String(localized: .settings(.offlineStorageFileCount(total.files)))
+    guard let id = connectionManager.activeConnectionId else { return Text(files) }
+    let thisServer = usage.content.byServer[id] ?? .zero
+    // With just the one server the share would repeat the row's own figure.
+    guard thisServer != total else { return Text(files) }
+    return Text(
+      .settings(
+        .offlineStorageThisServer(files, thisServer.bytes.formatted(.byteCount(style: .file)))))
   }
 
   @ViewBuilder
-  private func sizeRow(_ title: String, bytes: Int64?, files: Int? = nil) -> some View {
+  private func sizeRow(_ title: String, bytes: Int64?, caption: Text? = nil) -> some View {
     // `LabeledContent` like the other status rows on this screen; a second
     // `Text` in the label renders as its subtitle.
     LabeledContent {
@@ -75,8 +79,8 @@ struct OfflineStorageSection: View {
       }
     } label: {
       Text(title)
-      if let files {
-        Text(.settings(.offlineStorageFileCount(files)))
+      if let caption {
+        caption
       }
     }
   }
