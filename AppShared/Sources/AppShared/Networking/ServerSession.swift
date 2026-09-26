@@ -647,11 +647,11 @@ public final class ServerSession {
         }
         // As in `fillLibrary`: `true` is a claim the pass finished.
         try Task.checkCancellation()
-        // Clear the entry only once nothing is missing. Documents left over
-        // with no new failure keep the entry from the pass that failed on them.
+        // Failures that aren't surfaced (offline, 403) say nothing new, so
+        // they leave an existing entry as it is.
         if let failure = outcome.failure {
           self?.recordFailure(failure, at: .detailFill)
-        } else if outcome.unresolved == 0 {
+        } else if outcome.failed == 0 {
           self?.recordSuccess(at: .detailFill)
         }
         return true
