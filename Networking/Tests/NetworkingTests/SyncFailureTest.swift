@@ -117,6 +117,12 @@ import os
     #expect(SyncFailureClass.degraded.readFallbackLogLevel == .default)
   }
 
+  @Test("only the two fills are Entire-library-only")
+  func entireLibraryOnlySites() {
+    #expect(
+      Set(SyncFailureSite.allCases.filter(\.isEntireLibraryOnly)) == [.libraryFill, .detailFill])
+  }
+
   // MARK: - Ledger
 
   @Test(

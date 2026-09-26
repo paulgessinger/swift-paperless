@@ -144,6 +144,15 @@ public enum SyncFailureSite: String, Sendable, Hashable, CaseIterable {
   case libraryFill
   /// *Entire library*: the per-document notes / file metadata fill.
   case detailFill
+
+  /// Whether this part only runs in *Entire library* mode. Its failure is
+  /// hidden in *Recently browsed*, where nothing will run it again to clear it.
+  public var isEntireLibraryOnly: Bool {
+    switch self {
+    case .libraryFill, .detailFill: true
+    default: false
+    }
+  }
 }
 
 /// One server's record of which parts of its sync last failed, and how.
