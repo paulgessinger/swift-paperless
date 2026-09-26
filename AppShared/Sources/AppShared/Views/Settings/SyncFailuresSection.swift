@@ -5,12 +5,9 @@
 //  The Offline & Sync screen's "Sync errors" section: which parts of the active
 //  server's last sync failed, why, and when.
 //
-//  Separate from the per-view "Sync problems" list above it, which is fed from
-//  `query_sync_error` and only covers saved views the *Entire library* fill
-//  couldn't page. This one covers everything else — a server erroring on the
-//  permissions fetch, a reconcile sweep, the element sync — and shows in both
-//  offline-browsing modes (#663). What gets in is `SyncFailureClass`'s call;
-//  being offline never does.
+//  Separate from the per-view "Sync problems" list, which covers saved views
+//  only. Shown in both offline-browsing modes; what gets in is
+//  `SyncFailureClass`'s call.
 //
 
 import Networking

@@ -520,9 +520,7 @@ public final class DocumentStore: Sendable {
       if let displayable = error as? any DisplayableError, self.session === session {
         lastSyncError = displayable
       }
-      // The session already logged this at the level `SyncFailureClass` gives
-      // it — a flat `.error` here made every offline foreground look like a
-      // failure in exported logs. This line only notes that the store absorbed it.
+      // The session already logged this at the level `SyncFailureClass` gives it.
       Logger.sync.info("Background sync failed (suppressed): \(error)")
     }
   }

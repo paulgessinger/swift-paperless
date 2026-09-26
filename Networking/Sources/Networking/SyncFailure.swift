@@ -5,11 +5,7 @@
 //  How the offline/sync stack treats a failure: what level it logs at, and
 //  whether the Offline & Sync screen shows it.
 //
-//  Every failure path in that stack used to log at `.info`, which the unified
-//  log does not persist by default — so a user's exported logs, read at the
-//  default level, showed no sync failure at all, and nothing on screen did
-//  either (#663). The rule, applied everywhere a sync/fill/reconcile failure is
-//  caught:
+//  The rule, applied everywhere a sync/fill/reconcile failure is caught:
 //
 //  | class         | what it is                                 | log (sync)                  | surfaced |
 //  |---------------|--------------------------------------------|-----------------------------|----------|
@@ -19,14 +15,8 @@
 //  | `unreachable` | device online, server didn't answer        | `.notice`; `.error` if 3+   | yes      |
 //  | `degraded`    | 5xx, bad payload, TLS, version, local I/O  | `.error`                    | yes      |
 //
-//  Offline is the case the offline cache exists for, so it must never read as
-//  an error — neither in the log nor on screen. An unreachable server might be
-//  a blip (a dropped connection, a phone switching networks), so a single
-//  occurrence stays at `.notice`, which is still persisted and exported; only a
-//  run of them escalates. A degradation is a real problem on the first go.
-//
-//  Pure and in `Networking` (not `AppShared`, which has no test target) because
-//  the whole point is that the rule stays one rule; see `SyncFailureTest`.
+//  Offline is what the offline cache is for, so it never reads as an error.
+//  An unreachable server may be a blip, so only a run of them escalates.
 //
 
 import Common
@@ -105,17 +95,8 @@ public enum SyncFailureClass: Sendable, Equatable {
   /// the one it should report — `nil` while nothing worth surfacing has
   /// happened.
   ///
-  /// For the phases that keep going past a failed *item* (the per-document
-  /// detail fill above all): they end up having seen many errors and can report
-  /// at most one, and must report none at all when nothing among them was
-  /// surfaced. That last part is what keeps "you're offline" off the Offline &
-  /// Sync screen when the network drops in the middle of a long pass — every
-  /// remaining item fails, and none of those failures says anything about the
-  /// server.
-  ///
-  /// First-wins among the surfaced ones: the first failure is the one closest
-  /// to the cause, and the ones after it are usually its fallout (the network
-  /// going away, a server that has started refusing everything).
+  /// For phases that keep going past a failed item. First wins: later
+  /// failures are usually its fallout.
   public static func firstSurfaced(_ held: (any Error)?, _ error: any Error) -> (any Error)? {
     if let held { return held }
     return SyncFailureClass(error).isSurfaced ? error : nil

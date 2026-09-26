@@ -100,14 +100,8 @@ public struct DetailFillOutcome: Sendable {
 public protocol CachingBackend: AnyObject, Sendable {
   /// Fetch the permissions / UI-settings singleton and write it to the cache.
   ///
-  /// Its own step, called immediately before ``syncElements(progress:)``,
-  /// rather than the first half of it. The element sync deliberately soldiers
-  /// on past a failed permissions fetch — it falls back to the last cached
-  /// matrix, which is right for the data — so folded in, this failure was only
-  /// *knowable* when the element phase as a whole happened to succeed: a tags
-  /// request failing in the same pass hid it, and a permissions failure that
-  /// had since healed stayed on screen (#663). Split out, the caller records
-  /// its outcome on every attempt, whatever the element phase then does.
+  /// Called immediately before ``syncElements(progress:)``, as its own step so
+  /// the caller can record its outcome independently of the element phase.
   func syncUISettings() async throws
 
   /// Fetch every element collection from the network and reconcile it into the
@@ -870,15 +864,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   /// Fetch the UI settings singleton and write it through to the cache.
   ///
-  /// Throws on failure and does not log: the session catches it, records it at
-  /// `.uiSettings`, and logs it once at the level the ledger's consecutive
-  /// count gives it. Logging here as well would have been the second line —
-  /// and, knowing nothing of the count, the *quieter* one, which is how a
-  /// server that never answers this endpoint stayed at `.default` forever
-  /// instead of escalating to `.error` (#663).
-  ///
-  /// The failure is absorbed rather than fatal: `syncElements` carries on,
-  /// gated on the last cached permission matrix.
+  /// Throws without logging: the session records and logs the failure at
+  /// `.uiSettings`. Not fatal — `syncElements` carries on from the last cached
+  /// permission matrix.
   public func syncUISettings() async throws {
     let settings = try await wrapped.uiSettings()
     try await database.setUISettings(settings, serverID: serverID)

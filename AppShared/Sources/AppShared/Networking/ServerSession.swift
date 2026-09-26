@@ -191,16 +191,10 @@ public final class ServerSession {
   /// Which parts of this server's sync last failed, and how. Rendered on the
   /// Offline & Sync screen for the active server.
   ///
-  /// Every phase below reports into this, whoever started it — the store's
-  /// on-appear triggers, pull-to-refresh, or a background sweep — which is what
-  /// lets an *inactive* server's failures show up once it is switched to, and
-  /// what `DocumentStore.lastSyncError` could never do: that only ever saw a
-  /// thrown, displayable element-sync failure on the store's own path. The
-  /// rule for what gets in (and at what level it logs) is `SyncFailureClass`'s;
-  /// in particular, being offline never records anything.
-  ///
-  /// In memory only, like the other stamps here: a relaunch runs a fresh pass
-  /// straight away, which re-records whatever is still broken.
+  /// Every phase reports into this, whoever started it, so an inactive
+  /// server's failures show once it is switched to. What gets in is
+  /// `SyncFailureClass`'s rule. In memory only: a relaunch runs a fresh pass,
+  /// which re-records whatever is still broken.
   private var failureLedger = SyncFailureLedger()
 
   /// The current failures, in a fixed order; empty when every part of the last
@@ -237,14 +231,11 @@ public final class ServerSession {
 
   /// Record a failure at `site` and log it at the level the rule gives it.
   ///
-  /// The single place a sync failure is logged. Only the ledger knows how many
-  /// attempts in a row a site has failed, so only a line written from here can
-  /// escalate an unreachable server to `.error`; a layer below that logs the
-  /// same failure on the way past can only ever write a quieter duplicate.
+  /// The single place a sync failure is logged, because only the ledger knows
+  /// the consecutive count that escalates an unreachable server to `.error`.
   private func recordFailure(_ error: any Error, at site: SyncFailureSite) {
-    // Classify before touching the ledger: a mutation of an observed property
-    // repaints the Offline & Sync screen even when it changes nothing, and the
-    // routine failures — offline above all — are the common ones.
+    // Classify before touching the ledger: any write to an observed property
+    // repaints the Offline & Sync screen, and offline is the common case.
     let failureClass = SyncFailureClass(error)
     var level = failureClass.logLevel()
     var consecutive = 0
@@ -432,16 +423,10 @@ public final class ServerSession {
       }
       Logger.sync.debug("Starting element sync")
       return { [weak self] in
-        // Recorded here, inside the single-flight, so a failure is counted once
-        // however many callers joined it.
-        //
-        // Permissions first, and on its own: the element sync is gated on the
-        // matrix it caches, but a failure here is absorbed rather than fatal —
-        // the element sync carries on from the last cached matrix. Recording it
-        // before the element phase runs is what makes its outcome independent
-        // of that phase's: a tags request failing afterwards no longer buries a
-        // fresh permissions failure, and a permissions endpoint that has
-        // recovered clears its entry even if the pass then fails elsewhere.
+        // Recorded inside the single-flight, so a failure counts once however
+        // many callers joined it. Permissions are recorded separately: their
+        // failure isn't fatal, and must neither hide nor be hidden by the
+        // element phase's outcome.
         do {
           try await NetworkTransfer.$category.withValue(.sync) {
             try await backend.syncUISettings()
@@ -784,8 +769,7 @@ public final class ServerSession {
       }
       state = .failed
       // Only the element sync throws out of the phase loop, and it has already
-      // logged and recorded the failure at the level the rule gives it
-      // (`recordFailure`). This line just marks where the pass stopped.
+      // recorded and logged the failure.
       Logger.sync.info(
         "Sync pass stopped for \(stored.logLabel, privacy: .public) (suppressed): \(error)")
     }
