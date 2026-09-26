@@ -49,7 +49,8 @@ public final class Database: Sendable {
     let url = directory.appendingPathComponent("swift-paperless.sqlite")
     try self.init(
       path: url,
-      legacyConnectionsUserDefaults: UserDefaults(suiteName: appGroupIdentifier))
+      legacyConnectionsUserDefaults: UserDefaults(suiteName: appGroupIdentifier),
+      observesSuspensionNotifications: true)
   }
 
   /// Test seam: explicit on-disk path.
@@ -59,15 +60,23 @@ public final class Database: Sendable {
   ///   import migration. Pass `nil` (the default) when no legacy data is in
   ///   play; the production convenience initializer threads through the
   ///   app-group suite.
+  /// - Parameter observesSuspensionNotifications: whether this connection
+  ///   reacts to ``Database/suspend()``. Production only: the notifications
+  ///   are process-wide, so `true` in a test would suspend the databases of
+  ///   the suites running alongside it.
   public init(
     path: URL,
-    legacyConnectionsUserDefaults: UserDefaults? = nil
+    legacyConnectionsUserDefaults: UserDefaults? = nil,
+    observesSuspensionNotifications: Bool = false
   ) throws {
     let directory = path.deletingLastPathComponent()
     try Self.createDirectory(directory)
 
     var config = Configuration()
     config.label = "swift-paperless.persistence"
+    // What makes ``Database/suspend()`` reach this connection — see
+    // `Database+Suspension`.
+    config.observesSuspensionNotifications = observesSuspensionNotifications
     config.prepareDatabase { db in
       try db.execute(sql: "PRAGMA journal_mode = WAL;")
       try db.execute(sql: "PRAGMA synchronous = NORMAL;")
@@ -253,6 +262,9 @@ extension Database {
   /// would erase that distinction, and `throws(DatabaseError)` cannot express
   /// "or a cancellation", which is why the cache tables' accessors are
   /// untyped-`throws` while the `server` table's keep the typed signature.
+  ///
+  /// A write aborted by ``suspend()`` goes through the same hole, for the same
+  /// reason.
   func wrappingAsync<T>(
     _ operation: String, _ body: () async throws -> T
   ) async throws -> T {
@@ -261,6 +273,14 @@ extension Database {
     } catch let error as DatabaseError {
       throw error
     } catch is CancellationError {
+      throw CancellationError()
+    } catch let error as GRDB.DatabaseError where error.isInterruptionError {
+      // Suspended mid-write: GRDB rolled the transaction back, so this is
+      // "we were told to stop", not a write that failed. Reporting it as a
+      // cancellation keeps a sync interrupted by backgrounding from being
+      // recorded as a per-view sync error. Only cache fills are at stake.
+      Logger.persistence.debug(
+        "Database operation '\(operation, privacy: .public)' aborted: database is suspended")
       throw CancellationError()
     } catch {
       Logger.persistence.error(
