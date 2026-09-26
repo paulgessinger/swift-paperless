@@ -70,14 +70,42 @@ extension FilterState {
     sorting = legacy
   }
 
-  /// This filter with its sort pinned to what it resolves to right now.
+  /// This filter with its sort pinned to what it resolves to right now, and
+  /// its ID selections in a canonical order.
   ///
   /// Two filters address the same list when their resolved forms match, so
   /// this is the form to compare when the question is "same query?" rather
-  /// than "same user intent?".
+  /// than "same user intent?". The pickers append a reselected ID, so
+  /// selection order is intent, not query.
   public var resolved: FilterState {
     var copy = self
     copy.sorting = resolvedSorting
+    copy.correspondent = correspondent.canonicalized
+    copy.documentType = documentType.canonicalized
+    copy.storagePath = storagePath.canonicalized
+    copy.owner = owner.canonicalized
+    copy.tags = tags.canonicalized
     return copy
+  }
+}
+
+extension FilterState.Filter {
+  fileprivate var canonicalized: Self {
+    switch self {
+    case .any, .notAssigned: self
+    case .anyOf(let ids): .anyOf(ids: ids.sorted())
+    case .noneOf(let ids): .noneOf(ids: ids.sorted())
+    }
+  }
+}
+
+extension FilterState.TagFilter {
+  fileprivate var canonicalized: Self {
+    switch self {
+    case .any, .notAssigned: self
+    case .allOf(let include, let exclude):
+      .allOf(include: include.sorted(), exclude: exclude.sorted())
+    case .anyOf(let ids): .anyOf(ids: ids.sorted())
+    }
   }
 }

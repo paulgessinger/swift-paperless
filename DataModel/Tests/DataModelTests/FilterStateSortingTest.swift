@@ -62,6 +62,41 @@ struct FilterStateSortingTest {
     #expect(following.resolved == pinned.resolved)
   }
 
+  @Test(
+    "Reselecting an ID in a different order is the same list",
+    .bug("https://github.com/paulgessinger/swift-paperless/pull/747"))
+  func resolvedIgnoresSelectionOrder() {
+    let original = FilterState.empty.with {
+      $0.tags = .anyOf(ids: [1, 2])
+      $0.correspondent = .anyOf(ids: [3, 4])
+      $0.documentType = .noneOf(ids: [5, 6])
+      $0.storagePath = .anyOf(ids: [7, 8])
+      $0.owner = .noneOf(ids: [9, 10])
+    }
+    let reselected = FilterState.empty.with {
+      $0.tags = .anyOf(ids: [2, 1])
+      $0.correspondent = .anyOf(ids: [4, 3])
+      $0.documentType = .noneOf(ids: [6, 5])
+      $0.storagePath = .anyOf(ids: [8, 7])
+      $0.owner = .noneOf(ids: [10, 9])
+    }
+
+    #expect(original.resolved == reselected.resolved)
+
+    let allOf = FilterState.empty.with { $0.tags = .allOf(include: [1, 2], exclude: [3, 4]) }
+    let allOfReselected = FilterState.empty.with {
+      $0.tags = .allOf(include: [2, 1], exclude: [4, 3])
+    }
+    #expect(allOf.resolved == allOfReselected.resolved)
+  }
+
+  @Test("Include and exclude stay distinct when canonicalizing tags")
+  func resolvedKeepsTagSides() {
+    let a = FilterState.empty.with { $0.tags = .allOf(include: [1], exclude: [2]) }
+    let b = FilterState.empty.with { $0.tags = .allOf(include: [2], exclude: [1]) }
+    #expect(a.resolved != b.resolved)
+  }
+
   @Test("The nullable sort survives a Codable round trip")
   func codableRoundTrip() throws {
     for sorting in [nil, FilterState.Sorting(field: .title, order: .ascending)] {
