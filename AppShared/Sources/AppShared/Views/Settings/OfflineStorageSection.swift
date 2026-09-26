@@ -49,7 +49,11 @@ struct OfflineStorageSection: View {
     // database and the same blob store. Gating on `store.isSyncing` left the
     // figures stale until the active server happened to sync.
     .task(id: store.isAnyServerSyncing) {
-      usage = await store.storageUsage()
+      let measured = await store.storageUsage()
+      // The detached scan ignores cancellation, so a superseded one can still
+      // finish after the newer one; drop its result.
+      guard !Task.isCancelled else { return }
+      usage = measured
     }
   }
 
