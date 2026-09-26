@@ -683,22 +683,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         throw CancellationError()
       } catch {
         // A rejected view (e.g. an advanced full-text query the server won't run)
-        // must not block the *whole* library's coverage. Record it so the
-        // Offline & Sync screen can warn, and carry on.
-        //
-        // Not when the device is offline, though: that says nothing about the
-        // view, and recording it would list every saved view as broken the
-        // moment *Sync now* is tapped without a network (#663). Any error the
-        // view already has stays until it next fills.
-        let failureClass = SyncFailureClass(error)
+        // must not block the *whole* library's coverage.
         Logger.sync.log(
-          level: failureClass.logLevel(),
+          level: SyncFailureClass(error).logLevel(),
           "Library fill: '\(name ?? "default", privacy: .public)' failed (\(error)); skipping")
-        guard failureClass != .offline else { continue }
-        failedOnlyOffline = false
-        try? await database.recordQuerySyncError(
-          serverID: serverID, queryKey: key.rawValue, savedViewName: name,
-          message: Self.syncFailureMessage(error))
+        if await recordViewFailure(error, key: key, name: name) {
+          failedOnlyOffline = false
+        }
       }
     }
 
@@ -842,6 +833,18 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       "Detail fill: seeded \(seeded, privacy: .public) empty-notes rows, fetched \(fetchedNotes, privacy: .public) notes, \(fetchedMetadata, privacy: .public) metadata, \(failed, privacy: .public) failed, \(stillExcluded, privacy: .public) previously excluded"
     )
     return DetailFillOutcome(failure: failure, unresolved: failed + stillExcluded)
+  }
+
+  /// Record a saved view's failure for the Offline & Sync screen, unless the
+  /// device is offline: that says nothing about the view. An error the view
+  /// already has stays until it next syncs. Returns whether it was recorded.
+  @discardableResult
+  private func recordViewFailure(_ error: any Error, key: QueryKey, name: String?) async -> Bool {
+    guard SyncFailureClass(error) != .offline else { return false }
+    try? await database.recordQuerySyncError(
+      serverID: serverID, queryKey: key.rawValue, savedViewName: name,
+      message: Self.syncFailureMessage(error))
+    return true
   }
 
   /// A short, user-facing reason for a failed view sync — prefers the server's
@@ -1436,9 +1439,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           level: SyncFailureClass(error).logLevel(),
           "Membership sweep: '\(name ?? "default", privacy: .public)' failed (\(error)); continuing"
         )
-        try? await database.recordQuerySyncError(
-          serverID: serverID, queryKey: key.rawValue, savedViewName: name,
-          message: Self.syncFailureMessage(error))
+        await recordViewFailure(error, key: key, name: name)
       }
       // Both branches above end on a `try?`, which swallows cancellation along
       // with everything else. On any view but the last, the check at the top of
