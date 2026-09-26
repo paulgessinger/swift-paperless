@@ -49,12 +49,17 @@ get-build:
 next-build:
   @scripts/next_build_number.sh
 
-# Cut a TestFlight beta: previews the notes it will publish, then dispatches
-# .github/workflows/beta.yml. Nothing is committed, pushed, or built locally —
-# CI takes the build number from App Store Connect and tags the result. Args are
-# passed to scripts/beta.sh, e.g. `just beta --ref develop/v1.12 --dry-run`.
-beta *args:
-  scripts/beta.sh {{args}}
+# Build, sign, and upload to TestFlight through CI, then tag the uploaded build.
+# Example: just release --ref release/1.10 --dry-run
+# Tooling runs from main; --ref selects application source (defaults to main).
+alias beta := release
+[positional-arguments]
+release *args:
+  python3 scripts/release_dispatch.py "$@"
+
+# Offline tests for workflow dispatch and source/tooling separation.
+release-test:
+  python3 -m unittest discover -s scripts/tests -p 'test_release*.py'
 
 # The build+sign+upload half of `just beta`, as run by CI. Locally useful for
 # `just beta-ci --no-upload` (archive+export only) or `just beta-ci --dry-run`
