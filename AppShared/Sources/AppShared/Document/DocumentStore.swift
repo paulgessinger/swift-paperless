@@ -359,16 +359,27 @@ public final class DocumentStore: Sendable {
   }
 
   private static func makeImagePipeline(delegate: (any URLSessionDelegate)?) -> ImagePipeline {
-    let dataLoader = DataLoader()
+    // Nuke's default `URLSessionConfiguration` installs `sharedUrlCache`, a
+    // 150 MB on-disk `URLCache` in *this process's* caches directory. With the
+    // app-group `DataCache` below, every thumbnail would be written to both —
+    // and the pipeline reads the `DataCache` before it makes a request, so the
+    // `URLCache` copy is only ever reached for an image the `DataCache` has
+    // already evicted. Keep the one cache the share extension shares and the
+    // storage section can account for. Without an app-group container
+    // (previews, host tests) there is no `DataCache`, so the `URLCache` stays
+    // as the only one.
+    let dataCache = sharedThumbnailCacheURL().flatMap { try? DataCache(path: $0) }
+    let configuration = DataLoader.defaultConfiguration
+    if dataCache != nil {
+      configuration.urlCache = nil
+    }
+
+    let dataLoader = DataLoader(configuration: configuration)
     if let delegate {
       dataLoader.delegate = delegate
     }
     var config = ImagePipeline.Configuration(dataLoader: dataLoader)
-    if let cacheURL = sharedThumbnailCacheURL(),
-      let dataCache = try? DataCache(path: cacheURL)
-    {
-      config.dataCache = dataCache
-    }
+    config.dataCache = dataCache
     return ImagePipeline(configuration: config)
   }
 

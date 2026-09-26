@@ -43,3 +43,4 @@
 - The Offline & Sync screen now lists which parts of the last sync failed and why, clearing each as it succeeds again. Being offline doesn't count as a failure, so syncing without a connection no longer marks every saved view as failed
 - Turning off "Entire library" offline browsing now stops the download already in progress, instead of letting it carry on re-downloading data that was just removed
 - The Offline & Sync screen now shows how much space the offline data takes up on your device: the database, downloaded documents and thumbnails
+- Thumbnails are no longer cached twice on disk
