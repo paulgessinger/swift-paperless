@@ -10,9 +10,8 @@ import Testing
 /// changed-documents delta (R3δ) or any other write path.
 @Suite("DeltaOrderStaleness", .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
 struct DeltaOrderStalenessTests {
-  // Fractional seconds on purpose: the comparison runs against a row read back
-  // from disk, so a date that didn't survive the round trip exactly would make
-  // every identical refresh look like a change.
+  // Fractional seconds: an identical refresh must compare equal after the
+  // round trip through the database.
   private func date(_ t: TimeInterval) -> Date { Date(timeIntervalSince1970: t + 0.123_456) }
 
   private func doc(_ id: UInt, _ title: String = "Doc", modified: TimeInterval = 3000) -> Document {

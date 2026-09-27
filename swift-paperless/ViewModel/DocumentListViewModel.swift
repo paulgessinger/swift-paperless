@@ -476,21 +476,9 @@ class DocumentListViewModel {
 
   // MARK: - Stale order
 
-  /// The cached order of the list on screen was marked stale: a document it
-  /// lists changed — on the server, seen by the changed-documents delta, or by
-  /// an edit made here — in a way that may move it within the list or out of
-  /// it. Re-sync the query's membership so the list matches the server again.
-  ///
-  /// A membership rewrite, not a refill. The documents are already current:
-  /// whatever marked the key wrote their rows through in the same transaction
-  /// that marked it. What is out of date is only the *ordering*, and one id
-  /// request buys the server's whole answer — where a refill would re-download
-  /// a page of full documents to learn the same thing.
-  ///
-  /// Not straight away: something may be writing the query already — the
-  /// list's own fill still paging, the library sweep, the membership sweep —
-  /// and taking the key over would cancel it. Wait for those writers, then
-  /// rewrite only if none of them rewrote the whole order in the meantime.
+  /// A document the list shows changed in a way that may move it. Re-sync the
+  /// query's membership once the query's current writers are done, rather than
+  /// cancelling them.
   private func noteOrderStale(_ status: QueryStatus, for key: QueryKey) {
     let previous = lastOrderMark
     lastOrderMark = (status.orderStale, status.orderGeneration)
@@ -504,14 +492,10 @@ class DocumentListViewModel {
 
     staleResyncTask = Task { @MainActor [weak self] in
       guard let store = self?.store else { return }
-      // A cancelled task was already replaced (or dropped) by whoever
-      // cancelled it, so clearing the slot would clear its successor.
+      // Whoever cancelled this task already replaced it.
       defer { if !Task.isCancelled { self?.staleResyncTask = nil } }
-      // Until the flag is clear. A pass can end with it still set without
-      // failing: a mark landed while its request was in flight, or a fill took
-      // the key over and stopped before its first page. The observation drops
-      // those marks while this task runs, so this loop is what picks them up.
-      // Each further pass needs a new mark or a writer to have run.
+      // Until the order is clean: a mark can land while a pass is in flight,
+      // and the observation ignores marks while this task runs.
       while true {
         await store.waitForQueryWriters(queryKey: key)
         let status = try? await store.queryStatus(queryKey: key)
@@ -523,9 +507,8 @@ class DocumentListViewModel {
         do {
           try await store.refreshDocumentQueryMembership(filter: filterState)
         } catch {
-          // Nothing to show the user: the list keeps the rows it has, the flag
-          // stays set, and the next refresh — or the next mark — tries again.
-          // Offline is the common case here and is not a load failure.
+          // Not a load failure: the list keeps its rows and the next mark or
+          // refresh retries.
           Logger.shared.error("Re-syncing a stale document list failed: \(error)")
           return
         }

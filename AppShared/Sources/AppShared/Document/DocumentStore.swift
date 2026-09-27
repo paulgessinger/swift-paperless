@@ -838,15 +838,11 @@ extension DocumentStore {
     return try await backend.fillQuery(filter: filter, category: .list)
   }
 
-  /// Re-sync a list's cached membership from the server's id list, hydrating the
-  /// few ids the cache has no document row for. Cheaper than a fill by two
-  /// orders of magnitude: one id request instead of a page of full documents.
+  /// Re-sync a stale list's cached membership from the server's id list,
+  /// hydrating the few ids the cache has no row for.
   ///
-  /// What the list does when its cached order is marked stale, the documents in
-  /// it having already been written through by whatever marked it.
-  ///
-  /// - Returns: `false` without a caching backend, or when a fill owns the key
-  ///   and will write a better ordering itself.
+  /// - Returns: `false` without a caching backend, or if the rewrite didn't
+  ///   stand.
   @discardableResult
   public func refreshDocumentQueryMembership(filter: FilterState) async throws -> Bool {
     guard let backend = session?.backend else { return false }

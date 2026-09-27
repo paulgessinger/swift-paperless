@@ -457,11 +457,8 @@ struct DocumentCacheTests {
 
   // MARK: - Marks landing mid-rewrite
 
-  /// A whole-order rewrite asks the server for the list's answer, waits, and
-  /// then writes it and clears the stale flag. These cover the window in
-  /// between: a mark landing there describes a change the answer in hand
-  /// predates, and nothing re-marks the key afterwards, so clearing over it
-  /// leaves the list wrong until some other document in it changes.
+  /// A mark landing while a whole-order rewrite waits on the server describes
+  /// a change the rewrite's answer predates, so it must keep the order stale.
 
   @Test(
     "a mark landing while a membership rewrite is in flight survives it",
@@ -494,8 +491,7 @@ struct DocumentCacheTests {
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
-    // The mark is what triggered the rewrite, so it is accounted for by the
-    // answer the rewrite asked for.
+    // The mark triggered the rewrite, so the answer accounts for it.
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
@@ -551,9 +547,7 @@ struct DocumentCacheTests {
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       startPosition: 0, totalCount: 2, replaceAll: true)
 
-    // The flag is already set — which is the normal state when the list on
-    // screen reacts to it — so a second mark has no flag left to flip. It must
-    // still be visible to a rewrite already in flight.
+    // A second mark on a stale order must still reach a rewrite in flight.
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
@@ -599,9 +593,7 @@ struct DocumentCacheTests {
       startPosition: 0, totalCount: 1, replaceAll: true)
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
-    // A `query_meta` upsert rewrites every column, so the counter has to be
-    // carried forward: losing it would make the *next* capture compare against
-    // a reset value and clear over a mark it never saw.
+    // A `query_meta` upsert rewrites every column; the counter must survive.
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
       queryKey: key, serverID: server, orderedIDs: [1], basis: generation)
@@ -635,8 +627,7 @@ struct DocumentCacheTests {
     let database = try database(server)
     try await database.upsertDocuments([doc(2, "B"), doc(4, "D")], serverID: server)
 
-    // The ids a membership rewrite would write as skeletons, top of the list
-    // first — which is the order a bounded hydration fetches them in.
+    // Top of the list first, which is the order hydration fetches them in.
     #expect(
       try await database.documentIDsWithoutRows(serverID: server, among: [1, 2, 3, 4, 5, 3])
         == [1, 3, 5])

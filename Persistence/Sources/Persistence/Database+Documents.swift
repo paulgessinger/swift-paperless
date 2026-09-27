@@ -487,12 +487,7 @@ extension Database {
       .fetchSet(db)
   }
 
-  /// Which of `ids` have no cached `document` row — the ids a membership rewrite
-  /// would write into `query_order` as skeletons.
-  ///
-  /// The order of `ids` is kept and repeats are dropped, so a caller that can
-  /// only afford to fetch a few of them fetches the ones nearest the top of the
-  /// list, which is what the user is looking at.
+  /// Which of `ids` have no cached `document` row, in order, without repeats.
   public func documentIDsWithoutRows(serverID: UUID, among ids: [UInt]) async throws -> [UInt] {
     guard !ids.isEmpty else { return [] }
     return try await wrappingAsync("documentIDsWithoutRows") {
@@ -734,14 +729,11 @@ extension Database {
 
   /// What a `query_meta` write does to the `filled_at` stamp.
   ///
-  /// The stamp means *"the fill that owns this key paged it to the end"*. It
-  /// used to be set on every page write, i.e. it meant "a page was
-  /// written" — which is why a fill interrupted on page 2 left a 250-row order
-  /// carrying the server's full 3000 as `total_count` and a fresh `filled_at`,
-  /// indistinguishable from a complete one.
+  /// The stamp means *"the fill that owns this key paged it to the end"*, so a
+  /// fill interrupted on page 2 doesn't read as complete.
   enum FillStamp {
-    /// Page 1 of a fill has just deleted the key's whole order,
-    /// so it is known-incomplete until the fill says otherwise.
+    /// Page 1 of a fill has just deleted the key's whole order, so it is
+    /// known-incomplete until the fill says otherwise.
     case cleared
     /// A later page, or a membership rewrite — leave whatever is recorded.
     case unchanged
