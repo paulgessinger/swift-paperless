@@ -33,7 +33,7 @@ private struct CreateNoteView: View {
       try await store.addNote(to: document, note: note)
       // We have no way to only get the new note here
       notes = try await store.notes(for: document)
-      document.notes.count = notes.count
+      document.notes = NotesPayload(notes: notes)
       Haptics.shared.notification(.success)
       dismiss()
     } catch {
@@ -102,7 +102,7 @@ public struct DocumentNoteView: View {
       do {
         try await store.deleteNote(from: document, id: note.id)
         notes = notes.filter { $0.id != note.id }
-        document.notes.count = notes.count
+        document.notes = NotesPayload(notes: notes)
       } catch let error where error.isCancellationError {
       } catch {
         Logger.shared.error("Error deleting note from document: \(error)")

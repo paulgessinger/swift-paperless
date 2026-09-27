@@ -18,11 +18,19 @@ public protocol DocumentProtocol {
 
 public struct NotesPayload: Equatable, Sendable, Hashable {
   public var count: Int = 0
+  /// The notes themselves, when the response carried them (paperless-ngx 2.15
+  /// and later); `nil` when it carried only their ids.
+  public var notes: [DocumentNote]?
 
   public init() {}
 
   public init(count: Int) {
     self.count = count
+  }
+
+  public init(notes: [DocumentNote]) {
+    count = notes.count
+    self.notes = notes
   }
 }
 

@@ -28,8 +28,9 @@ extension Database {
   }
 
   /// Upsert document rows (a straight replace: every write is the complete
-  /// object), and mark stale every cached list that placed one of them under a
-  /// different or unknown `modified`. Returns how many lists were newly marked.
+  /// object), replace the cached notes of those that carry them, and mark stale
+  /// every cached list that placed one of them under a different or unknown
+  /// `modified`. Returns how many lists were newly marked.
   ///
   /// Every document write goes through here, so a list is marked whichever path
   /// brings the new copy in first. An unknown placement (a skeleton) is marked
@@ -42,7 +43,22 @@ extension Database {
     for domain in domains {
       try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
     }
+    if try canViewNotes(db, serverID: serverID) {
+      for domain in domains {
+        guard let notes = domain.notes.notes else { continue }
+        try DocumentNoteRecord(serverId: serverID, documentId: domain.id, notes: notes).upsert(db)
+      }
+    }
     return try markMovedPlacements(db, ids: domains.map(\.id), serverID: serverID)
+  }
+
+  /// Whether the cached permissions let the user view notes; `true` while none
+  /// are cached, like the detail fill. Document responses include notes
+  /// regardless, but `/notes/` refuses them without this permission, and the
+  /// cache holds only what that endpoint would return.
+  private static func canViewNotes(_ db: GRDB.Database, serverID: UUID) throws -> Bool {
+    try UISettingsRecord.fetchOne(db, key: serverID)?.domain.permissions
+      .test(.view, for: .note) ?? true
   }
 
   /// The placement check for a batch of just-written rows: two statements
@@ -78,12 +94,15 @@ extension Database {
   }
 
   /// Apply a page of the changed-documents delta (R3δ): upsert the documents,
-  /// drop their cached notes, and mark stale the cached lists they may have
-  /// moved in, in one transaction. Returns how many lists were newly marked.
+  /// replace or drop their cached notes, and mark stale the cached lists they
+  /// may have moved in, in one transaction. Returns how many lists were newly
+  /// marked.
   ///
-  /// Notes are dropped because a note edit bumps `modified` and the delta can't
-  /// tell which field changed. One transaction so a note write-through can't
-  /// land between the upsert and the drop and be deleted by it.
+  /// A note edit bumps `modified`, so any of these documents may have changed
+  /// notes. Documents that carry their notes get them replaced; the rest (older
+  /// servers send only note ids, or notes can't be viewed) lose their cached
+  /// notes. One transaction so a note write-through can't land between the
+  /// upsert and the drop and be deleted by it.
   @discardableResult
   public func applyChangedDocuments(
     _ domains: [Document], serverID: UUID
@@ -92,7 +111,9 @@ extension Database {
     return try await wrappingAsync("applyChangedDocuments") {
       try await writer.write { db in
         let marked = try Self.writeDocumentRows(db, domains, serverID: serverID)
-        try Self.dropNotes(serverID: serverID, documentIDs: domains.map(\.id), db)
+        let replaced = try Self.canViewNotes(db, serverID: serverID)
+        let unlisted = domains.filter { !replaced || $0.notes.notes == nil }
+        try Self.dropNotes(serverID: serverID, documentIDs: unlisted.map(\.id), db)
         return marked
       }
     }

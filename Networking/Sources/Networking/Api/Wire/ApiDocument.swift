@@ -119,19 +119,31 @@ extension ApiDocumentUpdate {
 
 // MARK: - Notes payload (decode-only)
 //
-// The /api/documents/<id>/ payload returns "notes" as either a list of full
-// note objects or a list of note ids depending on backend version. We only
-// care about the count for the document model.
+// The shape of "notes" in a document response depends on the backend:
+// - 2.15 and later (#9336): the list `/notes/` returns, with the user nested.
+// - Earlier 2.x: the raw note rows (`depth = 1`), which also carry `document`
+//   and give the user only as an id, so an author would show without a name.
+// - Around #8948: note ids.
+// Only the first is kept as the notes themselves; the rest give the count.
 
 struct ApiNotesPayload: Codable, Sendable {
   let count: Int
+  let notes: [ApiDocumentNote]?
+
+  /// The key only the raw note rows carry.
+  private struct RawRowMarker: Decodable {
+    let document: UInt?
+  }
 
   init(from decoder: any Decoder) throws {
     let container = try decoder.singleValueContainer()
     if let notes = try? container.decode([ApiDocumentNote].self) {
       count = notes.count
+      let rawRows = try container.decode([RawRowMarker].self).contains { $0.document != nil }
+      self.notes = rawRows ? nil : notes
     } else {
       count = try container.decode([UInt].self).count
+      notes = nil
     }
   }
 
@@ -145,8 +157,7 @@ struct ApiNotesPayload: Codable, Sendable {
 
 extension ApiNotesPayload {
   var domain: NotesPayload {
-    var p = NotesPayload()
-    p.count = count
-    return p
+    guard let notes else { return NotesPayload(count: count) }
+    return NotesPayload(notes: notes.map(\.domain))
   }
 }
