@@ -102,19 +102,12 @@ public struct DetailFillOutcome: Sendable {
   public static let complete = DetailFillOutcome(failure: nil, failed: 0)
 }
 
-/// Non-generic so the constant is legal, same as ``LibraryCoverage`` above.
-enum MembershipRewritePolicy {
-  /// How many missing objects a single-list rewrite fetches, one request each;
-  /// the rest stay skeletons until the list's next fill.
-  static let hydrationLimit = 10
-}
-
 /// What a membership rewrite does about ids with no cached `document` row.
 enum MembershipHydration {
   /// Leave them skeletons for the library fill.
   case deferToFill
-  /// Fetch the first `limit`, top of the list first.
-  case fetchMissing(limit: Int)
+  /// Fetch the missing ones among the first `window` ids, in one request.
+  case window(Int)
 }
 
 enum MembershipRewriteOutcome: Equatable {
@@ -216,14 +209,14 @@ public protocol CachingBackend: AnyObject, Sendable {
   func reconcileSavedViewMembership() async throws
 
   /// Re-sync one list's cached membership from the Tier-0 id projection, and
-  /// fetch the few objects the cache can't back. What a list on screen does
-  /// when its order goes stale: the documents are already current, only the
-  /// server's ordering is missing.
+  /// fetch the objects missing from its first `window` rows, so the list on
+  /// screen shows no placeholders afterwards. What a list does when its order
+  /// goes stale.
   ///
   /// - Returns: `false` if the rewrite didn't stand (a fill owns the key, or a
   ///   newer rewrite landed first).
   @discardableResult
-  func refreshQueryMembership(filter: FilterState) async throws -> Bool
+  func refreshQueryMembership(filter: FilterState, window: Int) async throws -> Bool
 
   /// Reachability GC for cached query keys: delete `query_order` / `query_meta`
   /// / `query_sync_error` for every key that is no longer reachable (the default
@@ -1265,6 +1258,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
+  public func documents(ids: [UInt]) async throws -> [Document] {
+    let fetched = try await wrapped.documents(ids: ids)
+    try await database.upsertDocuments(fetched, serverID: serverID)
+    return fetched
+  }
+
   public func document(asn: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }
@@ -1469,13 +1468,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  public func refreshQueryMembership(filter: FilterState) async throws -> Bool {
+  public func refreshQueryMembership(filter: FilterState, window: Int) async throws -> Bool {
     let key = QueryKey(serverID: serverID, filter: filter)
     // Pin the key so the reachability sweep doesn't collect it mid-rewrite.
     noteRequested(key)
     let outcome = try await rewriteQueryMembership(
-      key, filter: filter, label: "list on screen",
-      hydrating: .fetchMissing(limit: MembershipRewritePolicy.hydrationLimit))
+      key, filter: filter, label: "list on screen", hydrating: .window(window))
     return outcome == .rewritten
   }
 
@@ -1501,29 +1499,20 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       ? .rewritten : .takenOver
   }
 
-  /// Fetch objects for the ids in `ids` with no cached row, as far as `policy`
-  /// allows. Soft-fails per id: an unfetched document stays a skeleton.
+  /// Fetch the objects `policy` asks for that the cache has no row for. A
+  /// failure fails the rewrite, so the list keeps its order rather than
+  /// gaining placeholders.
   private func hydrate(
     _ ids: [UInt], policy: MembershipHydration, label: String
   ) async throws {
-    guard case .fetchMissing(let limit) = policy, limit > 0 else { return }
-    let missing = try await database.documentIDsWithoutRows(serverID: serverID, among: ids)
+    guard case .window(let window) = policy else { return }
+    let missing = try await database.documentIDsWithoutRows(
+      serverID: serverID, among: Array(ids.prefix(window)))
     guard !missing.isEmpty else { return }
-    if missing.count > limit {
-      Logger.sync.info(
-        "Membership rewrite: '\(label, privacy: .public)' is missing \(missing.count, privacy: .public) objects; hydrating the first \(limit, privacy: .public)"
-      )
-    }
-    for id in missing.prefix(limit) {
-      try Task.checkCancellation()
-      do {
-        _ = try await document(id: id)
-      } catch {
-        Logger.sync.info(
-          "Membership rewrite: '\(label, privacy: .public)' could not hydrate \(id, privacy: .public) (\(error)); leaving a placeholder"
-        )
-      }
-    }
+    Logger.sync.info(
+      "Membership rewrite: '\(label, privacy: .public)' hydrating \(missing.count, privacy: .public) object(s)"
+    )
+    _ = try await documents(ids: missing)
   }
 
   /// Rewrite `key`'s membership while *owning* the key, and report whether the

@@ -492,7 +492,11 @@ extension Database {
     guard !ids.isEmpty else { return [] }
     return try await wrappingAsync("documentIDsWithoutRows") {
       try await writer.read { db in
-        let cached = try Self.fetchAllDocumentIDs(db, serverID: serverID)
+        let cached = try Set(
+          DocumentRecord
+            .select(Column("id"), as: UInt.self)
+            .filter(Column("server_id") == serverID && ids.contains(Column("id")))
+            .fetchAll(db))
         var seen: Set<UInt> = []
         return ids.filter { seen.insert($0).inserted && !cached.contains($0) }
       }

@@ -839,14 +839,16 @@ extension DocumentStore {
   }
 
   /// Re-sync a stale list's cached membership from the server's id list,
-  /// hydrating the few ids the cache has no row for.
+  /// hydrating what its first `window` rows are missing.
   ///
   /// - Returns: `false` without a caching backend, or if the rewrite didn't
   ///   stand.
   @discardableResult
-  public func refreshDocumentQueryMembership(filter: FilterState) async throws -> Bool {
+  public func refreshDocumentQueryMembership(
+    filter: FilterState, window: Int
+  ) async throws -> Bool {
     guard let backend = session?.backend else { return false }
-    return try await backend.refreshQueryMembership(filter: filter)
+    return try await backend.refreshQueryMembership(filter: filter, window: window)
   }
 
   /// Live growing-prefix of a cached query's ordered answer (the list's data).

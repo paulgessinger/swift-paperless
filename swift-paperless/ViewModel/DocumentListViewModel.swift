@@ -505,7 +505,8 @@ class DocumentListViewModel {
         else { return }
         Logger.shared.info("Document list order went stale; re-syncing its membership")
         do {
-          try await store.refreshDocumentQueryMembership(filter: filterState)
+          try await store.refreshDocumentQueryMembership(
+            filter: filterState, window: prefixLimit)
         } catch {
           // Not a load failure: the list keeps its rows and the next mark or
           // refresh retries.

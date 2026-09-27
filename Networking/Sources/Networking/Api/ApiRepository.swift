@@ -877,6 +877,13 @@ extension ApiRepository: Repository {
     try await get(ApiDocument.self, endpoint: .document(id: id))?.domain
   }
 
+  public func documents(ids: [UInt]) async throws -> [Document] {
+    guard !ids.isEmpty else { return [] }
+    guard supports(feature: .documentIDFilter) else { return try await documentsOneByOne(ids: ids) }
+    return try await send(endpoint: .documents(ids: ids), returns: ListResponse<ApiDocument>.self)
+      .results.map(\.domain)
+  }
+
   public func document(asn: UInt) async throws -> Document? {
     Logger.networking.notice("Getting document by ASN")
 
