@@ -31,9 +31,11 @@ struct DeltaOrderStalenessTests {
   private func fill(
     _ database: Persistence.Database, _ server: UUID, _ key: QueryKey, _ documents: [Document]
   ) async throws {
-    try await database.writeQueryPage(
+    // A fill starting now: nothing marks the key while its page is in flight.
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: documents,
-      startPosition: 0, totalCount: UInt(documents.count), replaceAll: true)
+      totalCount: UInt(documents.count),
+      basis: database.queryOrderGeneration(queryKey: key, serverID: server))
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
   }
 
@@ -115,7 +117,8 @@ struct DeltaOrderStalenessTests {
     let key = QueryKey(sentinel: "view")
     try await database.upsertDocuments([doc(1)], serverID: server)
     // The membership sweep lists ids before their objects are cached.
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1, 2], basis: .initial)
 
     let marked = try await database.applyChangedDocuments([doc(2)], serverID: server)
 
@@ -146,14 +149,14 @@ struct DeltaOrderStalenessTests {
 
     // Page 1 places document 1, the delta then moves it, and page 2 appends
     // behind it without revisiting page 1's rows.
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1)],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
     try await database.applyChangedDocuments(
       [doc(1, "Renamed", modified: 4000)], serverID: server)
-    try await database.writeQueryPage(
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(2)],
-      startPosition: 1, totalCount: 2, replaceAll: false)
+      startPosition: 1, totalCount: 2)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
 
     #expect(try await isStale(database, server, key))
@@ -231,7 +234,8 @@ struct DeltaOrderStalenessTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "list")
     try await database.upsertDocuments([doc(1), doc(2)], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: .initial)
 
     try await database.upsertDocuments([doc(1), doc(2)], serverID: server)
     #expect(try await isStale(database, server, key) == false)
@@ -245,7 +249,8 @@ struct DeltaOrderStalenessTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "list")
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1], basis: .initial)
 
     try await database.upsertDocument(doc(1), serverID: server)
     #expect(try await isStale(database, server, key) == false)

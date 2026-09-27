@@ -119,8 +119,10 @@ struct QueryReachabilityGCTests {
     let drop = key("drop")
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: keep, serverID: server, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: drop, serverID: server, orderedIDs: [2])
+    try await database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: drop, serverID: server, orderedIDs: [2], basis: .initial)
     try await database.recordQuerySyncError(
       serverID: server, queryKey: keep.rawValue, savedViewName: "Keep", message: "boom")
     try await database.recordQuerySyncError(
@@ -142,8 +144,10 @@ struct QueryReachabilityGCTests {
     let b = key("b")
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: a, serverID: server, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: b, serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: a, serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: b, serverID: server, orderedIDs: [1], basis: .initial)
 
     #expect(try await database.pruneQueries(serverID: server, collectedKeys: []) == 0)
     #expect(try orderKeys(database, server) == ["a", "b"])
@@ -156,7 +160,8 @@ struct QueryReachabilityGCTests {
     let database = try database(server)
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key("a"), serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key("a"), serverID: server, orderedIDs: [1], basis: .initial)
     try await database.recordQuerySyncError(
       serverID: server, queryKey: key("b").rawValue, savedViewName: nil, message: "boom")
 
@@ -183,8 +188,10 @@ struct QueryReachabilityGCTests {
     let shared = key("shared")
     try await database.upsertDocuments([doc(1, "A")], serverID: serverA)
     try await database.upsertDocuments([doc(1, "A")], serverID: serverB)
-    try await database.replaceQueryOrder(queryKey: shared, serverID: serverA, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: shared, serverID: serverB, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: shared, serverID: serverA, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: shared, serverID: serverB, orderedIDs: [1], basis: .initial)
 
     let collected = try await database.pruneQueries(
       serverID: serverA, collectedKeys: [shared])
@@ -201,8 +208,10 @@ struct QueryReachabilityGCTests {
     let database = try database(server)
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key("keep"), serverID: server, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: key("drop"), serverID: server, orderedIDs: [2])
+    try await database.replaceQueryOrder(
+      queryKey: key("keep"), serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: key("drop"), serverID: server, orderedIDs: [2], basis: .initial)
     try await database.recordQuerySyncError(
       serverID: server, queryKey: key("drop").rawValue, savedViewName: nil, message: "boom")
 
@@ -218,8 +227,10 @@ struct QueryReachabilityGCTests {
     let database = try database(server)
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key("keep"), serverID: server, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: key("drop"), serverID: server, orderedIDs: [2])
+    try await database.replaceQueryOrder(
+      queryKey: key("keep"), serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: key("drop"), serverID: server, orderedIDs: [2], basis: .initial)
 
     // Before the sweep the orphaned key still "references" document 2.
     #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
@@ -239,9 +250,10 @@ struct QueryReachabilityGCTests {
     let database = try database(server)
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key("filled"), serverID: server, orderedIDs: [1])
     try await database.replaceQueryOrder(
-      queryKey: key("unfilled"), serverID: server, orderedIDs: [1])
+      queryKey: key("filled"), serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: key("unfilled"), serverID: server, orderedIDs: [1], basis: .initial)
     try setFilledAt(date(5000), key: key("filled"), serverID: server, on: database)
 
     let cached = try await database.cachedQueries(serverID: server)
@@ -257,7 +269,8 @@ struct QueryReachabilityGCTests {
     let database = try database(server)
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key("a"), serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key("a"), serverID: server, orderedIDs: [1], basis: .initial)
     try deleteMeta(database, server)
 
     let cached = try await database.cachedQueries(serverID: server)
@@ -279,8 +292,10 @@ struct QueryReachabilityGCTests {
 
     try await database.upsertDocuments([doc(1, "A")], serverID: serverA)
     try await database.upsertDocuments([doc(1, "A")], serverID: serverB)
-    try await database.replaceQueryOrder(queryKey: key("a"), serverID: serverA, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: key("b"), serverID: serverB, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key("a"), serverID: serverA, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: key("b"), serverID: serverB, orderedIDs: [1], basis: .initial)
 
     #expect(try await database.cachedQueries(serverID: serverA).map(\.key.rawValue) == ["a"])
   }
@@ -295,9 +310,9 @@ struct QueryReachabilityGCTests {
     // the P1 that a `NOT IN (reachable)` predicate had.
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key("snapshot"), serverID: server, orderedIDs: [1])
+      queryKey: key("snapshot"), serverID: server, orderedIDs: [1], basis: .initial)
     try await database.replaceQueryOrder(
-      queryKey: key("newcomer"), serverID: server, orderedIDs: [2])
+      queryKey: key("newcomer"), serverID: server, orderedIDs: [2], basis: .initial)
 
     let collected = try await database.pruneQueries(
       serverID: server, collectedKeys: [key("snapshot")])
@@ -313,7 +328,8 @@ struct QueryReachabilityGCTests {
     let database = try database(server)
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key("real"), serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key("real"), serverID: server, orderedIDs: [1], basis: .initial)
 
     #expect(
       try await database.pruneQueries(
@@ -328,7 +344,8 @@ struct QueryReachabilityGCTests {
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
     let keys = (0..<1200).map { key("k\($0)") }
     for k in keys {
-      try await database.replaceQueryOrder(queryKey: k, serverID: server, orderedIDs: [1])
+      try await database.replaceQueryOrder(
+        queryKey: k, serverID: server, orderedIDs: [1], basis: .initial)
     }
 
     let counter = try countingCommits(on: database)

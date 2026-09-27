@@ -44,7 +44,8 @@ struct RecentlyBrowsedCapTests {
     on database: Persistence.Database
   ) async throws {
     try await database.upsertDocuments(ids.map(doc), serverID: server)
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: Array(ids))
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: Array(ids), basis: .initial)
     if let viewedAt {
       try await database.markQueryViewed(queryKey: key, serverID: server, at: viewedAt)
     }
