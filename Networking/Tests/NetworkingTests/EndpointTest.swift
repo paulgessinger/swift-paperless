@@ -1,3 +1,4 @@
+import Common
 import DataModel
 import Foundation
 import Testing
@@ -67,6 +68,20 @@ import Testing
     #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
     // Still carries ordering (the QueryKey-relevant param).
     #expect(endpoint.queryItems.contains { $0.name == "ordering" })
+  }
+
+  @Test func testDocumentsByIDs() {
+    let endpoint = Endpoint.documents(ids: [3, 1, 2])
+    #expect(endpoint.path == "/api/documents")
+    #expect(endpoint.queryItems.contains { $0.name == "id__in" && $0.value == "3,1,2" })
+    // One page holds all of them, in the full cached shape.
+    #expect(endpoint.queryItems.contains { $0.name == "page_size" && $0.value == "3" })
+    #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
+  }
+
+  @Test func testDocumentIDFilterNeedsVersion2() {
+    #expect(!BackendFeature.documentIDFilter.isSupported(on: Version(1, 17, 4), api: 3))
+    #expect(BackendFeature.documentIDFilter.isSupported(on: Version(2, 0, 0), api: 3))
   }
 
   @Test func testDocumentsIdOnlyOmitsFullPerms() {

@@ -140,4 +140,31 @@ public enum DocumentListFillTracking {
   public static func replacementStoppedShort(isCacheComplete: Bool) -> Bool {
     !isCacheComplete
   }
+
+  /// Whether the list on screen should re-sync its membership on a new mark.
+  ///
+  /// Not for a mark already there when the list subscribed: opening a list
+  /// fills it anyway. Not while the window is widened past the first page,
+  /// where the rewrite could leave the user looking at placeholders; the next
+  /// refresh picks it up.
+  ///
+  /// - Parameters:
+  ///   - wasStale: The flag's previous value, or `nil` for the first status
+  ///     the list observed for this query.
+  ///   - isStale: The flag's value now.
+  ///   - isNewMark: The order was marked since the previous status.
+  ///   - isWidened: The list observes more rows than a fill's first page
+  ///     writes.
+  public static func resyncsMembershipForStaleOrder(
+    wasStale: Bool?, isStale: Bool, isNewMark: Bool, isWidened: Bool
+  ) -> Bool {
+    guard let wasStale, isStale, !isWidened else { return false }
+    return !wasStale || isNewMark
+  }
+
+  /// After waiting out the query's writers, whether the list still has to
+  /// re-sync itself: one of them may have rewritten the whole order meanwhile.
+  public static func resyncsMembershipAfterWriters(isStale: Bool, isWidened: Bool) -> Bool {
+    isStale && !isWidened
+  }
 }

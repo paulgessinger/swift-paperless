@@ -42,7 +42,8 @@ struct DowngradeGCTests {
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
     // Only doc 1 is tracked by any query.
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1], basis: .initial)
 
     let removed = try await database.pruneUnreferencedDocuments(serverID: server)
 
@@ -59,8 +60,10 @@ struct DowngradeGCTests {
     let keyB = QueryKey(sentinel: "B")
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: keyA, serverID: server, orderedIDs: [1])
-    try await database.replaceQueryOrder(queryKey: keyB, serverID: server, orderedIDs: [])
+    try await database.replaceQueryOrder(
+      queryKey: keyA, serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: keyB, serverID: server, orderedIDs: [], basis: .initial)
 
     let removed = try await database.pruneUnreferencedDocuments(serverID: server)
 
@@ -75,7 +78,8 @@ struct DowngradeGCTests {
     let key = QueryKey(sentinel: "A")
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1, 2], basis: .initial)
 
     #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
     #expect(try await database.document(serverID: server, id: 1) != nil)
@@ -156,8 +160,10 @@ struct DowngradeGCTests {
     let drop = QueryKey(sentinel: "saved-view")
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: keep, serverID: server, orderedIDs: [1, 2])
-    try await database.replaceQueryOrder(queryKey: drop, serverID: server, orderedIDs: [1, 2])
+    try await database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1, 2], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: drop, serverID: server, orderedIDs: [1, 2], basis: .initial)
     try await database.recordQuerySyncError(
       serverID: server, queryKey: drop.rawValue, savedViewName: "Saved", message: "boom")
 
@@ -183,7 +189,7 @@ struct DowngradeGCTests {
 
     try await database.upsertDocuments((1...5).map { doc($0, "d\($0)") }, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5])
+      queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5], basis: .initial)
 
     try await database.truncateQueryOrder(serverID: server, queryKey: key, keepingFirst: 3)
 
@@ -203,7 +209,7 @@ struct DowngradeGCTests {
 
     try await database.upsertDocuments((1...5).map { doc($0, "d\($0)") }, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5])
+      queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5], basis: .initial)
     // Punch a hole the way a page-boundary repeat or a remote delete does: the
     // surviving rows now sit at positions 0, 2, 3, 4 rather than 0...3.
     try await database.deleteDocuments(serverID: server, removedIDs: [2])
@@ -225,9 +231,9 @@ struct DowngradeGCTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "default")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: (1...5).map { doc($0, "d\($0)") },
-      startPosition: 0, totalCount: 5, replaceAll: true)
+      totalCount: 5, basis: .initial)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete)
 
@@ -246,9 +252,9 @@ struct DowngradeGCTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "default")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: (1...4).map { doc($0, "d\($0)") },
-      startPosition: 0, totalCount: 4, replaceAll: true)
+      totalCount: 4, basis: .initial)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
 
     try await database.reclaimAfterDowngrade(
@@ -257,9 +263,9 @@ struct DowngradeGCTests {
     #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete == false)
     // A cap at or above the list's size cuts nothing, so it stays complete.
     let whole = QueryKey(sentinel: "whole")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: whole, serverID: server, documents: [doc(1, "d1"), doc(2, "d2")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
     try await database.markQueryFillComplete(queryKey: whole, serverID: server)
     try await database.truncateQueryOrder(serverID: server, queryKey: whole, keepingFirst: 200)
     #expect(try await database.queryStatus(queryKey: whole, serverID: server).isComplete)
@@ -273,12 +279,12 @@ struct DowngradeGCTests {
 
     // Document 3 repeats across the page boundary: the unique key skips the
     // repeat, so five server results leave four rows at positions 0, 1, 2, 4.
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "a"), doc(2, "b"), doc(3, "c")],
-      startPosition: 0, totalCount: 5, replaceAll: true)
-    try await database.writeQueryPage(
+      totalCount: 5, basis: .initial)
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "c"), doc(4, "d")],
-      startPosition: 3, totalCount: 5, replaceAll: false)
+      startPosition: 3, totalCount: 5)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
 
     var status = try await database.queryStatus(queryKey: key, serverID: server)
@@ -318,9 +324,10 @@ struct DowngradeGCTests {
 
     try await database.upsertDocuments((1...6).map { doc($0, "d\($0)") }, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: keep, serverID: server, orderedIDs: [1, 2, 3, 4])
+      queryKey: keep, serverID: server, orderedIDs: [1, 2, 3, 4], basis: .initial)
     // 5 and 6 are only reachable through the saved view.
-    try await database.replaceQueryOrder(queryKey: drop, serverID: server, orderedIDs: [5, 6])
+    try await database.replaceQueryOrder(
+      queryKey: drop, serverID: server, orderedIDs: [5, 6], basis: .initial)
 
     let removed = try await database.reclaimAfterDowngrade(
       serverID: server, defaultQueryKey: keep, keepingFirst: 2)
@@ -342,7 +349,8 @@ struct DowngradeGCTests {
     let keep = QueryKey(sentinel: "default")
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: keep, serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
     try await database.setLibraryCoverageAt(date(5000), serverID: server)
 
     try await database.reclaimAfterDowngrade(
@@ -360,7 +368,8 @@ struct DowngradeGCTests {
     let keep = QueryKey(sentinel: "default")
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(queryKey: keep, serverID: server, orderedIDs: [1])
+    try await database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
     try await database.setDeltaWatermark(date(7000), serverID: server)
     try await database.setLibraryCoverageAt(date(5000), serverID: server)
 
@@ -387,9 +396,9 @@ struct DowngradeGCTests {
     let allDocs = (1...10).map { doc($0, "d\($0)") }
     try await database.upsertDocuments(allDocs, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: defaultKey, serverID: server, orderedIDs: allDocs.map(\.id))
+      queryKey: defaultKey, serverID: server, orderedIDs: allDocs.map(\.id), basis: .initial)
     try await database.replaceQueryOrder(
-      queryKey: savedViewKey, serverID: server, orderedIDs: allDocs.map(\.id))
+      queryKey: savedViewKey, serverID: server, orderedIDs: allDocs.map(\.id), basis: .initial)
 
     #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
     #expect(try await database.documentCount(serverID: server) == 10)

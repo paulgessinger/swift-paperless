@@ -133,6 +133,10 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try await intercept { try await wrapped.document(asn: asn) }
   }
 
+  public func documents(ids: [UInt]) async throws -> [Document] {
+    try await intercept { try await wrapped.documents(ids: ids) }
+  }
+
   public func documents(filter: FilterState) throws
     -> InterceptingDocumentSource<Wrapped.Documents>
   {

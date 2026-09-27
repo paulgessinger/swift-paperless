@@ -91,6 +91,14 @@ enum Migrations {
       try V10_AddQueryViewedAt.run(db)
     }
 
+    migrator.registerMigration("v11_track_query_order_staleness") { db in
+      try V11_TrackQueryOrderStaleness.run(db)
+    }
+
+    migrator.registerMigration("v12_promote_document_modified") { db in
+      try V12_PromoteDocumentModified.run(db)
+    }
+
     return migrator
   }
 }

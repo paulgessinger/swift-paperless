@@ -109,6 +109,10 @@ class DocumentListViewModel {
   @ObservationIgnored private nonisolated(unsafe) var documentTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var statusTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var completionTask: Task<Void, Never>?
+  @ObservationIgnored private nonisolated(unsafe) var staleResyncTask: Task<Void, Never>?
+  /// The observed query's order-stale flag and mark counter as last seen,
+  /// `nil` until the status observation first reports for it.
+  @ObservationIgnored private var lastOrderMark: (stale: Bool, generation: QueryOrderGeneration)?
   /// Bumped whenever the list moves on from a fill (a newer fill, a query
   /// switch, a teardown), so an older fill's late outcome is dropped rather
   /// than reported against whatever is on screen now.
@@ -425,6 +429,9 @@ class DocumentListViewModel {
     replacementStoppedShort = false
     isCacheComplete = false
     awaitingFill = true
+    lastOrderMark = nil
+    staleResyncTask?.cancel()
+    staleResyncTask = nil
     startStatusObservation(key)
     startDocumentObservation(key, limit: prefixLimit)
   }
@@ -458,6 +465,7 @@ class DocumentListViewModel {
           guard let self else { break }
           totalCount = status.totalCount
           isCacheComplete = status.isComplete
+          noteOrderStale(status, for: key)
         }
       } catch is CancellationError {
       } catch {
@@ -466,9 +474,58 @@ class DocumentListViewModel {
     }
   }
 
+  // MARK: - Stale order
+
+  /// A document the list shows changed in a way that may move it. Re-sync the
+  /// query's membership once the query's current writers are done, rather than
+  /// cancelling them.
+  private func noteOrderStale(_ status: QueryStatus, for key: QueryKey) {
+    let previous = lastOrderMark
+    lastOrderMark = (status.orderStale, status.orderGeneration)
+    guard
+      DocumentListFillTracking.resyncsMembershipForStaleOrder(
+        wasStale: previous?.stale, isStale: status.orderStale,
+        isNewMark: previous.map { $0.generation != status.orderGeneration } ?? false,
+        isWidened: isWindowWidened),
+      staleResyncTask == nil
+    else { return }
+
+    staleResyncTask = Task { @MainActor [weak self] in
+      guard let store = self?.store else { return }
+      // Whoever cancelled this task already replaced it.
+      defer { if !Task.isCancelled { self?.staleResyncTask = nil } }
+      // Until the order is clean: a mark can land while a pass is in flight,
+      // and the observation ignores marks while this task runs.
+      while true {
+        await store.waitForQueryWriters(queryKey: key)
+        let status = try? await store.queryStatus(queryKey: key)
+        guard let self, !Task.isCancelled, queryKey == key, let status,
+          DocumentListFillTracking.resyncsMembershipAfterWriters(
+            isStale: status.orderStale, isWidened: isWindowWidened)
+        else { return }
+        Logger.shared.info("Document list order went stale; re-syncing its membership")
+        do {
+          try await store.refreshDocumentQueryMembership(
+            filter: filterState, window: prefixLimit)
+        } catch {
+          // Not a load failure: the list keeps its rows and the next mark or
+          // refresh retries.
+          Logger.shared.error("Re-syncing a stale document list failed: \(error)")
+          return
+        }
+      }
+    }
+  }
+
+  /// The list observes more rows than a fill's first page writes.
+  private var isWindowWidened: Bool { prefixLimit > initialLimit }
+
   private func teardown() {
     documentTask?.cancel()
     documentTask = nil
+    staleResyncTask?.cancel()
+    staleResyncTask = nil
+    lastOrderMark = nil
     statusTask?.cancel()
     statusTask = nil
     completionTask?.cancel()

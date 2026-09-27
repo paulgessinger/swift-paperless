@@ -62,6 +62,9 @@ public protocol Repository<Documents, Tasks>: Sendable {
   func document(id: UInt) async throws -> Document?
   func document(asn: UInt) async throws -> Document?
 
+  /// The documents with the given ids that exist, in no particular order.
+  func documents(ids: [UInt]) async throws -> [Document]
+
   func documents(filter: FilterState) throws -> Documents
 
   /// The complete set of document IDs matching a query, in *id* order — backs
@@ -203,6 +206,20 @@ extension Repository {
 
 extension Repository {
   public func supports(feature: BackendFeature) -> Bool { true }
+
+  public func documents(ids: [UInt]) async throws -> [Document] {
+    try await documentsOneByOne(ids: ids)
+  }
+
+  /// One `document(id:)` per id, for conformers without a batch request.
+  public func documentsOneByOne(ids: [UInt]) async throws -> [Document] {
+    var documents: [Document] = []
+    for id in ids {
+      try Task.checkCancellation()
+      if let document = try await document(id: id) { documents.append(document) }
+    }
+    return documents
+  }
 
   /// The document-search encoding this backend understands. Use it both for
   /// requests and for the rules written into saved views, so the app does not

@@ -81,10 +81,9 @@ struct DocumentCacheTests {
     let key = QueryKey(sentinel: "test")
 
     // Written out of natural id order.
-    try await database.writeQueryPage(
-      queryKey: key, serverID: server,
-      documents: [doc(3, "C"), doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 3, replaceAll: true)
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(3, "C"), doc(1, "A"), doc(2, "B")],
+      totalCount: 3, basis: .initial)
 
     let replayed = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(replayed.map(\.id) == [3, 1, 2])
@@ -96,12 +95,12 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 4, replaceAll: true)
-    try await database.writeQueryPage(
+      totalCount: 4, basis: .initial)
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
-      startPosition: 2, totalCount: 4, replaceAll: false)
+      startPosition: 2, totalCount: 4)
 
     let all = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(all.map(\.id) == [1, 2, 3, 4])
@@ -114,13 +113,13 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
-      startPosition: 0, totalCount: 4, replaceAll: true)
+      totalCount: 4, basis: .initial)
     // Page 2 re-delivers doc 3, as it does when the page offsets shift.
-    try await database.writeQueryPage(
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
-      startPosition: 3, totalCount: 4, replaceAll: false)
+      startPosition: 3, totalCount: 4)
 
     let all = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(all.map(\.id) == [1, 2, 3, 4])
@@ -134,13 +133,13 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
     // A concurrent fill lands on the same positions with different documents.
-    try await database.writeQueryPage(
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(4, "D")],
-      startPosition: 0, totalCount: 2, replaceAll: false)
+      startPosition: 0, totalCount: 2)
 
     // The later write wins, as it did when this used `upsert`.
     let all = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
@@ -154,12 +153,12 @@ struct DocumentCacheTests {
     let a = QueryKey(sentinel: "a")
     let b = QueryKey(sentinel: "b")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: a, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
-    try await database.writeQueryPage(
+      totalCount: 1, basis: .initial)
+    try await database.replaceQueryPage(
       queryKey: b, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
+      totalCount: 1, basis: .initial)
 
     #expect(
       try await database.queryDocuments(queryKey: a, serverID: server, limit: 10).map(\.id) == [1])
@@ -175,10 +174,9 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "test")
 
-    try await database.writeQueryPage(
-      queryKey: key, serverID: server,
-      documents: (10...14).map { doc($0, "d\($0)") },
-      startPosition: 0, totalCount: 5, replaceAll: true)
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: (10...14).map { doc($0, "d\($0)") },
+      totalCount: 5, basis: .initial)
 
     // Delete the doc at position 2 — its query_order row cascades away.
     try await database.deleteDocuments(serverID: server, removedIDs: [12])
@@ -203,12 +201,12 @@ struct DocumentCacheTests {
     let keyA = QueryKey(sentinel: "A")
     let keyB = QueryKey(sentinel: "B")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: keyA, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
-    try await database.writeQueryPage(
+      totalCount: 2, basis: .initial)
+    try await database.replaceQueryPage(
       queryKey: keyB, serverID: server, documents: [doc(2, "B"), doc(3, "C")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
 
     try await database.deleteDocuments(serverID: server, removedIDs: [2])
 
@@ -257,7 +255,8 @@ struct DocumentCacheTests {
     // Only docs 1 and 3 are cached; 2 is reported by the server but absent.
     try await database.upsertDocuments([doc(1, "A"), doc(3, "C")], serverID: server)
 
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1, 2, 3])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1, 2, 3], basis: .initial)
 
     let replayed = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(replayed.map(\.id) == [1, 2, 3])  // all ids, order preserved
@@ -276,14 +275,16 @@ struct DocumentCacheTests {
     try await database.upsertDocuments(
       [doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
 
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [3, 1])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [3, 1], basis: .initial)
     #expect(
       try await database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
         3, 1,
       ])
 
     // A subsequent sweep with a different membership/order fully replaces it.
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 3, 1])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 3, 1], basis: .initial)
     #expect(
       try await database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
         2, 3, 1,
@@ -300,25 +301,25 @@ struct DocumentCacheTests {
 
     // Page 1 truncated the key's order down to what it just wrote, so the key
     // is incomplete no matter what it was before.
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 4, replaceAll: true)
+      totalCount: 4, basis: .initial)
     #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
 
     // An appended page is still not a completed fill — this is the case that
     // used to be indistinguishable from one.
-    try await database.writeQueryPage(
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(2, "B")],
-      startPosition: 1, totalCount: 4, replaceAll: false)
+      startPosition: 1, totalCount: 4)
     #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
 
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
     #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) != nil)
 
     // A new fill's page 1 wipes the order, so the completion goes with it.
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C")],
-      startPosition: 0, totalCount: 9, replaceAll: true)
+      totalCount: 9, basis: .initial)
     #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == nil)
   }
 
@@ -328,9 +329,9 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "fill")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 7, replaceAll: true)
+      totalCount: 7, basis: .initial)
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
 
@@ -346,16 +347,17 @@ struct DocumentCacheTests {
     let key = QueryKey(sentinel: "view")
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
+      totalCount: 1, basis: .initial)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
     let stamped = try #require(
       try await database.queryFillCompletedAt(queryKey: key, serverID: server))
 
     // The sweep writes a complete ordering of its own, so it neither claims nor
     // revokes the fill's completion.
-    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: .initial)
     #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) == stamped)
   }
 
@@ -368,12 +370,12 @@ struct DocumentCacheTests {
     let keyA = QueryKey(sentinel: "A")
     let keyB = QueryKey(sentinel: "B")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: keyA, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
-    try await database.writeQueryPage(
+      totalCount: 1, basis: .initial)
+    try await database.replaceQueryPage(
       queryKey: keyB, serverID: server, documents: [doc(2, "B")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
+      totalCount: 1, basis: .initial)
 
     #expect(try await database.queryStatus(queryKey: keyA, serverID: server).orderStale == false)
 
@@ -389,16 +391,223 @@ struct DocumentCacheTests {
     let database = try database(server)
     let key = QueryKey(sentinel: "A")
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
+      totalCount: 1, basis: .initial)
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == true)
 
-    try await database.writeQueryPage(
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
+      totalCount: 1, basis: generation)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test(
+    "an appended page keeps a stale flag set after page 1",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func appendKeepsStale() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      totalCount: 2, basis: .initial)
+    // A refresh moved document 1 after page 1 placed it; page 2 doesn't
+    // revisit page 1's rows, so it can't vouch for them.
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    try await database.appendQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B")],
+      startPosition: 1, totalCount: 2)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("an appended page leaves a clean order clean")
+  func appendKeepsClean() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      totalCount: 2, basis: .initial)
+    try await database.appendQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B")],
+      startPosition: 1, totalCount: 2)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test("a membership rewrite clears the order-stale flag")
+  func membershipRewriteClearsStale() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      totalCount: 2, basis: .initial)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    // The server's own ordering of the whole key, so it is current again.
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  // MARK: - Marks landing mid-rewrite
+
+  /// A mark landing while a whole-order rewrite waits on the server describes
+  /// a change the rewrite's answer predates, so it must keep the order stale.
+
+  @Test(
+    "a mark landing while a membership rewrite is in flight survives it",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func markDuringMembershipRewriteSurvives() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      totalCount: 2, basis: .initial)
+
+    // The request goes out with the counter as it stands…
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    // …document 2 changes while the server is answering…
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    // …and the answer, which predates that change, lands.
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("an uncontested membership rewrite still clears the flag")
+  func uncontestedMembershipRewriteClears() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      totalCount: 2, basis: .initial)
+
+    // The mark triggered the rewrite, so the answer accounts for it.
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test(
+    "a mark landing while a fill's first page is in flight survives it",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func markDuringFirstPageSurvives() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      totalCount: 2, basis: .initial)
+
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(2, "B"), doc(1, "A")],
+      totalCount: 2, basis: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("an uncontested first page still clears the flag")
+  func uncontestedFirstPageClears() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      totalCount: 1, basis: .initial)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      totalCount: 1, basis: generation)
+
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
+  }
+
+  @Test("a mark on an already-stale list still advances its counter")
+  func markAdvancesCounterWhenAlreadyStale() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      totalCount: 2, basis: .initial)
+
+    // A second mark on a stale order must still reach a rewrite in flight.
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+
+    #expect(
+      try await database.queryOrderGeneration(queryKey: key, serverID: server) != generation)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
+  }
+
+  @Test("the counter is per key: a mark on another list doesn't hold up a rewrite")
+  func counterIsPerKey() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let keyA = QueryKey(sentinel: "A")
+    let keyB = QueryKey(sentinel: "B")
+    try await database.replaceQueryPage(
+      queryKey: keyA, serverID: server, documents: [doc(1, "A")],
+      totalCount: 1, basis: .initial)
+    try await database.replaceQueryPage(
+      queryKey: keyB, serverID: server, documents: [doc(2, "B")],
+      totalCount: 1, basis: .initial)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    let generation = try await database.queryOrderGeneration(queryKey: keyA, serverID: server)
+    // Only B's member changes while A's rewrite is in flight.
+    try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: keyA, serverID: server, orderedIDs: [1], basis: generation)
+
+    #expect(try await database.queryStatus(queryKey: keyA, serverID: server).orderStale == false)
+    #expect(try await database.queryStatus(queryKey: keyB, serverID: server).orderStale)
+  }
+
+  @Test("a rewrite's own write doesn't move the counter")
+  func rewriteLeavesCounterAlone() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "A")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      totalCount: 1, basis: .initial)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    // A `query_meta` upsert rewrites every column; the counter must survive.
+    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: key, serverID: server, orderedIDs: [1], basis: generation)
+    try await database.markQueryFillComplete(queryKey: key, serverID: server)
+    try await database.appendQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A")],
+      startPosition: 1, totalCount: 2)
+
+    #expect(try await database.queryOrderGeneration(queryKey: key, serverID: server) == generation)
   }
 
   // MARK: - Reconcile support
@@ -415,6 +624,35 @@ struct DocumentCacheTests {
     let serverIDs: Set<UInt> = [2, 3, 4]
     let removed = try await database.allDocumentIDs(serverID: server).subtracting(serverIDs)
     #expect(removed == [1])
+  }
+
+  @Test("documentIDsWithoutRows keeps the caller's order and drops repeats")
+  func documentIDsWithoutRows() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments([doc(2, "B"), doc(4, "D")], serverID: server)
+
+    // Top of the list first, which is the order hydration fetches them in.
+    #expect(
+      try await database.documentIDsWithoutRows(serverID: server, among: [1, 2, 3, 4, 5, 3])
+        == [1, 3, 5])
+    #expect(try await database.documentIDsWithoutRows(serverID: server, among: [2, 4]) == [])
+    #expect(try await database.documentIDsWithoutRows(serverID: server, among: []) == [])
+  }
+
+  @Test("documentIDsWithoutRows doesn't count another server's rows as cached")
+  func documentIDsWithoutRowsIsPerServer() async throws {
+    let server = UUID()
+    let other = UUID()
+    let database = try database(server)
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: other,
+        url: URL(string: "https://other.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "bob")))
+    try await database.upsertDocuments([doc(1, "A")], serverID: other)
+
+    #expect(try await database.documentIDsWithoutRows(serverID: server, among: [1]) == [1])
   }
 
   // MARK: - Diagnostics (cached document count)
@@ -440,9 +678,9 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "A")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
 
     try await database.clearCache()
 
@@ -465,9 +703,9 @@ struct DocumentCacheTests {
     let server = UUID()
     let database = try database(server)
     let key = QueryKey(sentinel: "A")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true)
+      totalCount: 1, basis: .initial)
 
     _ = try database.deleteConnection(id: server)
 

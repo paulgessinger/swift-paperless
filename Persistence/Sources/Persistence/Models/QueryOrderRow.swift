@@ -12,34 +12,54 @@ struct QueryOrderRow: FetchableRecord, PersistableRecord, TableRecord, Codable, 
   var queryKey: String
   var position: Int
   var remoteId: UInt
+  /// The document's `modified` (reference-date seconds) this placement accounts
+  /// for; `nil` if unknown.
+  var placedModified: Double? = nil
 
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
     case queryKey = "query_key"
     case position
     case remoteId = "remote_id"
+    case placedModified = "placed_modified"
   }
 }
 
 /// Per-query bookkeeping (`query_meta` table): the server-reported total (which
-/// survives local deletion gaps) and the order-stale flag a mutation sets when
-/// it changes a field under the active sort.
+/// survives local deletion gaps) and the counters that say whether the cached
+/// order is stale.
 struct QueryMetaRow: FetchableRecord, PersistableRecord, TableRecord, Codable, Sendable, Equatable {
   static let databaseTableName = "query_meta"
 
   var serverId: UUID
   var queryKey: String
   var totalCount: UInt?
-  var orderStale: Bool
   var filledAt: Date?
+  /// Bumped by every mark.
+  var orderGeneration: Int
+  /// The generation the stored order accounts for.
+  var orderBasis: Int
+
+  var orderStale: Bool { orderGeneration > orderBasis }
 
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
     case queryKey = "query_key"
     case totalCount = "total_count"
-    case orderStale = "order_stale"
     case filledAt = "filled_at"
+    case orderGeneration = "order_generation"
+    case orderBasis = "order_basis"
   }
+}
+
+/// A list's mark counter, captured by a whole-order rewrite before its request
+/// and handed to its write as the basis of the order it stores.
+public struct QueryOrderGeneration: Equatable, Sendable {
+  let value: Int
+
+  init(_ value: Int) { self.value = value }
+
+  public static let initial = QueryOrderGeneration(0)
 }
 
 /// When a list was last put on screen (`query_meta.viewed_at`), as a record of
@@ -82,11 +102,18 @@ public struct QueryStatus: Equatable, Sendable {
   /// total). The list uses this to tell a truncated cache from a complete one
   /// when its fill fails.
   public var isComplete: Bool
+  /// Advances on every mark, so an observer sees a new mark on an order that
+  /// is already stale.
+  public var orderGeneration: QueryOrderGeneration
 
-  public init(totalCount: UInt?, localCount: Int, orderStale: Bool, isComplete: Bool = false) {
+  public init(
+    totalCount: UInt?, localCount: Int, orderStale: Bool, isComplete: Bool = false,
+    orderGeneration: QueryOrderGeneration = .initial
+  ) {
     self.totalCount = totalCount
     self.localCount = localCount
     self.orderStale = orderStale
     self.isComplete = isComplete
+    self.orderGeneration = orderGeneration
   }
 }

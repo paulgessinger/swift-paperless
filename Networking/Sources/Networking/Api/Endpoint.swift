@@ -163,6 +163,15 @@ extension Endpoint {
     )
   }
 
+  /// One page holding the documents with the given ids, full shape. Needs
+  /// ``BackendFeature/documentIDFilter``.
+  public static func documents(ids: [UInt]) -> Endpoint {
+    let endpoint = documents(page: 1, pageSize: UInt(max(ids.count, 1)))
+    let idList = ids.map(String.init).joined(separator: ",")
+    return Endpoint(
+      path: endpoint.path, queryItems: endpoint.queryItems + [.init(name: "id__in", value: idList)])
+  }
+
   public static func document(id: UInt, fullPerms: Bool = true) -> Endpoint {
     var queryItems: [URLQueryItem] = []
 

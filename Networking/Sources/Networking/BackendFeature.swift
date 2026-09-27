@@ -11,6 +11,10 @@ public enum BackendFeature {
   // Dedicated next ASN endpoint / 2.0.0
   case nextAsnEndpoint
 
+  // `id__in` document filter / 2.0.0. Older backends ignore it and return
+  // every document, so it must stay gated.
+  case documentIDFilter
+
   // Dedicated tasks acknowledge endpoint / 2.14.0
   case taskAcknowledgeEndpoint
 
@@ -41,7 +45,7 @@ public enum BackendFeature {
 
   func isSupported(on backendVersion: Version, api apiVersion: UInt) -> Bool {
     switch self {
-    case .nextAsnEndpoint:
+    case .nextAsnEndpoint, .documentIDFilter:
       backendVersion >= Version(2, 0, 0)
     case .taskAcknowledgeEndpoint:
       backendVersion >= Version(2, 14, 0)

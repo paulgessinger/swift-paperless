@@ -102,9 +102,9 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(3, "C"), doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 3, replaceAll: true)
+      totalCount: 3, basis: .initial)
 
     let initial = try await firstValue(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10))
@@ -116,9 +116,9 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: (1...5).map { doc($0, "d\($0)") },
-      startPosition: 0, totalCount: 5, replaceAll: true)
+      totalCount: 5, basis: .initial)
 
     let window = try await firstValue(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 2))
@@ -130,16 +130,16 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 4, replaceAll: true)
+      totalCount: 4, basis: .initial)
 
     let grown = try await value(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
     ) {
-      try await database.writeQueryPage(
+      try await database.appendQueryPage(
         queryKey: key, serverID: server, documents: [self.doc(3, "C"), self.doc(4, "D")],
-        startPosition: 2, totalCount: 4, replaceAll: false)
+        startPosition: 2, totalCount: 4)
     }
     #expect(grown.map(\.id) == [1, 2, 3, 4])
   }
@@ -149,9 +149,9 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
 
     let updated = try await value(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
@@ -167,9 +167,9 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B"), doc(3, "C")],
-      startPosition: 0, totalCount: 3, replaceAll: true)
+      totalCount: 3, basis: .initial)
 
     let remaining = try await value(
       from: database.observeDocumentPrefix(queryKey: key, serverID: server, limit: 10)
@@ -186,9 +186,9 @@ struct DocumentObservationTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
-      startPosition: 0, totalCount: 5, replaceAll: true)
+      totalCount: 5, basis: .initial)
 
     let initial = try await firstValue(
       from: database.observeQueryStatus(queryKey: key, serverID: server))
@@ -203,6 +203,29 @@ struct DocumentObservationTests {
   }
 
   @Test(
+    "observeQueryStatus re-emits when a key that is already stale is marked again",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
+  func queryStatusRemark() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server)
+    let key = QueryKey(sentinel: "q")
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
+      totalCount: 2, basis: .initial)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+
+    let first = try await firstValue(
+      from: database.observeQueryStatus(queryKey: key, serverID: server))
+    let remarked = try await value(
+      from: database.observeQueryStatus(queryKey: key, serverID: server)
+    ) {
+      try await database.markQueriesOrderStale(containing: 2, serverID: server)
+    }
+    #expect(first.orderStale && remarked.orderStale)
+    #expect(remarked.orderGeneration != first.orderGeneration)
+  }
+
+  @Test(
     "observeQueryStatus reports completeness only once a fill reaches the end",
     .bug("https://github.com/paulgessinger/swift-paperless/issues/692", id: 692))
   func queryStatusCompleteness() async throws {
@@ -214,17 +237,17 @@ struct DocumentObservationTests {
       from: database.observeQueryStatus(queryKey: key, serverID: server))
     #expect(cold.isComplete == false)
 
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
     let partial = try await firstValue(
       from: database.observeQueryStatus(queryKey: key, serverID: server))
     #expect(partial.isComplete == false)
 
     // The stamp only counts once the order reaches the server's total.
-    try await database.writeQueryPage(
+    try await database.appendQueryPage(
       queryKey: key, serverID: server, documents: [doc(2, "B")],
-      startPosition: 1, totalCount: 2, replaceAll: false)
+      startPosition: 1, totalCount: 2)
 
     let complete = try await value(
       from: database.observeQueryStatus(queryKey: key, serverID: server)
@@ -238,9 +261,9 @@ struct DocumentObservationTests {
     let refilling = try await value(
       from: database.observeQueryStatus(queryKey: key, serverID: server)
     ) {
-      try await database.writeQueryPage(
+      try await database.replaceQueryPage(
         queryKey: key, serverID: server, documents: [self.doc(1, "A")],
-        startPosition: 0, totalCount: 2, replaceAll: true)
+        totalCount: 2, basis: .initial)
     }
     #expect(refilling.isComplete == false)
   }
@@ -300,22 +323,22 @@ struct DocumentObservationTests {
     let database = try Database.seeded(serverID: serverA)
     let serverB = try addServer(to: database, host: "b")
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: serverA, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
 
     let next = try await valueSkippingForeignWrite(
       from: database.observeDocumentPrefix(queryKey: key, serverID: serverA, limit: 10),
       foreignWrite: {
         // Same query key, other server — the sweep's shape exactly.
-        try await database.writeQueryPage(
+        try await database.replaceQueryPage(
           queryKey: key, serverID: serverB, documents: [self.doc(1, "B-1"), self.doc(2, "B-2")],
-          startPosition: 0, totalCount: 2, replaceAll: true)
+          totalCount: 2, basis: .initial)
       },
       ownWrite: {
-        try await database.writeQueryPage(
+        try await database.appendQueryPage(
           queryKey: key, serverID: serverA, documents: [self.doc(2, "B")],
-          startPosition: 1, totalCount: 2, replaceAll: false)
+          startPosition: 1, totalCount: 2)
       })
     #expect(next.map(\.id) == [1, 2])
   }
@@ -326,21 +349,21 @@ struct DocumentObservationTests {
     let database = try Database.seeded(serverID: serverA)
     let serverB = try addServer(to: database, host: "b")
     let key = QueryKey(sentinel: "q")
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: serverA, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
 
     let next = try await valueSkippingForeignWrite(
       from: database.observeQueryStatus(queryKey: key, serverID: serverA),
       foreignWrite: {
-        try await database.writeQueryPage(
+        try await database.replaceQueryPage(
           queryKey: key, serverID: serverB, documents: [self.doc(9, "B-9")],
-          startPosition: 0, totalCount: 9, replaceAll: true)
+          totalCount: 9, basis: .initial)
       },
       ownWrite: {
-        try await database.writeQueryPage(
+        try await database.appendQueryPage(
           queryKey: key, serverID: serverA, documents: [self.doc(2, "B")],
-          startPosition: 1, totalCount: 2, replaceAll: false)
+          startPosition: 1, totalCount: 2)
       })
     #expect(next == QueryStatus(totalCount: 2, localCount: 2, orderStale: false))
   }

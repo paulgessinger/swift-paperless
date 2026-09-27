@@ -7,9 +7,9 @@ import GRDB
 /// `Persistence`.
 ///
 /// Reads are pure cache reads (no network — that's the caching repository's
-/// `fillQuery`/`sync`). Writes are either a query fill (`writeQueryPage`, the
-/// network → DB replay materialization) or a single pessimistic-mutation
-/// write-through (`upsertDocument`, `deleteDocuments`).
+/// `fillQuery`/`sync`). Writes are either a query fill (`replaceQueryPage` /
+/// `appendQueryPage`, the network → DB replay materialization) or a single
+/// pessimistic-mutation write-through (`upsertDocument`, `deleteDocuments`).
 ///
 /// Async only, like every cache table — see the rule in `Database+Connections`.
 /// The `static` bodies taking a `GRDB.Database` handle are what in-package
@@ -23,41 +23,77 @@ extension Database {
   /// projection level to preserve.
   public func upsertDocuments(_ domains: [Document], serverID: UUID) async throws {
     try await wrappingAsync("upsertDocuments") {
-      try await writer.write { try Self.writeDocumentRows($0, domains, serverID: serverID) }
+      try await writer.write { _ = try Self.writeDocumentRows($0, domains, serverID: serverID) }
     }
   }
 
+  /// Upsert document rows (a straight replace: every write is the complete
+  /// object), and mark stale every cached list that placed one of them under a
+  /// different or unknown `modified`. Returns how many lists were newly marked.
+  ///
+  /// Every document write goes through here, so a list is marked whichever path
+  /// brings the new copy in first. An unknown placement (a skeleton) is marked
+  /// too: only a rewrite of that list can say where the document belongs.
+  @discardableResult
   static func writeDocumentRows(
     _ db: GRDB.Database, _ domains: [Document], serverID: UUID
-  ) throws {
+  ) throws -> Int {
+    guard !domains.isEmpty else { return 0 }
     for domain in domains {
-      try writeDocumentRow(db, domain, serverID: serverID)
+      try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
     }
+    return try markMovedPlacements(db, ids: domains.map(\.id), serverID: serverID)
   }
 
-  /// Upsert a batch of documents **and** drop their cached notes, in one
-  /// transaction — the changed-metadata delta's write.
+  /// The placement check for a batch of just-written rows: two statements
+  /// however many rows, since per-row queries tripled the cost of a fill page.
+  private static func markMovedPlacements(
+    _ db: GRDB.Database, ids: [UInt], serverID: UUID
+  ) throws -> Int {
+    let idList = "[" + ids.map(String.init).joined(separator: ",") + "]"
+    let newlyStale = try Bool.fetchAll(
+      db.cachedStatement(
+        sql: """
+          UPDATE query_meta SET order_generation = order_generation + 1
+          WHERE server_id = ?1 AND query_key IN (
+            SELECT q.query_key FROM query_order q
+            JOIN document d ON d.server_id = q.server_id AND d.id = q.remote_id
+            WHERE q.server_id = ?1 AND q.remote_id IN (SELECT value FROM json_each(?2))
+              AND d.modified IS NOT NULL AND q.placed_modified IS NOT d.modified)
+          RETURNING order_generation = order_basis + 1
+          """),
+      arguments: [serverID, idList]
+    ).filter { $0 }.count
+    try db.cachedStatement(
+      sql: """
+        UPDATE query_order SET placed_modified = d.modified
+        FROM document d
+        WHERE query_order.server_id = ?1
+          AND query_order.remote_id IN (SELECT value FROM json_each(?2))
+          AND d.server_id = query_order.server_id AND d.id = query_order.remote_id
+          AND d.modified IS NOT NULL AND query_order.placed_modified IS NOT d.modified
+        """
+    ).execute(arguments: [serverID, idList])
+    return newlyStale
+  }
+
+  /// Apply a page of the changed-documents delta (R3δ): upsert the documents,
+  /// drop their cached notes, and mark stale the cached lists they may have
+  /// moved in, in one transaction. Returns how many lists were newly marked.
   ///
-  /// A note edit bumps `modified`, so a document the delta refreshes may have
-  /// stale cached notes; the upsert also refreshes its `notesCount`, which is
-  /// what lets the next detail fill re-seed an empty row for free or re-fetch.
-  /// The delta cannot tell a note change from any other field change, so this
-  /// may drop notes that did not actually change.
-  ///
-  /// One transaction rather than an upsert followed by an invalidation,
-  /// because the two are no longer separated by nothing: the `async` accessors
-  /// suspend, and a `createNote` / `deleteNote` write-through landing between
-  /// them would be deleted by the invalidation that follows it. Under
-  /// *Recently browsed* nothing repairs that until the document is fetched
-  /// online again, so the user's just-written note would appear to vanish.
-  public func upsertDocumentsInvalidatingNotes(
+  /// Notes are dropped because a note edit bumps `modified` and the delta can't
+  /// tell which field changed. One transaction so a note write-through can't
+  /// land between the upsert and the drop and be deleted by it.
+  @discardableResult
+  public func applyChangedDocuments(
     _ domains: [Document], serverID: UUID
-  ) async throws {
-    guard !domains.isEmpty else { return }
-    try await wrappingAsync("upsertDocumentsInvalidatingNotes") {
+  ) async throws -> Int {
+    guard !domains.isEmpty else { return 0 }
+    return try await wrappingAsync("applyChangedDocuments") {
       try await writer.write { db in
-        try Self.writeDocumentRows(db, domains, serverID: serverID)
+        let marked = try Self.writeDocumentRows(db, domains, serverID: serverID)
         try Self.dropNotes(serverID: serverID, documentIDs: domains.map(\.id), db)
+        return marked
       }
     }
   }
@@ -65,50 +101,70 @@ extension Database {
   /// Single-row write-through (pessimistic mutation).
   public func upsertDocument(_ domain: Document, serverID: UUID) async throws {
     try await wrappingAsync("upsertDocument") {
-      try await writer.write { try Self.writeDocumentRow($0, domain, serverID: serverID) }
+      try await writer.write { _ = try Self.writeDocumentRows($0, [domain], serverID: serverID) }
     }
   }
 
-  /// Replace (or append to) a cached query's ordered membership and upsert its
-  /// document rows in one transaction.
+  /// Page 1 of a fill: replace a cached query's order with `documents` and
+  /// upsert their rows, in one transaction.
   ///
-  /// - `replaceAll: true` (first page of a fill) clears the key's existing
-  ///   `query_order` first; subsequent pages pass `false` with an increasing
-  ///   `startPosition` so the background fill appends without rewriting earlier
-  ///   positions.
-  public func writeQueryPage(
-    queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int, totalCount: UInt?, replaceAll: Bool
-  ) async throws {
-    try await wrappingAsync("writeQueryPage") {
-      try await writer.write {
+  /// `basis` is the key's generation captured before the page was requested.
+  /// - Returns: `false`, writing nothing, if a rewrite with a newer basis has
+  ///   already landed.
+  @discardableResult
+  public func replaceQueryPage(
+    queryKey: QueryKey, serverID: UUID, documents: [Document], totalCount: UInt?,
+    basis: QueryOrderGeneration
+  ) async throws -> Bool {
+    try await wrappingAsync("replaceQueryPage") {
+      try await writer.write { db in
+        guard try Self.accepts(basis, db, queryKey: queryKey, serverID: serverID) else {
+          return false
+        }
+        try Self.deleteQueryOrder(db, queryKey: queryKey, serverID: serverID)
         try Self.writeQueryPage(
-          $0, queryKey: queryKey, serverID: serverID, documents: documents,
-          startPosition: startPosition, totalCount: totalCount, replaceAll: replaceAll)
+          db, queryKey: queryKey, serverID: serverID, documents: documents, startPosition: 0)
+        try Self.setQueryMeta(
+          db, serverID: serverID, queryKey: queryKey, totalCount: totalCount,
+          basis: basis, stamp: .cleared)
+        return true
+      }
+    }
+  }
+
+  /// A later page of a fill: append `documents` at `startPosition` and upsert
+  /// their rows. Leaves the staleness alone — marks since page 1 still apply to
+  /// the rows it wrote.
+  public func appendQueryPage(
+    queryKey: QueryKey, serverID: UUID, documents: [Document],
+    startPosition: Int, totalCount: UInt?
+  ) async throws {
+    try await wrappingAsync("appendQueryPage") {
+      try await writer.write { db in
+        try Self.writeQueryPage(
+          db, queryKey: queryKey, serverID: serverID, documents: documents,
+          startPosition: startPosition)
+        try Self.setQueryMeta(
+          db, serverID: serverID, queryKey: queryKey, totalCount: totalCount,
+          basis: nil, stamp: .unchanged)
       }
     }
   }
 
   private static func writeQueryPage(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int, totalCount: UInt?, replaceAll: Bool
+    startPosition: Int
   ) throws {
-    if replaceAll {
-      try QueryOrderRow
-        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-        .deleteAll(db)
-    }
+    // Placed before the rows are written, so their placement check doesn't
+    // mark this key.
     for (offset, domain) in documents.enumerated() {
-      try writeDocumentRow(db, domain, serverID: serverID)
       try QueryOrderRow(
         serverId: serverID, queryKey: queryKey.rawValue,
-        position: startPosition + offset, remoteId: domain.id
+        position: startPosition + offset, remoteId: domain.id,
+        placedModified: domain.modified?.timeIntervalSinceReferenceDate
       ).insert(db)
     }
-    try setQueryMeta(
-      db, serverID: serverID, queryKey: queryKey,
-      totalCount: totalCount, orderStale: false,
-      stamp: replaceAll ? .cleared : .unchanged)
+    try writeDocumentRows(db, documents, serverID: serverID)
   }
 
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
@@ -117,55 +173,104 @@ extension Database {
   /// there is no FK to `document`, so an id whose object isn't cached yet
   /// becomes a skeleton row (it gets its object via R3δ / the next fill).
   /// `totalCount` records the server's full count for the scrollbar extent.
+  ///
+  /// Each row is placed under the cached document's `modified`.
+  /// - Returns: `false`, writing nothing, if a rewrite with a newer basis has
+  ///   already landed.
+  @discardableResult
   public func replaceQueryOrder(
-    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
-  ) async throws {
+    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt], basis: QueryOrderGeneration
+  ) async throws -> Bool {
     try await wrappingAsync("replaceQueryOrder") {
-      try await writer.write {
-        try Self.replaceQueryOrder(
-          $0, queryKey: queryKey, serverID: serverID, orderedIDs: orderedIDs)
+      try await writer.write { db in
+        guard try Self.accepts(basis, db, queryKey: queryKey, serverID: serverID) else {
+          return false
+        }
+        try Self.deleteQueryOrder(db, queryKey: queryKey, serverID: serverID)
+        let insert = try db.cachedStatement(
+          sql: """
+            INSERT INTO query_order (server_id, query_key, position, remote_id, placed_modified)
+            VALUES (?, ?, ?, ?,
+              (SELECT modified FROM document WHERE server_id = ? AND id = ?))
+            """)
+        for (position, id) in orderedIDs.enumerated() {
+          try insert.execute(arguments: [
+            serverID, queryKey.rawValue, position, id, serverID, id,
+          ])
+        }
+        try Self.setQueryMeta(
+          db, serverID: serverID, queryKey: queryKey, totalCount: UInt(orderedIDs.count),
+          basis: basis, stamp: .unchanged)
+        return true
       }
     }
   }
 
-  private static func replaceQueryOrder(
-    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt]
+  private static func deleteQueryOrder(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
   ) throws {
     try QueryOrderRow
       .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
       .deleteAll(db)
-    for (position, id) in orderedIDs.enumerated() {
-      try QueryOrderRow(
-        serverId: serverID, queryKey: queryKey.rawValue,
-        position: position, remoteId: id
-      ).insert(db)
-    }
-    try setQueryMeta(
-      db, serverID: serverID, queryKey: queryKey,
-      totalCount: UInt(orderedIDs.count), orderStale: false, stamp: .unchanged)
   }
 
-  /// Mark every cached query containing `remoteID` order-stale under its active
-  /// sort. v1 over-marks (any query the doc is a member of); the ordering
-  /// corrects on the next fill / delta.
-  public func markQueriesOrderStale(containing remoteID: UInt, serverID: UUID) async throws {
-    try await wrappingAsync("markQueriesOrderStale") {
-      try await writer.write {
-        try Self.markOrderStale($0, containing: remoteID, serverID: serverID)
+  /// Whether a rewrite based on `basis` is at least as new as the stored order.
+  private static func accepts(
+    _ basis: QueryOrderGeneration, _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
+  ) throws -> Bool {
+    basis.value >= (try fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)?.orderBasis ?? 0)
+  }
+
+  /// The key's mark counter, to be captured by a whole-order rewrite before its
+  /// request and passed to its write as `basis`.
+  public func queryOrderGeneration(
+    queryKey: QueryKey, serverID: UUID
+  ) async throws -> QueryOrderGeneration {
+    try await wrappingAsync("queryOrderGeneration") {
+      try await writer.read { db in
+        QueryOrderGeneration(
+          try Self.fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)?.orderGeneration
+            ?? 0)
       }
     }
   }
 
-  private static func markOrderStale(
-    _ db: GRDB.Database, containing remoteID: UInt, serverID: UUID
-  ) throws {
-    let containing =
-      QueryOrderRow
+  /// Mark every cached query containing `remoteID` order-stale. Over-marks: any
+  /// query the document is a member of.
+  public func markQueriesOrderStale(containing remoteID: UInt, serverID: UUID) async throws {
+    try await wrappingAsync("markQueriesOrderStale") {
+      try await writer.write {
+        _ = try Self.markOrderStale(
+          $0, keys: Self.queryKeys(listingAnyOf: [remoteID], serverID: serverID),
+          serverID: serverID)
+      }
+    }
+  }
+
+  private static func queryKeys(
+    listingAnyOf remoteIDs: [UInt], serverID: UUID
+  ) -> QueryInterfaceRequest<String> {
+    QueryOrderRow
       .select(Column("query_key"), as: String.self)
-      .filter(Column("server_id") == serverID && Column("remote_id") == remoteID)
-    try QueryMetaRow
-      .filter(Column("server_id") == serverID && containing.contains(Column("query_key")))
-      .updateAll(db, Column("order_stale").set(to: true))
+      .filter(Column("server_id") == serverID && remoteIDs.contains(Column("remote_id")))
+  }
+
+  /// Bump the mark counter of every key in `keys`, and return how many were not
+  /// already stale.
+  @discardableResult
+  private static func markOrderStale(
+    _ db: GRDB.Database, keys: QueryInterfaceRequest<String>, serverID: UUID
+  ) throws -> Int {
+    let marked =
+      QueryMetaRow
+      .filter(Column("server_id") == serverID && keys.contains(Column("query_key")))
+    let newlyStale =
+      try marked
+      .filter(Column("order_generation") == Column("order_basis"))
+      .fetchCount(db)
+    try marked.updateAll(
+      db, Column("order_generation").set(to: Column("order_generation") + 1))
+    return newlyStale
   }
 
   /// Delete documents absent from the server's authoritative id set (the
@@ -408,6 +513,22 @@ extension Database {
       .fetchSet(db)
   }
 
+  /// Which of `ids` have no cached `document` row, in order, without repeats.
+  public func documentIDsWithoutRows(serverID: UUID, among ids: [UInt]) async throws -> [UInt] {
+    guard !ids.isEmpty else { return [] }
+    return try await wrappingAsync("documentIDsWithoutRows") {
+      try await writer.read { db in
+        let cached = try Set(
+          DocumentRecord
+            .select(Column("id"), as: UInt.self)
+            .filter(Column("server_id") == serverID && ids.contains(Column("id")))
+            .fetchAll(db))
+        var seen: Set<UInt> = []
+        return ids.filter { seen.insert($0).inserted && !cached.contains($0) }
+      }
+    }
+  }
+
   /// Count of `document` rows cached for a server — a diagnostic surface (the
   /// Offline & Sync screen) so the proactive fill and the downgrade GC's
   /// effect are visible without a debugger.
@@ -437,14 +558,10 @@ extension Database {
   private static func stampFillComplete(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
   ) throws {
-    let meta =
-      try QueryMetaRow
-      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-      .fetchOne(db)
     try setQueryMeta(
       db, serverID: serverID, queryKey: queryKey,
-      totalCount: meta?.totalCount, orderStale: meta?.orderStale ?? false,
-      stamp: .completed)
+      totalCount: try fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)?.totalCount,
+      basis: nil, stamp: .completed)
   }
 
   /// When this query's order was last filled to completion, or `nil` if it never
@@ -538,10 +655,7 @@ extension Database {
   static func fetchQueryStatus(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
   ) throws -> QueryStatus {
-    let meta =
-      try QueryMetaRow
-      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-      .fetchOne(db)
+    let meta = try fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)
     let order = try Row.fetchOne(
       db,
       sql: """
@@ -555,7 +669,8 @@ extension Database {
       totalCount: meta?.totalCount, localCount: localCount,
       orderStale: meta?.orderStale ?? false,
       isComplete: isOrderComplete(
-        filledAt: meta?.filledAt, lastPosition: lastPosition, totalCount: meta?.totalCount))
+        filledAt: meta?.filledAt, lastPosition: lastPosition, totalCount: meta?.totalCount),
+      orderGeneration: QueryOrderGeneration(meta?.orderGeneration ?? 0))
   }
 
   /// Whether a cached order is its query's whole membership.
@@ -579,12 +694,12 @@ extension Database {
     return extent >= Int(totalCount ?? 0)
   }
 
-  /// Upsert one document row. Every write is the complete object (the list
-  /// carries `full_perms`), so this is a straight replace — no merge, no level.
-  private static func writeDocumentRow(
-    _ db: GRDB.Database, _ domain: Document, serverID: UUID
-  ) throws {
-    try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
+  static func fetchQueryMeta(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
+  ) throws -> QueryMetaRow? {
+    try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .fetchOne(db)
   }
 
   /// Deletes the per-document detail-cache siblings (`document_note`,
@@ -620,14 +735,11 @@ extension Database {
 
   /// What a `query_meta` write does to the `filled_at` stamp.
   ///
-  /// The stamp means *"the fill that owns this key paged it to the end"*. It
-  /// used to be set on every `writeQueryPage`, i.e. it meant "a page was
-  /// written" — which is why a fill interrupted on page 2 left a 250-row order
-  /// carrying the server's full 3000 as `total_count` and a fresh `filled_at`,
-  /// indistinguishable from a complete one.
+  /// The stamp means *"the fill that owns this key paged it to the end"*, so a
+  /// fill interrupted on page 2 doesn't read as complete.
   enum FillStamp {
-    /// Page 1 of a fill: `replaceAll` has just deleted the key's whole order,
-    /// so it is known-incomplete until the fill says otherwise.
+    /// Page 1 of a fill has just deleted the key's whole order, so it is
+    /// known-incomplete until the fill says otherwise.
     case cleared
     /// A later page, or a membership rewrite — leave whatever is recorded.
     case unchanged
@@ -635,26 +747,26 @@ extension Database {
     case completed
   }
 
+  /// `basis` is the generation a whole-order rewrite accounts for; `nil` keeps
+  /// the stored one.
   private static func setQueryMeta(
     _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey,
-    totalCount: UInt?, orderStale: Bool, stamp: FillStamp
+    totalCount: UInt?, basis: QueryOrderGeneration?, stamp: FillStamp
   ) throws {
+    // A record `upsert` rewrites every column, so whatever this write doesn't
+    // set is carried forward, in the caller's transaction.
+    let existing = try fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)
     let filledAt: Date?
     switch stamp {
     case .cleared: filledAt = nil
     case .completed: filledAt = Date()
-    case .unchanged:
-      // A record `upsert` rewrites every column, so carrying the stamp forward
-      // has to be explicit. Same transaction as the caller's write, so no other
-      // writer can slip in between the read and the upsert.
-      filledAt =
-        try QueryMetaRow
-        .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
-        .fetchOne(db)?.filledAt
+    case .unchanged: filledAt = existing?.filledAt
     }
     try QueryMetaRow(
       serverId: serverID, queryKey: queryKey.rawValue,
-      totalCount: totalCount, orderStale: orderStale, filledAt: filledAt
+      totalCount: totalCount, filledAt: filledAt,
+      orderGeneration: existing?.orderGeneration ?? 0,
+      orderBasis: basis?.value ?? existing?.orderBasis ?? 0
     ).upsert(db)
   }
 }

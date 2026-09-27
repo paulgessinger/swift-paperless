@@ -43,10 +43,12 @@ struct DatabaseSchemaTests {
       let docColumns = Set(try db.columns(in: "document").map(\.name))
       #expect(!docColumns.contains("projection_level"))
       #expect(!docColumns.contains("detail_fetched_at"))
-      // `notes_count` / `current_version_id` are V9's promotions out of `data`.
+      // `notes_count` / `current_version_id` are V9's promotions out of `data`,
+      // `modified` is V12's.
       #expect(
         docColumns == [
           "server_id", "id", "title", "asn", "data", "notes_count", "current_version_id",
+          "modified",
         ])
 
       // query_order no longer FK-references `document` (so it can hold skeletons);
@@ -75,16 +77,115 @@ struct DatabaseSchemaTests {
     let database = try Database.inMemory()
     try database.writer.read { db in
       let columns = try db.columns(in: "query_meta")
-      #expect(
-        Set(columns.map(\.name)) == [
-          "server_id", "query_key", "total_count", "order_stale", "filled_at", "viewed_at",
-        ])
 
       // Added to an existing table with no backfill, so rows that predate it
       // must be allowed to carry nothing.
       let viewedAt = try #require(columns.first(where: { $0.name == "viewed_at" }))
       #expect(!viewedAt.isNotNull)
       #expect(viewedAt.type.uppercased() == "TEXT")
+    }
+  }
+
+  @Test("v11 replaces order_stale with two counters and adds placed_modified")
+  func v11TracksQueryOrderStaleness() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      let meta = try db.columns(in: "query_meta")
+      #expect(
+        Set(meta.map(\.name)) == [
+          "server_id", "query_key", "total_count", "filled_at", "viewed_at",
+          "order_generation", "order_basis",
+        ])
+      for name in ["order_generation", "order_basis"] {
+        let column = try #require(meta.first(where: { $0.name == name }))
+        #expect(column.isNotNull)
+        #expect(column.defaultValueSQL == "0")
+      }
+
+      let placed = try #require(
+        try db.columns(in: "query_order").first(where: { $0.name == "placed_modified" }))
+      #expect(!placed.isNotNull)
+      #expect(placed.type.uppercased() == "REAL")
+    }
+  }
+
+  @Test("v11 keeps stale orders stale and places existing rows under their cached date")
+  func v11CarriesStaleFlag() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v10_add_query_viewed_at")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO query_meta (server_id, query_key, order_stale)
+          VALUES (?, 'stale', 1), (?, 'clean', 0)
+          """, arguments: [server, server])
+      // Document 1 is cached, document 2 is a skeleton.
+      try db.execute(
+        sql: """
+          INSERT INTO document (server_id, id, title, data)
+          VALUES (?, 1, 'A', '{"created":0,"modified":1234.5,"tags":[],"versions":[]}')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO query_order (server_id, query_key, position, remote_id)
+          VALUES (?, 'clean', 0, 1), (?, 'clean', 1, 2)
+          """, arguments: [server, server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let stale = try Database.fetchQueryMeta(
+        db, queryKey: QueryKey(sentinel: "stale"), serverID: server)
+      let clean = try Database.fetchQueryMeta(
+        db, queryKey: QueryKey(sentinel: "clean"), serverID: server)
+      #expect(stale?.orderStale == true)
+      #expect(clean?.orderStale == false)
+
+      // Existing rows are placed under their cached document's date.
+      let placed = try Double?.fetchAll(
+        db, sql: "SELECT placed_modified FROM query_order ORDER BY position")
+      #expect(placed == [1234.5, nil])
+    }
+  }
+
+  @Test("v12 promotes document.modified to a column, backfilled from the blob")
+  func v12PromotesDocumentModified() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v11_track_query_order_staleness")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO document (server_id, id, title, data) VALUES
+            (?, 1, 'A', '{"created":0,"modified":1234.5,"tags":[],"versions":[]}'),
+            (?, 2, 'B', '{"created":0,"tags":[],"versions":[]}')
+          """, arguments: [server, server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let column = try #require(
+        try db.columns(in: "document").first(where: { $0.name == "modified" }))
+      #expect(!column.isNotNull)
+      #expect(column.type.uppercased() == "REAL")
+
+      let modified = try Double?.fetchAll(db, sql: "SELECT modified FROM document ORDER BY id")
+      #expect(modified == [1234.5, nil])
     }
   }
 

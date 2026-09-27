@@ -50,15 +50,15 @@ struct QueryViewedAtTests {
 
     // A whole fill: page 1 replaces the order and clears `filled_at`, page 2
     // appends, the end stamps completion.
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: list, serverID: server, documents: (1...2).map(doc),
-      startPosition: 0, totalCount: 4, replaceAll: true)
-    try await database.writeQueryPage(
+      totalCount: 4, basis: .initial)
+    try await database.appendQueryPage(
       queryKey: list, serverID: server, documents: (3...4).map(doc),
-      startPosition: 2, totalCount: 4, replaceAll: false)
+      startPosition: 2, totalCount: 4)
     try await database.markQueryFillComplete(queryKey: list, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: list, serverID: server, orderedIDs: [4, 3, 2, 1])
+      queryKey: list, serverID: server, orderedIDs: [4, 3, 2, 1], basis: .initial)
     try await database.truncateQueryOrder(serverID: server, queryKey: list, keepingFirst: 1)
 
     #expect(try await database.queryViewedAt(queryKey: list, serverID: server) == date(1000))
@@ -69,9 +69,9 @@ struct QueryViewedAtTests {
   func stampKeepsFillBookkeeping() async throws {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: list, serverID: server, documents: (1...2).map(doc),
-      startPosition: 0, totalCount: 2, replaceAll: true)
+      totalCount: 2, basis: .initial)
     try await database.markQueryFillComplete(queryKey: list, serverID: server)
     let filledAt = try #require(
       try await database.queryFillCompletedAt(queryKey: list, serverID: server))
