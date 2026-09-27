@@ -23,7 +23,7 @@
 # keychain is used. In CI, set DIST_CERTIFICATE_P12_BASE64 (+ optional
 # DIST_CERTIFICATE_PASSWORD) and it is imported into a throwaway keychain.
 #
-# Credentials (same names as scripts/beta.sh / the fastlane lane):
+# Credentials:
 #   APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_ISSUER_ID, and one of
 #   APP_STORE_CONNECT_KEY_FILEPATH or APP_STORE_CONNECT_KEY_CONTENT.
 
@@ -116,7 +116,7 @@ trap cleanup EXIT
 
 # --- credentials -----------------------------------------------------------
 # asc reads ASC_* env vars; bridge fastlane's names so one set of secrets works
-# both locally and in CI (mirrors scripts/beta.sh).
+# both locally and in CI.
 [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}" ]   && export ASC_KEY_ID="${ASC_KEY_ID:-$APP_STORE_CONNECT_API_KEY_ID}"
 [ -n "${APP_STORE_CONNECT_ISSUER_ID:-}" ]    && export ASC_ISSUER_ID="${ASC_ISSUER_ID:-$APP_STORE_CONNECT_ISSUER_ID}"
 [ -n "${APP_STORE_CONNECT_KEY_FILEPATH:-}" ] && export ASC_PRIVATE_KEY_PATH="${ASC_PRIVATE_KEY_PATH:-$APP_STORE_CONNECT_KEY_FILEPATH}"

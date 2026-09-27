@@ -59,7 +59,7 @@ release *args:
 
 # Offline tests for workflow dispatch and source/tooling separation.
 release-test:
-  python3 -m unittest discover -s scripts/tests -p 'test_release*.py'
+  uv run --no-project --with pytest==8.4.2 python -m pytest scripts/tests/test_release.py
 
 # The build+sign+upload half of `just beta`, as run by CI. Locally useful for
 # `just beta-ci --no-upload` (archive+export only) or `just beta-ci --dry-run`

@@ -10,8 +10,8 @@ just release --ref develop/v1.10.3        # existing branch names also work
 just release --ref release/1.10 --dry-run # CI archive/export, no upload or tag
 ```
 
-`just beta` is an alias for the same command. `scripts/beta.sh` remains a
-compatibility entry point. App Store submission remains a separate manual step.
+`just beta` is an alias for the same command. App Store submission remains a
+separate manual step.
 
 ## What CI does
 
@@ -64,8 +64,9 @@ branches retain their own validation workflows until those are updated.
 
 ## Testing
 
-`just release-test` runs offline tests for pinned source dispatch, default and
-explicit build numbers, failure handling, and source/tooling separation. Fake
+`just release-test` uses uv to run offline pytest tests for pinned source
+dispatch, default and explicit build numbers, failure handling, and source/tooling
+separation. Fake
 GitHub and Xcode tools are used; the tests cannot upload or sign an app.
 
 The exported IPA uses normal App Store Connect distribution, so eligible builds

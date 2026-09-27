@@ -20,7 +20,7 @@
 #     version       optional — marketing version (default: Version.xcconfig)
 #     notes-file    optional — override the notes body
 #
-# Credentials: same as scripts/beta.sh — APP_STORE_CONNECT_* env, or an `asc`
+# Credentials: same as scripts/beta_ci.sh — APP_STORE_CONNECT_* env, or an `asc`
 # keychain login (asc auth login).
 
 set -euo pipefail
@@ -51,7 +51,7 @@ notes_file="${3:-}"
 }
 
 # Bridge fastlane's credential names to the ASC_* env vars `asc` reads (mirrors
-# scripts/beta.sh), so the same secrets work here. asc also falls back to its
+# scripts/beta_ci.sh), so the same secrets work here. asc also falls back to its
 # keychain login when no env is set.
 [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}" ]   && export ASC_KEY_ID="${ASC_KEY_ID:-$APP_STORE_CONNECT_API_KEY_ID}"
 [ -n "${APP_STORE_CONNECT_ISSUER_ID:-}" ]    && export ASC_ISSUER_ID="${ASC_ISSUER_ID:-$APP_STORE_CONNECT_ISSUER_ID}"

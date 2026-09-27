@@ -4,7 +4,7 @@ A runbook/checklist for when the **Apple Distribution certificate** used to sign
 TestFlight builds expires (or is about to). Apple distribution certificates are
 valid for **1 year**, so this comes up roughly annually.
 
-For context on the rest of the pipeline, see `scripts/beta.sh` (previews the
+For context on the rest of the pipeline, see `scripts/release_dispatch.py` (previews the
 notes + dispatches the workflow) and `scripts/beta_ci.sh` (assigns the build
 number, archives, signs, uploads via `asc`, and tags the result), which runs from
 `.github/workflows/beta.yml`.
