@@ -95,6 +95,10 @@ enum Migrations {
       try V11_TrackQueryOrderStaleness.run(db)
     }
 
+    migrator.registerMigration("v12_promote_document_modified") { db in
+      try V12_PromoteDocumentModified.run(db)
+    }
+
     return migrator
   }
 }

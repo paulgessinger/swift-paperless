@@ -57,6 +57,10 @@ public struct DocumentRecord:
   /// their home. Kept in step by being written only in
   /// `init(serverId:domain:)`, alongside the payload it is derived from.
   public var currentVersionID: UInt
+  /// A real column so a membership rewrite can place each row under it without
+  /// parsing `data` (see `V12`). Lives only here, not in `payload`. Stored as
+  /// reference-date seconds, the same value `query_order.placed_modified` holds.
+  public var modified: Date?
   public var payload: Payload
 
   /// Storage-local copy of a `DocumentVersion` (decoupled from the domain type
@@ -75,7 +79,6 @@ public struct DocumentRecord:
     public var created: Date
     public var tags: [UInt]
     public var added: Date?
-    public var modified: Date?
     public var originalFileName: String?
     public var archivedFileName: String?
     public var storagePath: UInt?
@@ -94,7 +97,20 @@ public struct DocumentRecord:
     case asn
     case notesCount = "notes_count"
     case currentVersionID = "current_version_id"
+    case modified
     case payload = "data"
+  }
+
+  public static func databaseDateEncodingStrategy(for column: String)
+    -> DatabaseDateEncodingStrategy
+  {
+    .timeIntervalSinceReferenceDate
+  }
+
+  public static func databaseDateDecodingStrategy(for column: String)
+    -> DatabaseDateDecodingStrategy
+  {
+    .timeIntervalSinceReferenceDate
   }
 
   // Storage-dedicated JSON coders for the `data` column (sorted keys ⇒
@@ -116,13 +132,13 @@ extension DocumentRecord {
     asn = domain.asn
     notesCount = domain.notes.count
     currentVersionID = domain.currentVersionID
+    modified = domain.modified
     payload = Payload(
       documentType: domain.documentType,
       correspondent: domain.correspondent,
       created: domain.created,
       tags: domain.tags,
       added: domain.added,
-      modified: domain.modified,
       originalFileName: domain.originalFileName,
       archivedFileName: domain.archivedFileName,
       storagePath: domain.storagePath,
@@ -147,7 +163,7 @@ extension DocumentRecord {
       created: payload.created,
       tags: payload.tags,
       added: payload.added,
-      modified: payload.modified,
+      modified: modified,
       originalFileName: payload.originalFileName,
       archivedFileName: payload.archivedFileName,
       storagePath: payload.storagePath,

@@ -43,10 +43,12 @@ struct DatabaseSchemaTests {
       let docColumns = Set(try db.columns(in: "document").map(\.name))
       #expect(!docColumns.contains("projection_level"))
       #expect(!docColumns.contains("detail_fetched_at"))
-      // `notes_count` / `current_version_id` are V9's promotions out of `data`.
+      // `notes_count` / `current_version_id` are V9's promotions out of `data`,
+      // `modified` is V12's.
       #expect(
         docColumns == [
           "server_id", "id", "title", "asn", "data", "notes_count", "current_version_id",
+          "modified",
         ])
 
       // query_order no longer FK-references `document` (so it can hold skeletons);
@@ -151,6 +153,39 @@ struct DatabaseSchemaTests {
       let placed = try Double?.fetchAll(
         db, sql: "SELECT placed_modified FROM query_order ORDER BY position")
       #expect(placed == [1234.5, nil])
+    }
+  }
+
+  @Test("v12 promotes document.modified to a column, backfilled from the blob")
+  func v12PromotesDocumentModified() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v11_track_query_order_staleness")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO document (server_id, id, title, data) VALUES
+            (?, 1, 'A', '{"created":0,"modified":1234.5,"tags":[],"versions":[]}'),
+            (?, 2, 'B', '{"created":0,"tags":[],"versions":[]}')
+          """, arguments: [server, server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let column = try #require(
+        try db.columns(in: "document").first(where: { $0.name == "modified" }))
+      #expect(!column.isNotNull)
+      #expect(column.type.uppercased() == "REAL")
+
+      let modified = try Double?.fetchAll(db, sql: "SELECT modified FROM document ORDER BY id")
+      #expect(modified == [1234.5, nil])
     }
   }
 

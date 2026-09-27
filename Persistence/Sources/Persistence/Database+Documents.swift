@@ -144,13 +144,11 @@ extension Database {
           return false
         }
         try Self.deleteQueryOrder(db, queryKey: queryKey, serverID: serverID)
-        // `data.modified` is stored as reference-date seconds, the same value
-        // `placed_modified` holds.
         let insert = try db.cachedStatement(
           sql: """
             INSERT INTO query_order (server_id, query_key, position, remote_id, placed_modified)
             VALUES (?, ?, ?, ?,
-              (SELECT json_extract(data, '$.modified') FROM document WHERE server_id = ? AND id = ?))
+              (SELECT modified FROM document WHERE server_id = ? AND id = ?))
             """)
         for (position, id) in orderedIDs.enumerated() {
           try insert.execute(arguments: [
