@@ -46,3 +46,4 @@
 - Thumbnails are no longer cached twice on disk
 - Document lists now update when one of their documents changes, whether in the app or on the server: a document that no longer matches the filter disappears, and one whose sort field changed moves to its new place
 - On Paperless-ngx 2.15 and later, document notes are saved for offline use straight from your document lists, without separate downloads
+- With "Entire library" offline browsing, a document's file metadata viewed offline now shows its current file names after the document is moved on the server, for example to another storage path, instead of the names from before the move

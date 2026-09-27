@@ -9,7 +9,8 @@ import GRDB
 /// Both follow the same network-first → write-through → offline-fallback shape
 /// as `document(id:)`: the caching repository forwards to the server, replaces
 /// the cached row on success, and serves the cached row on failure. Notes are
-/// document-keyed and mutable; file-metadata is version-keyed and immutable.
+/// document-keyed and mutable; file-metadata is version-keyed and refetched
+/// when its document's `modified` moves on.
 ///
 /// Async only, like every cache table — see the rule in `Database+Connections`.
 extension Database {
@@ -49,25 +50,24 @@ extension Database {
       .domain
   }
 
-  // MARK: - File-metadata (immutable, version-keyed)
+  // MARK: - File-metadata (version-keyed)
 
-  /// Cache a file version's `/metadata/`. Immutable per version, so this only
-  /// writes the first time a version is seen (re-writing an identical row is
-  /// harmless).
+  /// Cache a file version's `/metadata/`, replacing any previous row.
+  ///
+  /// - Parameter documentModified: the document's `modified` as known before
+  ///   the request. The detail fill refetches when the document's cached
+  ///   `modified` differs from it, or when it is `nil`.
   public func setFileMetadata(
-    _ metadata: Metadata, serverID: UUID, versionID: UInt
+    _ metadata: Metadata, serverID: UUID, versionID: UInt, documentModified: Date?
   ) async throws {
     try await wrappingAsync("setFileMetadata") {
       try await writer.write {
-        try Self.writeFileMetadata(metadata, serverID: serverID, versionID: versionID, $0)
+        try FileMetadataRecord(
+          serverId: serverID, versionId: versionID, documentModified: documentModified,
+          domain: metadata
+        ).upsert($0)
       }
     }
-  }
-
-  private static func writeFileMetadata(
-    _ metadata: Metadata, serverID: UUID, versionID: UInt, _ db: GRDB.Database
-  ) throws {
-    try FileMetadataRecord(serverId: serverID, versionId: versionID, domain: metadata).upsert(db)
   }
 
   /// A file version's cached metadata, or `nil` if never cached.
@@ -167,28 +167,27 @@ extension Database {
     .filter { !excluding.contains($0) }
   }
 
-  /// Cached document ids whose *current* file version has no cached
-  /// `file_metadata` row — the documents that need an R4m `/metadata/` request.
-  /// File-metadata is version-keyed and immutable, so a document already covered
-  /// for its current version is never re-fetched. Mirrors the version-key
-  /// resolution in `CachingRepository.metadata(documentId:)` (current version,
-  /// falling back to the document id).
+  /// Cached document ids that need an R4m `/metadata/` request: their current
+  /// file version has no cached `file_metadata` row, or the row was fetched
+  /// under a different document `modified`. Mirrors the version-key resolution
+  /// in `CachingRepository.metadata(documentId:)` (current version, falling back
+  /// to the document id).
   ///
   /// Same shape as ``documentIDsNeedingNotesFetch(serverID:excluding:)`` and for
   /// the same reason. `current_version_id` is a real column (`V9`) holding what
   /// `Document.currentVersionID` computes, so this is an anti-join against
   /// `file_metadata`'s primary key rather than a `json_each` walk per row.
-  public func documentIDsMissingFileMetadata(
+  public func documentIDsNeedingFileMetadataFetch(
     serverID: UUID, excluding: Set<UInt> = []
   ) async throws -> [UInt] {
-    try await wrappingAsync("documentIDsMissingFileMetadata") {
+    try await wrappingAsync("documentIDsNeedingFileMetadataFetch") {
       try await writer.read {
-        try Self.idsMissingFileMetadata(serverID: serverID, excluding: excluding, $0)
+        try Self.idsNeedingFileMetadata(serverID: serverID, excluding: excluding, $0)
       }
     }
   }
 
-  private static func idsMissingFileMetadata(
+  private static func idsNeedingFileMetadata(
     serverID: UUID, excluding: Set<UInt>, _ db: GRDB.Database
   ) throws -> [UInt] {
     try UInt.fetchAll(
@@ -200,6 +199,7 @@ extension Database {
             SELECT 1 FROM file_metadata f
             WHERE f.server_id = d.server_id
               AND f.version_id = d.current_version_id
+              AND (d.modified IS NULL OR f.document_modified IS d.modified)
           )
         ORDER BY d.id
         """,

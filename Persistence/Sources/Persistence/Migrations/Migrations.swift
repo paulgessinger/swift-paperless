@@ -99,6 +99,10 @@ enum Migrations {
       try V12_PromoteDocumentModified.run(db)
     }
 
+    migrator.registerMigration("v13_track_file_metadata_document_modified") { db in
+      try V13_TrackFileMetadataDocumentModified.run(db)
+    }
+
     return migrator
   }
 }

@@ -189,6 +189,45 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v13 dates existing file metadata by its current document's modified")
+  func v13BackfillsFileMetadataDocumentModified() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v12_promote_document_modified")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      // Document 1's current version is 9; version 1 is an older one.
+      try db.execute(
+        sql: """
+          INSERT INTO document (server_id, id, title, data, current_version_id, modified)
+          VALUES (?, 1, 'A', '{}', 9, 1234.5)
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO file_metadata (server_id, version_id, data)
+          VALUES (?, 1, '{}'), (?, 9, '{}')
+          """, arguments: [server, server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let column = try #require(
+        try db.columns(in: "file_metadata").first(where: { $0.name == "document_modified" }))
+      #expect(!column.isNotNull)
+      #expect(column.type.uppercased() == "REAL")
+
+      let dates = try Double?.fetchAll(
+        db, sql: "SELECT document_modified FROM file_metadata ORDER BY version_id")
+      #expect(dates == [nil, 1234.5])
+    }
+  }
+
   @Test("migrator tracks applied identifiers internally")
   func migratorTracksAppliedIdentifiers() throws {
     let database = try Database.inMemory()
