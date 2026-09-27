@@ -84,8 +84,10 @@ class DocumentListViewModel {
 
   /// Which list the failure belongs to, for wording it.
   var scope: DocumentListScope {
-    DocumentListScope(
-      savedView: filterState.savedView, modified: filterState.modified,
+    let savedView = filterState.savedView.flatMap { store.savedViews[$0] }
+    return DocumentListScope(
+      savedView: filterState.savedView,
+      modified: savedView.map { filterState.isModified(from: $0) } ?? false,
       filtering: filterState.filtering)
   }
 

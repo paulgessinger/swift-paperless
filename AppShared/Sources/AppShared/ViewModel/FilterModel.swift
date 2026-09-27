@@ -39,7 +39,8 @@ public final class FilterModel {
       return .default
     }
     do {
-      let value = try JSONDecoder().decode(FilterState.self, from: data)
+      var value = try JSONDecoder().decode(FilterState.self, from: data)
+      value.adoptLegacySorting(fromPersisted: data)
       Logger.shared.trace(
         "Decoded filter state from UserDefaults: \(String(decoding: data, as: UTF8.self)) -> \(String(describing: value)) -> "
       )
@@ -56,7 +57,7 @@ public final class FilterModel {
   {
     didSet {
       Logger.shared.trace("FilterState modified")
-      if filterState == oldValue, filterState.modified == oldValue.modified {
+      if filterState == oldValue {
         return
       }
 
@@ -72,6 +73,24 @@ public final class FilterModel {
         "Encoded filter state to UserDefaults: \(String(describing: self.filterState)) -> \(String(decoding: s, as: UTF8.self))"
       )
     }
+  }
+
+  /// The app-default sort, mirrored here so that a change to it is observable.
+  ///
+  /// `FilterState` resolves the default through `SettingsStore`, which is
+  /// deliberately not observable (it is nonisolated, so `FilterState.default`
+  /// can read it). A filter that follows the default is therefore *unchanged*
+  /// when Preferences moves it, and anything keyed on the filter alone would
+  /// never re-query.
+  public private(set) var defaultSorting: FilterState.Sorting = FilterState.defaultSorting
+
+  /// The filter as the document list should run it: the live filter with its
+  /// sort pinned to whatever it resolves to. This is the value to observe —
+  /// see ``defaultSorting``.
+  public var resolvedFilterState: FilterState {
+    var state = filterState
+    state.sorting = filterState.sorting ?? defaultSorting
+    return state
   }
 
   public init() {
@@ -101,24 +120,18 @@ public final class FilterModel {
 
   private func applyDefaults() {
     let settings = AppSettings.shared
-    var filterState = filterState
 
-    if self.filterState.searchText.isEmpty {
+    // The sort needs no pass of its own: a filter that has not picked one
+    // stores `nil` and resolves against the default on every read. Mirroring
+    // it into `defaultSorting` is what lets the list notice.
+    defaultSorting = FilterState.defaultSorting
+
+    if filterState.searchText.isEmpty {
       Logger.shared.debug(
         "Applying search mode default change to: \(String(describing: settings.defaultSearchMode), privacy: .public)"
       )
       // User has not typed any search text yet -> we're not changing the mode under them
       filterState.searchMode = settings.defaultSearchMode
-
-      // Reset modified to what it was before, we're not actually modifying anything
-      filterState.modified = self.filterState.modified
     }
-
-    if !self.filterState.modified, self.filterState.savedView == nil {
-      filterState.sortField = settings.defaultSortField
-      filterState.sortOrder = settings.defaultSortOrder
-    }
-
-    self.filterState = filterState
   }
 }
