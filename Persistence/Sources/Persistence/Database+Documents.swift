@@ -27,11 +27,54 @@ extension Database {
     }
   }
 
+  /// Upsert document rows (a straight replace: every write is the complete
+  /// object), and mark stale every cached list that placed one of them under a
+  /// different or unknown `modified`. Returns how many lists were newly marked.
+  ///
+  /// Every document write goes through here, so a list is marked whichever path
+  /// brings the new copy in first. An unknown placement (a skeleton) is marked
+  /// too: only a rewrite of that list can say where the document belongs.
   @discardableResult
   static func writeDocumentRows(
     _ db: GRDB.Database, _ domains: [Document], serverID: UUID
   ) throws -> Int {
-    try domains.reduce(0) { $0 + (try writeDocumentRow(db, $1, serverID: serverID)) }
+    guard !domains.isEmpty else { return 0 }
+    for domain in domains {
+      try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
+    }
+    return try markMovedPlacements(db, ids: domains.map(\.id), serverID: serverID)
+  }
+
+  /// The placement check for a batch of just-written rows: two statements
+  /// however many rows, since per-row queries tripled the cost of a fill page.
+  private static func markMovedPlacements(
+    _ db: GRDB.Database, ids: [UInt], serverID: UUID
+  ) throws -> Int {
+    let idList = "[" + ids.map(String.init).joined(separator: ",") + "]"
+    let newlyStale = try Bool.fetchAll(
+      db.cachedStatement(
+        sql: """
+          UPDATE query_meta SET order_generation = order_generation + 1
+          WHERE server_id = ?1 AND query_key IN (
+            SELECT q.query_key FROM query_order q
+            JOIN document d ON d.server_id = q.server_id AND d.id = q.remote_id
+            WHERE q.server_id = ?1 AND q.remote_id IN (SELECT value FROM json_each(?2))
+              AND d.modified IS NOT NULL AND q.placed_modified IS NOT d.modified)
+          RETURNING order_generation = order_basis + 1
+          """),
+      arguments: [serverID, idList]
+    ).filter { $0 }.count
+    try db.cachedStatement(
+      sql: """
+        UPDATE query_order SET placed_modified = d.modified
+        FROM document d
+        WHERE query_order.server_id = ?1
+          AND query_order.remote_id IN (SELECT value FROM json_each(?2))
+          AND d.server_id = query_order.server_id AND d.id = query_order.remote_id
+          AND d.modified IS NOT NULL AND query_order.placed_modified IS NOT d.modified
+        """
+    ).execute(arguments: [serverID, idList])
+    return newlyStale
   }
 
   /// Apply a page of the changed-documents delta (R3δ): upsert the documents,
@@ -58,7 +101,7 @@ extension Database {
   /// Single-row write-through (pessimistic mutation).
   public func upsertDocument(_ domain: Document, serverID: UUID) async throws {
     try await wrappingAsync("upsertDocument") {
-      try await writer.write { _ = try Self.writeDocumentRow($0, domain, serverID: serverID) }
+      try await writer.write { _ = try Self.writeDocumentRows($0, [domain], serverID: serverID) }
     }
   }
 
@@ -112,16 +155,16 @@ extension Database {
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, documents: [Document],
     startPosition: Int
   ) throws {
+    // Placed before the rows are written, so their placement check doesn't
+    // mark this key.
     for (offset, domain) in documents.enumerated() {
-      // Placed before the row is written, so the row's own placement check
-      // doesn't mark this key.
       try QueryOrderRow(
         serverId: serverID, queryKey: queryKey.rawValue,
         position: startPosition + offset, remoteId: domain.id,
         placedModified: domain.modified?.timeIntervalSinceReferenceDate
       ).insert(db)
-      try writeDocumentRow(db, domain, serverID: serverID)
     }
+    try writeDocumentRows(db, documents, serverID: serverID)
   }
 
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
@@ -657,29 +700,6 @@ extension Database {
     try QueryMetaRow
       .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
       .fetchOne(db)
-  }
-
-  /// Upsert one document row (a straight replace: every write is the complete
-  /// object), and mark stale every cached list that placed the document under a
-  /// different or unknown `modified`. Returns how many lists were newly marked.
-  ///
-  /// Every document write goes through here, so a list is marked whichever path
-  /// brings the new copy in first. An unknown placement (a skeleton) is marked
-  /// too: only a rewrite of that list can say where the document belongs.
-  @discardableResult
-  private static func writeDocumentRow(
-    _ db: GRDB.Database, _ domain: Document, serverID: UUID
-  ) throws -> Int {
-    try DocumentRecord(serverId: serverID, domain: domain).upsert(db)
-    guard let modified = domain.modified?.timeIntervalSinceReferenceDate else { return 0 }
-    let placements = QueryOrderRow.filter(
-      Column("server_id") == serverID && Column("remote_id") == domain.id)
-    let moved = placements.filter(
-      Column("placed_modified") == nil || Column("placed_modified") != modified)
-    let marked = try markOrderStale(
-      db, keys: moved.select(Column("query_key"), as: String.self), serverID: serverID)
-    try moved.updateAll(db, Column("placed_modified").set(to: modified))
-    return marked
   }
 
   /// Deletes the per-document detail-cache siblings (`document_note`,
