@@ -480,7 +480,7 @@ struct DocumentCacheTests {
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
     // …and the answer, which predates that change, lands.
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [2, 1], clearingStaleIf: generation)
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
 
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
   }
@@ -499,7 +499,7 @@ struct DocumentCacheTests {
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [2, 1], clearingStaleIf: generation)
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
 
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
   }
@@ -517,9 +517,9 @@ struct DocumentCacheTests {
 
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(2, "B"), doc(1, "A")],
-      startPosition: 0, totalCount: 2, replaceAll: true, clearingStaleIf: generation)
+      totalCount: 2, basis: generation)
 
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
   }
@@ -535,9 +535,9 @@ struct DocumentCacheTests {
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
-    try await database.writeQueryPage(
+    try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
-      startPosition: 0, totalCount: 1, replaceAll: true, clearingStaleIf: generation)
+      totalCount: 1, basis: generation)
 
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
   }
@@ -561,7 +561,7 @@ struct DocumentCacheTests {
     #expect(
       try await database.queryOrderGeneration(queryKey: key, serverID: server) != generation)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [2, 1], clearingStaleIf: generation)
+      queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
   }
 
@@ -583,7 +583,7 @@ struct DocumentCacheTests {
     // Only B's member changes while A's rewrite is in flight.
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: keyA, serverID: server, orderedIDs: [1], clearingStaleIf: generation)
+      queryKey: keyA, serverID: server, orderedIDs: [1], basis: generation)
 
     #expect(try await database.queryStatus(queryKey: keyA, serverID: server).orderStale == false)
     #expect(try await database.queryStatus(queryKey: keyB, serverID: server).orderStale)
@@ -604,7 +604,7 @@ struct DocumentCacheTests {
     // a reset value and clear over a mark it never saw.
     let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1], clearingStaleIf: generation)
+      queryKey: key, serverID: server, orderedIDs: [1], basis: generation)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
     try await database.writeQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],

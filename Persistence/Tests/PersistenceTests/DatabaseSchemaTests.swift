@@ -84,23 +84,57 @@ struct DatabaseSchemaTests {
     }
   }
 
-  @Test("v11 adds order_generation to query_meta, defaulting to 0")
-  func v11AddsQueryOrderGeneration() throws {
+  @Test("v11 replaces order_stale with two counters and adds placed_modified")
+  func v11TracksQueryOrderStaleness() throws {
     let database = try Database.inMemory()
     try database.writer.read { db in
-      let columns = try db.columns(in: "query_meta")
+      let meta = try db.columns(in: "query_meta")
       #expect(
-        Set(columns.map(\.name)) == [
-          "server_id", "query_key", "total_count", "order_stale", "filled_at", "viewed_at",
-          "order_generation",
+        Set(meta.map(\.name)) == [
+          "server_id", "query_key", "total_count", "filled_at", "viewed_at",
+          "order_generation", "order_basis",
         ])
+      for name in ["order_generation", "order_basis"] {
+        let column = try #require(meta.first(where: { $0.name == name }))
+        #expect(column.isNotNull)
+        #expect(column.defaultValueSQL == "0")
+      }
 
-      // Counted, not carried: every existing row starts at zero, and a rewrite
-      // that captures zero and reads zero back clears the flag as before.
-      let generation = try #require(columns.first(where: { $0.name == "order_generation" }))
-      #expect(generation.isNotNull)
-      #expect(generation.type.uppercased() == "INTEGER")
-      #expect(generation.defaultValueSQL == "0")
+      let placed = try #require(
+        try db.columns(in: "query_order").first(where: { $0.name == "placed_modified" }))
+      #expect(!placed.isNotNull)
+      #expect(placed.type.uppercased() == "REAL")
+    }
+  }
+
+  @Test("v11 keeps a stale order stale and a clean one clean")
+  func v11CarriesStaleFlag() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v10_add_query_viewed_at")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO query_meta (server_id, query_key, order_stale)
+          VALUES (?, 'stale', 1), (?, 'clean', 0)
+          """, arguments: [server, server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let stale = try Database.fetchQueryMeta(
+        db, queryKey: QueryKey(sentinel: "stale"), serverID: server)
+      let clean = try Database.fetchQueryMeta(
+        db, queryKey: QueryKey(sentinel: "clean"), serverID: server)
+      #expect(stale?.orderStale == true)
+      #expect(clean?.orderStale == false)
     }
   }
 

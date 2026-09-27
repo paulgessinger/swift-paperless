@@ -138,7 +138,7 @@ enum MembershipRewriteOutcome: Equatable {
   case rewritten
   /// A fill owns the key and writes a strictly better ordering.
   case leftToFill
-  /// A fill took the key over while the rewrite was being written.
+  /// A fill took the key over, or a newer rewrite landed first.
   case takenOver
 
   var reason: String {
@@ -567,20 +567,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         try await NetworkTransfer.$category.withValue(category) {
           var position = 0
           do {
-            // Page 1 is a whole-order rewrite and clears the stale flag, so it
-            // needs the same evidence a membership rewrite does: the counter as
-            // it stood before the page was asked for. A mark landing while page 1
-            // was in flight — an edit made from the list, a delta pass — describes
-            // a change this page predates, and clearing over it would leave the
-            // key clean and wrong. See ``QueryOrderGeneration``.
-            let generation = try await database.queryOrderGeneration(
+            // Captured before the request: a mark landing while it is in flight
+            // keeps the order stale.
+            let basis = try await database.queryOrderGeneration(
               queryKey: key, serverID: serverID)
             let batch = try await source.fetch(limit: pageSize)
             let total = await source.totalCount
-            try await database.writeQueryPage(
-              queryKey: key, serverID: serverID, documents: batch,
-              startPosition: 0, totalCount: total, replaceAll: true,
-              clearingStaleIf: generation)
+            // Rejected only if a newer rewrite already landed; appending to its
+            // order would garble it.
+            guard
+              try await database.replaceQueryPage(
+                queryKey: key, serverID: serverID, documents: batch,
+                totalCount: total, basis: basis)
+            else { throw CancellationError() }
             position = batch.count
             pageOne.yield(total)
             pageOne.finish()
@@ -607,10 +606,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             // may already have landed — writing here would graft our stale
             // positions onto its rows.
             try Task.checkCancellation()
-            try await database.writeQueryPage(
+            try await database.appendQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
-              startPosition: position, totalCount: await source.totalCount,
-              replaceAll: false)
+              startPosition: position, totalCount: await source.totalCount)
             position += batch.count
           }
 
@@ -1533,7 +1531,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   ///
   /// The cheap half of a fill: `orderedDocumentIDs` is the Tier-0 `fields=id`
   /// projection, so one request buys the query's whole answer in its own sort
-  /// order, and ``Database/replaceQueryOrder(queryKey:serverID:orderedIDs:)``
+  /// order, and ``Database/replaceQueryOrder(queryKey:serverID:orderedIDs:basis:)``
   /// writes it as the key's positions verbatim. What it does *not* buy is the
   /// documents themselves — `hydrating` decides what to do about the ids the
   /// cache cannot back.
@@ -1624,9 +1622,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // out, so `ServerSession` would count a cancelled membership sweep as a
     // completed one and advance its freshness stamps on the strength of it.
     return try await activeFills.withOwnership(of: [key]) {
-      try await database.replaceQueryOrder(
-        queryKey: key, serverID: serverID, orderedIDs: orderedIDs,
-        clearingStaleIf: generation)
+      // A newer rewrite landing first counts as being taken over.
+      guard
+        try await database.replaceQueryOrder(
+          queryKey: key, serverID: serverID, orderedIDs: orderedIDs, basis: generation)
+      else { throw CancellationError() }
     }
   }
 

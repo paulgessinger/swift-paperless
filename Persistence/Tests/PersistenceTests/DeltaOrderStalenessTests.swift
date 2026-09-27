@@ -5,9 +5,9 @@ import Testing
 
 @testable import Persistence
 
-/// The changed-documents delta (R3δ) marks cached query orders stale when a
-/// refresh may have moved a document within them or out of them
-/// (`Database.applyChangedDocuments`).
+/// Cached query orders are marked stale when a document they list is written
+/// with a different `modified` than it was placed under — by the
+/// changed-documents delta (R3δ) or any other write path.
 @Suite("DeltaOrderStaleness", .bug("https://github.com/paulgessinger/swift-paperless/issues/689"))
 struct DeltaOrderStalenessTests {
   // Fractional seconds on purpose: the comparison runs against a row read back
@@ -195,5 +195,90 @@ struct DeltaOrderStalenessTests {
 
     #expect(try await isStale(database, serverA, key))
     #expect(try await isStale(database, serverB, key) == false)
+  }
+
+  @Test("A detail fetch landing the new copy first doesn't hide the change")
+  func detailFetchFirst() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "list")
+    try await fill(database, server, key, [doc(1), doc(2)])
+
+    try await database.upsertDocument(doc(1, "Zzz", modified: 4000), serverID: server)
+    #expect(try await isStale(database, server, key))
+
+    // The delta then sees an identical row, and the list stays marked.
+    try await database.applyChangedDocuments([doc(1, "Zzz", modified: 4000)], serverID: server)
+    #expect(try await isStale(database, server, key))
+  }
+
+  @Test("Another list's fill landing the new copy marks this list, not its own")
+  func otherFillFirst() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let listA = QueryKey(sentinel: "a")
+    let listB = QueryKey(sentinel: "b")
+    try await fill(database, server, listA, [doc(1), doc(2)])
+
+    try await fill(database, server, listB, [doc(1, "Zzz", modified: 4000)])
+
+    #expect(try await isStale(database, server, listA))
+    #expect(try await isStale(database, server, listB) == false)
+  }
+
+  @Test("A membership rewrite places rows under the cached copy's modified")
+  func membershipRewritePlacement() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "list")
+    try await database.upsertDocuments([doc(1), doc(2)], serverID: server)
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [2, 1])
+
+    try await database.upsertDocuments([doc(1), doc(2)], serverID: server)
+    #expect(try await isStale(database, server, key) == false)
+
+    try await database.upsertDocuments([doc(2, modified: 4000)], serverID: server)
+    #expect(try await isStale(database, server, key))
+  }
+
+  @Test("An unknown placement adopts the first copy written outside the delta")
+  func unknownPlacementAdopts() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "list")
+    try await database.replaceQueryOrder(queryKey: key, serverID: server, orderedIDs: [1])
+
+    try await database.upsertDocument(doc(1), serverID: server)
+    #expect(try await isStale(database, server, key) == false)
+
+    try await database.upsertDocument(doc(1, modified: 4000), serverID: server)
+    #expect(try await isStale(database, server, key))
+  }
+
+  @Test("A rewrite based on an older generation than the stored order is rejected")
+  func supersededRewriteRejected() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let key = QueryKey(sentinel: "list")
+    try await fill(database, server, key, [doc(1), doc(2)])
+
+    // A asks, a mark lands, B asks and writes first.
+    let a = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    try await database.markQueriesOrderStale(containing: 1, serverID: server)
+    let b = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    #expect(
+      try await database.replaceQueryOrder(
+        queryKey: key, serverID: server, orderedIDs: [2, 1], basis: b))
+
+    #expect(
+      try await database.replaceQueryOrder(
+        queryKey: key, serverID: server, orderedIDs: [1, 2], basis: a) == false)
+    #expect(
+      try await database.replaceQueryPage(
+        queryKey: key, serverID: server, documents: [doc(1), doc(2)], totalCount: 2, basis: a)
+        == false)
+    let order = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    #expect(order.map(\.id) == [2, 1])
+    #expect(try await isStale(database, server, key) == false)
   }
 }
