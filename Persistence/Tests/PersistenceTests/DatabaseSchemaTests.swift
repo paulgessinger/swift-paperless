@@ -107,7 +107,7 @@ struct DatabaseSchemaTests {
     }
   }
 
-  @Test("v11 keeps a stale order stale and a clean one clean")
+  @Test("v11 keeps stale orders stale and places existing rows under their cached date")
   func v11CarriesStaleFlag() throws {
     let server = UUID()
     let queue = try DatabaseQueue()
@@ -124,6 +124,17 @@ struct DatabaseSchemaTests {
           INSERT INTO query_meta (server_id, query_key, order_stale)
           VALUES (?, 'stale', 1), (?, 'clean', 0)
           """, arguments: [server, server])
+      // Document 1 is cached, document 2 is a skeleton.
+      try db.execute(
+        sql: """
+          INSERT INTO document (server_id, id, title, data)
+          VALUES (?, 1, 'A', '{"created":0,"modified":1234.5,"tags":[],"versions":[]}')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO query_order (server_id, query_key, position, remote_id)
+          VALUES (?, 'clean', 0, 1), (?, 'clean', 1, 2)
+          """, arguments: [server, server])
     }
     migrator.eraseDatabaseOnSchemaChange = false
     try migrator.migrate(queue)
@@ -135,6 +146,11 @@ struct DatabaseSchemaTests {
         db, queryKey: QueryKey(sentinel: "clean"), serverID: server)
       #expect(stale?.orderStale == true)
       #expect(clean?.orderStale == false)
+
+      // Existing rows are placed under their cached document's date.
+      let placed = try Double?.fetchAll(
+        db, sql: "SELECT placed_modified FROM query_order ORDER BY position")
+      #expect(placed == [1234.5, nil])
     }
   }
 

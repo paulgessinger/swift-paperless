@@ -41,10 +41,6 @@ extension Database {
   /// Notes are dropped because a note edit bumps `modified` and the delta can't
   /// tell which field changed. One transaction so a note write-through can't
   /// land between the upsert and the drop and be deleted by it.
-  ///
-  /// Besides the placement check every document row write does, a list holding
-  /// a document as a skeleton is marked too: its position came from a copy the
-  /// cache never saw, and the delta returning it means it changed recently.
   @discardableResult
   public func applyChangedDocuments(
     _ domains: [Document], serverID: UUID
@@ -52,19 +48,8 @@ extension Database {
     guard !domains.isEmpty else { return 0 }
     return try await wrappingAsync("applyChangedDocuments") {
       try await writer.write { db in
-        let ids = domains.map(\.id)
-        let cached = try Set(
-          DocumentRecord
-            .select(Column("id"), as: UInt.self)
-            .filter(Column("server_id") == serverID && ids.contains(Column("id")))
-            .fetchAll(db))
-        let skeletons = ids.filter { !cached.contains($0) }
-
-        var marked = try Self.writeDocumentRows(db, domains, serverID: serverID)
-        try Self.dropNotes(serverID: serverID, documentIDs: ids, db)
-        marked += try Self.markOrderStale(
-          db, keys: Self.queryKeys(listingAnyOf: skeletons, serverID: serverID),
-          serverID: serverID)
+        let marked = try Self.writeDocumentRows(db, domains, serverID: serverID)
+        try Self.dropNotes(serverID: serverID, documentIDs: domains.map(\.id), db)
         return marked
       }
     }
@@ -678,10 +663,11 @@ extension Database {
 
   /// Upsert one document row (a straight replace: every write is the complete
   /// object), and mark stale every cached list that placed the document under a
-  /// different `modified`. Returns how many lists were newly marked.
+  /// different or unknown `modified`. Returns how many lists were newly marked.
   ///
   /// Every document write goes through here, so a list is marked whichever path
-  /// brings the new copy in first. An unknown placement adopts the new date.
+  /// brings the new copy in first. An unknown placement (a skeleton) is marked
+  /// too: only a rewrite of that list can say where the document belongs.
   @discardableResult
   private static func writeDocumentRow(
     _ db: GRDB.Database, _ domain: Document, serverID: UUID
@@ -691,12 +677,10 @@ extension Database {
     let placements = QueryOrderRow.filter(
       Column("server_id") == serverID && Column("remote_id") == domain.id)
     let moved = placements.filter(
-      Column("placed_modified") != nil && Column("placed_modified") != modified)
+      Column("placed_modified") == nil || Column("placed_modified") != modified)
     let marked = try markOrderStale(
       db, keys: moved.select(Column("query_key"), as: String.self), serverID: serverID)
-    try placements
-      .filter(Column("placed_modified") == nil || Column("placed_modified") != modified)
-      .updateAll(db, Column("placed_modified").set(to: modified))
+    try moved.updateAll(db, Column("placed_modified").set(to: modified))
     return marked
   }
 

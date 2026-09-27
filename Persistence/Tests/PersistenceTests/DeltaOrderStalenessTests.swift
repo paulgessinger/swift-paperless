@@ -244,19 +244,24 @@ struct DeltaOrderStalenessTests {
     #expect(try await isStale(database, server, key))
   }
 
-  @Test("An unknown placement adopts the first copy written outside the delta")
-  func unknownPlacementAdopts() async throws {
+  @Test("A skeleton's document arriving through another list's fill marks its list")
+  func skeletonFilledElsewhere() async throws {
     let server = UUID()
     let database = try database(server)
-    let key = QueryKey(sentinel: "list")
+    let list = QueryKey(sentinel: "list")
+    let other = QueryKey(sentinel: "other")
+    // The sweep lists 1 before its object is cached; 1 is then renamed remotely.
+    try await database.upsertDocuments([doc(2)], serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1], basis: .initial)
+      queryKey: list, serverID: server, orderedIDs: [1, 2], basis: .initial)
 
-    try await database.upsertDocument(doc(1), serverID: server)
-    #expect(try await isStale(database, server, key) == false)
+    try await fill(database, server, other, [doc(1, "Zzz", modified: 4000)])
+    #expect(try await isStale(database, server, list))
+    #expect(try await isStale(database, server, other) == false)
 
-    try await database.upsertDocument(doc(1, modified: 4000), serverID: server)
-    #expect(try await isStale(database, server, key))
+    // The delta then sees an identical row, and the list stays marked.
+    try await database.applyChangedDocuments([doc(1, "Zzz", modified: 4000)], serverID: server)
+    #expect(try await isStale(database, server, list))
   }
 
   @Test("A rewrite based on an older generation than the stored order is rejected")
