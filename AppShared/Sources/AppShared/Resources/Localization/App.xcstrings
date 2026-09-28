@@ -5389,14 +5389,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Opdater"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Aktualisieren"
           }
         },
         "en" : {
@@ -5407,32 +5407,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Actualiser"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Aggiorna"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Vernieuwen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Odśwież"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh"
+            "state" : "translated",
+            "value" : "Yenile"
           }
         }
       }
@@ -5655,14 +5655,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse alle dokumenter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Nicht alle Dokumente konnten geladen werden"
           }
         },
         "en" : {
@@ -5673,32 +5673,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Impossible de charger tous les documents"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Impossibile caricare tutti i documenti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Kan niet alle documenten laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Nie udało się załadować wszystkich dokumentów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents"
+            "state" : "translated",
+            "value" : "Tüm dokümanlar yüklenemedi"
           }
         }
       }
@@ -5709,14 +5709,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse alle dokumenter for dette filter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Nicht alle Dokumente für diesen Filter konnten geladen werden"
           }
         },
         "en" : {
@@ -5727,32 +5727,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Impossible de charger tous les documents de ce filtre"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Impossibile caricare tutti i documenti per questo filtro"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Kan niet alle documenten voor dit filter laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Nie udało się załadować wszystkich dokumentów dla tego filtra"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all documents for this filter"
+            "state" : "translated",
+            "value" : "Bu filtre için tüm dokümanlar yüklenemedi"
           }
         }
       }
@@ -5763,14 +5763,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse hele “%@”"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht vollständig geladen werden"
           }
         },
         "en" : {
@@ -5781,32 +5781,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "Impossible de charger entièrement « %@ »"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "Impossibile caricare completamente «%@»"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "Kan “%@” niet volledig laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "Nie udało się w pełni załadować „%@”"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load all of “%@”"
+            "state" : "translated",
+            "value" : "“%@” tamamen yüklenemedi"
           }
         }
       }
@@ -5817,14 +5817,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Prøv igen"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Erneut versuchen"
           }
         },
         "en" : {
@@ -5835,32 +5835,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Réessayer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Riprova"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Opnieuw proberen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Ponów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Retry"
+            "state" : "translated",
+            "value" : "Tekrar dene"
           }
         }
       }
@@ -5871,14 +5871,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse dokumenter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Dokumente konnten nicht geladen werden"
           }
         },
         "en" : {
@@ -5889,32 +5889,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Impossible de charger les documents"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Impossibile caricare i documenti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Kan documenten niet laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Nie udało się załadować dokumentów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents"
+            "state" : "translated",
+            "value" : "Dokümanlar yüklenemedi"
           }
         }
       }
@@ -5925,14 +5925,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse dokumenter for dette filter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Dokumente für diesen Filter konnten nicht geladen werden"
           }
         },
         "en" : {
@@ -5943,32 +5943,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Impossible de charger les documents de ce filtre"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Impossibile caricare i documenti per questo filtro"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Kan documenten voor dit filter niet laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Nie udało się załadować dokumentów dla tego filtra"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load documents for this filter"
+            "state" : "translated",
+            "value" : "Bu filtre için dokümanlar yüklenemedi"
           }
         }
       }
@@ -5979,14 +5979,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse “%@”"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht geladen werden"
           }
         },
         "en" : {
@@ -5997,32 +5997,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "Impossible de charger « %@ »"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "Impossibile caricare «%@»"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "Kan “%@” niet laden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "Nie udało się załadować „%@”"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Couldn't load “%@”"
+            "state" : "translated",
+            "value" : "“%@” yüklenemedi"
           }
         }
       }
@@ -7519,14 +7519,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Måske ikke gemt – offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Evtl. nicht gespeichert – offline"
           }
         },
         "en" : {
@@ -7537,32 +7537,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Peut-être non enregistré – hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Forse non salvato – offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Mogelijk niet bewaard – offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Może nie zapisano – offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Maybe not saved — offline"
+            "state" : "translated",
+            "value" : "Kaydedilmemiş olabilir – çevrimdışı"
           }
         }
       }
@@ -7573,14 +7573,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Ikke gemt – du er offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Nicht gespeichert – du bist offline"
           }
         },
         "en" : {
@@ -7591,32 +7591,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Non enregistré – hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Non salvato – sei offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Niet bewaard – je bent offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Nie zapisano – brak sieci"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Not saved — you're offline"
+            "state" : "translated",
+            "value" : "Kaydedilmedi – çevrimdışısınız"
           }
         }
       }
@@ -10663,14 +10663,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "Forbindelsen blev afbrudt, før serveren svarede. Hvis du var ved at ændre noget, så tjek, om det blev gemt, før du prøver igen."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "Die Verbindung wurde unterbrochen, bevor der Server geantwortet hat. Falls du etwas geändert hast, prüfe vor einem erneuten Versuch, ob es gespeichert wurde."
           }
         },
         "en" : {
@@ -10681,32 +10681,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "La connexion a été interrompue avant la réponse du serveur. Si vous modifiiez quelque chose, vérifiez que la modification a bien été enregistrée avant de réessayer."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "La connessione si è interrotta prima che il server rispondesse. Se stavi modificando qualcosa, verifica che sia stato salvato prima di riprovare."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "De verbinding werd verbroken voordat de server antwoordde. Als je iets aan het wijzigen was, controleer dan of het is bewaard voordat je het opnieuw probeert."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "Połączenie zostało przerwane, zanim serwer odpowiedział. Jeśli coś zmieniałeś, sprawdź, czy zostało zapisane, zanim spróbujesz ponownie."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The connection dropped before the server answered. If you were changing something, check whether it was saved before trying again."
+            "state" : "translated",
+            "value" : "Sunucu yanıt vermeden bağlantı kesildi. Bir şeyi değiştiriyorsanız, tekrar denemeden önce kaydedilip kaydedilmediğini kontrol edin."
           }
         }
       }
@@ -10717,14 +10717,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "Forbindelsen til serveren blev afbrudt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "Verbindung zum Server unterbrochen"
           }
         },
         "en" : {
@@ -10735,32 +10735,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "La connexion au serveur a été perdue"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "Connessione al server interrotta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "Verbinding met de server verbroken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "Utracono połączenie z serwerem"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connection to the server was lost"
+            "state" : "translated",
+            "value" : "Sunucu bağlantısı kesildi"
           }
         }
       }
@@ -10877,14 +10877,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "Serverens adresse kunne ikke findes. Tjek, at den er stavet korrekt, og om serveren kun kan nås fra dit hjemmenetværk eller via VPN."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "Die Adresse des Servers wurde nicht gefunden. Prüfe, ob sie richtig geschrieben ist und ob der Server nur aus deinem Heimnetz oder über ein VPN erreichbar ist."
           }
         },
         "en" : {
@@ -10895,32 +10895,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "L'adresse du serveur est introuvable. Vérifiez qu'elle est correctement orthographiée et si le serveur n'est accessible que depuis votre réseau domestique ou via un VPN."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "Impossibile trovare l'indirizzo del server. Verifica che sia scritto correttamente e se il server è raggiungibile solo dalla rete di casa o tramite VPN."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "Het adres van de server kan niet worden gevonden. Controleer of het correct is gespeld en of de server alleen bereikbaar is vanaf je thuisnetwerk of via een VPN."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "Nie można znaleźć adresu serwera. Sprawdź, czy jest wpisany poprawnie i czy serwer nie jest dostępny tylko z sieci domowej lub przez VPN."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's address could not be found. Check that it is spelled correctly, and whether the server is only reachable from your home network or over a VPN."
+            "state" : "translated",
+            "value" : "Sunucunun adresi bulunamadı. Doğru yazıldığını ve sunucuya yalnızca ev ağınızdan veya VPN üzerinden erişilip erişilemediğini kontrol edin."
           }
         }
       }
@@ -10931,14 +10931,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Kan ikke finde serveren"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Server nicht gefunden"
           }
         },
         "en" : {
@@ -10949,32 +10949,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Serveur introuvable"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Impossibile trovare il server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Kan de server niet vinden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Nie można znaleźć serwera"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Can't find the server"
+            "state" : "translated",
+            "value" : "Sunucu bulunamıyor"
           }
         }
       }
@@ -11197,14 +11197,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Din enhed har ikke forbindelse til internettet. Tjek Wi-Fi eller mobildata, og prøv igen."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Dein Gerät ist nicht mit dem Internet verbunden. Prüfe WLAN oder mobile Daten und versuche es erneut."
           }
         },
         "en" : {
@@ -11215,32 +11215,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Votre appareil n'est pas connecté à Internet. Vérifiez le Wi-Fi ou les données cellulaires, puis réessayez."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Il dispositivo non è connesso a Internet. Controlla il Wi-Fi o i dati cellulari, quindi riprova."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Je apparaat heeft geen internetverbinding. Controleer wifi of mobiele data en probeer het opnieuw."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Urządzenie nie jest połączone z internetem. Sprawdź Wi-Fi lub dane komórkowe i spróbuj ponownie."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device isn't connected to the internet. Check Wi-Fi or mobile data, then try again."
+            "state" : "translated",
+            "value" : "Cihazınız internete bağlı değil. Wi-Fi veya hücresel veriyi kontrol edip tekrar deneyin."
           }
         }
       }
@@ -11251,14 +11251,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Du er offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Du bist offline"
           }
         },
         "en" : {
@@ -11269,32 +11269,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Vous êtes hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Sei offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Je bent offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Jesteś w trybie offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You're offline"
+            "state" : "translated",
+            "value" : "Çevrimdışısınız"
           }
         }
       }
@@ -11305,14 +11305,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Din enhed er online, men serveren svarede ikke. Den er måske stoppet eller ved at genstarte, eller kan kun nås fra et andet netværk eller via VPN."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Dein Gerät ist online, aber der Server hat nicht geantwortet. Er ist möglicherweise gestoppt, startet gerade neu oder ist nur aus einem anderen Netzwerk oder über ein VPN erreichbar."
           }
         },
         "en" : {
@@ -11323,32 +11323,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Votre appareil est en ligne, mais le serveur n'a pas répondu. Il est peut-être arrêté ou en cours de redémarrage, ou accessible uniquement depuis un autre réseau ou via un VPN."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Il dispositivo è online, ma il server non ha risposto. Potrebbe essere spento o in fase di riavvio, oppure raggiungibile solo da un'altra rete o tramite VPN."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Je apparaat is online, maar de server antwoordde niet. Mogelijk is hij gestopt of wordt hij opnieuw opgestart, of is hij alleen bereikbaar vanaf een ander netwerk of via een VPN."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Urządzenie jest online, ale serwer nie odpowiedział. Może być zatrzymany lub uruchamiany ponownie albo dostępny tylko z innej sieci lub przez VPN."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your device is online, but the server did not answer. It may be stopped or restarting, or only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Cihazınız çevrimiçi, ancak sunucu yanıt vermedi. Durdurulmuş veya yeniden başlatılıyor olabilir ya da yalnızca başka bir ağdan veya VPN üzerinden erişilebilir olabilir."
           }
         }
       }
@@ -11359,14 +11359,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "Serveren svarer ikke"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "Der Server antwortet nicht"
           }
         },
         "en" : {
@@ -11377,32 +11377,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "Le serveur ne répond pas"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "Il server non risponde"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "De server reageert niet"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "Serwer nie odpowiada"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server isn't responding"
+            "state" : "translated",
+            "value" : "Sunucu yanıt vermiyor"
           }
         }
       }
@@ -13537,14 +13537,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Standard (%1$@, %2$@)"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Standard (%1$@, %2$@)"
           }
         },
         "en" : {
@@ -13555,32 +13555,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Par défaut (%1$@, %2$@)"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Predefinito (%1$@, %2$@)"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Standaard (%1$@, %2$@)"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Domyślne (%1$@, %2$@)"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Default (%1$@, %2$@)"
+            "state" : "translated",
+            "value" : "Varsayılan (%1$@, %2$@)"
           }
         }
       }

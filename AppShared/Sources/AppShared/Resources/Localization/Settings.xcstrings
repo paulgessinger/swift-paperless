@@ -3201,14 +3201,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Database"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Database"
+            "state" : "translated",
+            "value" : "Datenbank"
           }
         },
         "en" : {
@@ -3219,32 +3219,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Database"
+            "state" : "translated",
+            "value" : "Base de données"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Database"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Database"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Database"
+            "state" : "translated",
+            "value" : "Baza danych"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Database"
+            "state" : "translated",
+            "value" : "Veritabanı"
           }
         }
       }
@@ -3255,14 +3255,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "Hentede dokumenter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "Heruntergeladene Dokumente"
           }
         },
         "en" : {
@@ -3273,32 +3273,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "Documents téléchargés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "Documenti scaricati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "Gedownloade documenten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "Pobrane dokumenty"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded documents"
+            "state" : "translated",
+            "value" : "İndirilen dokümanlar"
           }
         }
       }
@@ -3471,14 +3471,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Plads brugt på denne enhed af offlinedata for alle dine servere."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Von Offline-Daten aller deiner Server belegter Speicherplatz auf diesem Gerät."
           }
         },
         "en" : {
@@ -3489,32 +3489,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Espace utilisé sur cet appareil par les données hors ligne de tous vos serveurs."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Spazio occupato su questo dispositivo dai dati offline di tutti i tuoi server."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Ruimte die offlinegegevens van al je servers op dit apparaat innemen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Miejsce zajmowane na tym urządzeniu przez dane offline wszystkich Twoich serwerów."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Space used on this device by offline data for all your servers."
+            "state" : "translated",
+            "value" : "Tüm sunucularınızın çevrimdışı verilerinin bu cihazda kapladığı alan."
           }
         }
       }
@@ -3525,14 +3525,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Lagerplads"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Speicher"
           }
         },
         "en" : {
@@ -3543,32 +3543,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Stockage"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Spazio di archiviazione"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Opslag"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Pamięć"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Storage"
+            "state" : "translated",
+            "value" : "Depolama"
           }
         }
       }
@@ -3579,14 +3579,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ for denne server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ für diesen Server"
           }
         },
         "en" : {
@@ -3597,32 +3597,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ pour ce serveur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ per questo server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ voor deze server"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ dla tego serwera"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@ for this server"
+            "state" : "translated",
+            "value" : "%1$@ · bu sunucu için %2$@"
           }
         }
       }
@@ -3633,14 +3633,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniaturer"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Vorschaubilder"
           }
         },
         "en" : {
@@ -3651,32 +3651,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniatures"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniature"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniaturen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniatury"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Küçük resimler"
           }
         }
       }
@@ -3903,14 +3903,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Omfatter dokumentlister, detaljer, noter, elementsynkronisering, uploads, miniaturer og hentede dokumentfiler. Dokumenter, der åbnes fra offlinecachen, bruger ingen data."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Umfasst Dokumentlisten, Details, Notizen, Elementsynchronisierung, Uploads, Vorschaubilder und heruntergeladene Dokumentdateien. Aus dem Offline-Cache geöffnete Dokumente verbrauchen keine Daten."
           }
         },
         "en" : {
@@ -3921,32 +3921,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Comprend les listes de documents, les détails, les notes, la synchronisation des éléments, les envois, les miniatures et les fichiers de documents téléchargés. Les documents ouverts depuis le cache hors ligne n'utilisent aucune donnée."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Include elenchi di documenti, dettagli, note, sincronizzazione degli elementi, caricamenti, miniature e file dei documenti scaricati. I documenti aperti dalla cache offline non consumano dati."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Omvat documentlijsten, details, notities, elementsynchronisatie, uploads, miniaturen en gedownloade documentbestanden. Documenten die vanuit de offlinecache worden geopend, gebruiken geen data."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Obejmuje listy dokumentów, szczegóły, notatki, synchronizację elementów, przesyłanie, miniatury i pobrane pliki dokumentów. Dokumenty otwierane z pamięci podręcznej offline nie zużywają danych."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Counts document lists, details, notes, element sync, uploads, thumbnails and downloaded document files. Documents opened from the offline cache use no data."
+            "state" : "translated",
+            "value" : "Doküman listelerini, ayrıntıları, notları, öğe eşitlemesini, yüklemeleri, küçük resimleri ve indirilen doküman dosyalarını kapsar. Çevrimdışı önbellekten açılan dokümanlar veri kullanmaz."
           }
         }
       }
@@ -4011,14 +4011,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Overført data"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Übertragene Daten"
           }
         },
         "en" : {
@@ -4029,32 +4029,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Données transférées"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Dati trasferiti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Overgedragen data"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Przesłane dane"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Data transferred"
+            "state" : "translated",
+            "value" : "Aktarılan veri"
           }
         }
       }
@@ -4605,14 +4605,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Synkroniseringsfejl"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Synchronisierungsfehler"
           }
         },
         "en" : {
@@ -4623,32 +4623,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Erreurs de synchronisation"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Errori di sincronizzazione"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Synchronisatiefouten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Błędy synchronizacji"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Sync errors"
+            "state" : "translated",
+            "value" : "Eşitleme hataları"
           }
         }
       }
@@ -4659,14 +4659,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Disse dele af den seneste synkronisering med denne server mislykkedes, så det, der er gemt til offlinebrug, kan være forældet. Hver fejl forsvinder, så snart delen synkroniseres igen."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Diese Teile der letzten Synchronisierung mit diesem Server sind fehlgeschlagen, daher sind die für die Offline-Nutzung gespeicherten Daten möglicherweise veraltet. Jeder Eintrag verschwindet, sobald er wieder erfolgreich synchronisiert wurde."
           }
         },
         "en" : {
@@ -4677,32 +4677,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Ces parties de la dernière synchronisation avec ce serveur ont échoué : les données enregistrées pour une utilisation hors ligne peuvent donc être obsolètes. Chaque erreur disparaît dès que la synchronisation réussit à nouveau."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Queste parti dell'ultima sincronizzazione con questo server non sono riuscite, quindi i dati salvati per l'uso offline potrebbero non essere aggiornati. Ciascuna scompare non appena viene sincronizzata di nuovo correttamente."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Deze onderdelen van de laatste synchronisatie met deze server zijn mislukt, dus wat voor offlinegebruik is opgeslagen, is mogelijk verouderd. Elk onderdeel verdwijnt zodra het weer succesvol is gesynchroniseerd."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Te części ostatniej synchronizacji z tym serwerem nie powiodły się, więc dane zapisane do użytku offline mogą być nieaktualne. Każdy wpis znika, gdy tylko ponowna synchronizacja się powiedzie."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These parts of the last sync with this server failed, so what's saved for offline use may be out of date. Each one clears as soon as it syncs successfully again."
+            "state" : "translated",
+            "value" : "Bu sunucuyla yapılan son eşitlemenin bu bölümleri başarısız oldu; bu nedenle çevrimdışı kullanım için kaydedilenler güncel olmayabilir. Her biri yeniden başarıyla eşitlendiğinde kaybolur."
           }
         }
       }
@@ -4713,14 +4713,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "Mislykkedes %lld gange i træk"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "%lld-mal in Folge fehlgeschlagen"
           }
         },
         "en" : {
@@ -4731,32 +4731,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "A échoué %lld fois de suite"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "Non riuscita %lld volte di seguito"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "%lld keer achter elkaar mislukt"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "Niepowodzenie %lld razy z rzędu"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed %lld times in a row"
+            "state" : "translated",
+            "value" : "Art arda %lld kez başarısız oldu"
           }
         }
       }
@@ -4767,14 +4767,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Forbinder til serveren"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Verbindung zum Server"
           }
         },
         "en" : {
@@ -4785,32 +4785,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Connexion au serveur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Connessione al server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Verbinden met de server"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Łączenie z serwerem"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Connecting to the server"
+            "state" : "translated",
+            "value" : "Sunucuya bağlanma"
           }
         }
       }
@@ -4821,14 +4821,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "Tilladelser og indstillinger"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "Berechtigungen und Einstellungen"
           }
         },
         "en" : {
@@ -4839,32 +4839,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "Permissions et réglages"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "Permessi e impostazioni"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "Machtigingen en instellingen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "Uprawnienia i ustawienia"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Permissions and settings"
+            "state" : "translated",
+            "value" : "İzinler ve ayarlar"
           }
         }
       }
@@ -4875,14 +4875,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Etiketter, korrespondenter og andre data"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Tags, Korrespondenten und weitere Daten"
           }
         },
         "en" : {
@@ -4893,32 +4893,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Tags, correspondants et autres données"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Etichette, corrispondenti e altri dati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Labels, correspondenten en andere gegevens"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Tagi, korespondenci i inne dane"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags, correspondents and other data"
+            "state" : "translated",
+            "value" : "Etiketler, muhataplar ve diğer veriler"
           }
         }
       }
@@ -4929,14 +4929,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Fjerner slettede dokumenter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Gelöschte Dokumente entfernen"
           }
         },
         "en" : {
@@ -4947,32 +4947,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Suppression des documents supprimés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Rimozione dei documenti eliminati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Verwijderde documenten opruimen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Usuwanie usuniętych dokumentów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Removing deleted documents"
+            "state" : "translated",
+            "value" : "Silinen dokümanları kaldırma"
           }
         }
       }
@@ -4983,14 +4983,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Opdaterer ændrede dokumenter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Geänderte Dokumente aktualisieren"
           }
         },
         "en" : {
@@ -5001,32 +5001,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Mise à jour des documents modifiés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Aggiornamento dei documenti modificati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Gewijzigde documenten bijwerken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Aktualizowanie zmienionych dokumentów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating changed documents"
+            "state" : "translated",
+            "value" : "Değişen dokümanları güncelleme"
           }
         }
       }
@@ -5037,14 +5037,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Opdaterer gemte visninger"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Gespeicherte Ansichten aktualisieren"
           }
         },
         "en" : {
@@ -5055,32 +5055,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Mise à jour des vues enregistrées"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Aggiornamento delle viste salvate"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Opgeslagen weergaven bijwerken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Aktualizowanie zapisanych widoków"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Updating saved views"
+            "state" : "translated",
+            "value" : "Kayıtlı görünümleri güncelleme"
           }
         }
       }
@@ -5091,14 +5091,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Rydder op i offlinecachen"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Offline-Cache aufräumen"
           }
         },
         "en" : {
@@ -5109,32 +5109,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Nettoyage du cache hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Pulizia della cache offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Offlinecache opschonen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Porządkowanie pamięci podręcznej offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Cleaning up the offline cache"
+            "state" : "translated",
+            "value" : "Çevrimdışı önbelleği temizleme"
           }
         }
       }
@@ -5145,14 +5145,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Henter biblioteket"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Bibliothek herunterladen"
           }
         },
         "en" : {
@@ -5163,32 +5163,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Téléchargement de la bibliothèque"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Download della libreria"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Bibliotheek downloaden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Pobieranie biblioteki"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading the library"
+            "state" : "translated",
+            "value" : "Kitaplığı indirme"
           }
         }
       }
@@ -5199,14 +5199,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Henter noter og fildetaljer"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Notizen und Dateidetails herunterladen"
           }
         },
         "en" : {
@@ -5217,32 +5217,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Téléchargement des notes et des détails des fichiers"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Download di note e dettagli dei file"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Notities en bestandsgegevens downloaden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Pobieranie notatek i szczegółów plików"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading notes and file details"
+            "state" : "translated",
+            "value" : "Notları ve dosya ayrıntılarını indirme"
           }
         }
       }
@@ -7025,14 +7025,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "Dokumentfiler"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "Dokumentdateien"
           }
         },
         "en" : {
@@ -7043,32 +7043,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "Fichiers de documents"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "File dei documenti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "Documentbestanden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "Pliki dokumentów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document files"
+            "state" : "translated",
+            "value" : "Doküman dosyaları"
           }
         }
       }
@@ -7133,14 +7133,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Visning af lister"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Listen durchsuchen"
           }
         },
         "en" : {
@@ -7151,32 +7151,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Consultation des listes"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Consultazione degli elenchi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Lijsten bekijken"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Przeglądanie list"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Browsing lists"
+            "state" : "translated",
+            "value" : "Liste görüntüleme"
           }
         }
       }
@@ -7349,14 +7349,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniaturer"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Vorschaubilder"
           }
         },
         "en" : {
@@ -7367,32 +7367,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniatures"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniature"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniaturen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Miniatury"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Thumbnails"
+            "state" : "translated",
+            "value" : "Küçük resimler"
           }
         }
       }
