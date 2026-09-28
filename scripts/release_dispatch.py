@@ -70,13 +70,9 @@ def dispatch(args):
     sha = resolve(args.repo, args.ref)
     config = contents(args.repo, sha, "Config/Shared/Version.xcconfig")
     current_version = marketing_version(config)
-    notes = contents(args.repo, sha, "current_changelog.txt")
     fields.update(source_ref=sha, build_number=args.build_number or "")
     print(f"Build {current_version} from {args.ref} ({sha})")
-    print(
-        "Accumulated source changelog (CI publishes the delta since the previous build):"
-    )
-    print(notes.strip() or "(empty)")
+    print("CI will calculate the build changelog and show it in the run summary.")
     print(f"Workflow: {workflow} on {args.workflow_ref}")
     if args.dry_run:
         print("CI dry-run: build and export only; no upload or build tag.")

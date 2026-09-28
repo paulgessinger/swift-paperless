@@ -66,6 +66,18 @@ jobs:
         # (composes the release notes), both of which every beta goes through.
         run: brew install xcodegen xcbeautify asc uv
 
+      - name: Show build changelog
+        env:
+          SOURCE_ROOT: ${{ github.workspace }}/source
+        run: |
+          base="$(tooling/scripts/changelog.py base HEAD)"
+          notes="$(tooling/scripts/changelog.py delta HEAD)"
+          {
+            printf '### Build changelog\n\n'
+            printf 'Changes since %s\n\n' "${base:-the start of history (first build)}"
+            printf '%s\n' "${notes:-(no new changelog entries)}"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Build & upload to TestFlight
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
