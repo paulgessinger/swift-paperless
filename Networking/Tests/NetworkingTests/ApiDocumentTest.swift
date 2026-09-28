@@ -43,6 +43,8 @@ struct ApiDocumentTest {
     #expect(document.asn == 666)
     #expect(document.owner == Owner.user(2))
     #expect(document.notes.count == 1)
+    // Raw note rows give the author only as an id, so they aren't kept.
+    #expect(document.notes.notes == nil)
 
     #expect(document.originalFileName == "original.pdf")
     #expect(document.archivedFileName == "archived.pdf")
@@ -79,6 +81,7 @@ struct ApiDocumentTest {
     #expect(document.asn == 666)
     #expect(document.owner == Owner.user(2))
     #expect(document.notes.count == 1)
+    #expect(document.notes.notes == nil)
 
     // No permissions by default
     #expect(document.permissions == nil)
@@ -92,6 +95,10 @@ struct ApiDocumentTest {
     #expect(document.id == 16)
     #expect(document.title == "Versioned sample document")
     #expect(document.notes.count == 2)
+    // The 2.15+ shape: the same list `/notes/` returns.
+    let notes = try #require(document.notes.notes)
+    #expect(notes.map(\.id) == [16, 17])
+    #expect(notes.first?.user?.username == "testuser")
     #expect(document.customFields.count == 2)
     #expect(document.versions.count == 2)
 

@@ -123,6 +123,72 @@ struct DetailFillTests {
     #expect(try await database.documentIDsMissingFileMetadata(serverID: server).isEmpty)
   }
 
+  // MARK: - Notes from document responses
+
+  private func note(_ id: UInt, _ text: String) -> DocumentNote {
+    DocumentNote(id: id, note: text, created: date(1))
+  }
+
+  private func listing(_ id: UInt, _ notes: [DocumentNote]) -> Document {
+    var document = doc(id)
+    document.notes = NotesPayload(notes: notes)
+    return document
+  }
+
+  private func denyNotes(_ database: Persistence.Database, _ server: UUID) async throws {
+    let permissions = UserPermissions.empty(with: { $0.set(.view, to: true, for: .document) })
+    try await database.setUISettings(
+      UISettings(
+        user: User(id: 1, isSuperUser: false, username: "alice", groups: []),
+        permissions: permissions),
+      serverID: server)
+  }
+
+  @Test("a document write caches the notes its response carried")
+  func documentWriteCachesListedNotes() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.setNotes([note(9, "kept")], serverID: server, documentID: 2)
+
+    // Document 2's response carried only a count, so its row stays.
+    try await database.upsertDocuments(
+      [listing(1, [note(1, "a")]), doc(2, notesCount: 1)], serverID: server)
+
+    #expect(try await database.notes(serverID: server, documentID: 1) == [note(1, "a")])
+    #expect(try await database.notes(serverID: server, documentID: 2) == [note(9, "kept")])
+    #expect(try await database.documentIDsNeedingNotesFetch(serverID: server).isEmpty)
+  }
+
+  @Test("the delta replaces listed notes and drops the rest")
+  func deltaReplacesListedNotes() async throws {
+    let server = UUID()
+    let database = try database(server)
+    for id in [UInt(1), 2] {
+      try await database.setNotes([note(id, "old")], serverID: server, documentID: id)
+    }
+
+    try await database.applyChangedDocuments(
+      [listing(1, [note(1, "new")]), doc(2, notesCount: 1)], serverID: server)
+
+    #expect(try await database.notes(serverID: server, documentID: 1) == [note(1, "new")])
+    #expect(try await database.notes(serverID: server, documentID: 2) == nil)
+  }
+
+  @Test("without the notes view permission, listed notes are not cached")
+  func listedNotesNeedViewPermission() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.setNotes([note(2, "old")], serverID: server, documentID: 2)
+    try await denyNotes(database, server)
+
+    try await database.upsertDocuments([listing(1, [note(1, "a")])], serverID: server)
+    #expect(try await database.notes(serverID: server, documentID: 1) == nil)
+
+    // The delta still drops what was cached before.
+    try await database.applyChangedDocuments([listing(2, [note(2, "new")])], serverID: server)
+    #expect(try await database.notes(serverID: server, documentID: 2) == nil)
+  }
+
   // MARK: - Invalidation
 
   @Test("invalidateNotes drops only the named docs' rows")

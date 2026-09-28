@@ -212,11 +212,9 @@ extension Database {
   /// detail fill re-seeds or re-fetches their notes against a fresh
   /// `notesCount`. Explicit bookkeeping, not an FK cascade.
   ///
-  /// Standalone form. The R3δ delta — the invalidation's reason for existing,
-  /// since a note edit bumps `modified` like any other change — needs it to
-  /// commit with the document upsert it follows, so it uses
-  /// ``upsertDocumentsInvalidatingNotes(_:serverID:)`` instead; this one has no
-  /// production caller today.
+  /// Standalone form with no production caller today. The R3δ delta drops notes
+  /// in the same transaction as its document upsert, in
+  /// ``applyChangedDocuments(_:serverID:)``.
   public func invalidateNotes(serverID: UUID, documentIDs: [UInt]) async throws {
     guard !documentIDs.isEmpty else { return }
     try await wrappingAsync("invalidateNotes") {
