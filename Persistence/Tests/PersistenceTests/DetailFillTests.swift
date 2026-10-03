@@ -19,10 +19,10 @@ struct DetailFillTests {
   }
 
   private func doc(
-    _ id: UInt, notesCount: Int = 0, versions: [DocumentVersion] = []
+    _ id: UInt, notesCount: Int = 0, modified: Date? = nil, versions: [DocumentVersion] = []
   ) -> Document {
     Document(
-      id: id, title: "Doc \(id)", created: date(1000), tags: [],
+      id: id, title: "Doc \(id)", created: date(1000), tags: [], modified: modified,
       owner: .user(1), notes: NotesPayload(count: notesCount), versions: versions)
   }
 
@@ -97,7 +97,7 @@ struct DetailFillTests {
     #expect(try await database.documentIDsNeedingNotesFetch(serverID: server) == [2])
   }
 
-  @Test("documentIDsMissingFileMetadata keys on the current version, not any version")
+  @Test("documentIDsNeedingFileMetadataFetch keys on the current version, not any version")
   func missingFileMetadata() async throws {
     let server = UUID()
     let database = try database(server)
@@ -110,17 +110,49 @@ struct DetailFillTests {
     try await database.upsertDocuments([multiVersion, doc(2)], serverID: server)
 
     // Nothing cached → both missing.
-    #expect(try await Set(database.documentIDsMissingFileMetadata(serverID: server)) == [1, 2])
+    #expect(
+      try await Set(database.documentIDsNeedingFileMetadataFetch(serverID: server)) == [1, 2])
 
     // Caching an *old* version (1) does not satisfy doc 1 — current is 9.
-    try await database.setFileMetadata(metadata("old"), serverID: server, versionID: 1)
-    #expect(try await Set(database.documentIDsMissingFileMetadata(serverID: server)) == [1, 2])
+    try await database.setFileMetadata(
+      metadata("old"), serverID: server, versionID: 1, documentModified: nil)
+    #expect(
+      try await Set(database.documentIDsNeedingFileMetadataFetch(serverID: server)) == [1, 2])
 
     // Caching the current version (9) clears doc 1. Doc 2's current version is
     // its own id (no versions) → cache under id 2.
-    try await database.setFileMetadata(metadata("current"), serverID: server, versionID: 9)
-    try await database.setFileMetadata(metadata("doc2"), serverID: server, versionID: 2)
-    #expect(try await database.documentIDsMissingFileMetadata(serverID: server).isEmpty)
+    try await database.setFileMetadata(
+      metadata("current"), serverID: server, versionID: 9, documentModified: nil)
+    try await database.setFileMetadata(
+      metadata("doc2"), serverID: server, versionID: 2, documentModified: nil)
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server).isEmpty)
+  }
+
+  @Test(
+    "file metadata fetched under another document modified is needed again",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/764", id: 764))
+  func fileMetadataFollowsDocumentModified() async throws {
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments(
+      [doc(1, modified: date(100)), doc(2, modified: date(100)), doc(3, modified: date(100))],
+      serverID: server)
+    try await database.setFileMetadata(
+      metadata("1"), serverID: server, versionID: 1, documentModified: date(100))
+    try await database.setFileMetadata(
+      metadata("2"), serverID: server, versionID: 2, documentModified: date(100))
+    // Fetched without a cached document, so under an unknown date.
+    try await database.setFileMetadata(
+      metadata("3"), serverID: server, versionID: 3, documentModified: nil)
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server) == [3])
+
+    // A move (e.g. a storage path change) bumps `modified` without a new version.
+    try await database.upsertDocuments([doc(2, modified: date(200))], serverID: server)
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server) == [2, 3])
+
+    try await database.setFileMetadata(
+      metadata("2"), serverID: server, versionID: 2, documentModified: date(200))
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server) == [3])
   }
 
   // MARK: - Notes from document responses
@@ -189,6 +221,37 @@ struct DetailFillTests {
     #expect(try await database.notes(serverID: server, documentID: 2) == nil)
   }
 
+  @Test(
+    "a failed file metadata refresh throws and leaves the outdated row needed",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/764", id: 764))
+  func failedFileMetadataRefreshStaysNeeded() async throws {
+    struct ServerError: Error {}
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments([doc(1, modified: date(100))], serverID: server)
+    try await database.setFileMetadata(
+      metadata("before"), serverID: server, versionID: 1, documentModified: date(100))
+    try await database.upsertDocuments([doc(1, modified: date(200))], serverID: server)
+
+    // The outdated row must not turn the failure into a result.
+    await #expect(throws: ServerError.self) {
+      try await database.refreshFileMetadata(serverID: server, documentID: 1) {
+        throw ServerError()
+      }
+    }
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server) == [1])
+    #expect(
+      try await database.fileMetadata(serverID: server, documentID: 1)?.originalChecksum
+        == "before")
+
+    let fresh = metadata("after")
+    _ = try await database.refreshFileMetadata(serverID: server, documentID: 1) { fresh }
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server).isEmpty)
+    #expect(
+      try await database.fileMetadata(serverID: server, documentID: 1)?.originalChecksum
+        == "after")
+  }
+
   // MARK: - Invalidation
 
   @Test("invalidateNotes drops only the named docs' rows")
@@ -253,7 +316,8 @@ struct DetailFillTests {
     #expect(
       try await database.documentIDsNeedingNotesFetch(serverID: server, excluding: [2]) == [1, 3])
     #expect(
-      try await database.documentIDsMissingFileMetadata(serverID: server, excluding: [1, 3]) == [2])
+      try await database.documentIDsNeedingFileMetadataFetch(serverID: server, excluding: [1, 3])
+        == [2])
   }
 
   @Test("detail-fill queries return ids in a stable order")
@@ -267,7 +331,8 @@ struct DetailFillTests {
       [doc(30, notesCount: 1), doc(10, notesCount: 1), doc(20, notesCount: 1)], serverID: server)
 
     #expect(try await database.documentIDsNeedingNotesFetch(serverID: server) == [10, 20, 30])
-    #expect(try await database.documentIDsMissingFileMetadata(serverID: server) == [10, 20, 30])
+    #expect(
+      try await database.documentIDsNeedingFileMetadataFetch(serverID: server) == [10, 20, 30])
   }
 
 }

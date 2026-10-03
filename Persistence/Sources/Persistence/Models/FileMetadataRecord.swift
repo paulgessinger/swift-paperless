@@ -5,10 +5,12 @@ import GRDB
 /// GRDB record for a file version's cached `/metadata/` sub-resource
 /// (`file_metadata` table, keyed `(server_id, version_id)`).
 ///
-/// Immutable per file version, so a cached copy never goes stale until the
-/// version changes — hence the version key rather than the document id. `Metadata`
-/// isn't `Codable`, so the payload is an explicit storage mirror mapped by hand
-/// (`Metadata.Item` is already a wire-symmetric `Codable` leaf and is reused).
+/// Keyed by version because checksums, sizes and embedded metadata are fixed per
+/// file version. The filenames are not: moving the file changes them under the
+/// same version, so `documentModified` records which document state the row was
+/// fetched under. `Metadata` isn't `Codable`, so the payload is an explicit
+/// storage mirror mapped by hand (`Metadata.Item` is already a wire-symmetric
+/// `Codable` leaf and is reused).
 public struct FileMetadataRecord:
   FetchableRecord, PersistableRecord, TableRecord, Codable, Sendable, Equatable
 {
@@ -16,6 +18,9 @@ public struct FileMetadataRecord:
 
   public var serverId: UUID
   public var versionId: UInt
+  /// The document's `modified` when this was fetched, or `nil` if unknown.
+  /// Reference-date seconds, like `document.modified`.
+  public var documentModified: Date?
   public var payload: Payload
 
   public struct Payload: Codable, Sendable, Equatable {
@@ -36,6 +41,7 @@ public struct FileMetadataRecord:
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
     case versionId = "version_id"
+    case documentModified = "document_modified"
     case payload = "data"
   }
 
@@ -46,12 +52,25 @@ public struct FileMetadataRecord:
   public static func databaseJSONDecoder(for column: String) -> JSONDecoder {
     ElementStorage.decoder
   }
+
+  public static func databaseDateEncodingStrategy(for column: String)
+    -> DatabaseDateEncodingStrategy
+  {
+    .timeIntervalSinceReferenceDate
+  }
+
+  public static func databaseDateDecodingStrategy(for column: String)
+    -> DatabaseDateDecodingStrategy
+  {
+    .timeIntervalSinceReferenceDate
+  }
 }
 
 extension FileMetadataRecord {
-  public init(serverId: UUID, versionId: UInt, domain: Metadata) {
+  public init(serverId: UUID, versionId: UInt, documentModified: Date?, domain: Metadata) {
     self.serverId = serverId
     self.versionId = versionId
+    self.documentModified = documentModified
     payload = Payload(
       originalChecksum: domain.originalChecksum,
       originalSize: domain.originalSize,

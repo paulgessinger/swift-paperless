@@ -117,7 +117,8 @@ struct DowngradeGCTests {
 
     try await database.upsertDocuments([doc(1, "A")], serverID: server)
     try await database.setNotes([note(1)], serverID: server, documentID: 1)
-    try await database.setFileMetadata(metadata("sum"), serverID: server, versionID: 1)
+    try await database.setFileMetadata(
+      metadata("sum"), serverID: server, versionID: 1, documentModified: nil)
     // Not referenced by any query.
 
     _ = try await database.pruneUnreferencedDocuments(serverID: server)
@@ -140,8 +141,10 @@ struct DowngradeGCTests {
             DocumentVersion(id: 9, added: date(5000), isRoot: false),
           ])
       ], serverID: server)
-    try await database.setFileMetadata(metadata("root"), serverID: server, versionID: 1)
-    try await database.setFileMetadata(metadata("v9"), serverID: server, versionID: 9)
+    try await database.setFileMetadata(
+      metadata("root"), serverID: server, versionID: 1, documentModified: nil)
+    try await database.setFileMetadata(
+      metadata("v9"), serverID: server, versionID: 9, documentModified: nil)
     // Not referenced by any query.
 
     _ = try await database.pruneUnreferencedDocuments(serverID: server)

@@ -83,7 +83,7 @@ struct DocumentDetailCacheTests {
     let database = try database(server)
 
     let input = metadata("abc123", archive: true)
-    try await database.setFileMetadata(input, serverID: server, versionID: 9)
+    try await database.setFileMetadata(input, serverID: server, versionID: 9, documentModified: nil)
 
     let output = try #require(try await database.fileMetadata(serverID: server, versionID: 9))
     #expect(output.originalChecksum == input.originalChecksum)
@@ -107,8 +107,10 @@ struct DocumentDetailCacheTests {
     let server = UUID()
     let database = try database(server)
 
-    try await database.setFileMetadata(metadata("v1sum"), serverID: server, versionID: 1)
-    try await database.setFileMetadata(metadata("v2sum"), serverID: server, versionID: 2)
+    try await database.setFileMetadata(
+      metadata("v1sum"), serverID: server, versionID: 1, documentModified: nil)
+    try await database.setFileMetadata(
+      metadata("v2sum"), serverID: server, versionID: 2, documentModified: nil)
 
     #expect(
       try await database.fileMetadata(serverID: server, versionID: 1)?.originalChecksum == "v1sum")
@@ -131,7 +133,8 @@ struct DocumentDetailCacheTests {
         user: .init(id: 1, isSuperUser: true, username: "bob")))
 
     try await database.setNotes([note(1, "a-note")], serverID: serverA, documentID: 42)
-    try await database.setFileMetadata(metadata("a-sum"), serverID: serverA, versionID: 9)
+    try await database.setFileMetadata(
+      metadata("a-sum"), serverID: serverA, versionID: 9, documentModified: nil)
 
     #expect(try await database.notes(serverID: serverB, documentID: 42) == nil)
     #expect(try await database.fileMetadata(serverID: serverB, versionID: 9) == nil)
@@ -149,7 +152,8 @@ struct DocumentDetailCacheTests {
       Document(id: 42, title: "A", created: date(1000), tags: [], owner: .user(1)),
       serverID: server)
     try await database.setNotes([note(1, "a-note")], serverID: server, documentID: 42)
-    try await database.setFileMetadata(metadata("sum"), serverID: server, versionID: 42)
+    try await database.setFileMetadata(
+      metadata("sum"), serverID: server, versionID: 42, documentModified: nil)
 
     try await database.deleteDocuments(serverID: server, removedIDs: [42])
 
@@ -165,7 +169,8 @@ struct DocumentDetailCacheTests {
     let database = try database(server)
 
     try await database.setNotes([note(1, "a")], serverID: server, documentID: 42)
-    try await database.setFileMetadata(metadata("sum"), serverID: server, versionID: 9)
+    try await database.setFileMetadata(
+      metadata("sum"), serverID: server, versionID: 9, documentModified: nil)
 
     try await database.clearCache()
 

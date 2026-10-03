@@ -786,7 +786,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let downgraded = try await NetworkTransfer.$category.withValue(.fill) { () -> Bool in
       // These throw: an empty list read as "nothing missing" would clear the
       // detail fill's sync error.
-      let missingMetadata = try await database.documentIDsMissingFileMetadata(serverID: serverID)
+      let missingMetadata = try await database.documentIDsNeedingFileMetadataFetch(
+        serverID: serverID)
       let needsNotes =
         canViewNotes ? try await database.documentIDsNeedingNotesFetch(serverID: serverID) : []
 
@@ -828,7 +829,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         try Task.checkCancellation()
         if leftEntireLibrary() { return true }
         do {
-          _ = try await metadata(documentId: id)
+          // Not `metadata(documentId:)`: its fallback would serve the outdated
+          // row this is replacing and count a failed request as fetched.
+          _ = try await refreshMetadata(documentId: id)
           fetchedMetadata += 1
         } catch {
           absorb(error)
@@ -1707,32 +1710,25 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.nextAsn()
   }
 
-  /// The version id a document's file-metadata caches under. Both fallbacks
-  /// land on the document id, which equals the root version id server-side: the
-  /// cached row may be absent (nothing fetched it yet) and the read itself may
-  /// fail. In practice the detail view fetches the document first, so the
-  /// versions are usually known by the time this is called.
-  private func fileMetadataVersionID(documentId: UInt) async -> UInt {
-    (try? await database.document(serverID: serverID, id: documentId))?.currentVersionID
-      ?? documentId
-  }
-
   public func metadata(documentId: UInt) async throws -> Metadata {
-    // File-metadata is immutable per file version, so it caches under the
-    // document's current version id.
-    let versionID = await fileMetadataVersionID(documentId: documentId)
     do {
-      let fetched = try await wrapped.metadata(documentId: documentId)
-      try await database.setFileMetadata(fetched, serverID: serverID, versionID: versionID)
-      return fetched
+      return try await refreshMetadata(documentId: documentId)
     } catch let error where Self.mayServeCache(after: error) {
-      if let cached = try await database.fileMetadata(serverID: serverID, versionID: versionID) {
+      if let cached = try await database.fileMetadata(serverID: serverID, documentID: documentId) {
         Logger.shared.log(
           level: SyncFailureClass(error).readFallbackLogLevel,
           "metadata(documentId:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
+    }
+  }
+
+  /// `metadata(documentId:)` without the cache fallback: fetches, writes
+  /// through, and throws if the request fails.
+  private func refreshMetadata(documentId: UInt) async throws -> Metadata {
+    try await database.refreshFileMetadata(serverID: serverID, documentID: documentId) {
+      [wrapped] in try await wrapped.metadata(documentId: documentId)
     }
   }
 
