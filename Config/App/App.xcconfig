@@ -32,6 +32,10 @@ SWIFT_EMIT_LOC_STRINGS = NO
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
 ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES
+// Icon Composer (.icon) bundles are not covered by INCLUDE_ALL_APPICON_ASSETS,
+// which only picks up .appiconset entries from the asset catalog. Alternate
+// .icon files have to be listed here by name.
+ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIconVar3
 
 DEVELOPMENT_ASSET_PATHS = "swift-paperless/Preview Content"
 
