@@ -38,23 +38,47 @@ import Foundation
 /// main-actor caller enters it without suspending, so a snapshot of
 /// ``ownedKeys`` the caller took just before the call is still current at the
 /// claim.
+///
+/// ## Pending take-overs
+///
+/// A caller inside ``takeOver(_:start:)`` is counted against its key from the
+/// moment it enters until it returns or throws, not only once it has claimed.
+/// Otherwise the key would read as free while that caller waits to resume after
+/// the departing owner released it, and a sweep could claim it or a waiter
+/// could return just before the take-over's claim (#775). So ``isOwned(_:)``,
+/// ``ownedKeys`` and ``waitUntilFree(_:)`` mean "owned, or about to be".
+/// ``drain(_:)`` and ``owner(of:)`` see registered owners only: a take-over
+/// drains the writer in its way, not the other take-overs queued beside it.
 @MainActor
 public final class KeyOwnership<Key: Hashable & Sendable> {
   public typealias Owner = Task<Void, any Error>
 
   private var owners: [Key: Owner] = [:]
 
+  /// Callers currently inside ``takeOver(_:start:)``, per key. Absent rather
+  /// than zero.
+  private var pendingTakeOvers: [Key: Int] = [:]
+
+  /// ``waitUntilFree(_:)`` callers parked on a key that has pending take-overs
+  /// but no registered owner, resumed whenever a take-over of that key ends.
+  private var freeWaiters: [Key: [UInt64: CheckedContinuation<Void, Never>]] = [:]
+  private var nextWaiterID: UInt64 = 0
+
   public init() {}
 
-  /// Whether some writer currently owns `key`.
-  public func isOwned(_ key: Key) -> Bool { owners[key] != nil }
+  /// Whether some writer owns `key`, or a ``takeOver(_:start:)`` of it is in
+  /// progress.
+  public func isOwned(_ key: Key) -> Bool {
+    owners[key] != nil || pendingTakeOvers[key] != nil
+  }
 
-  /// The writer currently owning `key`, if any — for callers that wait for the
-  /// key to settle without taking it over.
-  public func owner(of key: Key) -> Owner? { owners[key] }
+  /// The writer registered against `key`, if any. Excludes pending take-overs.
+  func owner(of key: Key) -> Owner? { owners[key] }
 
-  /// Every key currently owned, as of this call.
-  public var ownedKeys: Dictionary<Key, Owner>.Keys { owners.keys }
+  /// Every key ``isOwned(_:)`` reports, as of this call.
+  public var ownedKeys: Set<Key> {
+    Set(owners.keys).union(pendingTakeOvers.keys)
+  }
 
   /// Register `owner` as `key`'s writer.
   ///
@@ -126,13 +150,78 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   /// Throws `CancellationError` without claiming anything if the *caller* was
   /// cancelled while draining — see ``drain(_:)``.
   ///
+  /// The key counts as owned for the whole call (see *Pending take-overs*).
+  /// The count is taken before the first suspension and dropped in a `defer`,
+  /// so every exit — claim, a throwing `start`, cancellation — drops it; on
+  /// success the claim is already in place when it does.
+  ///
   /// - Returns: The owner `start` created, now registered against `key`.
   @discardableResult
   public func takeOver(_ key: Key, start: () throws -> Owner) async throws -> Owner {
+    pendingTakeOvers[key, default: 0] += 1
+    defer { endPendingTakeOver(key) }
     try await drain(key)
     let owner = try start()
     claim(key, by: owner)
     return owner
+  }
+
+  private func endPendingTakeOver(_ key: Key) {
+    let remaining = pendingTakeOvers[key, default: 1] - 1
+    pendingTakeOvers[key] = remaining > 0 ? remaining : nil
+    // Waiters re-check: the key is now claimed, still pending, or free.
+    guard let waiters = freeWaiters.removeValue(forKey: key) else { return }
+    for waiter in waiters.values { waiter.resume() }
+  }
+
+  /// Suspend until `key` is free — no registered owner and no take-over in
+  /// progress — without taking it over. Returns early if the calling task is
+  /// cancelled.
+  ///
+  /// Owners are awaited, not cancelled. A finished owner is released here
+  /// rather than waited on until its own caller retracts it; it is no longer
+  /// writing. Waiting on a pending take-over parks until that take-over ends,
+  /// then re-checks. Cancellation interrupts that park, but not an
+  /// `await owner.value`, so a cancelled caller returns once the owner it is
+  /// awaiting has stopped.
+  ///
+  /// The key is free when this returns uncancelled, as of that main-actor job;
+  /// anything may claim it at the caller's next suspension.
+  public func waitUntilFree(_ key: Key) async {
+    while !Task.isCancelled {
+      if let owner = owners[key] {
+        _ = try? await owner.value
+        release(key, ifOwnedBy: owner)
+      } else if pendingTakeOvers[key] != nil {
+        await waitForPendingTakeOverToEnd(key)
+      } else {
+        return
+      }
+    }
+  }
+
+  private func waitForPendingTakeOverToEnd(_ key: Key) async {
+    let id = nextWaiterID
+    nextWaiterID += 1
+    await withTaskCancellationHandler {
+      await withCheckedContinuation { continuation in
+        // Cancelled before this registered: the handler has nothing to resume.
+        if Task.isCancelled {
+          continuation.resume()
+        } else {
+          freeWaiters[key, default: [:]][id] = continuation
+        }
+      }
+    } onCancel: {
+      Task { @MainActor in self.resumeFreeWaiter(key, id: id) }
+    }
+  }
+
+  /// No-op if a take-over ending already resumed it.
+  private func resumeFreeWaiter(_ key: Key, id: UInt64) {
+    guard let waiter = freeWaiters[key]?.removeValue(forKey: id) else { return }
+    if freeWaiters[key]?.isEmpty == true { freeWaiters[key] = nil }
+    waiter.resume()
   }
 
   /// Run `write` as the owner of every key in `keys`, for its whole duration.
@@ -154,11 +243,11 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
   /// Any other error from `write` propagates as-is.
   ///
   /// This is for a writer that *steps over* keys in use rather than taking them
-  /// over, so every key must be free: the caller checks ``isOwned(_:)`` (or
-  /// ``ownedKeys``) and gets here without suspending. Claiming an owned key
-  /// would replace its writer without stopping it, so that is asserted against
-  /// rather than done silently; a writer that wants a busy key uses
-  /// ``takeOver(_:start:)``.
+  /// over, so every key must be free, pending take-overs included: the caller
+  /// checks ``isOwned(_:)`` (or ``ownedKeys``) and gets here without
+  /// suspending. Claiming an owned key would replace its writer without
+  /// stopping it, so that is asserted against rather than done silently; a
+  /// writer that wants a busy key uses ``takeOver(_:start:)``.
   ///
   /// - Returns: `true` if the write completed, `false` if it was drained.
   public func withOwnership(
@@ -166,7 +255,7 @@ public final class KeyOwnership<Key: Hashable & Sendable> {
     perform write: @escaping @Sendable () async throws -> Void
   ) async throws -> Bool {
     assert(
-      keys.allSatisfy { owners[$0] == nil },
+      keys.allSatisfy { !isOwned($0) },
       "withOwnership would replace a running writer without stopping it")
     let owner = Owner { try await write() }
     for key in keys { claim(key, by: owner) }

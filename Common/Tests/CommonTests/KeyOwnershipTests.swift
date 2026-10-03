@@ -404,6 +404,197 @@ struct KeyOwnershipTests {
     #expect(!ownership.isOwned("key"))
   }
 
+  // MARK: - Pending take-overs (#775)
+
+  /// A take-over parked on `old`, whose registration is already gone: the
+  /// departing owner's cleanup ran, but `old` itself has not yet stopped, so
+  /// the take-over cannot have resumed. Releasing `latch` lets `old` stop.
+  private func parkTakeOverAfterOwnerReleased(
+    _ ownership: KeyOwnership<String>,
+    start: @escaping @MainActor () throws -> KeyOwnership<String>.Owner = {
+      KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+    }
+  ) async throws -> (taker: Task<KeyOwnership<String>.Owner, any Error>, latch: Latch) {
+    let latch = Latch()
+    let log = Log()
+    let old = KeyOwnership<String>.Owner {
+      await withTaskCancellationHandler {
+        await latch.wait()
+      } onCancel: {
+        log.append("old cancelled")
+      }
+    }
+    ownership.claim("key", by: old)
+    let taker = Task { @MainActor in try await ownership.takeOver("key", start: start) }
+    // `drain` cancels `old` and parks on its value in one main-actor job.
+    try await waitUntil { log.entries.contains("old cancelled") }
+    ownership.release("key", ifOwnedBy: old)
+    #expect(ownership.owner(of: "key") == nil)
+    return (taker, latch)
+  }
+
+  @Test(
+    "A key reads as owned while a take-over of it is pending",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/775", id: 775),
+    .timeLimit(.minutes(1)))
+  func pendingTakeOverReadsAsOwned() async throws {
+    let ownership = KeyOwnership<String>()
+    let (taker, latch) = try await parkTakeOverAfterOwnerReleased(ownership)
+
+    #expect(ownership.isOwned("key"))
+    #expect(ownership.ownedKeys == ["key"])
+
+    await latch.release()
+    let fill = try await taker.value
+    #expect(ownership.owner(of: "key") == fill)
+    fill.cancel()
+  }
+
+  @Test(
+    "Waiting for a key to be free outlasts a pending take-over and the owner it claims",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/775", id: 775),
+    .timeLimit(.minutes(1)))
+  func waiterOutlastsPendingTakeOver() async throws {
+    let ownership = KeyOwnership<String>()
+    let fillLatch = Latch()
+    let log = Log()
+    let (taker, latch) = try await parkTakeOverAfterOwnerReleased(ownership) {
+      KeyOwnership<String>.Owner {
+        await fillLatch.wait()
+        log.append("fill finished")
+      }
+    }
+
+    let waiter = Task { @MainActor in
+      await ownership.waitUntilFree("key")
+      log.append("waiter returned")
+    }
+    try await Task.sleep(for: .milliseconds(20))
+    #expect(log.entries.isEmpty, "the waiter must not return while a take-over is pending")
+
+    await latch.release()
+    let fill = try await taker.value
+    #expect(ownership.owner(of: "key") == fill)
+    try await Task.sleep(for: .milliseconds(20))
+    #expect(log.entries.isEmpty, "the waiter must not return while the claimed fill runs")
+
+    await fillLatch.release()
+    await waiter.value
+    #expect(log.entries == ["fill finished", "waiter returned"])
+    // The waiter retracts the finished owner itself rather than polling for it.
+    #expect(!ownership.isOwned("key"))
+  }
+
+  @Test(
+    "Waiting follows several take-overs pending on one key until the last one's owner stops",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/775", id: 775),
+    .timeLimit(.minutes(1)))
+  func waiterOutlastsSeveralPendingTakeOvers() async throws {
+    let ownership = KeyOwnership<String>()
+    let latch = Latch()
+    let log = Log()
+    let old = KeyOwnership<String>.Owner {
+      await withTaskCancellationHandler {
+        await latch.wait()
+      } onCancel: {
+        log.append("old cancelled")
+      }
+    }
+    ownership.claim("key", by: old)
+    let takers = (0..<2).map { _ in
+      Task { @MainActor in
+        try await ownership.takeOver("key") {
+          KeyOwnership<String>.Owner { try await Task.sleep(for: .seconds(60)) }
+        }
+      }
+    }
+    try await waitUntil { log.entries.contains("old cancelled") }
+    // Let the second taker park on `old` too.
+    try await Task.sleep(for: .milliseconds(20))
+    ownership.release("key", ifOwnedBy: old)
+
+    let waiter = Task { @MainActor in
+      await ownership.waitUntilFree("key")
+      log.append("waiter returned")
+    }
+    await latch.release()
+    var fills: [KeyOwnership<String>.Owner] = []
+    for taker in takers { fills.append(try await taker.value) }
+    let holder = try #require(ownership.owner(of: "key"))
+    try await Task.sleep(for: .milliseconds(20))
+    #expect(!log.entries.contains("waiter returned"))
+
+    holder.cancel()
+    await waiter.value
+    #expect(!ownership.isOwned("key"))
+    for fill in fills { fill.cancel() }
+  }
+
+  @Test(
+    "A take-over cancelled while pending clears its marker and releases waiters",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/775", id: 775),
+    .timeLimit(.minutes(1)))
+  func cancelledPendingTakeOverClearsMarker() async throws {
+    let ownership = KeyOwnership<String>()
+    let (taker, latch) = try await parkTakeOverAfterOwnerReleased(ownership)
+    let waiter = Task { @MainActor in await ownership.waitUntilFree("key") }
+
+    taker.cancel()
+    // `await owner.value` is not interruptible: still pending until `old` stops.
+    #expect(ownership.isOwned("key"))
+    await latch.release()
+
+    let outcome = await taker.result
+    if case .success(let replacement) = outcome { replacement.cancel() }
+    #expect(throws: CancellationError.self) { try outcome.get() }
+    #expect(!ownership.isOwned("key"))
+    #expect(ownership.ownedKeys.isEmpty)
+    await waiter.value
+  }
+
+  @Test(
+    "A take-over whose start throws clears its marker and releases waiters",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/775", id: 775),
+    .timeLimit(.minutes(1)))
+  func throwingPendingTakeOverClearsMarker() async throws {
+    let ownership = KeyOwnership<String>()
+    let (taker, latch) = try await parkTakeOverAfterOwnerReleased(ownership) {
+      throw WriteFailed()
+    }
+    let waiter = Task { @MainActor in await ownership.waitUntilFree("key") }
+
+    await latch.release()
+    await #expect(throws: WriteFailed.self) { try await taker.value }
+    #expect(!ownership.isOwned("key"))
+    #expect(ownership.ownedKeys.isEmpty)
+    await waiter.value
+  }
+
+  @Test(
+    "A waiter cancelled while a take-over is pending returns without it",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/775", id: 775),
+    .timeLimit(.minutes(1)))
+  func cancelledWaiterReturnsWhilePending() async throws {
+    let ownership = KeyOwnership<String>()
+    let (taker, latch) = try await parkTakeOverAfterOwnerReleased(ownership)
+    let waiter = Task { @MainActor in await ownership.waitUntilFree("key") }
+    try await Task.sleep(for: .milliseconds(20))
+
+    waiter.cancel()
+    await waiter.value
+    #expect(ownership.isOwned("key"), "the take-over is still pending")
+
+    await latch.release()
+    try await taker.value.cancel()
+  }
+
+  @Test("Waiting for an unowned key returns immediately")
+  func waitUntilFreeUnowned() async {
+    let ownership = KeyOwnership<String>()
+    await ownership.waitUntilFree("nothing")
+    #expect(!ownership.isOwned("nothing"))
+  }
+
   @Test("A failing write propagates its error and releases its keys")
   func writeErrorPropagates() async throws {
     let ownership = KeyOwnership<String>()
