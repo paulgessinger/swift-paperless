@@ -194,9 +194,9 @@ public struct OfflineSyncView: View {
             // Explicit user action: bypass the reconcile throttle and the
             // link gate, and force a re-fill ignoring the freshness marker.
             //
-            // `userInitiated` exists precisely so this rethrows instead of
-            // failing soft into `lastSyncError`; swallowing it here left a
-            // "Sync now" that looked identical whether it worked or not.
+            // `userInitiated` makes the sync rethrow instead of failing soft,
+            // so a failed "Sync now" is reported rather than looking identical
+            // to one that worked.
             syncNowRunning = true
             defer { syncNowRunning = false }
             let announcedOffline = errorController.noteOfflineIfNeeded()
