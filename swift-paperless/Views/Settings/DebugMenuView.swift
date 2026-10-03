@@ -111,8 +111,19 @@ struct DebugMenuView: View {
         }
       }
 
-      // Debug-only affordance: not localized on purpose, so debug strings
+      // Debug-only affordances: not localized on purpose, so debug strings
       // don't reach translators.
+      NavigationLink {
+        DatabaseStatisticsView()
+      } label: {
+        Label {
+          Text(verbatim: "Database statistics")
+            .accentColor(.primary)
+        } icon: {
+          Image(systemName: "cylinder.split.1x2")
+        }
+      }
+
       Section {
         Button {
           exportConnectionsToLegacyStorage()

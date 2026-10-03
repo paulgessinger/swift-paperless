@@ -982,6 +982,14 @@ extension DocumentStore {
     }.value
   }
 
+  /// Debug: the database's row counts and sync bookkeeping, for every server.
+  /// The database is reached through the active session, so this is `nil`
+  /// before login.
+  public func databaseStatistics() async throws -> DatabaseStatistics? {
+    guard let database = session?.backend?.database else { return nil }
+    return try await database.statistics()
+  }
+
   /// Debug / maintenance: drop downloaded document files that no cached document
   /// version references any more, keeping everything still reachable.
   ///
