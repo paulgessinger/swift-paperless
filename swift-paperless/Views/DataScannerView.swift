@@ -588,6 +588,7 @@ struct DataScannerView: View {
         isScanning: $isScanning,
         patterns: asnPatterns
       ) { document in
+        isScanning = false
         self.document = document
       }
       .transaction { t in
@@ -647,7 +648,9 @@ struct DataScannerView: View {
         }
       }
 
-      .sheet(item: $document) { document in
+      .sheet(item: $document, onDismiss: {
+        isScanning = true
+      }) { document in
         DetailView(document: document)
       }
     }
