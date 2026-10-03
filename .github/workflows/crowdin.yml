@@ -7,6 +7,7 @@ on:
   push:
     paths: [
       'AppShared/Sources/AppShared/Resources/Localization/*.xcstrings',
+      'swift-paperless/Localization/*.xcstrings',
     ]
     branches: [ main ]
 
@@ -47,8 +48,24 @@ jobs:
 
       - name: Fix generated files
         run: |
-          sudo chown $(whoami):$(whoami) AppShared/Sources/AppShared/Resources/Localization/*.xcstrings
-          prek run end-of-file-fixer --files AppShared/Sources/AppShared/Resources/Localization/*.xcstrings || true
+          catalogs=(AppShared/Sources/AppShared/Resources/Localization/*.xcstrings swift-paperless/Localization/*.xcstrings)
+          sudo chown "$(whoami):$(whoami)" "${catalogs[@]}"
+          prek run end-of-file-fixer --files "${catalogs[@]}" || true
+
+      # The pull drops translations committed to the repo but never uploaded.
+      # Put them back (Crowdin wins where both sides have one) and upload them.
+      - name: Restore local-only translations
+        id: restore
+        run: >-
+          python3 scripts/restore_local_translations.py --github-output
+          AppShared/Sources/AppShared/Resources/Localization/*.xcstrings
+          swift-paperless/Localization/*.xcstrings
+
+      - name: Crowdin push translations
+        if: steps.restore.outputs.restored != '0'
+        uses: crowdin/github-action@9af557de76d70c480f88065d336f445a362f402b # v3.1.0
+        with:
+          command: push translations
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
@@ -60,4 +77,6 @@ jobs:
           delete-branch: true
           body: "Automated update of localizations from Crowdin"
           base: main
-          add-paths: AppShared/Sources/AppShared/Resources/Localization
+          add-paths: |
+            AppShared/Sources/AppShared/Resources/Localization
+            swift-paperless/Localization
