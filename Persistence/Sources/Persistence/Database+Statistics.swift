@@ -155,7 +155,8 @@ extension Database {
         SELECT d.server_id, COUNT(*) AS n FROM document d
         WHERE NOT EXISTS (
           SELECT 1 FROM file_metadata f
-          WHERE f.server_id = d.server_id AND f.version_id = d.current_version_id)
+          WHERE f.server_id = d.server_id AND f.version_id = d.current_version_id
+            AND (d.modified IS NULL OR f.document_modified IS d.modified))
         GROUP BY d.server_id
         """)
 

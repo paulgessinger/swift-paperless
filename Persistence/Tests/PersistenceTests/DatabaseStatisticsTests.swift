@@ -15,6 +15,11 @@ struct DatabaseStatisticsTests {
       owner: .user(1), notes: NotesPayload(count: notes))
   }
 
+  private let metadata = Metadata(
+    originalChecksum: "checksum", originalSize: 1234, originalMimeType: "application/pdf",
+    mediaFilename: "scan.pdf", hasArchiveVersion: false, originalMetadata: [],
+    originalFilename: "scan.pdf", lang: "en")
+
   private let list = QueryKey(sentinel: "list")
   private let other = QueryKey(sentinel: "other")
 
@@ -74,6 +79,12 @@ struct DatabaseStatisticsTests {
       serverID: server, queryKey: "broken", savedViewName: "Inbox", message: "rejected",
       at: date(3000))
     try await database.setDeltaWatermark(date(4000), serverID: server)
+    // File metadata: fetched under an older `modified` for 1, current for 2,
+    // absent for 3.
+    try await database.setFileMetadata(
+      metadata, serverID: server, versionID: 1, documentModified: date(4000))
+    try await database.setFileMetadata(
+      metadata, serverID: server, versionID: 2, documentModified: nil)
 
     let stats = try await database.statistics()
 
@@ -93,7 +104,7 @@ struct DatabaseStatisticsTests {
     #expect(main.skeletonRows == 1)
     #expect(main.unreferencedDocuments == 1)
     #expect(main.documentsAwaitingNotes == 1)
-    #expect(main.documentsAwaitingFileMetadata == 3)
+    #expect(main.documentsAwaitingFileMetadata == 2)
 
     #expect(main.queries.map(\.id) == ["broken", "list", "other"])
     let filled = try #require(main.queries.first { $0.key == list })
