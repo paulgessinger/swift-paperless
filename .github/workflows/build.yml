@@ -91,6 +91,7 @@ jobs:
           - Common
           - Networking
           - Persistence
+          - Scanning
 
     steps:
       - name: Checkout
