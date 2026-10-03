@@ -1323,16 +1323,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let localIDs = try await database.allDocumentIDs(serverID: serverID)
     guard !localIDs.isEmpty else { return }
 
-    guard let watermark = try await deltaWatermark() else {
-      // First run: establish the baseline from the newest doc; subsequent passes
-      // delta against it. (Avoids re-paging the whole library on cold start.)
-      var newestFirst = FilterState.empty
-      newestFirst.sortField = .modified
-      newestFirst.sortOrder = .descending
-      let baseline = try wrapped.documents(filter: newestFirst)
-      if let newest = try await baseline.fetch(limit: 1).first?.modified {
-        try await setDeltaWatermark(newest)
-      }
+    let watermark: Date
+    if let stored = try await deltaWatermark() {
+      watermark = stored
+    } else if let baseline = try await establishDeltaBaseline() {
+      watermark = baseline
+    } else {
       return
     }
 
@@ -1679,13 +1675,44 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   ///
   /// An *unreadable* row is a different thing entirely and must not be reported
   /// as absent: the caller reads `nil` as "first run" and re-baselines from the
-  /// newest document, which moves the cursor past every change the real
-  /// watermark had not applied yet — and a high-water mark only moves up, so
+  /// newest cached document, which any list fill can have placed above the real
+  /// watermark. That moves the cursor past every change the real watermark had
+  /// not applied yet — and a high-water mark only moves up, so
   /// those documents are unreachable forever. So the failure propagates: the
   /// pass ends without touching the cursor and `ServerSession`'s sweep records
   /// it, leaving the stored watermark intact for the next attempt.
   private func deltaWatermark() async throws -> Date? {
     try await database.deltaWatermark(serverID: serverID)
+  }
+
+  /// Establish the delta's starting point when no watermark is stored: the
+  /// newest `modified` among this server's cached rows, stored as the watermark
+  /// and returned, or `nil` if there is nothing to baseline from.
+  ///
+  /// Throws if the baseline cannot be stored, so the walk never starts from one
+  /// that is not on disk. Otherwise an interrupted first pass would re-baseline
+  /// from a cache whose newest row a list fill may have moved up meanwhile,
+  /// above changes that pass had not applied.
+  ///
+  /// Covers every edit made after all cached rows were fetched: a cached
+  /// `modified` is a server timestamp no later than its row's fetch, so such an
+  /// edit is at or above the baseline. An edit that predates the fetch of some
+  /// newer-modified row can fall below it and stays stale until a fill
+  /// refreshes it. Baselining from the oldest cached row would cover that, but
+  /// can page the whole library on first run.
+  private func establishDeltaBaseline() async throws -> Date? {
+    if let newest = try await database.baselineDeltaWatermark(serverID: serverID) {
+      return newest
+    }
+    // Cached rows without a `modified` should not exist; fall back to the
+    // server's newest document, which applies nothing below it.
+    var newestFirst = FilterState.empty
+    newestFirst.sortField = .modified
+    newestFirst.sortOrder = .descending
+    let source = try wrapped.documents(filter: newestFirst)
+    guard let newest = try await source.fetch(limit: 1).first?.modified else { return nil }
+    try await database.setDeltaWatermark(newest, serverID: serverID)
+    return newest
   }
 
   /// Commit the cursor, swallowing an ordinary persistence failure (the pass

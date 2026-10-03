@@ -6,7 +6,7 @@ import Testing
 
 /// The delta watermark's read contract. `CachingRepository`'s changed-metadata
 /// pass treats a `nil` watermark as *"first run"* and re-baselines from the
-/// newest document, which discards the real cursor — so *absent* and
+/// newest cached document, which discards the real cursor — so *absent* and
 /// *unreadable* have to be two different answers, not both `nil`.
 @Suite("DeltaWatermark")
 struct DeltaWatermarkTests {
