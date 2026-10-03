@@ -1326,11 +1326,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let watermark: Date
     if let stored = try await deltaWatermark() {
       watermark = stored
-    } else if let baseline = try await firstRunDeltaBaseline() {
-      // Stored before walking: an interrupted first pass then resumes from
-      // here, rather than re-baselining from a cache whose newest row may have
-      // moved up in the meantime.
-      try await setDeltaWatermark(baseline)
+    } else if let baseline = try await establishDeltaBaseline() {
       watermark = baseline
     } else {
       return
@@ -1689,9 +1685,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await database.deltaWatermark(serverID: serverID)
   }
 
-  /// Where the delta starts when no watermark is stored: the newest `modified`
-  /// among this server's cached rows, or `nil` if there is nothing to baseline
-  /// from.
+  /// Establish the delta's starting point when no watermark is stored: the
+  /// newest `modified` among this server's cached rows, stored as the watermark
+  /// and returned, or `nil` if there is nothing to baseline from.
+  ///
+  /// Throws if the baseline cannot be stored, so the walk never starts from one
+  /// that is not on disk. Otherwise an interrupted first pass would re-baseline
+  /// from a cache whose newest row a list fill may have moved up meanwhile,
+  /// above changes that pass had not applied.
   ///
   /// Covers every edit made after all cached rows were fetched: a cached
   /// `modified` is a server timestamp no later than its row's fetch, so such an
@@ -1699,8 +1700,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// newer-modified row can fall below it and stays stale until a fill
   /// refreshes it. Baselining from the oldest cached row would cover that, but
   /// can page the whole library on first run.
-  private func firstRunDeltaBaseline() async throws -> Date? {
-    if let newest = try await database.newestCachedDocumentModified(serverID: serverID) {
+  private func establishDeltaBaseline() async throws -> Date? {
+    if let newest = try await database.baselineDeltaWatermark(serverID: serverID) {
       return newest
     }
     // Cached rows without a `modified` should not exist; fall back to the
@@ -1709,7 +1710,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     newestFirst.sortField = .modified
     newestFirst.sortOrder = .descending
     let source = try wrapped.documents(filter: newestFirst)
-    return try await source.fetch(limit: 1).first?.modified
+    guard let newest = try await source.fetch(limit: 1).first?.modified else { return nil }
+    try await database.setDeltaWatermark(newest, serverID: serverID)
+    return newest
   }
 
   /// Commit the cursor, swallowing an ordinary persistence failure (the pass

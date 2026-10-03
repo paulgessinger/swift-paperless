@@ -534,11 +534,15 @@ extension Database {
       .fetchSet(db)
   }
 
-  /// The latest `modified` among this server's cached documents, or `nil` if no
-  /// cached row has one. The changed-metadata delta's first-run baseline.
-  public func newestCachedDocumentModified(serverID: UUID) async throws -> Date? {
-    try await wrappingAsync("newestCachedDocumentModified") {
-      try await writer.read { db in
+  /// Baseline the changed-metadata delta from the cache: store the latest
+  /// `modified` among this server's cached documents as its delta watermark and
+  /// return it. Returns `nil`, storing nothing, if no cached row has one.
+  ///
+  /// One transaction, and a failed read or write throws: a caller that gets a
+  /// date back can rely on it being the stored watermark.
+  public func baselineDeltaWatermark(serverID: UUID) async throws -> Date? {
+    try await wrappingAsync("baselineDeltaWatermark") {
+      try await writer.write { db in
         // Read as the stored REAL: GRDB's `Date` decoding of a number assumes
         // the 1970 epoch, but the column holds reference-date seconds.
         let stamp =
@@ -546,7 +550,9 @@ extension Database {
           .select(max(Column("modified")), as: Double.self)
           .filter(Column("server_id") == serverID)
           .fetchOne(db)
-        return stamp.map { Date(timeIntervalSinceReferenceDate: $0) }
+        guard let stamp else { return nil }
+        try Self.updateSyncState(db, serverID: serverID) { $0.deltaWatermark = stamp }
+        return Date(timeIntervalSinceReferenceDate: stamp)
       }
     }
   }

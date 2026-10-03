@@ -29,7 +29,8 @@ struct DeltaBaselineTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
 
-    #expect(try await database.newestCachedDocumentModified(serverID: server) == nil)
+    #expect(try await database.baselineDeltaWatermark(serverID: server) == nil)
+    #expect(try await database.deltaWatermark(serverID: server) == nil)
   }
 
   @Test("the baseline is the newest cached modified, exactly")
@@ -39,7 +40,8 @@ struct DeltaBaselineTests {
     _ = try await database.applyChangedDocuments(
       [doc(1, modified: 3000), doc(2, modified: 5000), doc(3, modified: 4000)], serverID: server)
 
-    #expect(try await database.newestCachedDocumentModified(serverID: server) == date(5000))
+    #expect(try await database.baselineDeltaWatermark(serverID: server) == date(5000))
+    #expect(try await database.deltaWatermark(serverID: server) == date(5000))
   }
 
   @Test("rows without a modified date are ignored")
@@ -49,7 +51,7 @@ struct DeltaBaselineTests {
     _ = try await database.applyChangedDocuments(
       [doc(1, modified: nil), doc(2, modified: 4000)], serverID: server)
 
-    #expect(try await database.newestCachedDocumentModified(serverID: server) == date(4000))
+    #expect(try await database.baselineDeltaWatermark(serverID: server) == date(4000))
   }
 
   @Test("rows that all lack a modified date have no baseline")
@@ -59,7 +61,7 @@ struct DeltaBaselineTests {
     _ = try await database.applyChangedDocuments([doc(1, modified: nil)], serverID: server)
 
     #expect(try await database.allDocumentIDs(serverID: server) == [1])
-    #expect(try await database.newestCachedDocumentModified(serverID: server) == nil)
+    #expect(try await database.baselineDeltaWatermark(serverID: server) == nil)
   }
 
   @Test("another server's rows do not count")
@@ -75,7 +77,7 @@ struct DeltaBaselineTests {
     _ = try await database.applyChangedDocuments([doc(1, modified: 3000)], serverID: server)
     _ = try await database.applyChangedDocuments([doc(1, modified: 9000)], serverID: other)
 
-    #expect(try await database.newestCachedDocumentModified(serverID: server) == date(3000))
+    #expect(try await database.baselineDeltaWatermark(serverID: server) == date(3000))
   }
 
   @Test("a failed read throws rather than reading as no baseline")
@@ -91,7 +93,29 @@ struct DeltaBaselineTests {
     }
 
     await #expect(throws: Persistence.DatabaseError.self) {
-      _ = try await database.newestCachedDocumentModified(serverID: server)
+      _ = try await database.baselineDeltaWatermark(serverID: server)
     }
+  }
+
+  @Test("a baseline that cannot be stored throws rather than being returned")
+  func failedStoreThrows() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server)
+    _ = try await database.applyChangedDocuments([doc(1, modified: 3000)], serverID: server)
+
+    // Stand-in for any real write failure. A returned date would let the delta
+    // walk from a baseline that is not on disk.
+    try await database.writer.write { db in
+      try db.execute(
+        sql: """
+          CREATE TRIGGER reject_sync_state BEFORE INSERT ON server_sync_state
+          BEGIN SELECT RAISE(ABORT, 'rejected'); END
+          """)
+    }
+
+    await #expect(throws: Persistence.DatabaseError.self) {
+      _ = try await database.baselineDeltaWatermark(serverID: server)
+    }
+    #expect(try await database.deltaWatermark(serverID: server) == nil)
   }
 }
