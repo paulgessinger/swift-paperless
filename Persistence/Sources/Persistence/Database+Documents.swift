@@ -534,6 +534,23 @@ extension Database {
       .fetchSet(db)
   }
 
+  /// The latest `modified` among this server's cached documents, or `nil` if no
+  /// cached row has one. The changed-metadata delta's first-run baseline.
+  public func newestCachedDocumentModified(serverID: UUID) async throws -> Date? {
+    try await wrappingAsync("newestCachedDocumentModified") {
+      try await writer.read { db in
+        // Read as the stored REAL: GRDB's `Date` decoding of a number assumes
+        // the 1970 epoch, but the column holds reference-date seconds.
+        let stamp =
+          try DocumentRecord
+          .select(max(Column("modified")), as: Double.self)
+          .filter(Column("server_id") == serverID)
+          .fetchOne(db)
+        return stamp.map { Date(timeIntervalSinceReferenceDate: $0) }
+      }
+    }
+  }
+
   /// Which of `ids` have no cached `document` row, in order, without repeats.
   public func documentIDsWithoutRows(serverID: UUID, among ids: [UInt]) async throws -> [UInt] {
     guard !ids.isEmpty else { return [] }
