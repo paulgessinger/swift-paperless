@@ -17,10 +17,10 @@ CONFIG = "MARKETING_VERSION = 1.10.4\n"
 
 
 @patch.object(dispatch.subprocess, "run")
-@patch.object(dispatch, "contents", side_effect=[CONFIG, "- A fix\n"])
+@patch.object(dispatch, "contents", return_value=CONFIG)
 @patch.object(dispatch, "resolve", return_value=SHA)
 def test_maintenance_source_is_pinned_but_workflow_stays_on_main(
-    resolve, contents, run
+    resolve, contents, run, capsys
 ):
     args = dispatch.parser().parse_args(["--ref", "release/1.10", "--yes", "--dry-run"])
     dispatch.dispatch(args)
@@ -29,10 +29,16 @@ def test_maintenance_source_is_pinned_but_workflow_stays_on_main(
     inputs = json.loads(run.call_args.kwargs["input"])
     assert inputs["source_ref"] == SHA
     assert inputs["dry_run"] == "true"
+    contents.assert_called_once_with(
+        dispatch.REPOSITORY, SHA, "Config/Shared/Version.xcconfig"
+    )
+    output = capsys.readouterr().out
+    assert "CI will calculate the build changelog" in output
+    assert "Accumulated source changelog" not in output
 
 
 @patch.object(dispatch.subprocess, "run")
-@patch.object(dispatch, "contents", side_effect=[CONFIG, "- A fix\n"])
+@patch.object(dispatch, "contents", return_value=CONFIG)
 @patch.object(dispatch, "resolve", return_value=SHA)
 def test_default_release_uploads_main_with_ci_assigned_number(resolve, contents, run):
     dispatch.dispatch(dispatch.parser().parse_args(["--yes"]))
@@ -46,7 +52,7 @@ def test_default_release_uploads_main_with_ci_assigned_number(resolve, contents,
 
 
 @patch.object(dispatch.subprocess, "run")
-@patch.object(dispatch, "contents", side_effect=[CONFIG, ""])
+@patch.object(dispatch, "contents", return_value=CONFIG)
 @patch.object(dispatch, "resolve", return_value=SHA)
 def test_explicit_build_number_and_tooling_ref(resolve, contents, run):
     args = dispatch.parser().parse_args(

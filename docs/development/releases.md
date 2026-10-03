@@ -23,10 +23,14 @@ separate manual step.
 5. Creates `builds/<version>/<build>` and its GitHub prerelease at the application
    commit after a successful upload, using the changelog delta for that build.
 
-The source must already be on GitHub. The local command previews its accumulated
-changelog and resolves the source ref to a commit SHA before dispatching, so
-moving the branch afterwards cannot change what gets built. CI derives the
-per-build notes from the source history and build tags.
+The source must already be on GitHub. The local command shows the source ref,
+resolved commit SHA, and marketing version before dispatching. Moving the branch
+afterwards cannot change what gets built.
+
+CI calculates the per-build changelog from its full source history and build tags,
+and displays it in the run log and summary before building. The local command
+does not fetch or calculate changelog entries. With no previous build, CI shows
+all current notes; an unchanged changelog shows no new entries.
 
 There is one workflow, `.github/workflows/beta.yml`. It runs on `main`; its
 `source_ref` input selects the application checkout. Old maintenance branches
