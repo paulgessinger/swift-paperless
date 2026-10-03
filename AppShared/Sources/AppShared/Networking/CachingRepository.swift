@@ -829,7 +829,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         try Task.checkCancellation()
         if leftEntireLibrary() { return true }
         do {
-          _ = try await metadata(documentId: id)
+          // Not `metadata(documentId:)`: its fallback would serve the outdated
+          // row this is replacing and count a failed request as fetched.
+          _ = try await refreshMetadata(documentId: id)
           fetchedMetadata += 1
         } catch {
           absorb(error)
@@ -1709,26 +1711,24 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func metadata(documentId: UInt) async throws -> Metadata {
-    // Caches under the current version id. Without a cached document (none
-    // fetched yet, or the read failed) that falls back to the document id,
-    // which equals the root version id server-side. `modified` is read before
-    // the request, so a change landing during it leaves the row outdated
-    // rather than looking current.
-    let document = try? await database.document(serverID: serverID, id: documentId)
-    let versionID = document?.currentVersionID ?? documentId
     do {
-      let fetched = try await wrapped.metadata(documentId: documentId)
-      try await database.setFileMetadata(
-        fetched, serverID: serverID, versionID: versionID, documentModified: document?.modified)
-      return fetched
+      return try await refreshMetadata(documentId: documentId)
     } catch let error where Self.mayServeCache(after: error) {
-      if let cached = try await database.fileMetadata(serverID: serverID, versionID: versionID) {
+      if let cached = try await database.fileMetadata(serverID: serverID, documentID: documentId) {
         Logger.shared.log(
           level: SyncFailureClass(error).readFallbackLogLevel,
           "metadata(documentId:) network failed (\(error)); serving cached")
         return cached
       }
       throw error
+    }
+  }
+
+  /// `metadata(documentId:)` without the cache fallback: fetches, writes
+  /// through, and throws if the request fails.
+  private func refreshMetadata(documentId: UInt) async throws -> Metadata {
+    try await database.refreshFileMetadata(serverID: serverID, documentID: documentId) {
+      [wrapped] in try await wrapped.metadata(documentId: documentId)
     }
   }
 

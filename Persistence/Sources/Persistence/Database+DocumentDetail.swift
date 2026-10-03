@@ -70,6 +70,36 @@ extension Database {
     }
   }
 
+  /// Fetch a document's `/metadata/` with `fetch` and cache it under the
+  /// document's current version id. Without a cached document (none fetched
+  /// yet, or the read failed) that falls back to the document id, which equals
+  /// the root version id server-side.
+  ///
+  /// The document's `modified` is read before `fetch` runs, so a change landing
+  /// during the request leaves the row outdated rather than looking current.
+  ///
+  /// - Throws: whatever `fetch` throws, leaving any cached row as it was. There
+  ///   is no cache fallback here; see ``fileMetadata(serverID:documentID:)``.
+  public func refreshFileMetadata(
+    serverID: UUID, documentID: UInt, fetch: @Sendable () async throws -> Metadata
+  ) async throws -> Metadata {
+    let document = try? await document(serverID: serverID, id: documentID)
+    let fetched = try await fetch()
+    try await setFileMetadata(
+      fetched, serverID: serverID, versionID: document?.currentVersionID ?? documentID,
+      documentModified: document?.modified)
+    return fetched
+  }
+
+  /// The cached metadata of a document's current file version, or `nil` if
+  /// never cached. Resolves the version like
+  /// ``refreshFileMetadata(serverID:documentID:fetch:)``.
+  public func fileMetadata(serverID: UUID, documentID: UInt) async throws -> Metadata? {
+    let document = try? await document(serverID: serverID, id: documentID)
+    return try await fileMetadata(
+      serverID: serverID, versionID: document?.currentVersionID ?? documentID)
+  }
+
   /// A file version's cached metadata, or `nil` if never cached.
   public func fileMetadata(serverID: UUID, versionID: UInt) async throws -> Metadata? {
     try await wrappingAsync("fileMetadata") {
@@ -170,8 +200,8 @@ extension Database {
   /// Cached document ids that need an R4m `/metadata/` request: their current
   /// file version has no cached `file_metadata` row, or the row was fetched
   /// under a different document `modified`. Mirrors the version-key resolution
-  /// in `CachingRepository.metadata(documentId:)` (current version, falling back
-  /// to the document id).
+  /// in ``refreshFileMetadata(serverID:documentID:fetch:)`` (current version,
+  /// falling back to the document id).
   ///
   /// Same shape as ``documentIDsNeedingNotesFetch(serverID:excluding:)`` and for
   /// the same reason. `current_version_id` is a real column (`V9`) holding what

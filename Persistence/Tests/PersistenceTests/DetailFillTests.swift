@@ -221,6 +221,37 @@ struct DetailFillTests {
     #expect(try await database.notes(serverID: server, documentID: 2) == nil)
   }
 
+  @Test(
+    "a failed file metadata refresh throws and leaves the outdated row needed",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/764", id: 764))
+  func failedFileMetadataRefreshStaysNeeded() async throws {
+    struct ServerError: Error {}
+    let server = UUID()
+    let database = try database(server)
+    try await database.upsertDocuments([doc(1, modified: date(100))], serverID: server)
+    try await database.setFileMetadata(
+      metadata("before"), serverID: server, versionID: 1, documentModified: date(100))
+    try await database.upsertDocuments([doc(1, modified: date(200))], serverID: server)
+
+    // The outdated row must not turn the failure into a result.
+    await #expect(throws: ServerError.self) {
+      try await database.refreshFileMetadata(serverID: server, documentID: 1) {
+        throw ServerError()
+      }
+    }
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server) == [1])
+    #expect(
+      try await database.fileMetadata(serverID: server, documentID: 1)?.originalChecksum
+        == "before")
+
+    let fresh = metadata("after")
+    _ = try await database.refreshFileMetadata(serverID: server, documentID: 1) { fresh }
+    #expect(try await database.documentIDsNeedingFileMetadataFetch(serverID: server).isEmpty)
+    #expect(
+      try await database.fileMetadata(serverID: server, documentID: 1)?.originalChecksum
+        == "after")
+  }
+
   // MARK: - Invalidation
 
   @Test("invalidateNotes drops only the named docs' rows")

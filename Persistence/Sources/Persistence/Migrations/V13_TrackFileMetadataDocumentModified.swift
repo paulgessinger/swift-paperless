@@ -6,7 +6,9 @@ import GRDB
 /// same key; a differing `modified` is what reveals it.
 ///
 /// Existing rows for a current version take their document's cached date, so
-/// the upgrade doesn't refetch the whole library. Rows for older versions stay
+/// the upgrade doesn't refetch the whole library. That date is assumed, not
+/// known: a row already outdated before the upgrade stays so until its document
+/// changes again or its metadata is viewed online. Rows for older versions stay
 /// `NULL`; nothing reads their date.
 enum V13_TrackFileMetadataDocumentModified {
   static func run(_ db: GRDB.Database) throws {
