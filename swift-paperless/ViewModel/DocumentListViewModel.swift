@@ -46,7 +46,16 @@ class DocumentListViewModel {
   var totalCount: UInt?
 
   /// True while a fill (page-1 await) or refresh is in flight.
-  private(set) var isFetching = false
+  var isFetching: Bool { fillsInFlight > 0 }
+
+  /// How many fills the list has started and not yet finished.
+  ///
+  /// Counted rather than flagged because two can overlap — a pull-to-refresh
+  /// during the initial load, a filter change during a refresh — and the
+  /// superseded one runs on to its own `defer` after the newer one has already
+  /// claimed the flag. Clearing it there said "idle" while a fill was still in
+  /// flight, and an empty cache reads that as "No documents".
+  private var fillsInFlight = 0
 
   /// The observed query was just switched to and its fill hasn't reported back
   /// yet. Without this, the element sync that precedes a filter change's fill
@@ -76,7 +85,8 @@ class DocumentListViewModel {
   var state: DocumentListState {
     DocumentListState(
       hasRows: !documents.isEmpty,
-      isFetching: isFetching || awaitingFill || isFollowingReplacement,
+      isFetching: isFetching || awaitingFill,
+      isFillTakenOver: isFollowingReplacement,
       totalCount: totalCount,
       isCacheComplete: isCacheComplete,
       fillFailed: fillError != nil || replacementStoppedShort)
@@ -288,8 +298,8 @@ class DocumentListViewModel {
   /// here, the background paging via `watchCompletion` — so the list can tell a
   /// failed load from a query with no matches.
   private func runFill() async throws {
-    isFetching = true
-    defer { isFetching = false }
+    fillsInFlight += 1
+    defer { fillsInFlight -= 1 }
     fill?.cancel()
     fillGeneration += 1
     let generation = fillGeneration
@@ -314,13 +324,39 @@ class DocumentListViewModel {
       awaitingFill = false
       watchCompletion(of: handle, generation: generation)
     } catch {
-      if generation == fillGeneration {
+      // Judged like the background paging in `watchCompletion`. A cancellation
+      // here is another fill draining ours before page 1 landed.
+      let end: DocumentListFillTracking.End = error.isCancellationError ? .cancelled : .failed
+      switch DocumentListFillTracking.followUp(
+        after: end, isCurrent: generation == fillGeneration)
+      {
+      case .none:
+        break
+      case .recordFailure:
         awaitingFill = false
-        if !error.isCancellationError {
-          fillError = error
+        fillError = error
+      case .followReplacement:
+        awaitingFill = false
+        // Set before the task starts, so no render pass sees an empty, idle list.
+        isFollowingReplacement = true
+        if let queryKey {
+          startFollowingReplacement(of: queryKey, generation: generation)
+        } else {
+          // Nothing subscribed to follow; don't strand the placeholders.
+          isFollowingReplacement = false
         }
       }
       throw error
+    }
+  }
+
+  /// Follow a replacement for a fill drained before page 1 landed, which left
+  /// no handle for `watchCompletion`. Runs in the completion slot, so a query
+  /// switch, a newer fill or a teardown cancels it.
+  private func startFollowingReplacement(of key: QueryKey, generation: Int) {
+    completionTask?.cancel()
+    completionTask = Task { @MainActor [weak self] in
+      await self?.followReplacement(of: key, generation: generation)
     }
   }
 
@@ -365,6 +401,10 @@ class DocumentListViewModel {
   /// outcome from the cache, since the replacement's error isn't visible here.
   /// Meanwhile the list counts as fetching: something is filling its query.
   private func followReplacement(of key: QueryKey, generation: Int) async {
+    // A queued follow-up can start after the list moved on. The newer fill or
+    // query switch has already reset the flag; setting it again would leave
+    // that query on placeholders.
+    guard generation == fillGeneration else { return }
     Logger.shared.info("Document fill was taken over by another fill; following it")
     isFollowingReplacement = true
     await store.waitForQueryWriters(queryKey: key)

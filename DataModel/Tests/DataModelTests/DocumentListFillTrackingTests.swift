@@ -43,18 +43,18 @@ struct DocumentListFillTrackingTests {
     let stoppedShort = DocumentListFillTracking.replacementStoppedShort(isCacheComplete: false)
     // Partial rows get the incomplete notice.
     let partial = DocumentListState(
-      hasRows: true, isFetching: false, totalCount: 900, isCacheComplete: false,
-      fillFailed: stoppedShort)
+      hasRows: true, isFetching: false, isFillTakenOver: false, totalCount: 900,
+      isCacheComplete: false, fillFailed: stoppedShort)
     #expect(partial.isIncomplete)
     // An empty prefix with a positive total is unavailable, not loading forever.
     let empty = DocumentListState(
-      hasRows: false, isFetching: false, totalCount: 900, isCacheComplete: false,
-      fillFailed: stoppedShort)
+      hasRows: false, isFetching: false, isFillTakenOver: false, totalCount: 900,
+      isCacheComplete: false, fillFailed: stoppedShort)
     #expect(empty.content == .unavailable)
     // While the replacement still runs, the list counts as fetching.
     let following = DocumentListState(
-      hasRows: false, isFetching: true, totalCount: 900, isCacheComplete: false,
-      fillFailed: false)
+      hasRows: false, isFetching: true, isFillTakenOver: false, totalCount: 900,
+      isCacheComplete: false, fillFailed: false)
     #expect(following.content == .loading)
   }
 
@@ -114,5 +114,66 @@ struct DocumentListFillTrackingTests {
       DocumentListFillTracking.resyncsMembershipAfterWriters(isStale: true, isWidened: false))
     #expect(
       !DocumentListFillTracking.resyncsMembershipAfterWriters(isStale: false, isWidened: false))
+  }
+
+  @Test("A page-1 fill is judged by the same rule as the paging behind it")
+  func pageOneEndsLikeTheBackgroundLeg() {
+    // The list awaits page 1 and pages the rest in the background, but a
+    // takeover can land during either, and both have to be followed.
+    #expect(DocumentListFillTracking.followUp(after: .failed, isCurrent: true) == .recordFailure)
+    #expect(
+      DocumentListFillTracking.followUp(after: .cancelled, isCurrent: true) == .followReplacement)
+    #expect(DocumentListFillTracking.followUp(after: .cancelled, isCurrent: false) == .none)
+  }
+
+  @Test(
+    "A page-1 fill drained on a cold launch shows placeholders, never 'No documents'",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/692", id: 692))
+  func drainedPageOneIsNotAnEmptyResult() {
+    // Nothing cached, nothing fetched, no error: everything the list knows
+    // after its page-1 fill was drained before writing a row.
+    func coldCache(isFillTakenOver: Bool, fillFailed: Bool = false) -> DocumentListState {
+      DocumentListState(
+        hasRows: false, isFetching: false, isFillTakenOver: isFillTakenOver, totalCount: nil,
+        isCacheComplete: false, fillFailed: fillFailed)
+    }
+
+    // Unfollowed, this is the cold-launch flash.
+    #expect(coldCache(isFillTakenOver: false).content == .empty)
+
+    // Followed, the list waits on whoever took the query over.
+    let following =
+      DocumentListFillTracking.followUp(after: .cancelled, isCurrent: true) == .followReplacement
+    #expect(coldCache(isFillTakenOver: following).content == .loading)
+  }
+
+  @Test(
+    "Following a drained page-1 fill resolves on every exit, including failure",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/692", id: 692))
+  func followedPageOneAlwaysResolves() {
+    // The replacement died too (an offline cold launch kills both fills): the
+    // list has to offer a retry, not spin forever. This is why `.unavailable`
+    // exists.
+    let bothFailed = DocumentListState(
+      hasRows: false, isFetching: false, isFillTakenOver: false, totalCount: nil,
+      isCacheComplete: false,
+      fillFailed: DocumentListFillTracking.replacementStoppedShort(isCacheComplete: false))
+    #expect(bothFailed.content == .unavailable)
+
+    // The replacement finished against a server that really has no documents:
+    // the takeover must not mask a genuine zero-match answer.
+    let genuinelyEmpty = DocumentListState(
+      hasRows: false, isFetching: false, isFillTakenOver: false, totalCount: 0,
+      isCacheComplete: true,
+      fillFailed: DocumentListFillTracking.replacementStoppedShort(isCacheComplete: true))
+    #expect(genuinelyEmpty.content == .empty)
+
+    // The replacement finished and the rows are on their way: still no flash in
+    // the beat before the observation repaints.
+    let rowsIncoming = DocumentListState(
+      hasRows: false, isFetching: false, isFillTakenOver: false, totalCount: 12,
+      isCacheComplete: true,
+      fillFailed: DocumentListFillTracking.replacementStoppedShort(isCacheComplete: true))
+    #expect(rowsIncoming.content == .loading)
   }
 }
