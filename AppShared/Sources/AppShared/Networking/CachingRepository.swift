@@ -258,6 +258,21 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// (see the rule in `Database+Connections`), and this is a single-row read of
   /// a handful of rows.
   var offlineBrowsingMode: OfflineBrowsingMode { get }
+
+  /// Called when a cache write fails after the server accepted the mutation
+  /// behind it, naming the pass that repairs the cache. The mutation itself
+  /// still succeeds. The owning `ServerSession` installs this.
+  var onCacheWriteLost: (@MainActor (CacheHeal) -> Void)? { get set }
+}
+
+/// The sync pass that brings the cache up to a server-accepted change whose
+/// cache write failed.
+public enum CacheHeal: Sendable, Equatable {
+  /// The element collections and the UI settings singleton: the element sync.
+  case elements
+  /// Documents and their notes: the reconcile, whose changed-documents delta
+  /// refreshes an edit and whose deletion sweep drops a delete.
+  case documents
 }
 
 extension CachingBackend {
@@ -331,6 +346,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   let wrapped: Wrapped
   public let database: Database
   public let serverID: UUID
+
+  public var onCacheWriteLost: (@MainActor (CacheHeal) -> Void)?
 
   /// The in-flight writer of each `QueryKey`'s `query_order` — a fill (page 1
   /// included, not only the background continuation) or the membership sweep's
@@ -957,24 +974,27 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// until the next `reconcileDocumentDeletions` happens to notice.
   ///
   /// An unstructured `Task` inherits actor isolation but *not* cancellation, so
-  /// the write runs to completion; awaiting its value keeps the method's
-  /// contract (it still returns only once the cache agrees with the server) and
-  /// still propagates a genuine write failure to the caller.
+  /// the write runs to completion, and this returns only once it has.
+  ///
+  /// A write that fails (the database busy past its timeout, a full disk) is
+  /// logged and reported through ``onCacheWriteLost`` with `heal`, and not
+  /// thrown: the server has the change, so reporting the mutation as failed
+  /// would invite a retry that re-sends it, or, for a delete, fails because the
+  /// object is gone. The cache keeps its old value until the heal pass lands.
   ///
   /// Only for writes behind a committed remote mutation. Reads and sweep writes
   /// stay cancellable: stopping those loses work, not consistency.
   private func commitCache(
-    _ operation: String, _ body: @escaping @Sendable () async throws -> Void
-  ) async throws {
+    _ operation: String, heal: CacheHeal,
+    _ body: @escaping @Sendable () async throws -> Void
+  ) async {
     do {
       try await Task { try await body() }.value
     } catch {
-      // The caller sees this as a plain failure; only the log can say that the
-      // server already accepted the change and it is the cache that is behind.
       Logger.shared.error(
-        "Cache write '\(operation, privacy: .public)' failed after the server accepted the change; the cache is stale until the next reconcile: \(error)"
+        "Cache write '\(operation, privacy: .public)' failed after the server accepted the change; healing \(String(describing: heal), privacy: .public): \(error)"
       )
-      throw error
+      onCacheWriteLost?(heal)
     }
   }
 
@@ -1068,7 +1088,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func create(tag: ProtoTag) async throws -> Tag {
     let created = try await wrapped.create(tag: tag)
-    try await commitCache("create(tag:)") { [database, serverID] in
+    await commitCache("create(tag:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(created, of: TagRecord.self, serverID: serverID)
     }
     return created
@@ -1076,7 +1096,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(tag: Tag) async throws -> Tag {
     let updated = try await wrapped.update(tag: tag)
-    try await commitCache("update(tag:)") { [database, serverID] in
+    await commitCache("update(tag:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(updated, of: TagRecord.self, serverID: serverID)
     }
     return updated
@@ -1084,14 +1104,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func delete(tag: Tag) async throws {
     try await wrapped.delete(tag: tag)
-    try await commitCache("delete(tag:)") { [database, serverID, id = tag.id] in
+    await commitCache("delete(tag:)", heal: .elements) { [database, serverID, id = tag.id] in
       try await database.deleteElement(TagRecord.self, serverID: serverID, id: id)
     }
   }
 
   public func create(correspondent: ProtoCorrespondent) async throws -> Correspondent {
     let created = try await wrapped.create(correspondent: correspondent)
-    try await commitCache("create(correspondent:)") { [database, serverID] in
+    await commitCache("create(correspondent:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(created, of: CorrespondentRecord.self, serverID: serverID)
     }
     return created
@@ -1099,7 +1119,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(correspondent: Correspondent) async throws -> Correspondent {
     let updated = try await wrapped.update(correspondent: correspondent)
-    try await commitCache("update(correspondent:)") { [database, serverID] in
+    await commitCache("update(correspondent:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(updated, of: CorrespondentRecord.self, serverID: serverID)
     }
     return updated
@@ -1107,14 +1127,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func delete(correspondent: Correspondent) async throws {
     try await wrapped.delete(correspondent: correspondent)
-    try await commitCache("delete(correspondent:)") { [database, serverID, id = correspondent.id] in
+    await commitCache("delete(correspondent:)", heal: .elements) {
+      [database, serverID, id = correspondent.id] in
       try await database.deleteElement(CorrespondentRecord.self, serverID: serverID, id: id)
     }
   }
 
   public func create(documentType: ProtoDocumentType) async throws -> DocumentType {
     let created = try await wrapped.create(documentType: documentType)
-    try await commitCache("create(documentType:)") { [database, serverID] in
+    await commitCache("create(documentType:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(created, of: DocumentTypeRecord.self, serverID: serverID)
     }
     return created
@@ -1122,7 +1143,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(documentType: DocumentType) async throws -> DocumentType {
     let updated = try await wrapped.update(documentType: documentType)
-    try await commitCache("update(documentType:)") { [database, serverID] in
+    await commitCache("update(documentType:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(updated, of: DocumentTypeRecord.self, serverID: serverID)
     }
     return updated
@@ -1130,14 +1151,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func delete(documentType: DocumentType) async throws {
     try await wrapped.delete(documentType: documentType)
-    try await commitCache("delete(documentType:)") { [database, serverID, id = documentType.id] in
+    await commitCache("delete(documentType:)", heal: .elements) {
+      [database, serverID, id = documentType.id] in
       try await database.deleteElement(DocumentTypeRecord.self, serverID: serverID, id: id)
     }
   }
 
   public func create(storagePath: ProtoStoragePath) async throws -> StoragePath {
     let created = try await wrapped.create(storagePath: storagePath)
-    try await commitCache("create(storagePath:)") { [database, serverID] in
+    await commitCache("create(storagePath:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(created, of: StoragePathRecord.self, serverID: serverID)
     }
     return created
@@ -1145,7 +1167,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(storagePath: StoragePath) async throws -> StoragePath {
     let updated = try await wrapped.update(storagePath: storagePath)
-    try await commitCache("update(storagePath:)") { [database, serverID] in
+    await commitCache("update(storagePath:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(updated, of: StoragePathRecord.self, serverID: serverID)
     }
     return updated
@@ -1153,14 +1175,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func delete(storagePath: StoragePath) async throws {
     try await wrapped.delete(storagePath: storagePath)
-    try await commitCache("delete(storagePath:)") { [database, serverID, id = storagePath.id] in
+    await commitCache("delete(storagePath:)", heal: .elements) {
+      [database, serverID, id = storagePath.id] in
       try await database.deleteElement(StoragePathRecord.self, serverID: serverID, id: id)
     }
   }
 
   public func create(savedView: ProtoSavedView) async throws -> SavedView {
     let created = try await wrapped.create(savedView: savedView)
-    try await commitCache("create(savedView:)") { [database, serverID] in
+    await commitCache("create(savedView:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(created, of: SavedViewRecord.self, serverID: serverID)
     }
     return created
@@ -1168,7 +1191,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(savedView: SavedView) async throws -> SavedView {
     let updated = try await wrapped.update(savedView: savedView)
-    try await commitCache("update(savedView:)") { [database, serverID] in
+    await commitCache("update(savedView:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
     }
     return updated
@@ -1176,7 +1199,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func delete(savedView: SavedView) async throws {
     try await wrapped.delete(savedView: savedView)
-    try await commitCache("delete(savedView:)") { [database, serverID, id = savedView.id] in
+    await commitCache("delete(savedView:)", heal: .elements) {
+      [database, serverID, id = savedView.id] in
       try await database.deleteElement(SavedViewRecord.self, serverID: serverID, id: id)
     }
   }
@@ -1199,7 +1223,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // has just earned the right to clear) or removes the document from it (a
     // delete reconcile, after which there is nothing left to mark). Neither
     // leaves a wrong state behind.
-    try await commitCache("update(document:)") { [database, serverID] in
+    await commitCache("update(document:)", heal: .documents) { [database, serverID] in
       try await database.upsertDocument(updated, serverID: serverID)
       try await database.markQueriesOrderStale(containing: updated.id, serverID: serverID)
     }
@@ -1210,7 +1234,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.delete(document: document)
     // Explicitly prunes every cached query_order referencing it too — no FK
     // cascade does this (dropped in migration V6).
-    try await commitCache("delete(document:)") { [database, serverID, id = document.id] in
+    await commitCache("delete(document:)", heal: .documents) {
+      [database, serverID, id = document.id] in
       try await database.deleteDocuments(serverID: serverID, removedIDs: [id])
     }
   }
@@ -1773,7 +1798,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Pessimistic: the server returns the updated full list, which we write
     // through so the cached notes stay consistent without a re-fetch.
     let updated = try await wrapped.createNote(documentId: documentId, note: note)
-    try await commitCache("createNote(documentId:)") { [database, serverID] in
+    await commitCache("createNote(documentId:)", heal: .documents) { [database, serverID] in
       try await database.setNotes(updated, serverID: serverID, documentID: documentId)
     }
     return updated
@@ -1781,7 +1806,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func deleteNote(id: UInt, documentId: UInt) async throws -> [Document.Note] {
     let updated = try await wrapped.deleteNote(id: id, documentId: documentId)
-    try await commitCache("deleteNote(id:documentId:)") { [database, serverID] in
+    await commitCache("deleteNote(id:documentId:)", heal: .documents) { [database, serverID] in
       try await database.setNotes(updated, serverID: serverID, documentID: documentId)
     }
     return updated
@@ -1852,7 +1877,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // the pre-sync user and permission matrix. `commitCache` covers the other
     // half — cancelled here, the server would be holding settings the cached
     // singleton denies.
-    try await commitCache("update(settings:)") { [database, serverID] in
+    await commitCache("update(settings:)", heal: .elements) { [database, serverID] in
       try await database.updateUISettings(serverID: serverID) { current in
         UISettings(user: current.user, settings: settings, permissions: current.permissions)
       }

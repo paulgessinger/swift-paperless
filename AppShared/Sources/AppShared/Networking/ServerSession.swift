@@ -151,23 +151,27 @@ public final class ServerSession {
   /// next trigger rather than being throttled away.
   public private(set) var lastSuccessfulSync: Date?
 
-  /// When the reconcile last *ran*. Advances on every attempt, deliberately —
-  /// it gates the sub-throttle below, and a server that fails every sweep must
-  /// not refetch its whole live id set on each of the seventeen on-appear
+  /// The reconcile's 300 s sub-throttle, which keeps the active server's
+  /// on-appear triggers off the wire. Bypassed by pull-to-refresh, by the
+  /// scheduler (which has already applied its own, much longer throttle before
+  /// asking), and by a heal owed after a lost cache write.
+  ///
+  /// Stamped on every attempt, deliberately: a server that fails every sweep
+  /// must not refetch its whole live id set on each of the seventeen on-appear
   /// triggers. Distinct from ``lastReconcileSuccess`` for exactly that reason.
-  @ObservationIgnored private var lastReconcileAttempt: Date?
+  @ObservationIgnored private var reconcileGate = ReconcileGate(interval: 300)
+
+  /// Whether an element sync is owed that has not started yet: a mutation's
+  /// cache write failed, and an element sync already running may have fetched
+  /// before the server accepted it.
+  @ObservationIgnored private var elementHealOwed = false
 
   /// When the reconcile last refreshed *something*. The user-facing "last
   /// refreshed" stamp the Offline & Sync screen renders, so it is observed.
   public private(set) var lastReconcileSuccess: Date?
 
-  /// Keeps the active server's on-appear triggers off the wire. Bypassed by
-  /// pull-to-refresh and by the scheduler, which has already applied its own
-  /// (much longer) throttle before asking.
-  private static let reconcileThrottle: TimeInterval = 300
-
-  /// When the blob reclaim last ran. Advances on every attempt, like
-  /// ``lastReconcileAttempt`` and for the same reason.
+  /// When the blob reclaim last ran. Advances on every attempt, like the
+  /// reconcile's stamp in ``reconcileGate`` and for the same reason.
   ///
   /// `static`, unlike every other throttle here: the reclaim is the one pass on
   /// this class that is not per-server. It walks a single app-group blob
@@ -180,7 +184,7 @@ public final class ServerSession {
   /// than racing into a duplicate sweep.
   @ObservationIgnored private static var lastContentReclaim: Date?
 
-  /// Much coarser than ``reconcileThrottle``: the reclaim is a directory walk
+  /// Much coarser than the reconcile's 300 s throttle: the reclaim is a directory walk
   /// over the whole blob store, and its input only changes when a version is
   /// superseded or a document disappears — neither of which is worth re-checking
   /// every five minutes on every foreground. In-memory, so a cold launch sweeps
@@ -291,6 +295,12 @@ public final class ServerSession {
     self.serverID = serverID
     source = .fixed(repository)
     state = .ready
+    adopt(repository)
+  }
+
+  /// Route the repository's lost cache writes to this session's heal.
+  private func adopt(_ repository: any Repository & CachingBackend) {
+    repository.onCacheWriteLost = { [weak self] in self?.heal($0) }
   }
 
   // MARK: - Repository access
@@ -373,6 +383,7 @@ public final class ServerSession {
         }
         return repository
       }
+      adopt(repository)
       built = (connection, repository)
       hasBuiltRepository = true
       return repository
@@ -421,6 +432,7 @@ public final class ServerSession {
         Logger.sync.info("Element sync skipped: session has no repository")
         return nil
       }
+      elementHealOwed = false
       Logger.sync.debug("Starting element sync")
       return { [weak self] in
         // Recorded inside the single-flight, so a failure counts once however
@@ -473,14 +485,9 @@ public final class ServerSession {
   public func reconcileDocuments(force: Bool = false) async -> ReconcileResult {
     let result = await reconcileSlot.joinOrStart(ifIdle: {
       guard let backend = current else { return nil }
-      if !force, let last = lastReconcileAttempt,
-        Date().timeIntervalSince(last) < Self.reconcileThrottle
-      {
-        return nil
-      }
-      // Stamped only when a pass actually starts — a joiner or a throttled
-      // caller leaves it alone.
-      lastReconcileAttempt = Date()
+      // Consulted only when a pass would actually start — a joiner leaves the
+      // stamp and an owed heal alone.
+      guard reconcileGate.start(force: force) else { return nil }
       return { [weak self] in
         guard let self else { return ReconcileResult() }
         return await runReconcile(backend: backend)
@@ -661,6 +668,42 @@ public final class ServerSession {
       } catch {
         self?.recordFailure(error, at: .detailFill)
         return false
+      }
+    }
+  }
+
+  // MARK: - Cache heal
+
+  /// Bring the cache up to a change the server accepted but the cache write
+  /// missed, by running the pass that already fetches it: the reconcile for
+  /// documents and notes (the delta refreshes an edit, the deletion sweep
+  /// drops a delete), the element sync for elements and UI settings.
+  ///
+  /// Starts now, bypassing the reconcile throttle. A pass already in flight is
+  /// joined, then followed by a fresh one if no pass has started since the heal
+  /// was owed: the joined pass may have read the server before the change.
+  ///
+  /// No retry beyond that: if the database is still failing, the heal fails too
+  /// and the cache stays behind until a later pass succeeds.
+  private func heal(_ kind: CacheHeal) {
+    Logger.sync.notice(
+      "Healing \(String(describing: kind), privacy: .public) cache for server \(self.serverID, privacy: .public)"
+    )
+    switch kind {
+    case .documents:
+      reconcileGate.oweHeal()
+      Task { [weak self] in
+        await self?.reconcileDocuments()
+        guard self?.reconcileGate.isHealOwed == true else { return }
+        await self?.reconcileDocuments()
+      }
+    case .elements:
+      elementHealOwed = true
+      // Failures are recorded and logged inside `syncElements`.
+      Task { [weak self] in
+        try? await self?.syncElements()
+        guard self?.elementHealOwed == true else { return }
+        try? await self?.syncElements()
       }
     }
   }

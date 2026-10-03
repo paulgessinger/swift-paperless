@@ -48,3 +48,4 @@
 - On Paperless-ngx 2.15 and later, document notes are saved for offline use straight from your document lists, without separate downloads
 - With "Entire library" offline browsing, a document's file metadata viewed offline now shows its current file names after the document is moved on the server, for example to another storage path, instead of the names from before the move
 - Pulling to refresh a document whose preview or original file failed to download now tries the download again, instead of staying on the error until the document is reopened
+- A change the server has saved is no longer reported as failed when the app cannot update its local copy right away; the local copy catches up on its own
