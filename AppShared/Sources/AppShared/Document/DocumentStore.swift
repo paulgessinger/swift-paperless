@@ -77,15 +77,6 @@ public final class DocumentStore: Sendable {
   /// does.
   public var permissionsKnown: Bool { projection?.isHydrated ?? false }
 
-  /// The last automatic (non-user-initiated) sync failure, kept so the UI can
-  /// surface a degraded state without tearing down the cached display.
-  /// User-initiated syncs rethrow instead (the caller toasts, as before).
-  ///
-  /// Narrower than ``syncFailures``, which is what the Offline & Sync screen
-  /// renders: this only ever sees a thrown element-sync failure on this store's
-  /// own path.
-  public private(set) var lastSyncError: (any DisplayableError)?
-
   /// Which parts of the active server's sync last failed — element sync, the
   /// permissions fetch, each reconcile sweep, the fills — whoever ran them.
   /// Offline and permission failures never appear here; see
@@ -296,14 +287,13 @@ public final class DocumentStore: Sendable {
   }
 
   /// Drop the per-server state this store still holds in memory, on a repository
-  /// swap. That is only the task list and the last sync error now: documents
-  /// aren't held in memory under source-of-truth (the list observes the DB
-  /// directly), and the element projection is owned by `projection` and
-  /// rebuilt by `rebuildProjection()`. `private` because `install(session:)` is
-  /// the one caller — a swap is the only moment this is the right thing to do.
+  /// swap. That is only the task list: documents aren't held in memory under
+  /// source-of-truth (the list observes the DB directly), and the element
+  /// projection is owned by `projection` and rebuilt by `rebuildProjection()`.
+  /// `private` because `install(session:)` is the one caller — a swap is the
+  /// only moment this is the right thing to do.
   private func clear() {
     tasks = []
-    lastSyncError = nil
   }
 
   /// Point the store at `connection` — the only supported way to put it on a server.
@@ -513,11 +503,13 @@ public final class DocumentStore: Sendable {
   /// Network → DB via the caching backend; the live element observation repaints
   /// the projection. Concurrent calls coalesce onto a single in-flight
   /// `syncElements` (the session's `elementSyncTask`); each caller still applies its own
-  /// `userInitiated` policy to the shared outcome — automatic syncs fail soft
-  /// into `lastSyncError`, user-initiated syncs rethrow so the caller can
+  /// `userInitiated` policy to the shared outcome — automatic syncs log the
+  /// failure and return normally, user-initiated syncs rethrow so the caller can
   /// surface the failure (toast). So a user-initiated call joining a background
-  /// sync still sees the error. This is what entry views call eagerly on
-  /// appear, and what pull-to-refresh calls with `userInitiated: true`.
+  /// sync still sees the error. The session decides which failures reach
+  /// ``syncFailures``, independent of `userInitiated`. This is what entry views
+  /// call eagerly on appear, and what pull-to-refresh calls with
+  /// `userInitiated: true`.
   public func sync(userInitiated: Bool = false) async throws {
     Logger.sync.notice("Sync store (userInitiated: \(userInitiated))")
     // Pinned for the whole call, not re-read after the await. A server switch
@@ -528,10 +520,6 @@ public final class DocumentStore: Sendable {
     guard let session else { return }
     do {
       try await session.syncElements()
-      // `lastSyncError` describes the server this call synced, so an outcome
-      // that arrives after a switch must not be shown for — or cleared on — the
-      // server now on screen.
-      if self.session === session { lastSyncError = nil }
       Logger.sync.info("Sync store complete")
       // Kick the reconcile alongside the element sync (throttled,
       // non-blocking). Not just remote deletes, despite the name it used to
@@ -550,12 +538,6 @@ public final class DocumentStore: Sendable {
         return
       }
       if userInitiated { throw error }
-      // Only presentable failures are recorded. A non-displayable one (a GRDB
-      // `DatabaseError`, a raw `URLError`) leaves any degraded state already
-      // on screen intact rather than clearing it.
-      if let displayable = error as? any DisplayableError, self.session === session {
-        lastSyncError = displayable
-      }
       // The session already logged this at the level `SyncFailureClass` gives it.
       Logger.sync.info("Background sync failed (suppressed): \(error)")
     }
