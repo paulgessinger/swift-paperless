@@ -282,17 +282,27 @@ class DocumentDetailModel {
     }
   }
 
+  /// No PDF is on screen and none is in flight: either the document was just
+  /// opened, or the last download failed and a refresh should retry it.
+  private var needsPreviewDownload: Bool {
+    switch download {
+    case .initial, .error: true
+    case .loading, .loaded: false
+    }
+  }
+
   func loadDocument(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     let priorDocument = document
-    let isFreshOpen = if case .initial = download { true } else { false }
 
     // Fire the provisional PDF load off the already-known document right away
     // — its own cache check (ContentStore, keyed on `currentVersionID` +
     // `modified`) is what decides whether this is an instant hit or a real
     // download, so starting it here rather than after the metadata round-trip
     // is what lets a cached PDF appear immediately on a slow connection.
+    // Runs on a refresh after a failed download too, so an unchanged document
+    // is retried rather than left on the error placeholder.
     let provisionalDownload: Task<Void, Never>? =
-      isFreshOpen ? Task { await runDownload(for: priorDocument) } : nil
+      needsPreviewDownload ? Task { await runDownload(for: priorDocument) } : nil
 
     do {
       if let updated = try await store.document(id: document.id) {
@@ -304,10 +314,15 @@ class DocumentDetailModel {
       onError?(error)
     }
 
-    // Only the *provisional* download is fresh-open-only; on a refresh there
-    // is nothing to wait for (`provisionalDownload` is nil) because the PDF is
-    // already on screen.
+    // On a refresh with the PDF already on screen there is nothing to wait for
+    // (`provisionalDownload` is nil).
     await provisionalDownload?.value
+
+    // The original is otherwise only fetched after a preview download, which
+    // an unchanged document with its preview on screen doesn't run.
+    if case .error = originalDownload, case .loaded = download {
+      Task { await downloadOriginal() }
+    }
 
     // Nothing changed server-side — the PDF on screen (provisional or from a
     // previous load) already reflects current content, no need to re-fetch.
@@ -316,8 +331,8 @@ class DocumentDetailModel {
     // has to run on every load, not just a fresh open, or a document versioned
     // while the detail view is open keeps rendering the old file until the view
     // is closed and reopened. `runDownload` is safe to call here — its delayed
-    // `.loading` flip is itself gated on `isFreshOpen`, so the new PDF swaps in
-    // without blanking the preview.
+    // `.loading` flip only happens while no PDF is on screen, so the new PDF
+    // swaps in without blanking the preview.
     guard
       document.currentVersionID != priorDocument.currentVersionID
         || document.modified != priorDocument.modified
@@ -327,10 +342,10 @@ class DocumentDetailModel {
   }
 
   private func runDownload(for document: Document) async {
-    let isFreshOpen = if case .initial = download { true } else { false }
-
+    // A retry after a failed download shows loading like a fresh open does,
+    // replacing the error placeholder. A PDF already on screen stays there.
     let setLoading =
-      isFreshOpen
+      needsPreviewDownload
       ? Task {
         try? await Task.sleep(for: .seconds(0.5))
         guard !Task.isCancelled else { return }
@@ -379,8 +394,13 @@ class DocumentDetailModel {
     }
   }
 
+  /// Fetch the original file, unless it is already loaded or in flight. A
+  /// previous failure is retried.
   func downloadOriginal() async {
-    guard case .initial = originalDownload else { return }
+    switch originalDownload {
+    case .initial, .error: break
+    case .loading, .loaded: return
+    }
     originalDownload = .loading
     do {
       let url = try await store.repository.download(document: document, original: true)
