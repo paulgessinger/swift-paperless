@@ -43,9 +43,9 @@ import Observation
 /// - It is not ``SingleFlight``. That type is keyed, lock-based and callable
 ///   from any isolation, retracts its entry from inside the operation, fans
 ///   progress out to joiners, and cannot be cancelled. A slot is main-actor
-///   state that views observe (``isOccupied``), retracts from the *starter*
-///   once the value is back, and has to be retired — cancelled and emptied at
-///   once — when the work in it goes stale.
+///   state that views observe (``isOccupied``), is retracted by whichever
+///   caller resumes first once the value is back, and has to be retired —
+///   cancelled and emptied at once — when the work in it goes stale.
 @MainActor
 @Observable
 public final class TaskSlot<Success: Sendable, Failure: Error> {
@@ -87,9 +87,14 @@ public final class TaskSlot<Success: Sendable, Failure: Error> {
   }
 
   /// Empty the slot — but only if it still holds `finished`. A retire, or a
-  /// replacement started after one, may own the slot by the time the starter
+  /// replacement started after one, may own the slot by the time a caller
   /// resumes, and clearing it blindly would break the newer task's coalescing.
   /// Synchronous, like every other mutation of the slot.
+  ///
+  /// The starter and every joiner call this as they resume, in whatever order
+  /// the runtime picks. So a caller that has its result never finds the
+  /// finished task still in the slot, and its next call starts a fresh one
+  /// instead of rejoining it.
   private func retract(_ finished: Task<Success, Failure>) {
     if task == finished {
       task = nil
@@ -100,7 +105,10 @@ public final class TaskSlot<Success: Sendable, Failure: Error> {
 extension TaskSlot where Failure == Never {
   /// Join the task in flight, or start one running `operation`.
   public func joinOrStart(_ operation: @escaping @MainActor () async -> Success) async -> Success {
-    if let task { return await task.value }
+    if let task {
+      defer { retract(task) }
+      return await task.value
+    }
     return await start(operation)
   }
 
@@ -113,7 +121,10 @@ extension TaskSlot where Failure == Never {
   public func joinOrStart(ifIdle makeOperation: () -> (@MainActor () async -> Success)?) async
     -> Success?
   {
-    if let task { return await task.value }
+    if let task {
+      defer { retract(task) }
+      return await task.value
+    }
     guard let operation = makeOperation() else { return nil }
     return await start(operation)
   }
@@ -132,7 +143,10 @@ extension TaskSlot where Failure == any Error {
   public func joinOrStart(_ operation: @escaping @MainActor () async throws -> Success) async throws
     -> Success
   {
-    if let task { return try await task.value }
+    if let task {
+      defer { retract(task) }
+      return try await task.value
+    }
     return try await start(operation)
   }
 
@@ -141,7 +155,10 @@ extension TaskSlot where Failure == any Error {
   public func joinOrStart(ifIdle makeOperation: () -> (@MainActor () async throws -> Success)?)
     async throws -> Success?
   {
-    if let task { return try await task.value }
+    if let task {
+      defer { retract(task) }
+      return try await task.value
+    }
     guard let operation = makeOperation() else { return nil }
     return try await start(operation)
   }

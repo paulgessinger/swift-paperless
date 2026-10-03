@@ -3,6 +3,7 @@
 //  DataModel
 //
 
+import Common
 import Foundation
 import Testing
 
@@ -65,5 +66,54 @@ struct ReconcileGateTests {
     let started = gate.start(force: true, now: t0)
     #expect(started)
     #expect(!gate.isHealOwed)
+  }
+
+  /// The gate behind a single-flight slot, the way `ServerSession` runs its
+  /// reconcile: a request joins the pass in flight, or asks the gate whether to
+  /// start one.
+  @MainActor
+  private final class Passes {
+    var gate = ReconcileGate(interval: 300)
+    let slot = TaskSlot<Void, Never>()
+    var started = 0
+
+    func reconcile(_ pass: @escaping @MainActor () async -> Void = {}) async {
+      _ = await slot.joinOrStart(ifIdle: {
+        guard gate.start(force: false) else { return nil }
+        started += 1
+        return pass
+      })
+    }
+  }
+
+  @MainActor
+  @Test(
+    "A heal owed while a pass is in flight is followed by a fresh pass",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/777", id: 777))
+  func healDuringPassStartsFreshPass() async throws {
+    let passes = Passes()
+    let (held, release) = AsyncStream.makeStream(of: Void.self)
+
+    let inFlight = Task { @MainActor in
+      await passes.reconcile { for await _ in held {} }
+    }
+    while !passes.slot.isOccupied { await Task.yield() }
+
+    // The heal's two calls: join whatever is running, then run a pass of its
+    // own if none has started since the heal was owed.
+    passes.gate.oweHeal()
+    let heal = Task { @MainActor in
+      await passes.reconcile()
+      guard passes.gate.isHealOwed else { return }
+      await passes.reconcile()
+    }
+    try await Task.sleep(for: .milliseconds(20))
+    #expect(passes.started == 1)
+
+    release.finish()
+    await heal.value
+    await inFlight.value
+    #expect(passes.started == 2)
+    #expect(!passes.gate.isHealOwed)
   }
 }

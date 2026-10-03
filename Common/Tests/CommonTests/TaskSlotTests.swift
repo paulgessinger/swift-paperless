@@ -79,6 +79,71 @@ struct TaskSlotTests {
     #expect(!slot.isOccupied)
   }
 
+  @Test(
+    "A joiner that has its result can start a fresh task straight away",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/777", id: 777))
+  func joinerFindsSlotEmpty() async throws {
+    let slot = TaskSlot<Int, Never>()
+    let latch = Latch()
+    var starts = 0
+
+    let first = Task { @MainActor in
+      await slot.joinOrStart {
+        starts += 1
+        await latch.wait()
+        return 1
+      }
+    }
+    try await waitUntil { slot.isOccupied }
+    // Join, then ask again without suspending in between: the finished task
+    // must not still be in the slot, or the second call would rejoin it.
+    let joiner = Task { @MainActor in
+      let joined = await slot.joinOrStart(ifIdle: { { -1 } })
+      let followUp = await slot.joinOrStart(ifIdle: {
+        starts += 1
+        return { 2 }
+      })
+      return (joined, followUp)
+    }
+    try await Task.sleep(for: .milliseconds(20))
+
+    await latch.release()
+    let (joined, followUp) = await joiner.value
+    #expect(joined == 1)
+    #expect(followUp == 2)
+    #expect(await first.value == 1)
+    #expect(starts == 2)
+    #expect(!slot.isOccupied)
+  }
+
+  @Test(
+    "A joiner of a throwing slot can start a fresh task straight away",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/777", id: 777))
+  func throwingJoinerFindsSlotEmpty() async throws {
+    let slot = TaskSlot<Int, any Error>()
+    let latch = Latch()
+
+    let first = Task { @MainActor in
+      try await slot.joinOrStart(ifIdle: {
+        {
+          await latch.wait()
+          throw BuildFailed()
+        }
+      })
+    }
+    try await waitUntil { slot.isOccupied }
+    let joiner = Task { @MainActor in
+      _ = try? await slot.joinOrStart(ifIdle: { { -1 } })
+      return try await slot.joinOrStart(ifIdle: { { 2 } })
+    }
+    try await Task.sleep(for: .milliseconds(20))
+
+    await latch.release()
+    #expect(try await joiner.value == 2)
+    await #expect(throws: BuildFailed.self) { try await first.value }
+    #expect(!slot.isOccupied)
+  }
+
   @Test("Joiners of a throwing slot see the same error as the starter")
   func rethrowsToJoiners() async throws {
     let slot = TaskSlot<Void, any Error>()
