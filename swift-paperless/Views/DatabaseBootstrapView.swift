@@ -8,15 +8,19 @@ import Persistence
 import SwiftUI
 import os
 
-/// Owns the at-launch ``Database`` construction. Sole producer; ``MainView``
-/// only sees a ready database after the bootstrap succeeds. On failure the
-/// app shows the hard-fail UI instead, with a "Try Again" affordance that
-/// re-runs the bootstrap.
+/// Drives the at-launch construction of the process's ``AppStack``, and owns
+/// the hard-fail UI for when it cannot be built.
+///
+/// No longer the *sole* producer, and deliberately so: the scene is not the
+/// only thing that runs in this process. `AppStackHolder` is the producer, this
+/// type is the scene's view onto it — it asks at launch, reports the failure if
+/// there is one, and offers a retry. An App Intent asking the holder from a
+/// background launch gets the very same stack.
 @MainActor
 @Observable
 final class DatabaseBootstrap {
   enum Outcome {
-    case ready(Database)
+    case ready(AppStack)
     case failed(any Error)
   }
 
@@ -28,12 +32,16 @@ final class DatabaseBootstrap {
 
   func retry() {
     Logger.shared.notice("Retrying database bootstrap")
+    // The cached stack is the thing that failed, or — coming from the wipe —
+    // points at a file that has since been deleted. Either way the next attempt
+    // has to build a new one rather than be handed the old.
+    AppStackHolder.reset()
     outcome = Self.attempt()
   }
 
   private static func attempt() -> Outcome {
     do {
-      return .ready(try Database())
+      return .ready(try AppStackHolder.shared())
     } catch {
       Logger.shared.fault("Database bootstrap failed: \(error)")
       return .failed(error)
@@ -46,8 +54,8 @@ struct DatabaseBootstrapView: View {
 
   var body: some View {
     switch bootstrap.outcome {
-    case .ready(let database):
-      MainView(database: database)
+    case .ready(let stack):
+      MainView(stack: stack)
     case .failed(let error):
       DatabaseFailureView(error: error) { bootstrap.retry() }
     }
