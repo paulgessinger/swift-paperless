@@ -628,23 +628,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   /// Whether a fill (or the membership sweep's own rewrite) currently owns this
-  /// key's `query_order`.
+  /// key's `query_order`, or a fill is waiting to take it over.
   private func isFilling(_ key: QueryKey) -> Bool { activeFills.isOwned(key) }
 
   public func waitForQueryWriters(_ key: QueryKey) async {
-    while let owner = activeFills.owner(of: key), !Task.isCancelled {
-      // The owner's outcome is its own caller's to report; this only waits.
-      _ = try? await owner.value
-      // A finished owner is retracted by a separate main-actor job (its
-      // registration task, a taking-over fill's `takeOver`, or a sweep's
-      // `defer`), which may not have run yet. When `takeOver` is the one that
-      // retracts it, the successor registers in that same job, so the takeover
-      // does not read as "nobody". Back off briefly rather than spin on the
-      // stale entry.
-      if activeFills.owner(of: key) == owner {
-        try? await Task.sleep(for: .milliseconds(20))
-      }
-    }
+    // A fill waiting in `takeOver` counts as a writer, so this does not return
+    // between its predecessor stopping and its claim.
+    await activeFills.waitUntilFree(key)
   }
 
   public func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws {
