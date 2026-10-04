@@ -36,4 +36,20 @@ struct ServerSessionTests {
     let tags = try await harness.database.elements(TagRecord.self, serverID: harness.serverID)
     #expect(tags.count == 1)
   }
+
+  // Driven through the database rather than `reconcileDocuments()`: the
+  // reconcile ends in the content reclaim, which opens the real app-group
+  // `ContentStore` and blocks on the host.
+  @Test("The store shows the persisted last-refreshed stamp, and follows it when it changes")
+  func storeShowsPersistedLastRefreshed() async throws {
+    let harness = try await StoreHarness.make()
+    #expect(harness.store.lastReconcileAt == nil)
+
+    let first = Date(timeIntervalSince1970: 1_700_000_000)
+    try await harness.database.setLastReconcileAt(first, serverID: harness.serverID)
+    try await waitUntil({ harness.store.lastReconcileAt == first }, "store never saw the stamp")
+
+    try await harness.database.clearCache()
+    try await waitUntil({ harness.store.lastReconcileAt == nil }, "store never saw the reset")
+  }
 }

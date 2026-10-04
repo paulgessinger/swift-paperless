@@ -62,6 +62,11 @@ public final class ServerProjection {
   /// staying on "Never". A bare DB read wouldn't be tracked by the observation.
   public private(set) var libraryCoverageAt: Date?
 
+  /// When the reconcile last refreshed something for this server (`nil` if
+  /// never): an observed mirror of `server_sync_state.last_reconcile_at`, so it
+  /// tracks passes the scheduler runs, relaunches, and a cache wipe.
+  public private(set) var lastReconcileAt: Date?
+
   /// Views (saved or default) whose proactive offline fill the server most
   /// recently rejected, from `query_sync_error`, so the Offline & Sync screen
   /// can warn that they aren't fully cached.
@@ -120,6 +125,8 @@ public final class ServerProjection {
         database.observeServerConfiguration(serverID: serverID), into: \.serverConfiguration),
       observeValue(
         database.observeLibraryCoverageAt(serverID: serverID), into: \.libraryCoverageAt),
+      observeValue(
+        database.observeLastReconcileAt(serverID: serverID), into: \.lastReconcileAt),
       observeValue(database.observeQuerySyncErrors(serverID: serverID), into: \.syncErrors),
       observeValue(database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount),
     ])

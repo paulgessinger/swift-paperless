@@ -146,11 +146,6 @@ public final class ServerSession {
 
   public private(set) var state: State = .idle
 
-  /// Last *fully* successful pass. The scheduler's throttle input; advanced only
-  /// on a clean pass, so an interrupted or partially-failed one retries on the
-  /// next trigger rather than being throttled away.
-  public private(set) var lastSuccessfulSync: Date?
-
   /// The reconcile's 300 s sub-throttle, which keeps the active server's
   /// on-appear triggers off the wire. Bypassed by pull-to-refresh, by the
   /// scheduler (which has already applied its own, much longer throttle before
@@ -158,17 +153,14 @@ public final class ServerSession {
   ///
   /// Stamped on every attempt, deliberately: a server that fails every sweep
   /// must not refetch its whole live id set on each of the seventeen on-appear
-  /// triggers. Distinct from ``lastReconcileSuccess`` for exactly that reason.
+  /// triggers. Distinct from `server_sync_state.last_reconcile_at` for exactly
+  /// that reason.
   @ObservationIgnored private var reconcileGate = ReconcileGate(interval: 300)
 
   /// Whether an element sync is owed that has not started yet: a mutation's
   /// cache write failed, and an element sync already running may have fetched
   /// before the server accepted it.
   @ObservationIgnored private var elementHealOwed = false
-
-  /// When the reconcile last refreshed *something*. The user-facing "last
-  /// refreshed" stamp the Offline & Sync screen renders, so it is observed.
-  public private(set) var lastReconcileSuccess: Date?
 
   /// When the blob reclaim last ran. Advances on every attempt, like the
   /// reconcile's stamp in ``reconcileGate`` and for the same reason.
@@ -263,6 +255,18 @@ public final class ServerSession {
     Logger.sync.notice(
       "Sync \(site.rawValue, privacy: .public) recovered for server \(self.serverID, privacy: .public)"
     )
+  }
+
+  /// Write a freshness stamp. A failed write costs only the stamp — the next
+  /// pass writes it again — so it is logged rather than recorded as a failure.
+  private func persistStamp(_ name: String, _ write: () async throws -> Void) async {
+    do {
+      try await write()
+    } catch {
+      Logger.sync.error(
+        "Writing \(name, privacy: .public) for server \(self.serverID, privacy: .public) failed: \(error)"
+      )
+    }
   }
 
   /// The reason shown on the Offline & Sync screen. For a connectivity failure
@@ -581,9 +585,12 @@ public final class ServerSession {
     }
 
     // A pass in which *something* refreshed counts. A cancelled pass stamps
-    // nothing — it didn't finish, it was called off.
+    // nothing — it didn't finish, it was called off. Persisted, so the Offline
+    // & Sync screen's "Last refreshed" survives a relaunch.
     if result.succeeded > 0, !result.cancelled {
-      lastReconcileSuccess = Date()
+      await persistStamp("last reconcile") {
+        try await backend.database.setLastReconcileAt(Date(), serverID: backend.serverID)
+      }
     }
     return result
   }
@@ -799,7 +806,12 @@ public final class ServerSession {
       // server is swept again. The `catch` below turns it back into a quiet
       // return.
       try Task.checkCancellation()
-      lastSuccessfulSync = Date()
+      // The scheduler's throttle input, persisted so it holds across launches.
+      if let backend {
+        await persistStamp("last successful sync") {
+          try await backend.database.setLastSuccessfulSync(Date(), serverID: backend.serverID)
+        }
+      }
       Logger.sync.info("Server \(stored.logLabel, privacy: .public) synced")
     } catch {
       // A pass retired by a rebuild (or by the caller going away) was called

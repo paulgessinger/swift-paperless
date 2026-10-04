@@ -120,9 +120,18 @@ public final class ServerSessionRegistry {
     return session
   }
 
-  /// Every session's last fully-successful sync, for the scheduler's throttle.
+  /// Every server's last fully-successful sync, for the scheduler's throttle.
   /// Servers that have never completed a pass are absent rather than distant-past.
-  public func lastSuccessfulSyncs() -> [UUID: Date] {
-    sessions.compactMapValues(\.lastSuccessfulSync)
+  ///
+  /// Read from the database rather than from the sessions: it covers servers
+  /// with no session yet, which after a launch is all of them.
+  public func lastSuccessfulSyncs() async -> [UUID: Date] {
+    do {
+      return try await database.lastSuccessfulSyncs()
+    } catch {
+      // Nothing throttled is the safe reading: every server syncs.
+      Logger.sync.error("Reading last successful syncs failed: \(error)")
+      return [:]
+    }
   }
 }
