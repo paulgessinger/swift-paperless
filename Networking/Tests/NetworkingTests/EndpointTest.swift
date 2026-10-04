@@ -94,7 +94,7 @@ import Testing
 
   @Test func testDocumentsOptOutOfFullPerms() {
     // Probes that read only the envelope don't want the per-object permission
-    // expansion — it costs four guardian queries per row server-side.
+    // expansion.
     let endpoint = Endpoint.documents(page: 1, rules: [], fullPerms: false)
     #expect(!endpoint.queryItems.contains { $0.name == "full_perms" })
   }
