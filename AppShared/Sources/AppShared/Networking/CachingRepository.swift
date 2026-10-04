@@ -551,11 +551,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return Task.detached(priority: .utility) {
         try await NetworkTransfer.$category.withValue(category) {
           var position = 0
+          let deletions: DocumentDeletionMark
           do {
             // Captured before the request: a mark landing while it is in flight
-            // keeps the order stale.
-            let basis = try await database.queryOrderGeneration(
+            // keeps the order stale, and a document deleted meanwhile stays out
+            // of every page — the source buffers, so later pages can carry
+            // objects from this first response.
+            let basis = try await database.queryWriteBasis(
               queryKey: key, serverID: serverID)
+            deletions = basis.deletions
             let batch = try await source.fetch(limit: pageSize)
             let total = await source.totalCount
             // Rejected only if a newer rewrite already landed; appending to its
@@ -593,7 +597,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             try Task.checkCancellation()
             try await database.appendQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
-              startPosition: position, totalCount: await source.totalCount)
+              startPosition: position, totalCount: await source.totalCount,
+              deletions: deletions)
             position += batch.count
           }
 
@@ -1364,6 +1369,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     filter.sortOrder = .ascending
     filter.date.modified = .between(start: watermark, end: nil)
     let source = try wrapped.documents(filter: filter)
+    // Before the first request (the source pages lazily): a document deleted
+    // while the delta pages is left out rather than written back.
+    let deletions = database.documentDeletionMark()
 
     var cursor = watermark
     var applied = 0
@@ -1415,7 +1423,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // and under *Recently browsed* nothing repairs that until the document
         // is fetched online again. The same write marks the lists a changed
         // document may have moved in.
-        let marked = try await database.applyChangedDocuments(toUpsert, serverID: serverID)
+        let marked = try await database.applyChangedDocuments(
+          toUpsert, serverID: serverID, deletions: deletions)
         if marked > 0 {
           Logger.sync.info(
             "Reconcile: \(marked, privacy: .public) cached list(s) may be out of order")
@@ -1502,14 +1511,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   ) async throws -> MembershipRewriteOutcome {
     guard !isFilling(key) else { return .leftToFill }
     // Captured before the request: a mark landing while it is in flight keeps
-    // the order stale.
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: serverID)
+    // the order stale, and an id deleted meanwhile is left out.
+    let basis = try await database.queryWriteBasis(queryKey: key, serverID: serverID)
     // Ordered, not the id set: the ids become positions verbatim.
     let ids = try await wrapped.orderedDocumentIDs(filter: filter)
     guard !isFilling(key) else { return .leftToFill }
     try await hydrate(ids, policy: hydrating, label: label)
     guard !isFilling(key) else { return .leftToFill }
-    return try await replaceQueryOrderOwningKey(key, orderedIDs: ids, generation: generation)
+    return try await replaceQueryOrderOwningKey(key, orderedIDs: ids, basis: basis)
       ? .rewritten : .takenOver
   }
 
@@ -1546,7 +1555,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   ///   first, so the caller skips the view rather than clearing its recorded
   ///   sync error.
   private func replaceQueryOrderOwningKey(
-    _ key: QueryKey, orderedIDs: [UInt], generation: QueryOrderGeneration
+    _ key: QueryKey, orderedIDs: [UInt], basis: QueryWriteBasis
   ) async throws -> Bool {
     let database = database
     let serverID = serverID
@@ -1560,7 +1569,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return try await activeFills.withOwnership(of: [key]) {
       guard
         try await database.replaceQueryOrder(
-          queryKey: key, serverID: serverID, orderedIDs: orderedIDs, basis: generation)
+          queryKey: key, serverID: serverID, orderedIDs: orderedIDs, basis: basis)
       else { throw CancellationError() }
     }
   }
@@ -1822,6 +1831,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func restoreTrash(documents: [UInt]) async throws {
     try await wrapped.restoreTrash(documents: documents)
+    // They exist again, so a list write in flight across their deletion may
+    // keep them.
+    database.forgetDocumentDeletions(documents, serverID: serverID)
   }
 
   public func emptyTrash(documents: [UInt]) async throws {
