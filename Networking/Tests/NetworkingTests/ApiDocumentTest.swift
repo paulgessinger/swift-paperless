@@ -196,6 +196,35 @@ struct ApiDocumentTest {
     #expect(perms.view == Permissions.Set(users: [], groups: [1]))
   }
 
+  @Test(
+    "A `full_perms=true` document carries its permission sets and owner",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/690", id: 690)
+  )
+  func testFullPermsShapeDecodesPermissionsAndOwner() throws {
+    // `full_perms=true` swaps `user_can_change` for `permissions`.
+    let data = try #require(testData("Data/Document/full_perms_true.json"))
+    let document = try decoder.decode(ApiDocument.self, from: data).domain
+
+    #expect(document.owner == .user(2))
+    let perms = try #require(document.permissions)
+    #expect(perms.view == Permissions.Set(users: [], groups: [1]))
+    #expect(perms.change == Permissions.Set(users: [1], groups: []))
+  }
+
+  @Test(
+    "A document without `full_perms` decodes with nil permissions",
+    .bug("https://github.com/paulgessinger/swift-paperless/issues/690", id: 690)
+  )
+  func testNonFullPermsShapeHasNoPermissions() throws {
+    // Without `full_perms` the server sends `user_can_change` and omits
+    // `permissions`; the unknown key is ignored.
+    let data = try #require(testData("Data/Document/full.json"))
+    let document = try decoder.decode(ApiDocument.self, from: data).domain
+
+    #expect(document.owner == .user(2))
+    #expect(document.permissions == nil)
+  }
+
   enum NilComponent: String, CaseIterable {
     case correspondent
     case documentType = "document_type"

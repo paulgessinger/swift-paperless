@@ -133,9 +133,12 @@ extension Endpoint {
   /// `OwnedObjectSerializer` pops `user_can_change` (and
   /// `is_shared_by_requester`) when it is set, and pops `permissions` when it
   /// isn't. So a full-perms row carries `permissions` and no `user_can_change`.
-  /// It is also not free — on every released backend `get_permissions` runs per
-  /// object and issues four guardian queries, so a page of `pageSize` documents
-  /// costs 4 × `pageSize` permission lookups server-side.
+  /// Servers before 3.0.1 also run four permission-table queries per row for it,
+  /// so a page costs 4 × `pageSize` extra queries there; later servers batch
+  /// them per page. The app requests it anyway: change checks match
+  /// `permissions.change` users and groups, the permission and owner editors
+  /// need the sets, and cached rows are replaced whole, so a row without
+  /// `permissions` would wipe them. Measurements are on #690.
   public static func documents(
     page: UInt, rules: [FilterRule] = [], pageSize: UInt = Self.defaultDocumentPageSize,
     fields: [String]? = nil,
