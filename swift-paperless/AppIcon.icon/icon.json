@@ -1,82 +1,79 @@
 {
-  "color-space-for-untagged-svg-colors" : "display-p3",
-  "fill-specializations" : [
-    {
-      "value" : "automatic"
-    },
-    {
-      "appearance" : "dark",
-      "value" : {
-        "automatic-gradient" : "srgb:0.14530,0.14530,0.14530,1.00000"
-      }
-    }
-  ],
+  "fill" : "system-light",
   "groups" : [
     {
-      "blur-material" : null,
-      "hidden" : false,
       "layers" : [
         {
-          "glass" : true,
-          "hidden" : false,
-          "image-name" : "liquid_glass_1.svg",
-          "name" : "liquid_glass_1",
-          "position" : {
-            "scale" : 0.8,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "glass" : true,
-          "hidden" : false,
-          "image-name" : "liquid_glass_2.svg",
-          "name" : "liquid_glass_2",
-          "position" : {
-            "scale" : 0.8,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
+          "image-name" : "SwiffPaperless-Mono.png",
+          "name" : "SwiffPaperless-Mono",
+          "opacity-specializations" : [
+            {
+              "value" : 0
+            },
+            {
+              "appearance" : "dark",
+              "value" : 0
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 1
+            }
+          ]
         }
       ],
-      "lighting" : "combined",
-      "opacity-specializations" : [
-        {
-          "appearance" : "dark",
-          "value" : 1
-        }
-      ],
+      "name" : "Mono",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
       },
-      "specular" : true,
-      "translucency-specializations" : [
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blend-mode-specializations" : [
         {
-          "value" : {
-            "enabled" : true,
-            "value" : 0.3
-          }
+          "value" : "normal"
         },
         {
           "appearance" : "dark",
-          "value" : {
-            "enabled" : true,
-            "value" : 0.1
-          }
-        },
-        {
-          "appearance" : "tinted",
-          "value" : {
-            "enabled" : true,
-            "value" : 0.1
-          }
+          "value" : "normal"
         }
-      ]
+      ],
+      "blur-material" : null,
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name-specializations" : [
+            {
+              "value" : "Paperless.png"
+            },
+            {
+              "idiom" : "square",
+              "value" : "SwiffPaperless.svg"
+            }
+          ],
+          "name" : "SwiffPaperless-Light",
+          "opacity-specializations" : [
+            {
+              "appearance" : "tinted",
+              "value" : 1
+            }
+          ]
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "Light / Dark",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 1
+      }
     }
   ],
   "supported-platforms" : {
