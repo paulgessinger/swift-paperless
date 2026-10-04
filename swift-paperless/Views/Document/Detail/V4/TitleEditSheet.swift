@@ -50,18 +50,33 @@ struct TitleEditSheet: View {
         CustomSection {
           CustomSectionRow {
             VStack(alignment: .leading, spacing: 6) {
-              TextField(
-                String(localized: .app(.documentEditTitleLabel)),
-                text: $title,
-                axis: .vertical
-              )
-              .focused($focused)
-              .onChange(of: title) { _, newValue in
-                // Server-side limit; truncate inline so the user sees the
-                // cap rather than getting an error on save.
-                if newValue.count > Self.titleCharacterLimit {
-                  title = String(newValue.prefix(Self.titleCharacterLimit))
+              HStack(alignment: .firstTextBaseline) {
+                TextField(
+                  String(localized: .app(.documentEditTitleLabel)),
+                  text: $title,
+                  axis: .vertical
+                )
+                .focused($focused)
+                .onChange(of: title) { _, newValue in
+                  // Server-side limit; truncate inline so the user sees the
+                  // cap rather than getting an error on save.
+                  if newValue.count > Self.titleCharacterLimit {
+                    title = String(newValue.prefix(Self.titleCharacterLimit))
+                  }
                 }
+
+                // Inline rather than `.clearable()`, which owns its own focus state.
+                Button {
+                  title = ""
+                  focused = true
+                } label: {
+                  Label(String(localized: .app(.clearText)), systemImage: "xmark.circle.fill")
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(.gray)
+                }
+                .buttonStyle(.plain)
+                .opacity(title.isEmpty ? 0 : 1)
+                .disabled(saving)
               }
 
               Text("\(title.count) / \(Self.titleCharacterLimit)")
