@@ -6,6 +6,7 @@
 //
 
 import AppShared
+import AppViews
 import AuthenticationServices
 import Common
 import DataModel

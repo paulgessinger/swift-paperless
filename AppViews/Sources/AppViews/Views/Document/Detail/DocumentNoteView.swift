@@ -1,0 +1,259 @@
+//
+//  DocumentNoteView.swift
+//  swift-paperless
+//
+//  Created by Paul Gessinger on 27.07.2024.
+//
+
+import AppShared
+import DataModel
+import Networking
+import SwiftUI
+import os
+
+private struct CreateNoteView: View {
+  @Binding public var document: Document
+  @Binding public var notes: [Document.Note]
+
+  @State private var noteText: String = ""
+  @State private var saving = false
+
+  @FocusState private var focused: Bool
+
+  @Environment(\.dismiss) private var dismiss
+  @Environment(DocumentStore.self) private var store
+  @EnvironmentObject private var errorController: ErrorController
+
+  private func saveNote() async {
+    guard !noteText.isEmpty else { return }
+
+    let note = ProtoDocument.Note(note: noteText)
+    saving = true
+
+    do {
+      try await store.addNote(to: document, note: note)
+      // We have no way to only get the new note here
+      notes = try await store.notes(for: document)
+      document.notes = NotesPayload(notes: notes)
+      Haptics.shared.notification(.success)
+      dismiss()
+    } catch {
+      Logger.shared.error("Error adding note to document: \(error)")
+      errorController.push(mutationError: error)
+      saving = false
+    }
+  }
+
+  public var body: some View {
+    NavigationStack {
+      Form {
+        TextField(
+          .documentMetadata(.notePlaceholder),
+          text: $noteText,
+          axis: .vertical
+        )
+        .focused($focused)
+
+        .onSubmit {
+          Task { await saveNote() }
+        }
+      }
+
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          CancelIconButton()
+        }
+
+        ToolbarItem(placement: .confirmationAction) {
+          SaveButton(action: {
+            Task { await saveNote() }
+          })
+          .disabled(noteText.isEmpty || saving)
+        }
+      }
+
+      .navigationTitle(.documentMetadata(.noteCreate))
+      .navigationBarTitleDisplayMode(.inline)
+    }
+    .task {
+      focused = true
+    }
+  }
+}
+
+public struct DocumentNoteView: View {
+  @Binding public var document: Document
+
+  public init(document: Binding<Document>) {
+    self._document = document
+  }
+
+  @State private var notes: [Document.Note] = []
+
+  @Environment(DocumentStore.self) private var store
+  @EnvironmentObject private var errorController: ErrorController
+
+  @Environment(\.dismiss) private var dismiss
+
+  @State private var adding = false
+  @State private var noteToDelete: Document.Note?
+
+  private func delete(_ note: Document.Note) {
+    Task {
+      do {
+        try await store.deleteNote(from: document, id: note.id)
+        notes = notes.filter { $0.id != note.id }
+        document.notes = NotesPayload(notes: notes)
+      } catch let error where error.isCancellationError {
+      } catch {
+        Logger.shared.error("Error deleting note from document: \(error)")
+        errorController.push(mutationError: error)
+      }
+    }
+  }
+
+  /// Load the document's notes. `userInitiated` controls whether a failure is
+  /// surfaced: a pull-to-refresh (`true`) toasts; the on-appear `.task` (`false`)
+  /// stays silent — it isn't user-initiated, and an offline open falls back to
+  /// whatever the cache holds.
+  private func loadNotes(userInitiated: Bool) async {
+    // Offline, the cache answers this without throwing, so the notice has to
+    // come from the network state at the gesture, not from a failure.
+    // Remembered, so the error path doesn't say it a second time.
+    let announcedOffline = userInitiated && errorController.noteOfflineIfNeeded()
+    do {
+      notes = try await store.notes(for: document)
+    } catch let error where error.isCancellationError {} catch {
+      Logger.shared.error("Error loading notes for document: \(error)")
+      if userInitiated, !announcedOffline {
+        errorController.push(readError: error)
+      }
+    }
+  }
+
+  private var canViewNotes: Bool {
+    store.permissions.test(.view, for: .note)
+  }
+
+  public var body: some View {
+    NavigationStack {
+      VStack {
+        if !canViewNotes {
+          Form {
+            ContentUnavailableView(
+              String(localized: .permissions(.noViewPermissionsDisplayTitle)),
+              systemImage: "lock.fill",
+              description: Text(.permissions(.noViewPermissionsNotes)))
+          }
+        } else if notes.isEmpty {
+          Form {
+            ContentUnavailableView {
+              Label(.documentMetadata(.notesEmptyTitle), systemImage: "note.text")
+            } description: {
+              Text(.documentMetadata(.notesEmptyDescription))
+            }
+          }
+        } else {
+          List {
+            Section {
+              ForEach(notes) { note in
+                VStack(alignment: .leading) {
+                  HStack {
+                    Text(note.created, style: .date)
+                    if let user = note.user, !user.username.isEmpty {
+                      Spacer()
+                      Text(user.username)
+                    }
+                  }
+                  .font(.caption)
+                  Text(note.note)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                .if(store.permissions.test(.delete, for: .note)) {
+                  $0.swipeActions(edge: .trailing) {
+                    Button(
+                      .app(.delete), role: .destructive,
+                      action: { delete(note) })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      .animation(.spring, value: document)
+
+      .navigationBarTitleDisplayMode(.inline)
+      .navigationTitle(.documentMetadata(.notes))
+
+      .scrollBounceBehavior(.basedOnSize)
+
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          CancelIconButton()
+        }
+
+        if canViewNotes {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              adding = true
+            } label: {
+              Label(.app(.add), systemImage: "plus")
+            }
+            .disabled(!store.permissions.test(.add, for: .note))
+          }
+        }
+      }
+
+      .refreshable {
+        await loadNotes(userInitiated: true)
+      }
+
+      .sheet(isPresented: $adding) {
+        CreateNoteView(document: $document, notes: $notes)
+      }
+    }
+
+    .task {
+      guard canViewNotes else { return }
+      await loadNotes(userInitiated: false)
+    }
+  }
+}
+
+// - MARK: Preview
+
+private struct PreviewHelper: View {
+  @State public var store = DocumentStore.preview(PreviewRepository(downloadDelay: 3.0))
+  @StateObject public var errorController = ErrorController()
+
+  @State public var document: Document?
+  @State public var metadata: Metadata?
+
+  public var body: some View {
+    NavigationStack {
+      VStack {
+        if document != nil {
+          DocumentNoteView(document: Binding($document)!)
+        }
+      }
+      .task {
+        document = try? await store.document(id: 1)
+        if let document {
+          metadata = try? await store.repository.metadata(documentId: document.id)
+        }
+      }
+    }
+    .environment(store)
+    .environmentObject(errorController)
+
+    .task {
+      try? await store.sync()
+    }
+  }
+}
+
+#Preview {
+  PreviewHelper()
+}
