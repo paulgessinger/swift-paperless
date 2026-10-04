@@ -168,9 +168,18 @@ class DocumentListViewModel {
     // must not re-subscribe / re-fill.
     guard documentTask == nil else { return }
 
+    // Cached rows first: the sync below can take a full timeout when the
+    // server is unreachable. An empty cache stays on placeholders via `state`.
+    if hasViewPermission(), let key = store.documentQueryKey(filter: filterState) {
+      subscribe(to: key, resettingWindow: true)
+      ready = true
+    }
+
     // Up-to-date permissions (soft: a sync failure leaves cached perms in place).
     try? await store.fetchUISettings()
     guard hasViewPermission() else {
+      teardown()
+      documents = []
       noPermissions = true
       ready = true
       return
@@ -182,7 +191,9 @@ class DocumentListViewModel {
       ready = true
       return
     }
-    subscribe(to: key, resettingWindow: true)
+    if key != queryKey {
+      subscribe(to: key, resettingWindow: true)
+    }
     do {
       try await runFill()
     } catch {
