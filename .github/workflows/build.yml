@@ -91,6 +91,7 @@ jobs:
           - Common
           - Networking
           - Persistence
+          - AppShared
 
     steps:
       - name: Checkout

@@ -49,6 +49,19 @@ let package = Package(
       plugins: [
         .plugin(name: "XCStringsToolPlugin", package: "xcstrings-tool-plugin")
       ]
-    )
+    ),
+    .testTarget(
+      name: "AppSharedTests",
+      dependencies: [
+        "AppShared",
+        .product(name: "Common", package: "Common"),
+        .product(name: "DataModel", package: "DataModel"),
+        .product(name: "Networking", package: "Networking"),
+        .product(name: "Persistence", package: "Persistence"),
+      ],
+      swiftSettings: [
+        .swiftLanguageMode(.v6)
+      ]
+    ),
   ]
 )
