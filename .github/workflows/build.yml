@@ -92,6 +92,7 @@ jobs:
           - Networking
           - Persistence
           - AppShared
+          - Scanning
 
     steps:
       - name: Checkout
