@@ -30,6 +30,10 @@ public final class Database: Sendable {
   /// instead of leaving a silently-emptied database unexplained.
   public let didEraseForSchemaChangeAtLaunch: Bool
 
+  /// Recently deleted documents, which list writes leave out — see
+  /// ``QueryWriteBasis``.
+  let deletionLog = DocumentDeletionLog()
+
   // MARK: - Init
 
   /// Production initializer. Opens (or creates) the app-group SQLite file.

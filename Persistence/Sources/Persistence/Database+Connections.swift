@@ -60,13 +60,17 @@ extension Database {
   /// - Returns: `true` if a row was deleted, `false` if no such row existed.
   @discardableResult
   public func deleteConnection(id: UUID) throws(DatabaseError) -> Bool {
-    try wrapping("deleteConnection") {
+    let deleted = try wrapping("deleteConnection") {
       try wrapping("deleteConnection") {
         try writer.write { db in
           try ConnectionRecord.deleteOne(db, key: id)
         }
       }
     }
+    // Its cache rows cascade away, and a later write for it fails the `server`
+    // FK, so nothing can need its entries any more.
+    deletionLog.drop(serverID: id)
+    return deleted
   }
 
   /// Update only the `needs_auth` column on one row.

@@ -50,3 +50,4 @@
 - Pulling to refresh a document whose preview or original file failed to download now tries the download again, instead of staying on the error until the document is reopened
 - A change the server has saved is no longer reported as failed when the app cannot update its local copy right away; the local copy catches up on its own
 - The document list no longer briefly says you have no documents while it is still loading on launch
+- A deleted document no longer reappears in a document list, as an empty placeholder or as a document that still opens, when a list update was running at the moment it was deleted
