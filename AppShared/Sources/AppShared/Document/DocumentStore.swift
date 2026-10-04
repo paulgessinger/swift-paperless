@@ -489,7 +489,7 @@ public final class DocumentStore: Sendable {
 
   /// Refresh `ui_settings` (permissions/settings) from the network, then pull
   /// the singleton into the projection before returning — the one path
-  /// (`DocumentListViewModel.load`) that reads `permissions` immediately
+  /// (`DocumentListViewModel.load`) that re-checks `permissions` immediately
   /// afterwards can't wait for the observation's runloop hop. Automatic (not
   /// user-initiated): a sync failure fails soft and we proceed with the cached
   /// permissions (offline-first) instead of aborting the launch load.
