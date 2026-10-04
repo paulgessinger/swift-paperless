@@ -1,4 +1,5 @@
 import AppShared
+import AppViews
 import DataModel
 import LocalAuthentication
 import SwiftUI

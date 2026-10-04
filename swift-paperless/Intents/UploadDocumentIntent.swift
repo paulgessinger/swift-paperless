@@ -5,6 +5,7 @@
 
 import AppIntents
 import AppShared
+import AppViews
 import DataModel
 import Foundation
 

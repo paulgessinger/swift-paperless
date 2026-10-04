@@ -374,12 +374,19 @@ public final class DocumentStore: Sendable {
   }
 
   /// Where the image pipelines keep their on-disk thumbnail cache — `nil`
-  /// without an app-group container (previews, host tests). Only the path: the
-  /// storage statistics read it off the main actor, and must not create it.
+  /// without an app-group container (previews, macOS host tests). Only the
+  /// path: the storage statistics read it off the main actor, and must not
+  /// create it.
   nonisolated static func thumbnailCacheURL() -> URL? {
-    FileManager.default.containerURL(
-      forSecurityApplicationGroupIdentifier: ContentStore.appGroup
-    )?.appendingPathComponent("Caches/Nuke", isDirectory: true)
+    #if os(iOS)
+      FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: ContentStore.appGroup
+      )?.appendingPathComponent("Caches/Nuke", isDirectory: true)
+    #else
+      // macOS returns a group-container path even to an unsigned test process,
+      // and touching it raises a privacy prompt that blocks until answered.
+      nil
+    #endif
   }
 
   private static func sharedThumbnailCacheURL() -> URL? {

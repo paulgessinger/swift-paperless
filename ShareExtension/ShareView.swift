@@ -6,6 +6,7 @@
 //
 
 import AppShared
+import AppViews
 import Networking
 import Persistence
 import SwiftUI

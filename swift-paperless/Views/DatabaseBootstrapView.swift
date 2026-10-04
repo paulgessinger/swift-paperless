@@ -4,6 +4,7 @@
 //
 
 import AppShared
+import AppViews
 import Persistence
 import SwiftUI
 import os

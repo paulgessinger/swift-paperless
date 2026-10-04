@@ -6,6 +6,7 @@
 //
 
 import AppShared
+import AppViews
 import Common
 import Foundation
 import MarkdownUI

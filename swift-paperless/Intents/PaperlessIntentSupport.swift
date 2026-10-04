@@ -5,6 +5,7 @@
 
 import AppIntents
 import AppShared
+import AppViews
 import Foundation
 import Networking
 import Persistence
