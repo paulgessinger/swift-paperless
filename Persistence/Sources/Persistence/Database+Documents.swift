@@ -103,13 +103,19 @@ extension Database {
   /// servers send only note ids, or notes can't be viewed) lose their cached
   /// notes. One transaction so a note write-through can't land between the
   /// upsert and the drop and be deleted by it.
+  ///
+  /// Documents deleted after `deletions` are skipped. A deletion the bounded
+  /// log has already evicted isn't seen; a row brought back that way is dropped
+  /// by the next remote-delete reconcile, which diffs `document` rows.
   @discardableResult
   public func applyChangedDocuments(
-    _ domains: [Document], serverID: UUID
+    _ domains: [Document], serverID: UUID, deletions: DocumentDeletionMark
   ) async throws -> Int {
     guard !domains.isEmpty else { return 0 }
     return try await wrappingAsync("applyChangedDocuments") {
       try await writer.write { db in
+        let deleted = deletionLog.deleted(since: deletions, serverID: serverID)
+        let domains = domains.filter { !deleted.ids.contains($0.id) }
         let marked = try Self.writeDocumentRows(db, domains, serverID: serverID)
         let replaced = try Self.canViewNotes(db, serverID: serverID)
         let unlisted = domains.filter { !replaced || $0.notes.notes == nil }
@@ -129,25 +135,33 @@ extension Database {
   /// Page 1 of a fill: replace a cached query's order with `documents` and
   /// upsert their rows, in one transaction.
   ///
-  /// `basis` is the key's generation captured before the page was requested.
+  /// `basis` is captured before the page was requested. Documents deleted since
+  /// are skipped as in
+  /// ``appendQueryPage(queryKey:serverID:documents:startPosition:totalCount:deletions:)``.
   /// - Returns: `false`, writing nothing, if a rewrite with a newer basis has
   ///   already landed.
   @discardableResult
   public func replaceQueryPage(
     queryKey: QueryKey, serverID: UUID, documents: [Document], totalCount: UInt?,
-    basis: QueryOrderGeneration
+    basis: QueryWriteBasis
   ) async throws -> Bool {
     try await wrappingAsync("replaceQueryPage") {
       try await writer.write { db in
-        guard try Self.accepts(basis, db, queryKey: queryKey, serverID: serverID) else {
+        guard try Self.accepts(basis.generation, db, queryKey: queryKey, serverID: serverID)
+        else {
           return false
         }
+        let deleted = deletionLog.deleted(since: basis.deletions, serverID: serverID)
         try Self.deleteQueryOrder(db, queryKey: queryKey, serverID: serverID)
         try Self.writeQueryPage(
-          db, queryKey: queryKey, serverID: serverID, documents: documents, startPosition: 0)
+          db, queryKey: queryKey, serverID: serverID, documents: documents, startPosition: 0,
+          skipping: deleted.ids)
         try Self.setQueryMeta(
           db, serverID: serverID, queryKey: queryKey, totalCount: totalCount,
-          basis: basis, stamp: .cleared)
+          basis: basis.generation, stamp: .cleared)
+        if !deleted.isComplete {
+          try Self.markOrderStale(db, queryKey: queryKey, serverID: serverID)
+        }
         return true
       }
     }
@@ -156,36 +170,49 @@ extension Database {
   /// A later page of a fill: append `documents` at `startPosition` and upsert
   /// their rows. Leaves the staleness alone — marks since page 1 still apply to
   /// the rows it wrote.
+  ///
+  /// `deletions` is captured before the fill's first request, because the page
+  /// source buffers and a page can carry objects from an earlier response.
+  /// Documents deleted since are skipped — no `query_order` row, no `document`
+  /// row — keeping the server's positions and total: the state the delete
+  /// would leave had it committed just after this write. If the bounded log
+  /// has evicted deletions since `deletions`, the order is marked stale for a
+  /// resync.
   public func appendQueryPage(
     queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int, totalCount: UInt?
+    startPosition: Int, totalCount: UInt?, deletions: DocumentDeletionMark
   ) async throws {
     try await wrappingAsync("appendQueryPage") {
       try await writer.write { db in
+        let deleted = deletionLog.deleted(since: deletions, serverID: serverID)
         try Self.writeQueryPage(
           db, queryKey: queryKey, serverID: serverID, documents: documents,
-          startPosition: startPosition)
+          startPosition: startPosition, skipping: deleted.ids)
         try Self.setQueryMeta(
           db, serverID: serverID, queryKey: queryKey, totalCount: totalCount,
           basis: nil, stamp: .unchanged)
+        if !deleted.isComplete {
+          try Self.markOrderStale(db, queryKey: queryKey, serverID: serverID)
+        }
       }
     }
   }
 
   private static func writeQueryPage(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID, documents: [Document],
-    startPosition: Int
+    startPosition: Int, skipping deleted: Set<UInt>
   ) throws {
+    let kept = documents.enumerated().filter { !deleted.contains($0.element.id) }
     // Placed before the rows are written, so their placement check doesn't
     // mark this key.
-    for (offset, domain) in documents.enumerated() {
+    for (offset, domain) in kept {
       try QueryOrderRow(
         serverId: serverID, queryKey: queryKey.rawValue,
         position: startPosition + offset, remoteId: domain.id,
         placedModified: domain.modified?.timeIntervalSinceReferenceDate
       ).insert(db)
     }
-    try writeDocumentRows(db, documents, serverID: serverID)
+    try writeDocumentRows(db, kept.map(\.element), serverID: serverID)
   }
 
   /// Rewrite a cached query's ordered membership from a Tier-0 id list (the
@@ -196,17 +223,25 @@ extension Database {
   /// `totalCount` records the server's full count for the scrollbar extent.
   ///
   /// Each row is placed under the cached document's `modified`.
+  ///
+  /// Ids deleted since `basis` was captured are left out, and positions and the
+  /// total count only the rest: nothing would ever prune a skeleton row for
+  /// one. If the bounded log has evicted deletions since `basis`, the order is
+  /// marked stale for a resync.
   /// - Returns: `false`, writing nothing, if a rewrite with a newer basis has
   ///   already landed.
   @discardableResult
   public func replaceQueryOrder(
-    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt], basis: QueryOrderGeneration
+    queryKey: QueryKey, serverID: UUID, orderedIDs: [UInt], basis: QueryWriteBasis
   ) async throws -> Bool {
     try await wrappingAsync("replaceQueryOrder") {
       try await writer.write { db in
-        guard try Self.accepts(basis, db, queryKey: queryKey, serverID: serverID) else {
+        guard try Self.accepts(basis.generation, db, queryKey: queryKey, serverID: serverID)
+        else {
           return false
         }
+        let deleted = deletionLog.deleted(since: basis.deletions, serverID: serverID)
+        let orderedIDs = orderedIDs.filter { !deleted.ids.contains($0) }
         try Self.deleteQueryOrder(db, queryKey: queryKey, serverID: serverID)
         let insert = try db.cachedStatement(
           sql: """
@@ -221,7 +256,10 @@ extension Database {
         }
         try Self.setQueryMeta(
           db, serverID: serverID, queryKey: queryKey, totalCount: UInt(orderedIDs.count),
-          basis: basis, stamp: .unchanged)
+          basis: basis.generation, stamp: .unchanged)
+        if !deleted.isComplete {
+          try Self.markOrderStale(db, queryKey: queryKey, serverID: serverID)
+        }
         return true
       }
     }
@@ -242,18 +280,42 @@ extension Database {
     basis.value >= (try fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)?.orderBasis ?? 0)
   }
 
-  /// The key's mark counter, to be captured by a whole-order rewrite before its
-  /// request and passed to its write as `basis`.
-  public func queryOrderGeneration(
+  /// The key's mark counter and the deletion log's position, to be captured by
+  /// a list write before its request and passed to its write as `basis`.
+  public func queryWriteBasis(
     queryKey: QueryKey, serverID: UUID
-  ) async throws -> QueryOrderGeneration {
-    try await wrappingAsync("queryOrderGeneration") {
+  ) async throws -> QueryWriteBasis {
+    let deletions = documentDeletionMark()
+    return try await wrappingAsync("queryWriteBasis") {
       try await writer.read { db in
-        QueryOrderGeneration(
-          try Self.fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)?.orderGeneration
-            ?? 0)
+        QueryWriteBasis(
+          generation: QueryOrderGeneration(
+            try Self.fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)?.orderGeneration
+              ?? 0),
+          deletions: deletions)
       }
     }
+  }
+
+  /// The deletion log's position, to be captured by a document write before
+  /// its request.
+  public func documentDeletionMark() -> DocumentDeletionMark {
+    deletionLog.mark()
+  }
+
+  /// Stop leaving `ids` out of writes based on a mark from before their
+  /// deletion: they exist again (restored from the trash).
+  public func forgetDocumentDeletions(_ ids: [UInt], serverID: UUID) {
+    deletionLog.forget(ids, serverID: serverID)
+  }
+
+  /// Bump one key's mark counter, leaving its order stale.
+  private static func markOrderStale(
+    _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
+  ) throws {
+    try QueryMetaRow
+      .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+      .updateAll(db, Column("order_generation").set(to: Column("order_generation") + 1))
   }
 
   /// Mark every cached query containing `remoteID` order-stale. Over-marks: any
@@ -299,18 +361,31 @@ extension Database {
   /// cached list. There is no FK from `query_order` to `document` (a row may be a
   /// skeleton), so the prune is explicit — a removed id must not linger as a
   /// permanent skeleton.
+  ///
+  /// The ids are recorded in the deletion log, so a write based on a
+  /// ``QueryWriteBasis`` or ``DocumentDeletionMark`` captured before this
+  /// delete leaves them out.
   public func deleteDocuments(serverID: UUID, removedIDs: [UInt]) async throws {
     guard !removedIDs.isEmpty else { return }
     try await wrappingAsync("deleteDocuments") {
-      try await writer.write {
-        try Self.removeDocuments($0, serverID: serverID, removedIDs: removedIDs)
+      try await writer.write { [deletionLog] in
+        try Self.removeDocuments(
+          $0, serverID: serverID, removedIDs: removedIDs, log: deletionLog)
       }
     }
   }
 
-  private static func removeDocuments(
-    _ db: GRDB.Database, serverID: UUID, removedIDs: [UInt]
+  static func removeDocuments(
+    _ db: GRDB.Database, serverID: UUID, removedIDs: [UInt], log: DocumentDeletionLog
   ) throws {
+    // Recorded inside the deleting transaction. SQLite serializes write
+    // transactions, so a list write committing after this one sees the entry,
+    // and one committing before has its rows pruned below. A rollback takes the
+    // entry back out, so a document that still exists isn't left out of later
+    // writes.
+    let sequence = log.record(removedIDs, serverID: serverID)
+    db.afterNextTransaction(
+      onCommit: { _ in }, onRollback: { _ in log.discard(sequence: sequence) })
     try pruneDocumentDetail(db, serverID: serverID, documentIDs: removedIDs)
     _ =
       try DocumentRecord

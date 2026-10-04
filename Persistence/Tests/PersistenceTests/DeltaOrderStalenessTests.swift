@@ -35,7 +35,7 @@ struct DeltaOrderStalenessTests {
     try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: documents,
       totalCount: UInt(documents.count),
-      basis: database.queryOrderGeneration(queryKey: key, serverID: server))
+      basis: database.queryWriteBasis(queryKey: key, serverID: server))
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
   }
 
@@ -272,9 +272,9 @@ struct DeltaOrderStalenessTests {
     try await fill(database, server, key, [doc(1), doc(2)])
 
     // A asks, a mark lands, B asks and writes first.
-    let a = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let a = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
-    let b = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let b = try await database.queryWriteBasis(queryKey: key, serverID: server)
     #expect(
       try await database.replaceQueryOrder(
         queryKey: key, serverID: server, orderedIDs: [2, 1], basis: b))

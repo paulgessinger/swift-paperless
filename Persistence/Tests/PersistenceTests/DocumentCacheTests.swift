@@ -397,7 +397,7 @@ struct DocumentCacheTests {
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == true)
 
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       totalCount: 1, basis: generation)
@@ -454,7 +454,7 @@ struct DocumentCacheTests {
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
     // The server's own ordering of the whole key, so it is current again.
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
       queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale == false)
@@ -477,7 +477,7 @@ struct DocumentCacheTests {
       totalCount: 2, basis: .initial)
 
     // The request goes out with the counter as it stands…
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     // …document 2 changes while the server is answering…
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
     // …and the answer, which predates that change, lands.
@@ -498,7 +498,7 @@ struct DocumentCacheTests {
 
     // The mark triggered the rewrite, so the answer accounts for it.
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
       queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
 
@@ -516,7 +516,7 @@ struct DocumentCacheTests {
       queryKey: key, serverID: server, documents: [doc(1, "A"), doc(2, "B")],
       totalCount: 2, basis: .initial)
 
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
     try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(2, "B"), doc(1, "A")],
@@ -535,7 +535,7 @@ struct DocumentCacheTests {
       totalCount: 1, basis: .initial)
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.replaceQueryPage(
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       totalCount: 1, basis: generation)
@@ -554,11 +554,11 @@ struct DocumentCacheTests {
 
     // A second mark on a stale order must still reach a rewrite in flight.
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
 
     #expect(
-      try await database.queryOrderGeneration(queryKey: key, serverID: server) != generation)
+      try await database.queryWriteBasis(queryKey: key, serverID: server) != generation)
     try await database.replaceQueryOrder(
       queryKey: key, serverID: server, orderedIDs: [2, 1], basis: generation)
     #expect(try await database.queryStatus(queryKey: key, serverID: server).orderStale)
@@ -578,7 +578,7 @@ struct DocumentCacheTests {
       totalCount: 1, basis: .initial)
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
-    let generation = try await database.queryOrderGeneration(queryKey: keyA, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: keyA, serverID: server)
     // Only B's member changes while A's rewrite is in flight.
     try await database.markQueriesOrderStale(containing: 2, serverID: server)
     try await database.replaceQueryOrder(
@@ -599,7 +599,7 @@ struct DocumentCacheTests {
     try await database.markQueriesOrderStale(containing: 1, serverID: server)
 
     // A `query_meta` upsert rewrites every column; the counter must survive.
-    let generation = try await database.queryOrderGeneration(queryKey: key, serverID: server)
+    let generation = try await database.queryWriteBasis(queryKey: key, serverID: server)
     try await database.replaceQueryOrder(
       queryKey: key, serverID: server, orderedIDs: [1], basis: generation)
     try await database.markQueryFillComplete(queryKey: key, serverID: server)
@@ -607,7 +607,7 @@ struct DocumentCacheTests {
       queryKey: key, serverID: server, documents: [doc(1, "A")],
       startPosition: 1, totalCount: 2)
 
-    #expect(try await database.queryOrderGeneration(queryKey: key, serverID: server) == generation)
+    #expect(try await database.queryWriteBasis(queryKey: key, serverID: server) == generation)
   }
 
   // MARK: - Reconcile support
