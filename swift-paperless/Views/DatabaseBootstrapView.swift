@@ -9,14 +9,8 @@ import Persistence
 import SwiftUI
 import os
 
-/// Drives the at-launch construction of the process's ``AppStack``, and owns
-/// the hard-fail UI for when it cannot be built.
-///
-/// No longer the *sole* producer, and deliberately so: the scene is not the
-/// only thing that runs in this process. `AppStackHolder` is the producer, this
-/// type is the scene's view onto it — it asks at launch, reports the failure if
-/// there is one, and offers a retry. An App Intent asking the holder from a
-/// background launch gets the very same stack.
+/// Drives the at-launch construction of the process's ``AppStack`` via
+/// `AppStackHolder`, and owns the hard-fail UI with a retry.
 @MainActor
 @Observable
 final class DatabaseBootstrap {
@@ -33,9 +27,7 @@ final class DatabaseBootstrap {
 
   func retry() {
     Logger.shared.notice("Retrying database bootstrap")
-    // The cached stack is the thing that failed, or — coming from the wipe —
-    // points at a file that has since been deleted. Either way the next attempt
-    // has to build a new one rather than be handed the old.
+    // The cached stack failed or points at a wiped file, so build a new one.
     AppStackHolder.reset()
     outcome = Self.attempt()
   }

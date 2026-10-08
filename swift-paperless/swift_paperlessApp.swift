@@ -35,9 +35,8 @@ struct MainView: View {
   @State private var syncEngine: SyncEngine
 
   // The process's GRDB database, threaded into each connection's
-  // CachingRepository. Comes from `AppStack`, which also owns the manager and
-  // the registry above — the scene borrows all three rather than owning them,
-  // because an App Intent runs in this same process and must get the same ones.
+  // CachingRepository. Borrowed from `AppStack` like the manager and registry,
+  // since App Intents share this process.
   private let database: Database
 
   @State private var friendlyNameSubscription: Subscription?

@@ -35,18 +35,10 @@ enum PaperlessIntentError: LocalizedError {
   }
 }
 
-/// The intents' view onto the process's ``AppStack``. Elements are read through
-/// a `DocumentStore`, so results come from the local cache that `sync()` keeps
-/// up to date.
-///
-/// The stack is emphatically *not* the intents' own. An intent declared in the
-/// app target runs in the app's process, and `@main` builds the scene's
-/// bootstrap on every launch — including the background launch the system does
-/// to run this intent. Anything built here instead of borrowed would therefore
-/// be a *second* database, second connection manager and second session
-/// registry alongside the app's, on every run: observations that never see each
-/// other's writes, two sessions racing the same server's sync, and a `server`
-/// row cached twice. See ``AppStack`` for why each of those bites.
+/// The intents' view onto the process's ``AppStack``, which they borrow rather
+/// than build: an intent runs in the app's process. Elements are read through a
+/// `DocumentStore`, so results come from the local cache that `sync()` keeps up
+/// to date.
 @MainActor
 enum PaperlessIntentStore {
   private static var stack: AppStack {
@@ -77,13 +69,8 @@ extension DocumentStore {
   /// past the deadline, and a failure is already swallowed by `sync()`, so
   /// callers just read whatever the cache holds afterwards.
   func sync(timeout: Duration) async {
-    // The wait is bounded; the sync is not. `sync()` joins the session's
-    // `TaskSlot`, which by design does not propagate a joiner's cancellation
-    // into the shared task — "a joiner going away must not tear down the work
-    // under the others" — so whichever child loses this race ends the *wait*
-    // only, and the sync runs on to finish writing what a later read will find.
-    // That is also why the race can be structured: cancelling these children,
-    // or the whole call, costs nothing that anyone is waiting on.
+    // `sync()` joins the session's `TaskSlot`, which does not cancel the shared
+    // task when a joiner leaves, so losing this race ends only the wait.
     await withTaskGroup(of: Void.self) { group in
       group.addTask { [self] in try? await sync() }
       group.addTask { try? await Task.sleep(for: timeout) }

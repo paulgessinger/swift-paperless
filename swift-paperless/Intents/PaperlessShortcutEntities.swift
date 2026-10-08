@@ -239,20 +239,10 @@ struct PaperlessTagQuery: EntityStringQuery {
 /// through the store's repository so they come from the synced local cache.
 @MainActor
 private enum PaperlessElementLoader {
-  /// Picker lists: read the cache, syncing only when it has nothing to show.
-  ///
-  /// Every keystroke in the Shortcuts editor lands here — `entities(matching:)`
-  /// filters this list rather than querying its own — so the path has to stay
-  /// cheap enough to run per character. A cache read is; a sync is not, being a
-  /// `ui_settings` fetch plus every element collection, unthrottled (the
-  /// single-flight in `syncElements` only merges *concurrent* callers), and
-  /// blind to the `syncOverCellular` gate that `SyncEngine` weighs for its own
-  /// sweeps. Keeping this cache current is that engine's job, together with the
-  /// app's foreground sync for the active server.
-  ///
-  /// An empty cache is the one case that cannot wait for either: a picker with
-  /// no rows is useless, and the server may have been added moments ago. That
-  /// alone pays for a bounded sync.
+  /// Picker lists: read the cache, syncing only when it is empty. This runs per
+  /// keystroke in the Shortcuts editor, and a sync is too heavy for that and
+  /// ignores the `syncOverCellular` gate; keeping the cache current is the
+  /// `SyncEngine`'s job.
   static func suggested<Element: LocallyNamed & Sendable>(
     server: PaperlessServerEntity?,
     load: @Sendable (any Repository) async throws -> [Element]

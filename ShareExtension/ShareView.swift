@@ -28,17 +28,9 @@ struct ShareView: View {
   init(attachmentManager: AttachmentManager, callback: @escaping () -> Void) {
     self.attachmentManager = attachmentManager
     self.callback = callback
-    // The extension process's own `AppStack` (app-group SQLite, WAL). The same
-    // DB backs the `ConnectionManager` and — through the session's
-    // `CachingRepository` — the element cache, so the store's `ElementStore`
-    // projection observes the extension's own writes. Cross-process live
-    // notification isn't delivered (the extension syncs at launch), but the
-    // extension's in-process writes drive its own observation normally.
-    //
-    // "Its own" is a property of the process, not of this call: the holder is
-    // per-process, and in an extension this is the only thing that ever asks it.
-    // The registry it carries is never `start()`ed here, because an extension
-    // has no reason to react to connection edits made elsewhere.
+    // The extension process's `AppStack` (app-group SQLite, WAL). Its registry is
+    // never `start()`ed: an extension has no reason to react to connection edits
+    // made elsewhere.
     let stack = AppStackHolder.sharedWithInMemoryFallback(context: "Share Extension")
     _connectionManager = State(initialValue: stack.connectionManager)
     _store = State(initialValue: DocumentStore(registry: stack.sessionRegistry))
