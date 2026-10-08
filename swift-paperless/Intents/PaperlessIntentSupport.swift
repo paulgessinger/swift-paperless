@@ -35,21 +35,32 @@ enum PaperlessIntentError: LocalizedError {
   }
 }
 
-/// The intents' view onto the process's ``AppStack``, which they borrow rather
-/// than build: an intent runs in the app's process. Elements are read through a
-/// `DocumentStore`, so results come from the local cache that `sync()` keeps up
-/// to date.
+/// The intents' only way to the process's ``AppStack``, which they borrow
+/// because an intent runs in the app's process.
 @MainActor
 enum PaperlessIntentStore {
-  private static var stack: AppStack {
-    AppStackHolder.sharedWithInMemoryFallback(context: "Intents")
+  fileprivate static var stores: [UUID: DocumentStore] = [:]
+
+  /// Runs an intent as background work. An intent can run while the app stays
+  /// in the background, where the database writer is otherwise suspended.
+  static func run<T>(_ body: (PaperlessIntentContext) async throws -> T) async rethrows -> T {
+    let stack = AppStackHolder.sharedWithInMemoryFallback(context: "Intents")
+    return try await stack.suspension.performBackgroundWork {
+      try await body(PaperlessIntentContext(stack: stack))
+    }
   }
+}
 
-  static var connectionManager: ConnectionManager { stack.connectionManager }
+/// What an intent can reach inside ``PaperlessIntentStore/run(_:)``.
+@MainActor
+struct PaperlessIntentContext {
+  let stack: AppStack
 
-  private static var stores: [UUID: DocumentStore] = [:]
+  var connectionManager: ConnectionManager { stack.connectionManager }
 
-  static func store(server: PaperlessServerEntity? = nil) async throws -> DocumentStore {
+  /// Elements are read through a `DocumentStore`, so results come from the
+  /// local cache.
+  func store(server: PaperlessServerEntity? = nil) async throws -> DocumentStore {
     guard let id = server?.id ?? connectionManager.activeConnectionId,
       let stored = connectionManager.connections[id]
     else {
@@ -57,9 +68,10 @@ enum PaperlessIntentStore {
     }
     // Activating again is cheap when nothing changed, and rebuilds the stack
     // if the connection (e.g. its token) did since the store was created.
-    let store = stores[id] ?? DocumentStore(registry: stack.sessionRegistry)
+    let store =
+      PaperlessIntentStore.stores[id] ?? DocumentStore(registry: stack.sessionRegistry)
     try await store.activate(connection: stored, reload: false)
-    stores[id] = store
+    PaperlessIntentStore.stores[id] = store
     return store
   }
 }
