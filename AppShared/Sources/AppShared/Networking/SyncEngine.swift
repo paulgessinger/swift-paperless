@@ -13,9 +13,9 @@
 //  own their repositories through `ServerSession`, so a sweep that reaches the
 //  active server coalesces onto the session the store is already using.
 //
-//  Scheduling stays on app-lifecycle triggers (launch / foreground /
-//  active-change); true `BGProcessingTask` execution is not implemented yet
-//  (see #697).
+//  Two triggers: app-lifecycle events (launch / foreground / active-change)
+//  sweep the inactive servers, and the background tasks sweep every server
+//  through ``syncAllServers(allowsFill:cost:)``.
 //
 //  This type is now purely the *scheduler*: it decides which servers to sync and
 //  in what order, and hands each one to its ``ServerSession``, which owns that
@@ -59,9 +59,9 @@ public final class SyncEngine {
   /// Servers this engine has already accounted for, diffed to spot additions.
   @ObservationIgnored private var knownServerIDs: Set<UUID> = []
 
-  /// Background warmth cadence for inactive servers — deliberately looser than
-  /// the active path's 300 s reconcile throttle; these servers aren't on screen.
-  @ObservationIgnored private let inactiveThrottle: TimeInterval = 900
+  /// How long a sweep leaves a refreshed server alone — deliberately looser
+  /// than the active path's 300 s reconcile throttle.
+  @ObservationIgnored private let sweepThrottle: TimeInterval = 900
 
   public init(
     registry: ServerSessionRegistry,
@@ -125,16 +125,35 @@ public final class SyncEngine {
     }
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
-      await runSweep(cost: linkCost())
+      await runSweep(
+        scope: .excludingActive(manager.activeConnectionId), allowsFill: true, cost: linkCost())
     }
     sweepTask = task
     await task.value
     sweepTask = nil
   }
 
+  /// Sweep every server, the active one included, stalest first. For a
+  /// background run, where no `DocumentStore` drives the active server.
+  ///
+  /// Runs in the caller's task: cancelling it stops the sweep before the next
+  /// server. Steps already running on a session are stopped by
+  /// ``ServerSessionRegistry/cancelAllWork()``. Not coalesced with
+  /// ``syncInactiveServers()``; an overlap joins the sessions' own
+  /// single-flights.
+  ///
+  /// - Parameters:
+  ///   - allowsFill: `false` limits every server to the cheap phases.
+  ///   - cost: The link cost, measured by the caller.
+  /// - Returns: `false` if the sweep was cancelled.
+  public func syncAllServers(allowsFill: Bool, cost: LinkCost) async -> Bool {
+    await runSweep(scope: .all, allowsFill: allowsFill, cost: cost)
+    return !Task.isCancelled
+  }
+
   // MARK: - Sweep
 
-  private func runSweep(cost: LinkCost) async {
+  private func runSweep(scope: SyncPlan.Scope, allowsFill: Bool, cost: LinkCost) async {
     let snapshots = manager.connections.values.map { conn in
       SyncPlan.ServerSnapshot(
         id: conn.id,
@@ -142,18 +161,24 @@ public final class SyncEngine {
         isEntireLibrary: conn.offlineBrowsingMode == .entireLibrary,
         syncOverCellular: conn.syncOverCellular)
     }
-    let actions = SyncPlan.inactiveActions(
+    let actions = SyncPlan.actions(
       connections: snapshots,
-      activeID: manager.activeConnectionId,
+      scope: scope,
       lastSweep: await registry.lastReconcileAts(),
       now: Date(),
-      throttle: inactiveThrottle,
-      cost: cost)
+      throttle: sweepThrottle,
+      cost: cost,
+      allowsFill: allowsFill)
 
+    let label = scope == .all ? "Full" : "Inactive"
     Logger.sync.info(
-      "Inactive sweep: \(actions.count) of \(snapshots.count) server(s) (expensive: \(cost.isExpensive), constrained: \(cost.isConstrained))"
+      "\(label, privacy: .public) sweep: \(actions.count) of \(snapshots.count) server(s) (expensive: \(cost.isExpensive), constrained: \(cost.isConstrained), fill allowed: \(allowsFill))"
     )
     for action in actions {
+      guard !Task.isCancelled else {
+        Logger.sync.info("\(label, privacy: .public) sweep cancelled")
+        return
+      }
       // No "skip the server that went active mid-sweep" guard any more: sweeping
       // it now means driving the *same* `ServerSession` the store drives, which
       // coalesces onto that session's per-phase single-flights instead of racing
@@ -162,7 +187,7 @@ public final class SyncEngine {
       guard let stored = manager.connections[action.serverID] else { continue }
       await runAction(action, stored: stored)
     }
-    Logger.sync.info("Inactive sweep complete")
+    Logger.sync.info("\(label, privacy: .public) sweep complete")
   }
 
   /// Policy for a server that just appeared. Session creation and teardown
