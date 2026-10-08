@@ -21,6 +21,8 @@ public final class AppStack {
   public let database: Database
   public let connectionManager: ConnectionManager
   public let sessionRegistry: ServerSessionRegistry
+  /// Background work runs inside it, so the database writer is open meanwhile.
+  public let suspension: DatabaseSuspensionController
 
   /// Lazy, so the Share Extension, which never schedules syncs, does not
   /// start a path monitor.
@@ -33,8 +35,9 @@ public final class AppStack {
     // work starts.
     linkCost: { [weak self] in self?.networkMonitor.cost ?? .unknown })
 
-  init(database: Database) {
+  init(database: Database, suspension: DatabaseSuspensionController? = nil) {
     self.database = database
+    self.suspension = suspension ?? DatabaseSuspensionController()
     let connectionManager = ConnectionManager(database: database)
     self.connectionManager = connectionManager
     sessionRegistry = ServerSessionRegistry(
@@ -51,13 +54,17 @@ public enum AppStackHolder {
   /// cached so a transient failure does not outlive its cause.
   private static var cached: AppStack?
 
+  /// The process's suspension controller. It outlives a failed or reset stack,
+  /// and the app attaches it to its lifecycle at launch.
+  public static let suspension = DatabaseSuspensionController()
+
   /// The process's stack, opening the app-group database on first call. Throws
   /// what ``Persistence/Database`` throws.
   public static func shared() throws -> AppStack {
     if let cached {
       return cached
     }
-    let stack = AppStack(database: try Database())
+    let stack = AppStack(database: try Database(), suspension: suspension)
     cached = stack
     return stack
   }

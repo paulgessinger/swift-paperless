@@ -56,8 +56,8 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   /// Release the SQLite write lock before iOS suspends the process — a write
-  /// still holding it at suspension is a `0xDEAD10CC` termination. See
-  /// `Database+Suspension`.
+  /// still holding it at suspension is a `0xDEAD10CC` termination.
+  /// `DatabaseSuspensionController` decides when, given background work.
   ///
   /// Notifications rather than `applicationDidEnterBackground(_:)`, which UIKit
   /// never calls once an app adopts scenes (this one vends a
@@ -71,16 +71,22 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    let suspension = AppStackHolder.suspension
+    suspension.attach(
+      isInBackground: application.applicationState == .background,
+      requestTime: BackgroundTime.request)
+
+    // UIKit posts these on the main thread, and `queue: nil` delivers there.
     let center = NotificationCenter.default
     center.addObserver(
       forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil
     ) { _ in
-      Persistence.Database.suspend()
+      MainActor.assumeIsolated { suspension.didEnterBackground() }
     }
     center.addObserver(
       forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil
     ) { _ in
-      Persistence.Database.resume()
+      MainActor.assumeIsolated { suspension.willEnterForeground() }
     }
     return true
   }
