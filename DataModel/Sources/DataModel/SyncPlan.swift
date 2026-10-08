@@ -38,7 +38,7 @@ public struct SyncServerAction: Equatable, Sendable {
   }
 }
 
-/// Pure planning for the multi-server (inactive-server) sync sweep.
+/// Pure planning for the multi-server sync sweep.
 public enum SyncPlan {
   /// A dependency-free snapshot of one configured server, as the engine sees it
   /// at sweep time. `isEntireLibrary` is `AppShared.OfflineBrowsingMode ==
@@ -60,20 +60,17 @@ public enum SyncPlan {
     }
   }
 
+  /// Which servers a sweep covers.
+  public enum Scope: Equatable, Sendable {
+    /// Every server except the active one, which `DocumentStore` drives while
+    /// the app is open.
+    case excludingActive(UUID?)
+    /// Every server, for a background run with no `DocumentStore`.
+    case all
+  }
+
   /// The ordered set of actions for a sweep of every **inactive** server.
-  ///
-  /// - The active server is excluded (it is driven by `DocumentStore`, never by
-  ///   the engine — this is what prevents a two-instance double-fill race).
-  /// - Uncredentialed servers always yield a `needsAuthOnly` action (cheap,
-  ///   throttle-exempt, so a freshly-arrived token is picked up on the very next
-  ///   sweep).
-  /// - Credentialed servers are dropped while their last successful sweep is
-  ///   still within `throttle`; otherwise they yield a sync action whose
-  ///   the `.fill` phase is gated on `isEntireLibrary &&` that server's own
-  ///   ``SyncCondition/allowsProactiveSync`` — each server's own
-  ///   `syncOverCellular` opt-in applies to *that* server only, not the whole
-  ///   sweep.
-  /// - Ordering is stable (by `id`) for deterministic, testable behavior.
+  /// See ``actions(connections:scope:lastSweep:now:throttle:cost:allowsFill:)``.
   public static func inactiveActions(
     connections: [ServerSnapshot],
     activeID: UUID?,
@@ -82,9 +79,45 @@ public enum SyncPlan {
     throttle: TimeInterval,
     cost: LinkCost
   ) -> [SyncServerAction] {
+    actions(
+      connections: connections, scope: .excludingActive(activeID), lastSweep: lastSweep,
+      now: now, throttle: throttle, cost: cost, allowsFill: true)
+  }
+
+  /// The ordered set of actions for a sweep of the servers in `scope`.
+  ///
+  /// - Uncredentialed servers always yield a `needsAuthOnly` action (cheap,
+  ///   throttle-exempt, so a freshly-arrived token is picked up on the very next
+  ///   sweep).
+  /// - Credentialed servers are dropped while their last sweep is still within
+  ///   `throttle`; otherwise they yield a sync action whose `.fill` phase is
+  ///   gated on `allowsFill`, `isEntireLibrary` and that server's own
+  ///   ``SyncCondition/allowsProactiveSync``.
+  /// - Stalest first: never-swept servers, then the oldest `lastSweep`, with
+  ///   `id` breaking ties. A background run that runs out of time has then
+  ///   reached the servers that needed it most.
+  public static func actions(
+    connections: [ServerSnapshot],
+    scope: Scope,
+    lastSweep: [UUID: Date],
+    now: Date,
+    throttle: TimeInterval,
+    cost: LinkCost,
+    allowsFill: Bool
+  ) -> [SyncServerAction] {
     connections
-      .filter { $0.id != activeID }
-      .sorted { $0.id.uuidString < $1.id.uuidString }
+      .filter { server in
+        guard case .excludingActive(let activeID) = scope else { return true }
+        return server.id != activeID
+      }
+      .sorted { lhs, rhs in
+        switch (lastSweep[lhs.id], lastSweep[rhs.id]) {
+        case (nil, .some): true
+        case (.some, nil): false
+        case (.some(let l), .some(let r)) where l != r: l < r
+        default: lhs.id.uuidString < rhs.id.uuidString
+        }
+      }
       .compactMap { server in
         guard server.hasToken else {
           // Uncredentialed: mark needs-auth every sweep (no network, no throttle).
@@ -93,19 +126,19 @@ public enum SyncPlan {
         if let last = lastSweep[server.id], now.timeIntervalSince(last) < throttle {
           return nil  // still fresh — skip the network sweep
         }
-        return SyncServerAction(
-          serverID: server.id,
-          needsAuthOnly: false,
-          phases: phases(
+        let phases =
+          allowsFill
+          ? phases(
             isEntireLibrary: server.isEntireLibrary,
-            condition: SyncCondition(
-              cost: cost, syncOverCellular: server.syncOverCellular)))
+            condition: SyncCondition(cost: cost, syncOverCellular: server.syncOverCellular))
+          : .cheap
+        return SyncServerAction(serverID: server.id, needsAuthOnly: false, phases: phases)
       }
   }
 
   /// The phases one credentialed server should run.
   ///
-  /// Shared by both drivers: the sweep reaches it through ``inactiveActions``,
+  /// Shared by both drivers: the sweep reaches it through ``actions(connections:scope:lastSweep:now:throttle:cost:allowsFill:)``,
   /// and the active server — which `DocumentStore` drives directly, outside any
   /// sweep — calls it itself. One function means the server the user is looking
   /// at cannot drift onto a different rule than its siblings, which is exactly
