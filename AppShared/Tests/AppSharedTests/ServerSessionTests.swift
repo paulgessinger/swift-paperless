@@ -37,9 +37,8 @@ struct ServerSessionTests {
     #expect(tags.count == 1)
   }
 
-  // Driven through the database rather than `reconcileDocuments()`: the
-  // reconcile ends in the content reclaim, which opens the real app-group
-  // `ContentStore` and blocks on the host.
+  // Driven through the database rather than `reconcileDocuments()`, so the
+  // stamp is a known value.
   @Test("The store shows the persisted last-refreshed stamp, and follows it when it changes")
   func storeShowsPersistedLastRefreshed() async throws {
     let harness = try await StoreHarness.make()
@@ -93,15 +92,14 @@ struct ServerSessionTests {
     #expect(calls() == ["resume", "requestTime", "suspend", "releaseTime"])
   }
 
-  // The handoff from `DocumentStore.sync()` to its reconcile. Two element syncs
-  // stand in for it: a real reconcile's content reclaim blocks on the host.
+  // The handoff from `DocumentStore.sync()` to its reconcile.
   @Test("A step that starts after the previous one ended opens the writer again")
   func consecutiveStepsEachOpenTheWriter() async throws {
     let (suspension, calls) = recordingSuspension()
     let harness = try await StoreHarness.make(suspension: suspension)
 
     try await harness.session.syncElements()
-    try await harness.session.syncElements()
+    await harness.session.reconcileDocuments(force: true)
 
     let pass = ["resume", "requestTime", "suspend", "releaseTime"]
     #expect(calls() == pass + pass)
