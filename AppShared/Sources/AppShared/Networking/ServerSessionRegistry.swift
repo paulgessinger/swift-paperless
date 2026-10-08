@@ -124,6 +124,13 @@ public final class ServerSessionRegistry {
     return session
   }
 
+  /// Call off every session's steps in flight.
+  public func cancelAllWork() {
+    for session in sessions.values {
+      session.cancelWork()
+    }
+  }
+
   /// Every server's last refresh, for the scheduler's throttle and order.
   /// Servers that have never refreshed are absent rather than distant-past.
   ///

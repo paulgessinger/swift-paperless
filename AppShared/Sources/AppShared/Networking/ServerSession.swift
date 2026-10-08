@@ -429,6 +429,13 @@ public final class ServerSession {
     detailFillSlot.retire()
   }
 
+  /// Call off every step in flight, keeping the repository. Used when iOS's
+  /// background time runs out; the next trigger starts afresh.
+  public func cancelWork() {
+    syncSlot.retire()
+    retirePhases()
+  }
+
   /// Drop the retained stack. Used when the server row goes away — the row
   /// delete FK-cascades the cache, so there is nothing else to clean up.
   public func invalidate() {

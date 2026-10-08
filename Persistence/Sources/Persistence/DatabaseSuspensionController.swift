@@ -24,6 +24,10 @@ public final class DatabaseSuspensionController {
   /// Hands the held grant back; `nil` while none is held.
   private var releaseGrant: (@MainActor () -> Void)?
 
+  /// Stops the running work when time runs out in the background. Runs before
+  /// the writer is suspended.
+  public var onExpire: (@MainActor () -> Void)?
+
   /// - Parameter requestTime: The default grants none, so the controller only
   ///   counts until ``attach(isInBackground:requestTime:)``.
   public init(
@@ -113,11 +117,21 @@ public final class DatabaseSuspensionController {
     releaseGrant = nil
   }
 
-  private func grantExpired() {
-    releaseGrant = nil
+  /// Time ran out for a source other than the controller's own grant, such
+  /// as a background task's expiration. Same handling as the grant's expiry:
+  /// stop the work and suspend, then hand back any grant still held.
+  public func expire() {
     guard isInBackground else { return }
     Logger.persistence.notice(
       "Background time expired with \(self.activeWork) work item(s) running; suspending")
+    onExpire?()
     suspend()
+    releaseHeldGrant()
+  }
+
+  private func grantExpired() {
+    // The provider ends this grant itself.
+    releaseGrant = nil
+    expire()
   }
 }

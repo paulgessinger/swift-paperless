@@ -104,4 +104,29 @@ struct ServerSessionTests {
     let pass = ["resume", "requestTime", "suspend", "releaseTime"]
     #expect(calls() == pass + pass)
   }
+
+  @Test("The stack hands background-time expiry to its sessions")
+  func expiryCancelsSessionWork() async throws {
+    let (suspension, _) = recordingSuspension()
+    let stack = AppStack(database: try Database.inMemory(), suspension: suspension)
+    let session = stack.sessionRegistry.session(for: UUID())
+    #expect(suspension.onExpire != nil)
+
+    // Nothing in flight: cancelling is harmless and the session stays usable.
+    suspension.expire()
+    session.cancelWork()
+    #expect(session.syncFailures.isEmpty)
+  }
+
+  @Test("A session whose work was called off runs its next step normally")
+  func cancelledSessionKeepsWorking() async throws {
+    let harness = try await StoreHarness.make()
+    _ = try await harness.transient.create(tag: ProtoTag(name: "Receipts", color: tagColor))
+
+    harness.session.cancelWork()
+    try await harness.session.syncElements()
+
+    let tags = try await harness.database.elements(TagRecord.self, serverID: harness.serverID)
+    #expect(tags.count == 1)
+  }
 }

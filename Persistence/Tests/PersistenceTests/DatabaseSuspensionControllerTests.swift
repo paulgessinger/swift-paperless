@@ -12,6 +12,7 @@ struct DatabaseSuspensionControllerTests {
     case resume
     case requestTime
     case releaseTime
+    case stopWork
   }
 
   final class Recorder {
@@ -97,6 +98,38 @@ struct DatabaseSuspensionControllerTests {
     // grant left to hand back.
     controller.endBackgroundWork()
     #expect(recorder.calls == [.requestTime, .suspend, .suspend])
+  }
+
+  @Test("When the time runs out, the work is stopped before the writer is suspended")
+  func expiryStopsWorkFirst() {
+    let (controller, recorder) = makeController()
+    controller.onExpire = { recorder.calls.append(.stopWork) }
+    controller.beginBackgroundWork()
+    controller.didEnterBackground()
+    recorder.expire?()
+    #expect(recorder.calls == [.requestTime, .stopWork, .suspend])
+  }
+
+  @Test("Another time source expiring stops the work, suspends and hands back the held grant")
+  func externalExpiry() {
+    let (controller, recorder) = makeController()
+    controller.onExpire = { recorder.calls.append(.stopWork) }
+    controller.beginBackgroundWork()
+    controller.didEnterBackground()
+    controller.expire()
+    #expect(recorder.calls == [.requestTime, .stopWork, .suspend, .releaseTime])
+    // The work ending later has no grant left to hand back.
+    controller.endBackgroundWork()
+    #expect(recorder.calls == [.requestTime, .stopWork, .suspend, .releaseTime, .suspend])
+  }
+
+  @Test("Expiry in the foreground neither stops the work nor touches the writer")
+  func externalExpiryInForeground() {
+    let (controller, recorder) = makeController()
+    controller.onExpire = { recorder.calls.append(.stopWork) }
+    controller.beginBackgroundWork()
+    controller.expire()
+    #expect(recorder.calls.isEmpty)
   }
 
   @Test("New work after the time ran out opens the writer again with a new grant")
