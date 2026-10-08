@@ -37,11 +37,12 @@ public final class AppStack {
 
   init(database: Database, suspension: DatabaseSuspensionController? = nil) {
     self.database = database
-    self.suspension = suspension ?? DatabaseSuspensionController()
+    let suspension = suspension ?? DatabaseSuspensionController()
+    self.suspension = suspension
     let connectionManager = ConnectionManager(database: database)
     self.connectionManager = connectionManager
     sessionRegistry = ServerSessionRegistry(
-      database: database, manager: connectionManager)
+      database: database, manager: connectionManager, suspension: suspension)
   }
 }
 

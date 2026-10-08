@@ -37,7 +37,8 @@ struct StoreHarness {
     tags: [Tag] = [],
     documents: [Document] = [],
     permissions: UserPermissions = .full,
-    settings: UISettingsSettings = UISettingsSettings()
+    settings: UISettingsSettings = UISettingsSettings(),
+    suspension: DatabaseSuspensionController? = nil
   ) async throws -> StoreHarness {
     let serverID = UUID()
     let database = try Database.seeded(
@@ -47,7 +48,7 @@ struct StoreHarness {
       uiSettings: UISettings(user: user, settings: settings, permissions: permissions))
     let transient = TransientRepository()
     let caching = CachingRepository(wrapping: transient, database: database, serverID: serverID)
-    let session = ServerSession(serverID: serverID, repository: caching)
+    let session = ServerSession(serverID: serverID, repository: caching, suspension: suspension)
     let store = DocumentStore(session: session)
     try await waitUntil({ store.permissionsKnown }, "projection never hydrated")
     if !tags.isEmpty {

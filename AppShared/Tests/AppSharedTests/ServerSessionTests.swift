@@ -52,4 +52,58 @@ struct ServerSessionTests {
     try await harness.database.clearCache()
     try await waitUntil({ harness.store.lastReconcileAt == nil }, "store never saw the reset")
   }
+
+  // MARK: - Background work
+
+  /// A controller that starts in the background and records what reaches the
+  /// writer and iOS.
+  private func recordingSuspension() -> (DatabaseSuspensionController, () -> [String]) {
+    final class Box { var calls: [String] = [] }
+    let box = Box()
+    let controller = DatabaseSuspensionController(
+      isInBackground: true,
+      suspend: { box.calls.append("suspend") },
+      resume: { box.calls.append("resume") },
+      requestTime: { _ in
+        box.calls.append("requestTime")
+        return { box.calls.append("releaseTime") }
+      })
+    return (controller, { box.calls })
+  }
+
+  @Test("A sync step in the background opens the writer for itself, and closes it when done")
+  func syncStepIsBackgroundWork() async throws {
+    let (suspension, calls) = recordingSuspension()
+    let harness = try await StoreHarness.make(suspension: suspension)
+
+    try await harness.session.syncElements()
+
+    #expect(calls() == ["resume", "requestTime", "suspend", "releaseTime"])
+  }
+
+  @Test("Callers joining a step in flight don't count it twice")
+  func joinedStepCountsOnce() async throws {
+    let (suspension, calls) = recordingSuspension()
+    let harness = try await StoreHarness.make(suspension: suspension)
+
+    async let first: Void = harness.session.syncElements()
+    async let second: Void = harness.session.syncElements()
+    _ = try await (first, second)
+
+    #expect(calls() == ["resume", "requestTime", "suspend", "releaseTime"])
+  }
+
+  // The handoff from `DocumentStore.sync()` to its reconcile. Two element syncs
+  // stand in for it: a real reconcile's content reclaim blocks on the host.
+  @Test("A step that starts after the previous one ended opens the writer again")
+  func consecutiveStepsEachOpenTheWriter() async throws {
+    let (suspension, calls) = recordingSuspension()
+    let harness = try await StoreHarness.make(suspension: suspension)
+
+    try await harness.session.syncElements()
+    try await harness.session.syncElements()
+
+    let pass = ["resume", "requestTime", "suspend", "releaseTime"]
+    #expect(calls() == pass + pass)
+  }
 }

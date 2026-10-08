@@ -66,6 +66,9 @@ public final class ServerSession {
 
   @ObservationIgnored private let source: Source
 
+  /// Every sync step runs as background work here; see ``asBackgroundWork(_:)``.
+  @ObservationIgnored private let suspension: DatabaseSuspensionController
+
   /// The retained stack, together with the `Connection` it was assembled from.
   /// Only ever populated for ``Source/stored``.
   ///
@@ -257,6 +260,16 @@ public final class ServerSession {
     )
   }
 
+  /// Runs one sync step as background work for as long as it runs, so a step
+  /// still running when the app leaves keeps the writer open on iOS's time, and
+  /// one starting in the background opens it itself. Called inside each step's
+  /// single-flight, so joined callers count once.
+  private func asBackgroundWork<T>(
+    _ body: @MainActor () async throws -> T
+  ) async rethrows -> T {
+    try await suspension.performBackgroundWork(body)
+  }
+
   /// Write a freshness stamp. A failed write costs only the stamp — the next
   /// pass writes it again — so it is logged rather than recorded as a failure.
   private func persistStamp(_ name: String, _ write: () async throws -> Void) async {
@@ -283,21 +296,29 @@ public final class ServerSession {
     return (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
   }
 
+  /// - Parameter suspension: The app's; without one the session's own only counts.
   public init(
     serverID: UUID,
     database: Database,
-    mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode
+    mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
+    suspension: DatabaseSuspensionController? = nil
   ) {
     self.serverID = serverID
     source = .stored(database: database, mode: mode)
+    self.suspension = suspension ?? DatabaseSuspensionController()
   }
 
   /// A session around a repository that already exists, for previews and tests.
   /// It consults no connection record and never rebuilds: the repository it is
   /// handed is the one it keeps, so it is `.ready` from birth.
-  public init(serverID: UUID, repository: any Repository & CachingBackend) {
+  public init(
+    serverID: UUID,
+    repository: any Repository & CachingBackend,
+    suspension: DatabaseSuspensionController? = nil
+  ) {
     self.serverID = serverID
     source = .fixed(repository)
+    self.suspension = suspension ?? DatabaseSuspensionController()
     state = .ready
     adopt(repository)
   }
@@ -439,26 +460,29 @@ public final class ServerSession {
       elementHealOwed = false
       Logger.sync.debug("Starting element sync")
       return { [weak self] in
-        // Recorded inside the single-flight, so a failure counts once however
-        // many callers joined it. Permissions are recorded separately: their
-        // failure isn't fatal, and must neither hide nor be hidden by the
-        // element phase's outcome.
-        do {
-          try await NetworkTransfer.$category.withValue(.sync) {
-            try await backend.syncUISettings()
+        guard let self else { return }
+        try await asBackgroundWork {
+          // Recorded inside the single-flight, so a failure counts once however
+          // many callers joined it. Permissions are recorded separately: their
+          // failure isn't fatal, and must neither hide nor be hidden by the
+          // element phase's outcome.
+          do {
+            try await NetworkTransfer.$category.withValue(.sync) {
+              try await backend.syncUISettings()
+            }
+            self.recordSuccess(at: .uiSettings)
+          } catch {
+            self.recordFailure(error, at: .uiSettings)
           }
-          self?.recordSuccess(at: .uiSettings)
-        } catch {
-          self?.recordFailure(error, at: .uiSettings)
-        }
-        do {
-          try await NetworkTransfer.$category.withValue(.sync) {
-            try await backend.syncElements { self?.report($0, for: .elementSync) }
+          do {
+            try await NetworkTransfer.$category.withValue(.sync) {
+              try await backend.syncElements { [weak self] in self?.report($0, for: .elementSync) }
+            }
+            self.recordSuccess(at: .elements)
+          } catch {
+            self.recordFailure(error, at: .elements)
+            throw error
           }
-          self?.recordSuccess(at: .elements)
-        } catch {
-          self?.recordFailure(error, at: .elements)
-          throw error
         }
       }
     })
@@ -494,7 +518,7 @@ public final class ServerSession {
       guard reconcileGate.start(force: force) else { return nil }
       return { [weak self] in
         guard let self else { return ReconcileResult() }
-        return await runReconcile(backend: backend)
+        return await asBackgroundWork { await runReconcile(backend: backend) }
       }
     })
     return result ?? ReconcileResult()
@@ -624,21 +648,24 @@ public final class ServerSession {
     // queries. `force` is not lost by joining: a fill only runs at all when the
     // coverage marker is stale or forced, so one is already doing the work.
     return await libraryFillSlot.joinOrStart { [weak self] in
-      do {
-        try await NetworkTransfer.$category.withValue(.fill) {
-          try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
+      guard let self else { return false }
+      return await asBackgroundWork { [weak self] in
+        do {
+          try await NetworkTransfer.$category.withValue(.fill) {
+            try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
+          }
+          // `true` here is what tells `runSync` the pass completed; a cancellation
+          // swallowed on the fill's last `await` must not reach it as one.
+          try Task.checkCancellation()
+          self?.recordSuccess(at: .libraryFill)
+          return true
+        } catch is CancellationError {
+          Logger.sync.debug("Proactive library fill cancelled")
+          return false
+        } catch {
+          self?.recordFailure(error, at: .libraryFill)
+          return false
         }
-        // `true` here is what tells `runSync` the pass completed; a cancellation
-        // swallowed on the fill's last `await` must not reach it as one.
-        try Task.checkCancellation()
-        self?.recordSuccess(at: .libraryFill)
-        return true
-      } catch is CancellationError {
-        Logger.sync.debug("Proactive library fill cancelled")
-        return false
-      } catch {
-        self?.recordFailure(error, at: .libraryFill)
-        return false
       }
     }
   }
@@ -655,26 +682,29 @@ public final class ServerSession {
       return true
     }
     return await detailFillSlot.joinOrStart { [weak self] in
-      do {
-        let outcome = try await NetworkTransfer.$category.withValue(.fill) {
-          try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
+      guard let self else { return false }
+      return await asBackgroundWork { [weak self] in
+        do {
+          let outcome = try await NetworkTransfer.$category.withValue(.fill) {
+            try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
+          }
+          // As in `fillLibrary`: `true` is a claim the pass finished.
+          try Task.checkCancellation()
+          // Failures that aren't surfaced (offline, 403) say nothing new, so
+          // they leave an existing entry as it is.
+          if let failure = outcome.failure {
+            self?.recordFailure(failure, at: .detailFill)
+          } else if outcome.failed == 0 {
+            self?.recordSuccess(at: .detailFill)
+          }
+          return true
+        } catch is CancellationError {
+          Logger.sync.debug("Proactive detail fill cancelled")
+          return false
+        } catch {
+          self?.recordFailure(error, at: .detailFill)
+          return false
         }
-        // As in `fillLibrary`: `true` is a claim the pass finished.
-        try Task.checkCancellation()
-        // Failures that aren't surfaced (offline, 403) say nothing new, so
-        // they leave an existing entry as it is.
-        if let failure = outcome.failure {
-          self?.recordFailure(failure, at: .detailFill)
-        } else if outcome.failed == 0 {
-          self?.recordSuccess(at: .detailFill)
-        }
-        return true
-      } catch is CancellationError {
-        Logger.sync.debug("Proactive detail fill cancelled")
-        return false
-      } catch {
-        self?.recordFailure(error, at: .detailFill)
-        return false
       }
     }
   }
@@ -730,7 +760,7 @@ public final class ServerSession {
   public func sync(stored: StoredConnection, phases: SyncPhases) async {
     await syncSlot.joinOrStart { [weak self] in
       guard let self else { return }
-      await runSync(stored: stored, phases: phases)
+      await asBackgroundWork { await runSync(stored: stored, phases: phases) }
     }
   }
 
