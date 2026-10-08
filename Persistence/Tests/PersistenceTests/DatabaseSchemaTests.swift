@@ -271,8 +271,10 @@ struct DatabaseSchemaTests {
     }
   }
 
-  @Test("v15 drops last_successful_sync_at, keeping the rest of the sync state")
-  func v15DropsLastSuccessfulSync() throws {
+  @Test(
+    "v15 renames last_reconcile_at to last_refreshed_at and drops last_successful_sync_at, keeping the values"
+  )
+  func v15SingleFreshnessStamp() throws {
     let server = UUID()
     let queue = try DatabaseQueue()
     var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
@@ -296,17 +298,18 @@ struct DatabaseSchemaTests {
     try queue.read { db in
       let columns = try db.columns(in: "server_sync_state").map(\.name)
       #expect(!columns.contains("last_successful_sync_at"))
+      #expect(!columns.contains("last_reconcile_at"))
 
       let row = try #require(
         try Row.fetchOne(
           db,
           sql: """
-            SELECT delta_watermark, library_coverage_at, last_reconcile_at
+            SELECT delta_watermark, library_coverage_at, last_refreshed_at
             FROM server_sync_state
             """))
       #expect(row["delta_watermark"] as Double? == 100.5)
       #expect(row["library_coverage_at"] as Double? == 200.5)
-      #expect(row["last_reconcile_at"] as Double? == 300.5)
+      #expect(row["last_refreshed_at"] as Double? == 300.5)
     }
   }
 

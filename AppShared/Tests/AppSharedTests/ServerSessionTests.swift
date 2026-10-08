@@ -42,14 +42,14 @@ struct ServerSessionTests {
   @Test("The store shows the persisted last-refreshed stamp, and follows it when it changes")
   func storeShowsPersistedLastRefreshed() async throws {
     let harness = try await StoreHarness.make()
-    #expect(harness.store.lastReconcileAt == nil)
+    #expect(harness.store.lastRefreshedAt == nil)
 
     let first = Date(timeIntervalSince1970: 1_700_000_000)
-    try await harness.database.setLastReconcileAt(first, serverID: harness.serverID)
-    try await waitUntil({ harness.store.lastReconcileAt == first }, "store never saw the stamp")
+    try await harness.database.setLastRefreshedAt(first, serverID: harness.serverID)
+    try await waitUntil({ harness.store.lastRefreshedAt == first }, "store never saw the stamp")
 
     try await harness.database.clearCache()
-    try await waitUntil({ harness.store.lastReconcileAt == nil }, "store never saw the reset")
+    try await waitUntil({ harness.store.lastRefreshedAt == nil }, "store never saw the reset")
   }
 
   // MARK: - Background work

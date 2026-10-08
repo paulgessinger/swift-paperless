@@ -127,7 +127,7 @@ struct DatabaseStatisticsView: View {
       row("Needs auth", server.needsAuth ? "yes" : "no")
       row("Delta watermark", timestamp(server.deltaWatermark))
       row("Library coverage", timestamp(server.libraryCoverageAt))
-      row("Last reconcile", timestamp(server.lastReconcileAt))
+      row("Last refreshed", timestamp(server.lastRefreshedAt))
       row("Skeleton order rows", "\(server.skeletonRows)")
       row("Unreferenced documents", "\(server.unreferencedDocuments)")
       row("Awaiting notes", "\(server.documentsAwaitingNotes)")

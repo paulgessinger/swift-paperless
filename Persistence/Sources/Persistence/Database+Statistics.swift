@@ -38,7 +38,7 @@ public struct DatabaseStatistics: Sendable, Equatable {
     public var needsAuth: Bool
     public var deltaWatermark: Date?
     public var libraryCoverageAt: Date?
-    public var lastReconcileAt: Date?
+    public var lastRefreshedAt: Date?
     /// Row counts of every table with a `server_id` column, by table name.
     /// Tables without rows for this server are absent.
     public var rowsByTable: [String: Int]
@@ -228,7 +228,7 @@ extension Database {
         needsAuth: server.needsAuth,
         deltaWatermark: state?.deltaWatermark.map(Date.init(timeIntervalSinceReferenceDate:)),
         libraryCoverageAt: state?.libraryCoverageAt.map(Date.init(timeIntervalSinceReferenceDate:)),
-        lastReconcileAt: state?.lastReconcileAt.map(Date.init(timeIntervalSinceReferenceDate:)),
+        lastRefreshedAt: state?.lastRefreshedAt.map(Date.init(timeIntervalSinceReferenceDate:)),
         rowsByTable: rowsByServer[server.id] ?? [:],
         skeletonRows: skeletons[server.id]?.values.reduce(0, +) ?? 0,
         unreferencedDocuments: unreferenced[server.id] ?? 0,

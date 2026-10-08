@@ -156,7 +156,7 @@ public final class ServerSession {
   ///
   /// Stamped on every attempt, deliberately: a server that fails every sweep
   /// must not refetch its whole live id set on each of the seventeen on-appear
-  /// triggers. Distinct from `server_sync_state.last_reconcile_at` for exactly
+  /// triggers. Distinct from `server_sync_state.last_refreshed_at` for exactly
   /// that reason.
   @ObservationIgnored private var reconcileGate = ReconcileGate(interval: 300)
 
@@ -613,8 +613,8 @@ public final class ServerSession {
     // finish, it was called off. The stamp backs "Last refreshed" and the
     // scheduler's throttle and stalest-first order.
     if result.succeeded > 0, !result.cancelled {
-      await persistStamp("last reconcile") {
-        try await backend.database.setLastReconcileAt(Date(), serverID: backend.serverID)
+      await persistStamp("last refreshed") {
+        try await backend.database.setLastRefreshedAt(Date(), serverID: backend.serverID)
       }
     }
     return result

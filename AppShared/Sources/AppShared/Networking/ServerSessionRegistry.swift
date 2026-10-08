@@ -136,9 +136,9 @@ public final class ServerSessionRegistry {
   ///
   /// Read from the database rather than from the sessions: it covers servers
   /// with no session yet, which after a launch is all of them.
-  public func lastReconcileAts() async -> [UUID: Date] {
+  public func lastRefreshes() async -> [UUID: Date] {
     do {
-      return try await database.lastReconcileAts()
+      return try await database.lastRefreshes()
     } catch {
       // Nothing throttled is the safe reading: every server syncs.
       Logger.sync.error("Reading last refreshes failed: \(error)")
