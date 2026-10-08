@@ -34,6 +34,7 @@ public final class ServerSessionRegistry {
   @ObservationIgnored private let database: Database
   @ObservationIgnored private let manager: ConnectionManager
   @ObservationIgnored private let mode: ApiRepository.Mode
+  @ObservationIgnored private let suspension: DatabaseSuspensionController?
 
   /// One session per known server. Observable so a screen can show every
   /// server's state, not just the active one's.
@@ -53,11 +54,13 @@ public final class ServerSessionRegistry {
   public init(
     database: Database,
     manager: ConnectionManager,
-    mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode
+    mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
+    suspension: DatabaseSuspensionController? = nil
   ) {
     self.database = database
     self.manager = manager
     self.mode = mode
+    self.suspension = suspension
   }
 
   deinit {
@@ -115,14 +118,24 @@ public final class ServerSessionRegistry {
     if let existing = sessions[id] {
       return existing
     }
-    let session = ServerSession(serverID: id, database: database, mode: mode)
+    let session = ServerSession(
+      serverID: id, database: database, mode: mode, suspension: suspension)
     sessions[id] = session
     return session
   }
 
-  /// Every session's last fully-successful sync, for the scheduler's throttle.
+  /// Every server's last fully-successful sync, for the scheduler's throttle.
   /// Servers that have never completed a pass are absent rather than distant-past.
-  public func lastSuccessfulSyncs() -> [UUID: Date] {
-    sessions.compactMapValues(\.lastSuccessfulSync)
+  ///
+  /// Read from the database rather than from the sessions: it covers servers
+  /// with no session yet, which after a launch is all of them.
+  public func lastSuccessfulSyncs() async -> [UUID: Date] {
+    do {
+      return try await database.lastSuccessfulSyncs()
+    } catch {
+      // Nothing throttled is the safe reading: every server syncs.
+      Logger.sync.error("Reading last successful syncs failed: \(error)")
+      return [:]
+    }
   }
 }

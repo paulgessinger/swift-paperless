@@ -74,14 +74,17 @@ struct UploadDocumentIntent: AppIntent {
       tags: tags?.map(\.tag.id) ?? [],
       created: nil)
 
+    let server = server
     do {
-      let store = try await PaperlessIntentStore.store(server: server)
-      // Uploads only; cache upkeep belongs to the app's sync and `SyncEngine`,
-      // which respect the `syncOverCellular` gate and the reconcile throttle.
-      try await store.repository.create(
-        document: document,
-        file: uploadFile.url,
-        filename: uploadFile.filename)
+      try await PaperlessIntentStore.run { context in
+        let store = try await context.store(server: server)
+        // Uploads only; cache upkeep belongs to the app's sync and `SyncEngine`,
+        // which respect the `syncOverCellular` gate and the reconcile throttle.
+        try await store.repository.create(
+          document: document,
+          file: uploadFile.url,
+          filename: uploadFile.filename)
+      }
     } catch let error as PaperlessIntentError {
       throw error
     } catch {

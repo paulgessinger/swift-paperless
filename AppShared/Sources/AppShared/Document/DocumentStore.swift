@@ -117,14 +117,10 @@ public final class DocumentStore: Sendable {
     return isSyncing
   }
 
-  /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**.
-  /// `nil` until the first successful reconcile this session.
-  ///
-  /// Owned by the session, not mirrored into stored state here: the session's
-  /// own stamp is observed, so a view reading this through the store still
-  /// repaints when a sweep lands — including a sweep the *scheduler* ran, which
-  /// the store used never to hear about.
-  public var lastReconcileAt: Date? { session?.lastReconcileSuccess }
+  /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**,
+  /// observed from `server_sync_state.last_reconcile_at`: it repaints when a
+  /// sweep lands — including one the *scheduler* ran — and survives a relaunch.
+  public var lastReconcileAt: Date? { projection?.lastReconcileAt }
 
   /// When the active server's library was last fully filled (`nil` if never),
   /// observed from `server_sync_state.library_coverage_at` so the Offline & Sync

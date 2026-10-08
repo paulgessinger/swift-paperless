@@ -2,15 +2,16 @@
 //  AppStack.swift
 //  AppShared
 //
-//  The process's one database and the two owners layered directly on it.
+//  The process's one database and the long-lived objects built on it.
 //
 
 import Foundation
 import Persistence
 import os
 
-/// The per-process persistence stack: the GRDB connection, the sole
-/// ``ConnectionManager`` and the sole ``ServerSessionRegistry``.
+/// The per-process stack: the GRDB connection, the sole ``ConnectionManager``,
+/// the sole ``ServerSessionRegistry``, and the sync engine and network monitor
+/// on top of them.
 ///
 /// A second set in one process would not see the first one's writes (separate
 /// SQLite connections) and would sync the same server twice, so entry points
@@ -20,13 +21,28 @@ public final class AppStack {
   public let database: Database
   public let connectionManager: ConnectionManager
   public let sessionRegistry: ServerSessionRegistry
+  /// Background work runs inside it, so the database writer is open meanwhile.
+  public let suspension: DatabaseSuspensionController
 
-  fileprivate init(database: Database) {
+  /// Lazy, so the Share Extension, which never schedules syncs, does not
+  /// start a path monitor.
+  public private(set) lazy var networkMonitor = NetworkMonitor()
+
+  public private(set) lazy var syncEngine = SyncEngine(
+    registry: sessionRegistry,
+    manager: connectionManager,
+    // Read live, per sweep, so the engine gates on the link as it is when the
+    // work starts.
+    linkCost: { [weak self] in self?.networkMonitor.cost ?? .unknown })
+
+  init(database: Database, suspension: DatabaseSuspensionController? = nil) {
     self.database = database
+    let suspension = suspension ?? DatabaseSuspensionController()
+    self.suspension = suspension
     let connectionManager = ConnectionManager(database: database)
     self.connectionManager = connectionManager
     sessionRegistry = ServerSessionRegistry(
-      database: database, manager: connectionManager)
+      database: database, manager: connectionManager, suspension: suspension)
   }
 }
 
@@ -39,13 +55,17 @@ public enum AppStackHolder {
   /// cached so a transient failure does not outlive its cause.
   private static var cached: AppStack?
 
+  /// The process's suspension controller. It outlives a failed or reset stack,
+  /// and the app attaches it to its lifecycle at launch.
+  public static let suspension = DatabaseSuspensionController()
+
   /// The process's stack, opening the app-group database on first call. Throws
   /// what ``Persistence/Database`` throws.
   public static func shared() throws -> AppStack {
     if let cached {
       return cached
     }
-    let stack = AppStack(database: try Database())
+    let stack = AppStack(database: try Database(), suspension: suspension)
     cached = stack
     return stack
   }

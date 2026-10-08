@@ -103,6 +103,10 @@ enum Migrations {
       try V13_TrackFileMetadataDocumentModified.run(db)
     }
 
+    migrator.registerMigration("v14_persist_sync_freshness") { db in
+      try V14_PersistSyncFreshness.run(db)
+    }
+
     return migrator
   }
 }

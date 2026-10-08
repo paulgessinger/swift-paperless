@@ -228,6 +228,49 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v14 adds the freshness stamps as empty, keeping the existing sync state")
+  func v14AddsSyncFreshnessColumns() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v13_track_file_metadata_document_modified")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO server_sync_state (server_id, delta_watermark, library_coverage_at)
+          VALUES (?, 100.5, 200.5)
+          """, arguments: [server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let columns = try db.columns(in: "server_sync_state")
+      for name in ["last_reconcile_at", "last_successful_sync_at"] {
+        let column = try #require(columns.first(where: { $0.name == name }))
+        #expect(!column.isNotNull)
+        #expect(column.type.uppercased() == "REAL")
+      }
+
+      let row = try #require(
+        try Row.fetchOne(
+          db,
+          sql: """
+            SELECT delta_watermark, library_coverage_at, last_reconcile_at, last_successful_sync_at
+            FROM server_sync_state
+            """))
+      #expect(row["delta_watermark"] as Double? == 100.5)
+      #expect(row["library_coverage_at"] as Double? == 200.5)
+      #expect(row["last_reconcile_at"] as Double? == nil)
+      #expect(row["last_successful_sync_at"] as Double? == nil)
+    }
+  }
+
   @Test("migrator tracks applied identifiers internally")
   func migratorTracksAppliedIdentifiers() throws {
     let database = try Database.inMemory()

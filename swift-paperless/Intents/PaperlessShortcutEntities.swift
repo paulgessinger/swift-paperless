@@ -58,26 +58,26 @@ struct PaperlessServerQuery: EntityStringQuery {
   {
     guard !identifiers.isEmpty else { return [] }
     let ids = Set(identifiers)
-    return await allEntities().filter { ids.contains($0.id) }
+    return await PaperlessIntentStore.run(Self.entities).filter { ids.contains($0.id) }
   }
 
   func entities(matching string: String) async throws -> [PaperlessServerEntity] {
     let search = string.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !search.isEmpty else { return try await suggestedEntities() }
-    return await allEntities().filter { $0.matches(search) }
+    return await PaperlessIntentStore.run(Self.entities).filter { $0.matches(search) }
   }
 
   func suggestedEntities() async throws -> [PaperlessServerEntity] {
-    await allEntities()
+    await PaperlessIntentStore.run(Self.entities)
   }
 
   func defaultResult() async -> PaperlessServerEntity? {
-    await activeEntity()
+    await PaperlessIntentStore.run(Self.activeEntity)
   }
 
   @MainActor
-  private func allEntities() -> [PaperlessServerEntity] {
-    let connectionManager = PaperlessIntentStore.connectionManager
+  private static func entities(_ context: PaperlessIntentContext) -> [PaperlessServerEntity] {
+    let connectionManager = context.connectionManager
     let allConnections = Array(connectionManager.connections.values)
     let activeConnectionId = connectionManager.activeConnectionId
 
@@ -92,8 +92,8 @@ struct PaperlessServerQuery: EntityStringQuery {
   }
 
   @MainActor
-  private func activeEntity() -> PaperlessServerEntity? {
-    let connectionManager = PaperlessIntentStore.connectionManager
+  private static func activeEntity(_ context: PaperlessIntentContext) -> PaperlessServerEntity? {
+    let connectionManager = context.connectionManager
     guard let connection = connectionManager.storedConnection else {
       return nil
     }
@@ -247,8 +247,8 @@ private enum PaperlessElementLoader {
     server: PaperlessServerEntity?,
     load: @Sendable (any Repository) async throws -> [Element]
   ) async throws -> [Element] {
-    try await loading {
-      let store = try await PaperlessIntentStore.store(server: server)
+    try await loading { context in
+      let store = try await context.store(server: server)
       let cached = try await load(store.repository)
       guard cached.isEmpty else {
         return cached.sortedByLocalizedName()
@@ -268,8 +268,8 @@ private enum PaperlessElementLoader {
   ) async throws -> [Element] where Element.ID == UInt {
     guard !identifiers.isEmpty else { return [] }
     let ids = Set(identifiers)
-    return try await loading {
-      let store = try await PaperlessIntentStore.store(server: server)
+    return try await loading { context in
+      let store = try await context.store(server: server)
       var found = try await load(store.repository).filter { ids.contains(Int($0.id)) }
       if found.count < ids.count {
         try? await store.sync()
@@ -282,9 +282,11 @@ private enum PaperlessElementLoader {
     }
   }
 
-  private static func loading<T>(_ body: () async throws -> T) async throws -> T {
+  private static func loading<T>(
+    _ body: (PaperlessIntentContext) async throws -> T
+  ) async throws -> T {
     do {
-      return try await body()
+      return try await PaperlessIntentStore.run(body)
     } catch let error as PaperlessIntentError {
       throw error
     } catch {

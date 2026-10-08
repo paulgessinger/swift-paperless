@@ -8,7 +8,9 @@
 import Foundation
 import os
 
-let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "UserDefaults")
+// `bundleIdentifier` is nil in the SwiftPM test runner on the host.
+let logger = Logger(
+  subsystem: Bundle.main.bundleIdentifier ?? "swift-paperless", category: "UserDefaults")
 
 extension UserDefaults {
   @MainActor

@@ -1,9 +1,10 @@
 import Foundation
 import GRDB
 
-/// Per-server sync-cursor operations (`server_sync_state`). The delta watermark
-/// and the proactive-fill coverage timestamp are regenerable state, written by
-/// `CachingRepository` and reset by `clearCache`. Dates cross the boundary as
+/// Per-server sync-cursor operations (`server_sync_state`). The delta watermark,
+/// the proactive-fill coverage timestamp and the freshness stamps are
+/// regenerable state, written by `CachingRepository` and `ServerSession` and
+/// reset by `clearCache`. Dates cross the boundary as
 /// `Date?`; the on-disk shape (REAL `timeIntervalSinceReferenceDate`) stays
 /// inside `Persistence`.
 ///
@@ -48,8 +49,61 @@ extension Database {
   /// immediately and again on every write (including a `clearCache` reset to
   /// `nil`). Backed by GRDB `ValueObservation`; consumers don't see GRDB types.
   public func observeLibraryCoverageAt(serverID: UUID) -> AsyncThrowingStream<Date?, Error> {
+    observeDate(\.libraryCoverageAt, serverID: serverID)
+  }
+
+  /// When the reconcile last refreshed something for this server, or `nil` if
+  /// never (or since the cache was cleared).
+  public func setLastReconcileAt(_ date: Date?, serverID: UUID) async throws {
+    try await wrappingAsync("setLastReconcileAt") {
+      try await writer.write {
+        try Self.updateSyncState($0, serverID: serverID) {
+          $0.lastReconcileAt = date?.timeIntervalSinceReferenceDate
+        }
+      }
+    }
+  }
+
+  /// Observe this server's `last_reconcile_at`, like
+  /// ``observeLibraryCoverageAt(serverID:)``.
+  public func observeLastReconcileAt(serverID: UUID) -> AsyncThrowingStream<Date?, Error> {
+    observeDate(\.lastReconcileAt, serverID: serverID)
+  }
+
+  /// When a scheduled sync pass last completed cleanly for this server.
+  public func setLastSuccessfulSync(_ date: Date?, serverID: UUID) async throws {
+    try await wrappingAsync("setLastSuccessfulSync") {
+      try await writer.write {
+        try Self.updateSyncState($0, serverID: serverID) {
+          $0.lastSuccessfulSyncAt = date?.timeIntervalSinceReferenceDate
+        }
+      }
+    }
+  }
+
+  /// Every server's last clean sync pass, for the scheduler. Servers that have
+  /// never completed one are absent.
+  public func lastSuccessfulSyncs() async throws -> [UUID: Date] {
+    try await wrappingAsync("lastSuccessfulSyncs") {
+      try await writer.read { db in
+        var result: [UUID: Date] = [:]
+        for record in try ServerSyncStateRecord.fetchAll(db) {
+          if let stamp = record.lastSuccessfulSyncAt {
+            result[record.serverId] = Date(timeIntervalSinceReferenceDate: stamp)
+          }
+        }
+        return result
+      }
+    }
+  }
+
+  // MARK: - Helpers
+
+  private func observeDate(
+    _ keyPath: KeyPath<ServerSyncStateRecord, Double?> & Sendable, serverID: UUID
+  ) -> AsyncThrowingStream<Date?, Error> {
     let observation = ValueObservation.tracking { db in
-      try ServerSyncStateRecord.fetchOne(db, key: serverID)?.libraryCoverageAt
+      try ServerSyncStateRecord.fetchOne(db, key: serverID)?[keyPath: keyPath]
     }
     let writer = writer
     return AsyncThrowingStream { continuation in
@@ -69,8 +123,6 @@ extension Database {
     }
   }
 
-  // MARK: - Helpers
-
   private static func date(
     _ keyPath: KeyPath<ServerSyncStateRecord, Double?>, serverID: UUID, _ db: GRDB.Database
   ) throws -> Date? {
@@ -79,7 +131,7 @@ extension Database {
     return Date(timeIntervalSinceReferenceDate: stamp)
   }
 
-  /// Read-modify-write upsert preserving the row's other column. Takes the
+  /// Read-modify-write upsert preserving the row's other columns. Takes the
   /// caller's transaction so the change commits atomically with the rest of
   /// its work.
   static func updateSyncState(

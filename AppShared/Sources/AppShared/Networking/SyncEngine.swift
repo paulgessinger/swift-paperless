@@ -23,8 +23,8 @@
 //  exclusion, throttle, uncredentialed degrade, heavy-fill gating, new-server
 //  diff) live in the pure, unit-tested `DataModel.SyncPlan`.
 //
-//  It keeps no per-server state of its own: freshness stamps and in-flight work
-//  live on the sessions, which is what lets a background sweep and the on-screen
+//  It keeps no per-server state of its own: freshness stamps live in the
+//  database and in-flight work on the sessions, which is what lets a background sweep and the on-screen
 //  store agree about a server without either consulting the other.
 //
 
@@ -145,7 +145,7 @@ public final class SyncEngine {
     let actions = SyncPlan.inactiveActions(
       connections: snapshots,
       activeID: manager.activeConnectionId,
-      lastSweep: registry.lastSuccessfulSyncs(),
+      lastSweep: await registry.lastSuccessfulSyncs(),
       now: Date(),
       throttle: inactiveThrottle,
       cost: cost)
