@@ -12,16 +12,6 @@ import Networking
 import SwiftUI
 import os
 
-extension CustomFieldUnknownValue: DisplayableError {
-  public var message: String {
-    String(localized: .customFields(.unknownValueError))
-  }
-
-  public var details: String? {
-    String(localized: .customFields(.unknownValueEncode))
-  }
-}
-
 private struct InvalidFieldView: View {
   public let instance: CustomFieldInstance
   public let reason: CustomFieldValue.InvalidReason
