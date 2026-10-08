@@ -2,15 +2,16 @@
 //  AppStack.swift
 //  AppShared
 //
-//  The process's one database and the two owners layered directly on it.
+//  The process's one database and the long-lived objects built on it.
 //
 
 import Foundation
 import Persistence
 import os
 
-/// The per-process persistence stack: the GRDB connection, the sole
-/// ``ConnectionManager`` and the sole ``ServerSessionRegistry``.
+/// The per-process stack: the GRDB connection, the sole ``ConnectionManager``,
+/// the sole ``ServerSessionRegistry``, and the sync engine and network monitor
+/// on top of them.
 ///
 /// A second set in one process would not see the first one's writes (separate
 /// SQLite connections) and would sync the same server twice, so entry points
@@ -21,7 +22,18 @@ public final class AppStack {
   public let connectionManager: ConnectionManager
   public let sessionRegistry: ServerSessionRegistry
 
-  fileprivate init(database: Database) {
+  /// Lazy, so the Share Extension, which never schedules syncs, does not
+  /// start a path monitor.
+  public private(set) lazy var networkMonitor = NetworkMonitor()
+
+  public private(set) lazy var syncEngine = SyncEngine(
+    registry: sessionRegistry,
+    manager: connectionManager,
+    // Read live, per sweep, so the engine gates on the link as it is when the
+    // work starts.
+    linkCost: { [weak self] in self?.networkMonitor.cost ?? .unknown })
+
+  init(database: Database) {
     self.database = database
     let connectionManager = ConnectionManager(database: database)
     self.connectionManager = connectionManager

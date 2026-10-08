@@ -23,27 +23,16 @@ struct MainView: View {
   @State private var initialDisplay = true
   @State private var showSettings = false
 
-  @State private var manager: ConnectionManager
-
-  // Owns one ServerSession per configured server, for the lifetime of its row.
-  // Held here rather than inside the engine because it is the process's single
-  // source of per-server repositories, not a scheduling detail.
-  @State private var sessionRegistry: ServerSessionRegistry
-
-  // Keeps every *inactive* server's offline cache warm. The active
-  // server stays on the DocumentStore path; the engine skips it.
-  @State private var syncEngine: SyncEngine
-
-  // The process's GRDB database, threaded into each connection's
-  // CachingRepository. Borrowed from `AppStack` like the manager and registry,
-  // since App Intents share this process.
-  private let database: Database
+  // Process-wide, shared with every other window and the App Intents.
+  private let stack: AppStack
+  private var manager: ConnectionManager { stack.connectionManager }
+  private var sessionRegistry: ServerSessionRegistry { stack.sessionRegistry }
+  private var syncEngine: SyncEngine { stack.syncEngine }
+  private var networkMonitor: NetworkMonitor { stack.networkMonitor }
 
   @State private var friendlyNameSubscription: Subscription?
 
   @StateObject private var errorController: ErrorController
-
-  @State private var networkMonitor = NetworkMonitor()
 
   @Environment(\.scenePhase) var scenePhase
 
@@ -61,25 +50,10 @@ struct MainView: View {
     _ = AppSettings.shared
     // Route network byte counts into the persisted transfer meter.
     TransferStatistics.install()
-    database = stack.database
-    let manager = stack.connectionManager
-    _manager = State(wrappedValue: manager)
+    self.stack = stack
     let errorController = ErrorController()
-    let networkMonitor = NetworkMonitor()
-    let sessionRegistry = stack.sessionRegistry
-    _sessionRegistry = State(wrappedValue: sessionRegistry)
-    _syncEngine = State(
-      wrappedValue: SyncEngine(
-        registry: sessionRegistry,
-        manager: manager,
-        // Read live, per sweep, so the engine gates on the link as it is when
-        // the work starts rather than when the app launched. Each server
-        // combines it with its own opt-in via `SyncCondition`; the engine never
-        // folds it into a single answer for all of them.
-        linkCost: { [weak networkMonitor] in networkMonitor?.cost ?? .unknown }))
-    errorController.installConnectivityPolicy(networkMonitor: networkMonitor)
+    errorController.installConnectivityPolicy(networkMonitor: stack.networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
-    _networkMonitor = State(initialValue: networkMonitor)
     _biometricLockManager = StateObject(
       wrappedValue: BiometricLockManager(errorController: errorController))
   }
@@ -459,7 +433,7 @@ struct MainView: View {
     .appOverlays(
       errorController: errorController,
       networkMonitor: networkMonitor,
-      database: database
+      database: stack.database
     )
   }
 }
