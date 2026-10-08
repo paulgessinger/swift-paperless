@@ -10,8 +10,11 @@ import DataModel
 import Foundation
 
 struct UploadDocumentIntent: AppIntent {
-  static let title: LocalizedStringResource = "Upload Document"
-  static let description = IntentDescription("Uploads a document to a Paperless server.")
+  // Metadata strings are literal resources, not the generated `.intents(…)`
+  // accessors: `appintentsmetadataprocessor` reads them from the source text.
+  static let title = LocalizedStringResource("uploadDocumentIntentTitle", table: "Intents")
+  static let description = IntentDescription(
+    LocalizedStringResource("uploadDocumentIntentDescription", table: "Intents"))
   static let openAppWhenRun = false
 
   static var parameterSummary: some ParameterSummary {
@@ -23,29 +26,44 @@ struct UploadDocumentIntent: AppIntent {
     }
   }
 
+  // `public.data` is every file with byte-stream contents but no directories.
+  // Shortcuts applies this list while the shortcut is edited, before a file's
+  // real type is known, so anything narrower would reject files handed over by
+  // other actions. The server rejects formats it cannot parse.
+  //
+  // `.connectToPreviousIntentResult` wires the previous action's result into
+  // this field, the one parameter an upload cannot run without.
   @Parameter(
-    title: "Document",
-    supportedTypeIdentifiers: ["public.image", "com.adobe.pdf"])
+    title: LocalizedStringResource("uploadDocumentIntentDocumentParameter", table: "Intents"),
+    supportedTypeIdentifiers: ["public.data"],
+    inputConnectionBehavior: .connectToPreviousIntentResult)
   var document: IntentFile
 
-  @Parameter(title: "Server")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentServerParameter", table: "Intents"))
   var server: PaperlessServerEntity
 
-  @Parameter(title: "Title")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentTitleParameter", table: "Intents"))
   var title: String?
 
-  @Parameter(title: "Document Type")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentDocumentTypeParameter", table: "Intents"))
   var documentType: PaperlessDocumentTypeEntity?
 
-  @Parameter(title: "Correspondent")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentCorrespondentParameter", table: "Intents"))
   var correspondent: PaperlessCorrespondentEntity?
 
-  @Parameter(title: "Tags")
+  @Parameter(
+    title: LocalizedStringResource("uploadDocumentIntentTagsParameter", table: "Intents"))
   var tags: [PaperlessTagEntity]?
 
   init() {}
 
-  func perform() async throws -> some IntentResult {
+  // The `& ProvidesDialog` is needed: AppIntents reads the declared return type,
+  // and behind a bare `some IntentResult` the dialog is discarded.
+  func perform() async throws -> some IntentResult & ProvidesDialog {
     let uploadFile = try PaperlessIntentUploadFile.materialize(document)
     defer { uploadFile.cleanup() }
 
@@ -58,9 +76,8 @@ struct UploadDocumentIntent: AppIntent {
 
     do {
       let store = try await PaperlessIntentStore.store(server: server)
-      // Opportunistic: refresh the element cache while the upload runs, so the
-      // next shortcut run sees current tags/types/correspondents.
-      Task { try? await store.sync(userInitiated: true) }
+      // Uploads only; cache upkeep belongs to the app's sync and `SyncEngine`,
+      // which respect the `syncOverCellular` gate and the reconcile throttle.
       try await store.repository.create(
         document: document,
         file: uploadFile.url,
@@ -71,7 +88,7 @@ struct UploadDocumentIntent: AppIntent {
       throw PaperlessIntentError.uploadFailed(error.localizedDescription)
     }
 
-    return .result(dialog: IntentDialog(.app(.uploadDocumentIntentSuccess)))
+    return .result(dialog: IntentDialog(.intents(.uploadDocumentIntentSuccess)))
   }
 }
 

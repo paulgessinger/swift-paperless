@@ -22,29 +22,31 @@ enum PaperlessIntentError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .noConnection:
-      String(localized: .app(.uploadDocumentIntentNoConnectionError))
+      String(localized: .intents(.uploadDocumentIntentNoConnectionError))
     case .prepareFileFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentPrepareFileError(detail)))
+      String(localized: .intents(.uploadDocumentIntentPrepareFileError(detail)))
     case .loadOptionsFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentLoadOptionsError(detail)))
+      String(localized: .intents(.uploadDocumentIntentLoadOptionsError(detail)))
     case .missingElement(let kind):
-      String(localized: .app(.uploadDocumentIntentMissingElementError(kind)))
+      String(localized: .intents(.uploadDocumentIntentMissingElementError(kind)))
     case .uploadFailed(let detail):
-      String(localized: .app(.uploadDocumentIntentUploadError(detail)))
+      String(localized: .intents(.uploadDocumentIntentUploadError(detail)))
     }
   }
 }
 
-/// The intents' own database, connection manager and session registry, built once
-/// per process the same way `ShareView` does. Elements are read through a
-/// `DocumentStore`, so results come from the local cache that `sync()` keeps
-/// up to date.
+/// The intents' view onto the process's ``AppStack``, which they borrow rather
+/// than build: an intent runs in the app's process. Elements are read through a
+/// `DocumentStore`, so results come from the local cache that `sync()` keeps up
+/// to date.
 @MainActor
 enum PaperlessIntentStore {
-  static let database = bootstrapDatabase()
-  static let connectionManager = ConnectionManager(database: database)
-  private static let registry = ServerSessionRegistry(
-    database: database, manager: connectionManager)
+  private static var stack: AppStack {
+    AppStackHolder.sharedWithInMemoryFallback(context: "Intents")
+  }
+
+  static var connectionManager: ConnectionManager { stack.connectionManager }
+
   private static var stores: [UUID: DocumentStore] = [:]
 
   static func store(server: PaperlessServerEntity? = nil) async throws -> DocumentStore {
@@ -55,26 +57,10 @@ enum PaperlessIntentStore {
     }
     // Activating again is cheap when nothing changed, and rebuilds the stack
     // if the connection (e.g. its token) did since the store was created.
-    let store = stores[id] ?? DocumentStore(registry: registry)
+    let store = stores[id] ?? DocumentStore(registry: stack.sessionRegistry)
     try await store.activate(connection: stored, reload: false)
     stores[id] = store
     return store
-  }
-
-  // Same fallback as the Share Extension: an unusable app-group file still
-  // yields a working (empty) database, so the intent reports "no server"
-  // instead of crashing.
-  private static func bootstrapDatabase() -> Database {
-    do {
-      return try Database()
-    } catch {
-      Logger.shared.fault("Intent database bootstrap failed (\(error)); falling back to in-memory")
-      do {
-        return try Database.inMemory()
-      } catch {
-        preconditionFailure("In-memory database fallback also failed: \(error)")
-      }
-    }
   }
 }
 
@@ -83,17 +69,14 @@ extension DocumentStore {
   /// past the deadline, and a failure is already swallowed by `sync()`, so
   /// callers just read whatever the cache holds afterwards.
   func sync(timeout: Duration) async {
-    let (stream, continuation) = AsyncStream<Void>.makeStream()
-    Task {
-      try? await sync()
-      continuation.yield()
+    // `sync()` joins the session's `TaskSlot`, which does not cancel the shared
+    // task when a joiner leaves, so losing this race ends only the wait.
+    await withTaskGroup(of: Void.self) { group in
+      group.addTask { [self] in try? await sync() }
+      group.addTask { try? await Task.sleep(for: timeout) }
+      await group.next()
+      group.cancelAll()
     }
-    let timer = Task {
-      try? await Task.sleep(for: timeout)
-      continuation.yield()
-    }
-    for await _ in stream { break }
-    timer.cancel()
   }
 }
 

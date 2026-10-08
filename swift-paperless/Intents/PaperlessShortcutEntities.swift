@@ -11,7 +11,8 @@ import Foundation
 import Networking
 
 struct PaperlessServerEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Server")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeServer", table: "Intents"))
   static let defaultQuery = PaperlessServerQuery()
 
   let connection: StoredConnection
@@ -104,7 +105,8 @@ struct PaperlessServerQuery: EntityStringQuery {
 }
 
 struct PaperlessDocumentTypeEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Document Type")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeDocumentType", table: "Intents"))
   static let defaultQuery = PaperlessDocumentTypeQuery()
 
   let documentType: DocumentType
@@ -148,7 +150,8 @@ struct PaperlessDocumentTypeQuery: EntityStringQuery {
 }
 
 struct PaperlessCorrespondentEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Correspondent")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeCorrespondent", table: "Intents"))
   static let defaultQuery = PaperlessCorrespondentQuery()
 
   let correspondent: Correspondent
@@ -192,7 +195,8 @@ struct PaperlessCorrespondentQuery: EntityStringQuery {
 }
 
 struct PaperlessTagEntity: AppEntity {
-  static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Tag")
+  static let typeDisplayRepresentation = TypeDisplayRepresentation(
+    name: LocalizedStringResource("entityTypeTag", table: "Intents"))
   static let defaultQuery = PaperlessTagQuery()
 
   let tag: Tag
@@ -235,14 +239,20 @@ struct PaperlessTagQuery: EntityStringQuery {
 /// through the store's repository so they come from the synced local cache.
 @MainActor
 private enum PaperlessElementLoader {
-  /// Picker lists: give a short sync the chance to pull in new elements, then
-  /// read whatever is cached — also when the sync failed or timed out.
+  /// Picker lists: read the cache, syncing only when it is empty. This runs per
+  /// keystroke in the Shortcuts editor, and a sync is too heavy for that and
+  /// ignores the `syncOverCellular` gate; keeping the cache current is the
+  /// `SyncEngine`'s job.
   static func suggested<Element: LocallyNamed & Sendable>(
     server: PaperlessServerEntity?,
     load: @Sendable (any Repository) async throws -> [Element]
   ) async throws -> [Element] {
     try await loading {
       let store = try await PaperlessIntentStore.store(server: server)
+      let cached = try await load(store.repository)
+      guard cached.isEmpty else {
+        return cached.sortedByLocalizedName()
+      }
       await store.sync(timeout: .seconds(3))
       return try await load(store.repository).sortedByLocalizedName()
     }

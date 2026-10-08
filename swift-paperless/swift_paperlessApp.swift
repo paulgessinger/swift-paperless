@@ -34,7 +34,9 @@ struct MainView: View {
   // server stays on the DocumentStore path; the engine skips it.
   @State private var syncEngine: SyncEngine
 
-  // Shared GRDB database, threaded into each connection's CachingRepository.
+  // The process's GRDB database, threaded into each connection's
+  // CachingRepository. Borrowed from `AppStack` like the manager and registry,
+  // since App Intents share this process.
   private let database: Database
 
   @State private var friendlyNameSubscription: Subscription?
@@ -55,16 +57,16 @@ struct MainView: View {
   // landed in another.
   @State private var routeManager = RouteManager()
 
-  init(database: Database) {
+  init(stack: AppStack) {
     _ = AppSettings.shared
     // Route network byte counts into the persisted transfer meter.
     TransferStatistics.install()
-    self.database = database
-    let manager = ConnectionManager(database: database)
+    database = stack.database
+    let manager = stack.connectionManager
     _manager = State(wrappedValue: manager)
     let errorController = ErrorController()
     let networkMonitor = NetworkMonitor()
-    let sessionRegistry = ServerSessionRegistry(database: database, manager: manager)
+    let sessionRegistry = stack.sessionRegistry
     _sessionRegistry = State(wrappedValue: sessionRegistry)
     _syncEngine = State(
       wrappedValue: SyncEngine(

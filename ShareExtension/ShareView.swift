@@ -28,47 +28,12 @@ struct ShareView: View {
   init(attachmentManager: AttachmentManager, callback: @escaping () -> Void) {
     self.attachmentManager = attachmentManager
     self.callback = callback
-    // The extension process's own Database (app-group SQLite, WAL). The same DB
-    // backs the `ConnectionManager` and — through the session's
-    // `CachingRepository` — the element cache, so the store's `ElementStore`
-    // projection observes the extension's own writes. Cross-process live
-    // notification isn't delivered (the extension syncs at launch), but the
-    // extension's in-process writes drive its own observation normally.
-    let database = Self.bootstrapDatabase()
-    let connectionManager = ConnectionManager(database: database)
-    _connectionManager = State(initialValue: connectionManager)
-    // The extension keeps the same one-session-per-server rule as the app, in a
-    // process that has no `SyncEngine` to share those sessions with. The registry
-    // is retained by the store; it is never `start()`ed, because an extension has
-    // no reason to react to connection edits made elsewhere.
-    _store = State(
-      initialValue: DocumentStore(
-        registry: ServerSessionRegistry(database: database, manager: connectionManager)))
-  }
-
-  // Open the app-group SQLite file. If the bootstrap fails (corrupt file,
-  // missing app-group), fall back to an in-memory database so the extension
-  // still renders the disabled "no active server" state cleanly instead of
-  // crashing. The in-memory path (DatabaseQueue + migrations) is infallible in
-  // practice; if it ever throws we want to know immediately — but log the
-  // fallback's own error first, since `preconditionFailure` only carries its
-  // message into the crash report and the underlying error is the only thing
-  // that would make such a report diagnosable.
-  private static func bootstrapDatabase() -> Database {
-    do {
-      return try Database()
-    } catch {
-      Logger.shared.fault(
-        "Share Extension database bootstrap failed (\(error)); falling back to in-memory")
-      do {
-        return try Database.inMemory()
-      } catch {
-        Logger.shared.fault(
-          "Share Extension in-memory database fallback also failed: \(error)")
-        preconditionFailure(
-          "In-memory database fallback also failed (\(error)); cannot construct ConnectionManager")
-      }
-    }
+    // The extension process's `AppStack` (app-group SQLite, WAL). Its registry is
+    // never `start()`ed: an extension has no reason to react to connection edits
+    // made elsewhere.
+    let stack = AppStackHolder.sharedWithInMemoryFallback(context: "Share Extension")
+    _connectionManager = State(initialValue: stack.connectionManager)
+    _store = State(initialValue: DocumentStore(registry: stack.sessionRegistry))
   }
 
   // Matched on the error rather than `ConnectionManager`'s `needsAuth` flag:
