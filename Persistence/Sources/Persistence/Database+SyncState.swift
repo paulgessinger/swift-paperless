@@ -70,25 +70,14 @@ extension Database {
     observeDate(\.lastReconcileAt, serverID: serverID)
   }
 
-  /// When a scheduled sync pass last completed cleanly for this server.
-  public func setLastSuccessfulSync(_ date: Date?, serverID: UUID) async throws {
-    try await wrappingAsync("setLastSuccessfulSync") {
-      try await writer.write {
-        try Self.updateSyncState($0, serverID: serverID) {
-          $0.lastSuccessfulSyncAt = date?.timeIntervalSinceReferenceDate
-        }
-      }
-    }
-  }
-
-  /// Every server's last clean sync pass, for the scheduler. Servers that have
-  /// never completed one are absent.
-  public func lastSuccessfulSyncs() async throws -> [UUID: Date] {
-    try await wrappingAsync("lastSuccessfulSyncs") {
+  /// Every server's `last_reconcile_at`, for the scheduler. Servers that have
+  /// never refreshed are absent.
+  public func lastReconcileAts() async throws -> [UUID: Date] {
+    try await wrappingAsync("lastReconcileAts") {
       try await writer.read { db in
         var result: [UUID: Date] = [:]
         for record in try ServerSyncStateRecord.fetchAll(db) {
-          if let stamp = record.lastSuccessfulSyncAt {
+          if let stamp = record.lastReconcileAt {
             result[record.serverId] = Date(timeIntervalSinceReferenceDate: stamp)
           }
         }

@@ -145,7 +145,7 @@ public final class SyncEngine {
     let actions = SyncPlan.inactiveActions(
       connections: snapshots,
       activeID: manager.activeConnectionId,
-      lastSweep: await registry.lastSuccessfulSyncs(),
+      lastSweep: await registry.lastReconcileAts(),
       now: Date(),
       throttle: inactiveThrottle,
       cost: cost)

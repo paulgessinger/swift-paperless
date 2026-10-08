@@ -489,19 +489,12 @@ public final class ServerSession {
   }
 
   /// What one reconcile pass achieved.
-  ///
-  /// Two stamps ask two different questions of the same pass — the scheduler
-  /// wants "fully clean" before it advances a throttle that could hide a broken
-  /// server for fifteen minutes; the Offline & Sync screen wants "did anything
-  /// refresh", because one flaky sweep shouldn't erase the two that worked. One
-  /// pass, both answers.
   public struct ReconcileResult: Sendable {
     public var succeeded = 0
     public var failed = false
     public var cancelled = false
 
-    /// Neither failed nor called off. Only a clean pass advances the scheduler's
-    /// freshness stamp.
+    /// Neither failed nor called off.
     public var isClean: Bool { !failed && !cancelled }
   }
 
@@ -608,9 +601,10 @@ public final class ServerSession {
       }
     }
 
-    // A pass in which *something* refreshed counts. A cancelled pass stamps
-    // nothing — it didn't finish, it was called off. Persisted, so the Offline
-    // & Sync screen's "Last refreshed" survives a relaunch.
+    // A pass in which *something* refreshed counts, so one flaky sweep doesn't
+    // erase the ones that worked. A cancelled pass stamps nothing — it didn't
+    // finish, it was called off. The stamp backs "Last refreshed" and the
+    // scheduler's throttle and stalest-first order.
     if result.succeeded > 0, !result.cancelled {
       await persistStamp("last reconcile") {
         try await backend.database.setLastReconcileAt(Date(), serverID: backend.serverID)
@@ -824,23 +818,10 @@ public final class ServerSession {
         }
       }
 
-      // Advance the stamp only on a *fully* successful pass — a pass that failed
-      // or was called off partway retries on the next trigger.
       guard reconcile.isClean, filled else {
         Logger.sync.info(
-          "Server \(stored.logLabel, privacy: .public) partially synced; stamp not advanced")
+          "Server \(stored.logLabel, privacy: .public) partially synced")
         return
-      }
-      // Same question as `sweep` asks, for the phases that don't run through
-      // it: a cancelled pass must not advance the stamp that decides when this
-      // server is swept again. The `catch` below turns it back into a quiet
-      // return.
-      try Task.checkCancellation()
-      // The scheduler's throttle input, persisted so it holds across launches.
-      if let backend {
-        await persistStamp("last successful sync") {
-          try await backend.database.setLastSuccessfulSync(Date(), serverID: backend.serverID)
-        }
       }
       Logger.sync.info("Server \(stored.logLabel, privacy: .public) synced")
     } catch {
