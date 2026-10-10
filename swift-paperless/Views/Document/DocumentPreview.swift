@@ -72,9 +72,7 @@ private final class IntegratedDocumentPreviewModel {
     image.pipeline = pipeline
 
     do {
-      try image.load(
-        ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
-      )
+      try image.load(store.thumbnailImageRequest(for: document))
     } catch {
       Logger.shared.error("Error loading document thumbnail: \(error)")
     }
@@ -360,9 +358,7 @@ private struct IntegratedDocumentPreview: View {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
       image.pipeline = store.imagePipeline
       do {
-        try image.load(
-          ImageRequest(urlRequest: store.repository.thumbnailRequest(document: document))
-        )
+        try image.load(store.thumbnailImageRequest(for: document))
       } catch {
         Logger.shared.error("Error loading document thumbnail: \(error)")
       }

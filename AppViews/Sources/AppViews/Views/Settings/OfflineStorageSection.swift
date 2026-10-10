@@ -23,7 +23,7 @@ struct OfflineStorageSection: View {
     Section {
       sizeRow(String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes)
       sizeRow(
-        String(localized: .settings(.offlineStorageDocuments)), bytes: usage?.content.total.bytes,
+        String(localized: .settings(.offlineStorageDocuments)), bytes: usage?.documents.bytes,
         caption: documentsCaption)
       sizeRow(
         String(localized: .settings(.offlineStorageThumbnails)), bytes: usage?.thumbnails.bytes)
@@ -35,8 +35,8 @@ struct OfflineStorageSection: View {
     }
     // Measure on appear, and again whenever a sync starts or finishes, so a
     // "Sync now" or fill run on this screen shows its effect without leaving
-    // and coming back. Not on every progress tick: the walk covers every
-    // downloaded file, so it's too heavy to repeat per document.
+    // and coming back. Not on every progress tick: the database is walked
+    // each time, so it's too heavy to repeat per document.
     //
     // Every server, not just the active one: these rows are the all-servers
     // total, and a background sweep of an inactive server grows the same
@@ -56,10 +56,10 @@ struct OfflineStorageSection: View {
   /// database and thumbnails are shared and can't be split by server.
   private var documentsCaption: Text? {
     guard let usage else { return nil }
-    let total = usage.content.total
+    let total = usage.documents
     let files = String(localized: .settings(.offlineStorageFileCount(total.files)))
     guard let id = connectionManager.activeConnectionId else { return Text(files) }
-    let thisServer = usage.content.byServer[id] ?? .zero
+    let thisServer = usage.documentsByServer[id] ?? .zero
     // With just the one server the share would repeat the row's own figure.
     guard thisServer != total else { return Text(files) }
     return Text(
