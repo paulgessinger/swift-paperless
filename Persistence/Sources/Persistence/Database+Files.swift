@@ -121,15 +121,12 @@ extension Database {
   public func unreferencedFiles() async throws -> [FileRecord] {
     try await wrappingAsync("unreferencedFiles") {
       try await writer.read { db in
-        try FileRecord.fetchAll(
-          db,
-          sql: """
-            SELECT f.* FROM file f
-            WHERE NOT EXISTS (
-              SELECT 1 FROM document d
-              WHERE d.server_id = f.server_id
-                AND COALESCE(NULLIF(d.current_version_id, 0), d.id) = f.version_id)
-            """)
+        let file = TableAlias()
+        let atThisVersion =
+          DocumentRecord
+          .filter(Column("server_id") == file[Column("server_id")])
+          .filter(Self.currentVersionID == file[Column("version_id")])
+        return try FileRecord.aliased(file).filter(!atThisVersion.exists()).fetchAll(db)
       }
     }
   }
@@ -179,15 +176,13 @@ extension Database {
       try await writer.write { db in
         var unresolved: [ContentStore.Key] = []
         for candidate in candidates {
-          // The document whose current version the file is filed under; the
-          // same rule as `retainedContentVersions`.
-          let documentID = try UInt.fetchOne(
-            db,
-            sql: """
-              SELECT id FROM document
-              WHERE server_id = ? AND COALESCE(NULLIF(current_version_id, 0), id) = ?
-              """,
-            arguments: [candidate.key.serverID, candidate.key.versionID])
+          // The document whose current version the file is filed under.
+          let documentID =
+            try DocumentRecord
+            .select(Column("id"), as: UInt.self)
+            .filter(Column("server_id") == candidate.key.serverID)
+            .filter(Self.currentVersionID == candidate.key.versionID)
+            .fetchOne(db)
           guard let documentID else {
             unresolved.append(candidate.key)
             continue
@@ -222,6 +217,11 @@ extension Database {
   }
 
   // MARK: - Query bodies
+
+  /// The version a `document` row's files are filed under: its current version,
+  /// or the document id for a row without versions (the column's `NOT NULL
+  /// DEFAULT 0` reads as "none"; the document id is the root version's id).
+  static let currentVersionID = SQL("COALESCE(NULLIF(current_version_id, 0), id)").sqlExpression
 
   static func file(serverID: UUID, versionID: UInt, kind: String)
     -> QueryInterfaceRequest<FileRecord>
