@@ -121,10 +121,11 @@ public struct ContentStore: Sendable {
     return canonical
   }
 
+  /// Move the downloaded file at `tempURL` into place, replacing what is
+  /// there. Freshness is the file index's business, not the store's: the
+  /// caller records the row once the file is in place.
   @discardableResult
-  public func store(
-    _ key: Key, movingFrom tempURL: URL, modified: Date?
-  ) throws -> URL {
+  public func store(_ key: Key, movingFrom tempURL: URL) throws -> URL {
     let directory = directory(for: key)
     try createDirectory(directory)
     let canonical = url(for: key)
@@ -135,9 +136,43 @@ public struct ContentStore: Sendable {
       try FileManager.default.moveItem(at: tempURL, to: canonical)
     }
     applyFileProtection(canonical)
+    return canonical
+  }
 
+  /// Legacy: store and write the sidecar `read(_:freshAgainst:)` checks. Goes
+  /// with that reader once every caller consults the file index instead.
+  @discardableResult
+  public func store(
+    _ key: Key, movingFrom tempURL: URL, modified: Date?
+  ) throws -> URL {
+    let canonical = try store(key, movingFrom: tempURL)
     try writeSidecar(for: key, modified: modified)
     return canonical
+  }
+
+  /// Write `data` as the blob for `key`: to a temporary name in the key's own
+  /// directory first, then renamed into place, so the canonical name only ever
+  /// holds a complete file. For small payloads that arrive in memory
+  /// (thumbnails); downloads go through ``store(_:movingFrom:)``.
+  @discardableResult
+  public func storeData(_ data: Data, for key: Key) throws -> URL {
+    let directory = directory(for: key)
+    try createDirectory(directory)
+    let temp = directory.appendingPathComponent(".\(key.kind.rawValue)-\(UUID().uuidString).tmp")
+    try data.write(to: temp, options: .atomic)
+    return try store(key, movingFrom: temp)
+  }
+
+  /// Bytes the blob for `key` occupies on disk, or `nil` when there is none.
+  /// Allocated size, like ``DiskUsage``, so the index sums to what deleting
+  /// the files would free.
+  public func size(of key: Key) -> Int64? {
+    guard
+      let values = try? url(for: key).resourceValues(forKeys: [
+        .totalFileAllocatedSizeKey, .fileSizeKey,
+      ])
+    else { return nil }
+    return (values.totalFileAllocatedSize ?? values.fileSize).map(Int64.init)
   }
 
   public func delete(_ key: Key) throws {
@@ -161,6 +196,61 @@ public struct ContentStore: Sendable {
       // Nothing cached yet; an absent root is already the desired end state.
     }
     try createDirectory(canonicalRoot)
+  }
+
+  // MARK: - Inventory
+
+  /// One blob found on disk, for the repair walk that matches the directory
+  /// against the file index.
+  public struct InventoryEntry: Sendable, Equatable {
+    public let key: Key
+    public let size: Int64
+    /// Newest modification anywhere in the version's directory, the directory
+    /// itself included: the grace-window input, as for the reclaim.
+    public let youngestModification: Date?
+    /// A sidecar from a build that recorded freshness next to the file.
+    public let hasLegacySidecar: Bool
+  }
+
+  /// Every blob under the store root with one of this store's own names. Other
+  /// entries are not this store's to judge and are skipped.
+  public func inventory() -> [InventoryEntry] {
+    var entries: [InventoryEntry] = []
+    for serverDirectory in contents(of: canonicalRoot) {
+      guard let serverID = UUID(uuidString: serverDirectory.lastPathComponent) else { continue }
+      for versionDirectory in contents(of: serverDirectory) {
+        guard let versionID = UInt(versionDirectory.lastPathComponent) else { continue }
+        let youngest = youngestModification(in: versionDirectory)
+        for kind in Kind.allCases {
+          let key = Key(serverID: serverID, versionID: versionID, kind: kind)
+          guard let size = size(of: key) else { continue }
+          entries.append(
+            InventoryEntry(
+              key: key, size: size, youngestModification: youngest,
+              hasLegacySidecar: FileManager.default.fileExists(atPath: sidecarURL(for: key).path)))
+        }
+      }
+    }
+    return entries
+  }
+
+  /// The UUIDs of the server directories under the store root, a removed
+  /// server's leftovers included.
+  public func serverDirectories() -> Set<UUID> {
+    Set(contents(of: canonicalRoot).compactMap { UUID(uuidString: $0.lastPathComponent) })
+  }
+
+  /// Drop every version and server directory that is empty. `rmdir(2)` fails
+  /// atomically on a directory something was just written into, so a blob
+  /// another process is adding survives.
+  public func removeEmptyDirectories() {
+    for serverDirectory in contents(of: canonicalRoot) {
+      guard UUID(uuidString: serverDirectory.lastPathComponent) != nil else { continue }
+      for versionDirectory in contents(of: serverDirectory) {
+        removeIfEmpty(versionDirectory)
+      }
+      removeIfEmpty(serverDirectory)
+    }
   }
 
   // MARK: - Reclamation
@@ -363,9 +453,21 @@ public struct ContentStore: Sendable {
 
   // MARK: - Sidecar
 
-  private struct Sidecar: Codable {
-    var modified: Date?
-    var writtenAt: Date
+  /// What builds before the file index wrote next to each blob. Read once by
+  /// the repair walk to adopt such a file, then removed.
+  public struct LegacySidecar: Codable, Sendable, Equatable {
+    public var modified: Date?
+    public var writtenAt: Date
+  }
+
+  private typealias Sidecar = LegacySidecar
+
+  public func readLegacySidecar(for key: Key) -> LegacySidecar? {
+    readSidecar(for: key)
+  }
+
+  public func removeLegacySidecar(for key: Key) {
+    try? FileManager.default.removeItem(at: sidecarURL(for: key))
   }
 
   private func writeSidecar(for key: Key, modified: Date?) throws {
