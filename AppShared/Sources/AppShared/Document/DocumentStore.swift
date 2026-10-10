@@ -521,8 +521,12 @@ public final class DocumentStore: Sendable {
     // repository, and the outgoing one's work is meant to run on) but
     // incoherent, and a pull-to-refresh on A would force-reconcile B.
     guard let session else { return }
+    // The detached reconcile below inherits the run, so both steps share it.
+    let run = SyncRunContext.child(userInitiated ? .userInitiated : .foreground)
     do {
-      try await session.syncElements()
+      try await SyncRunContext.$current.withValue(run) {
+        try await session.syncElements()
+      }
       Logger.sync.info("Sync store complete")
       // Kick the reconcile alongside the element sync (throttled,
       // non-blocking). Not just remote deletes, despite the name it used to
@@ -530,7 +534,9 @@ public final class DocumentStore: Sendable {
       // then the saved-view membership rebuild. Pull-to-refresh
       // (userInitiated) bypasses the throttle.
       let userInitiated = userInitiated
-      Task { await session.reconcileDocuments(force: userInitiated) }
+      SyncRunContext.$current.withValue(run) {
+        Task { await session.reconcileDocuments(force: userInitiated) }
+      }
     } catch {
       // A cancellation is never the user's problem to see: the caller's own task
       // went away. (A connection switch no longer retires it — that sync belongs
@@ -913,8 +919,10 @@ extension DocumentStore {
     // One session for both halves: re-reading it between them would page one
     // server's library and then walk a different server's details.
     guard let session else { return }
-    await session.fillLibrary(force: force)
-    await session.fillDocumentDetails()
+    await SyncRunContext.$current.withValue(.child(.foreground)) {
+      await session.fillLibrary(force: force)
+      await session.fillDocumentDetails()
+    }
   }
 
   /// The server's total for the default document list, from the cached query
@@ -991,6 +999,18 @@ extension DocumentStore {
   public func databaseStatistics() async throws -> DatabaseStatistics? {
     guard let database = session?.backend?.database else { return nil }
     return try await database.statistics()
+  }
+
+  /// Debug: the newest recorded sync steps, every server and the background
+  /// tasks. `nil` before login, like ``databaseStatistics()``.
+  public func syncRuns() async throws -> [SyncRunEntry]? {
+    guard let database = session?.backend?.database else { return nil }
+    return try await database.syncRuns()
+  }
+
+  /// Debug: drop the recorded sync steps.
+  public func clearSyncRuns() async throws {
+    try await session?.backend?.database.clearSyncRuns()
   }
 
   /// Debug / maintenance: drop downloaded document files that no cached document

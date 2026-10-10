@@ -69,6 +69,9 @@ public final class ServerSession {
   /// Every sync step runs as background work here; see ``asBackgroundWork(_:)``.
   @ObservationIgnored private let suspension: DatabaseSuspensionController
 
+  /// Writes this server's `sync_run` rows.
+  @ObservationIgnored private let recorder: SyncRunRecorder
+
   /// The retained stack, together with the `Connection` it was assembled from.
   /// Only ever populated for ``Source/stored``.
   ///
@@ -306,6 +309,7 @@ public final class ServerSession {
     self.serverID = serverID
     source = .stored(database: database, mode: mode)
     self.suspension = suspension ?? DatabaseSuspensionController()
+    recorder = SyncRunRecorder(database: database, serverID: serverID)
   }
 
   /// A session around a repository that already exists, for previews and tests.
@@ -319,6 +323,7 @@ public final class ServerSession {
     self.serverID = serverID
     source = .fixed(repository)
     self.suspension = suspension ?? DatabaseSuspensionController()
+    recorder = SyncRunRecorder(database: repository.database, serverID: serverID)
     state = .ready
     adopt(repository)
   }
@@ -469,10 +474,12 @@ public final class ServerSession {
       return { [weak self] in
         guard let self else { return }
         try await asBackgroundWork {
+          let row = await recorder.begin(.elements)
           // Recorded inside the single-flight, so a failure counts once however
           // many callers joined it. Permissions are recorded separately: their
           // failure isn't fatal, and must neither hide nor be hidden by the
           // element phase's outcome.
+          var note: String?
           do {
             try await NetworkTransfer.$category.withValue(.sync) {
               try await backend.syncUISettings()
@@ -480,14 +487,21 @@ public final class ServerSession {
             self.recordSuccess(at: .uiSettings)
           } catch {
             self.recordFailure(error, at: .uiSettings)
+            note = "uiSettings: \(Self.failureMessage(error))"
           }
           do {
             try await NetworkTransfer.$category.withValue(.sync) {
               try await backend.syncElements { [weak self] in self?.report($0, for: .elementSync) }
             }
             self.recordSuccess(at: .elements)
+            await recorder.end(row, note == nil ? .ok : .partial, message: note)
           } catch {
-            self.recordFailure(error, at: .elements)
+            if error.isCancellationError {
+              await recorder.end(row, .cancelled, message: note)
+            } else {
+              self.recordFailure(error, at: .elements)
+              await recorder.end(row, .failed, message: Self.failureMessage(error))
+            }
             throw error
           }
         }
@@ -527,6 +541,9 @@ public final class ServerSession {
   private func runReconcile(backend: any CachingBackend) async -> ReconcileResult {
     report(SyncActivity(stage: .reconcile), for: .reconcile)
     defer { report(nil, for: .reconcile) }
+    let row = await recorder.begin(.reconcile)
+    var failedSweeps = 0
+    var firstFailure: String?
 
     // Each sweep carries its own catch. The delete sweep is the most
     // failure-prone of the three — it fetches the server's entire live id set —
@@ -558,6 +575,10 @@ public final class ServerSession {
         // sweep refreshed nothing — but only a surfaced one reaches the screen.
         recordFailure(error, at: site)
         result.failed = true
+        failedSweeps += 1
+        if firstFailure == nil {
+          firstFailure = "\(site.rawValue): \(Self.failureMessage(error))"
+        }
       }
     }
 
@@ -617,6 +638,9 @@ public final class ServerSession {
         try await backend.database.setLastRefreshedAt(Date(), serverID: backend.serverID)
       }
     }
+    await recorder.end(
+      row, result.cancelled ? .cancelled : result.failed ? .failed : .ok,
+      message: firstFailure, succeeded: result.succeeded, failed: failedSweeps)
     return result
   }
 
@@ -651,6 +675,7 @@ public final class ServerSession {
     return await libraryFillSlot.joinOrStart { [weak self] in
       guard let self else { return false }
       return await asBackgroundWork { [weak self] in
+        let row = await self?.recorder.begin(.libraryFill)
         do {
           try await NetworkTransfer.$category.withValue(.fill) {
             try await backend.fillLibrary(force: force) { self?.report($0, for: .libraryFill) }
@@ -659,12 +684,15 @@ public final class ServerSession {
           // swallowed on the fill's last `await` must not reach it as one.
           try Task.checkCancellation()
           self?.recordSuccess(at: .libraryFill)
+          await self?.recorder.end(row, .ok)
           return true
         } catch is CancellationError {
           Logger.sync.debug("Proactive library fill cancelled")
+          await self?.recorder.end(row, .cancelled)
           return false
         } catch {
           self?.recordFailure(error, at: .libraryFill)
+          await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
           return false
         }
       }
@@ -685,6 +713,7 @@ public final class ServerSession {
     return await detailFillSlot.joinOrStart { [weak self] in
       guard let self else { return false }
       return await asBackgroundWork { [weak self] in
+        let row = await self?.recorder.begin(.detailFill)
         do {
           let outcome = try await NetworkTransfer.$category.withValue(.fill) {
             try await backend.fillDocumentDetails { self?.report($0, for: .detailFill) }
@@ -695,15 +724,22 @@ public final class ServerSession {
           // they leave an existing entry as it is.
           if let failure = outcome.failure {
             self?.recordFailure(failure, at: .detailFill)
+            await self?.recorder.end(
+              row, .failed, message: Self.failureMessage(failure), failed: outcome.failed)
           } else if outcome.failed == 0 {
             self?.recordSuccess(at: .detailFill)
+            await self?.recorder.end(row, .ok, failed: 0)
+          } else {
+            await self?.recorder.end(row, .partial, failed: outcome.failed)
           }
           return true
         } catch is CancellationError {
           Logger.sync.debug("Proactive detail fill cancelled")
+          await self?.recorder.end(row, .cancelled)
           return false
         } catch {
           self?.recordFailure(error, at: .detailFill)
+          await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
           return false
         }
       }
@@ -727,21 +763,24 @@ public final class ServerSession {
     Logger.sync.notice(
       "Healing \(String(describing: kind), privacy: .public) cache for server \(self.serverID, privacy: .public)"
     )
-    switch kind {
-    case .documents:
-      reconcileGate.oweHeal()
-      Task { [weak self] in
-        await self?.reconcileDocuments()
-        guard self?.reconcileGate.isHealOwed == true else { return }
-        await self?.reconcileDocuments()
-      }
-    case .elements:
-      elementHealOwed = true
-      // Failures are recorded and logged inside `syncElements`.
-      Task { [weak self] in
-        try? await self?.syncElements()
-        guard self?.elementHealOwed == true else { return }
-        try? await self?.syncElements()
+    // The tasks inherit the run context from here.
+    SyncRunContext.$current.withValue(SyncRunContext(trigger: .heal)) {
+      switch kind {
+      case .documents:
+        reconcileGate.oweHeal()
+        Task { [weak self] in
+          await self?.reconcileDocuments()
+          guard self?.reconcileGate.isHealOwed == true else { return }
+          await self?.reconcileDocuments()
+        }
+      case .elements:
+        elementHealOwed = true
+        // Failures are recorded and logged inside `syncElements`.
+        Task { [weak self] in
+          try? await self?.syncElements()
+          guard self?.elementHealOwed == true else { return }
+          try? await self?.syncElements()
+        }
       }
     }
   }
@@ -786,18 +825,22 @@ public final class ServerSession {
   private func runSync(stored: StoredConnection, phases: SyncPhases) async {
     Logger.sync.info(
       "Syncing server \(stored.logLabel, privacy: .public) (phases: \(phases.ordered.count))")
+    let connectionRow = await recorder.begin(.connection)
     do {
       _ = try await prepareRepository(for: stored)
     } catch {
       guard !error.isCancellationError else {
         Logger.sync.debug("Sync cancelled for \(stored.logLabel, privacy: .public)")
+        await recorder.end(connectionRow, .cancelled)
         return
       }
       state = .failed
       recordFailure(error, at: .connection)
+      await recorder.end(connectionRow, .failed, message: Self.failureMessage(error))
       return
     }
     recordSuccess(at: .connection)
+    await recorder.end(connectionRow, .ok)
     state = .ready
 
     do {

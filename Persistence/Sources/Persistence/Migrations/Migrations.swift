@@ -111,6 +111,10 @@ enum Migrations {
       try V15_SingleFreshnessStamp.run(db)
     }
 
+    migrator.registerMigration("v16_create_sync_run") { db in
+      try V16_CreateSyncRun.run(db)
+    }
+
     return migrator
   }
 }

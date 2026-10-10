@@ -211,7 +211,11 @@ public final class SyncEngine {
           isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary,
           condition: SyncCondition(
             cost: linkCost(), syncOverCellular: stored.syncOverCellular)))
-      Task { @MainActor [weak self] in await self?.runAction(action, stored: stored) }
+      Task { @MainActor [weak self] in
+        await SyncRunContext.$current.withValue(SyncRunContext(trigger: .newServer)) {
+          await self?.runAction(action, stored: stored)
+        }
+      }
     }
   }
 
@@ -223,7 +227,10 @@ public final class SyncEngine {
       session.markNeedsAuth(stored)
       return
     }
-    await session.sync(stored: stored, phases: action.phases)
+    // One run per server; a background task's sweep keeps the task's trigger.
+    await SyncRunContext.$current.withValue(.child(.sweep)) {
+      await session.sync(stored: stored, phases: action.phases)
+    }
   }
 
   // MARK: - Helpers

@@ -30,11 +30,11 @@ enum BackgroundTaskManager {
     // `using: .main` runs the launch handlers on the main queue.
     BGTaskScheduler.shared.register(forTaskWithIdentifier: refreshIdentifier, using: .main) {
       task in
-      MainActor.assumeIsolated { handle(task, label: "refresh", allowsFill: false) }
+      MainActor.assumeIsolated { handle(task, label: "refresh", trigger: .refreshTask) }
     }
     BGTaskScheduler.shared.register(forTaskWithIdentifier: processingIdentifier, using: .main) {
       task in
-      MainActor.assumeIsolated { handle(task, label: "processing", allowsFill: true) }
+      MainActor.assumeIsolated { handle(task, label: "processing", trigger: .processingTask) }
     }
   }
 
@@ -59,12 +59,12 @@ enum BackgroundTaskManager {
 
   // MARK: - Handling
 
-  private static func handle(_ task: BGTask, label: String, allowsFill: Bool) {
+  private static func handle(_ task: BGTask, label: String, trigger: SyncTrigger) {
     Logger.sync.info("Background task started: \(label, privacy: .public)")
     let work = Task { @MainActor in
       do {
         let stack = try AppStackHolder.shared()
-        return await BackgroundSync.run(stack: stack, allowsFill: allowsFill)
+        return await BackgroundSync.run(stack: stack, trigger: trigger)
       } catch {
         // Before first unlock, for example. Never wipe or fall back to an
         // in-memory database here; the next run tries again.

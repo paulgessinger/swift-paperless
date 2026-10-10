@@ -195,5 +195,73 @@ struct ServerSessionTests {
 
     #expect(!traffic.calls.contains("notes"))
     #expect(!traffic.calls.contains("metadata"))
+
+    // The record says so too: the library fill was called off, and no detail
+    // fill row exists. The end write lands in its own task, so wait for it.
+    let rows = try await closedRows(harness.database, count: 2)
+    #expect(rows.map(\.step) == ["libraryFill", "connection"])
+    #expect(rows.first?.outcome == "cancelled")
+  }
+
+  // MARK: - Sync run record
+
+  /// The record once `count` rows are closed, newest first.
+  private func closedRows(_ database: Database, count: Int) async throws -> [SyncRunEntry] {
+    var rows: [SyncRunEntry] = []
+    let deadline = ContinuousClock.now + .seconds(5)
+    repeat {
+      rows = try await database.syncRuns()
+      if rows.count == count, rows.allSatisfy({ !$0.isOpen }) { return rows }
+      try await Task.sleep(for: .milliseconds(2))
+    } while ContinuousClock.now < deadline
+    Issue.record("expected \(count) closed rows, have \(rows)")
+    return rows
+  }
+
+  @Test("A pass records one row per step under one run")
+  func passRecordsItsSteps() async throws {
+    let traffic = Traffic()
+    let (harness, stored) = try await fillingHarness(traffic)
+    traffic.released = true
+
+    await SyncRunContext.$current.withValue(SyncRunContext(trigger: .sweep)) {
+      await harness.session.sync(stored: stored, phases: [.fill])
+    }
+
+    let rows = try await closedRows(harness.database, count: 3)
+    #expect(rows.map(\.step) == ["detailFill", "libraryFill", "connection"])
+    #expect(rows.map(\.outcome) == ["ok", "ok", "ok"])
+    #expect(Set(rows.map(\.trigger)) == ["sweep"])
+    #expect(Set(rows.map(\.runID)).count == 1)
+    #expect(Set(rows.map(\.serverID)) == [harness.serverID])
+  }
+
+  @Test("An element sync with a failed ui_settings fetch is recorded as partial")
+  func partialElementSyncIsRecorded() async throws {
+    let harness = try await StoreHarness.make()
+    // No user logged in: `uiSettings()` throws, the element collections don't.
+
+    try await harness.session.syncElements()
+
+    let rows = try await closedRows(harness.database, count: 1)
+    #expect(rows.first?.step == "elements")
+    #expect(rows.first?.outcome == "partial")
+    // No context set by the caller: a plain foreground run.
+    #expect(rows.first?.trigger == "foreground")
+    #expect(rows.first?.message?.hasPrefix("uiSettings: ") == true)
+  }
+
+  @Test("The store's sync records its element sync and reconcile under one run")
+  func storeSyncRecordsOneRun() async throws {
+    let harness = try await StoreHarness.make()
+    harness.transient.addUser(StoreHarness.user)
+    try harness.transient.login(userId: StoreHarness.user.id)
+
+    try await harness.store.sync(userInitiated: true)
+
+    let rows = try await closedRows(harness.database, count: 2)
+    #expect(Set(rows.map(\.step)) == ["elements", "reconcile"])
+    #expect(Set(rows.map(\.trigger)) == ["userInitiated"])
+    #expect(Set(rows.map(\.runID)).count == 1)
   }
 }

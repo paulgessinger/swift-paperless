@@ -125,6 +125,17 @@ struct DebugMenuView: View {
         }
       }
 
+      NavigationLink {
+        SyncRunsView()
+      } label: {
+        Label {
+          Text(verbatim: "Sync runs")
+            .accentColor(.primary)
+        } icon: {
+          Image(systemName: "list.bullet.clipboard")
+        }
+      }
+
       Section {
         Button {
           exportConnectionsToLegacyStorage()
