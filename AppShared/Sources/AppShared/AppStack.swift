@@ -5,6 +5,7 @@
 //  The process's one database and the long-lived objects built on it.
 //
 
+import Common
 import Foundation
 import Persistence
 import os
@@ -23,6 +24,8 @@ public final class AppStack {
   public let sessionRegistry: ServerSessionRegistry
   /// Background work runs inside it, so the database writer is open meanwhile.
   public let suspension: DatabaseSuspensionController
+  /// The cached files' index and budget, one for every server's store.
+  public let contentReclaimer: ContentReclaimer
 
   /// Lazy, so the Share Extension, which never schedules syncs, does not
   /// start a path monitor.
@@ -35,16 +38,34 @@ public final class AppStack {
     // work starts.
     linkCost: { [weak self] in self?.networkMonitor.cost ?? .unknown })
 
-  init(database: Database, suspension: DatabaseSuspensionController? = nil) {
+  /// - Parameter contentStore: where downloaded files live; `nil` caches no
+  ///   files. Only the on-disk database may be paired with the app-group store:
+  ///   an index that does not outlive the process would judge every file on
+  ///   disk unaccounted for.
+  init(
+    database: Database, suspension: DatabaseSuspensionController? = nil,
+    contentStore: ContentStore? = nil
+  ) {
     self.database = database
     let suspension = suspension ?? DatabaseSuspensionController()
     self.suspension = suspension
     let connectionManager = ConnectionManager(database: database)
     self.connectionManager = connectionManager
+    let contentReclaimer = ContentReclaimer(database: database, store: contentStore)
+    self.contentReclaimer = contentReclaimer
     let sessionRegistry = ServerSessionRegistry(
-      database: database, manager: connectionManager, suspension: suspension)
+      database: database, manager: connectionManager, suspension: suspension,
+      contentReclaimer: contentReclaimer)
     self.sessionRegistry = sessionRegistry
     suspension.onExpire = { [weak sessionRegistry] in sessionRegistry?.cancelAllWork() }
+    // The rows went with the server; its files are only found by the walk.
+    sessionRegistry.onServersRemoved = { _ in
+      Task { @MainActor in
+        _ = await suspension.performBackgroundWork {
+          await contentReclaimer.run(reason: .connectionRemoved)
+        }
+      }
+    }
 
     // Steps the previous process never finished. Only rows older than this
     // process, so a step this one starts first is left alone.
@@ -59,6 +80,16 @@ public final class AppStack {
         } catch {
           Logger.sync.debug("Closing interrupted sync steps failed: \(error)")
         }
+      }
+    }
+  }
+
+  /// The once-per-launch content sweep. The app calls it; the Share Extension,
+  /// which builds a stack of its own, does not walk the store on every share.
+  public func runLaunchMaintenance() {
+    Task { @MainActor in
+      _ = await suspension.performBackgroundWork {
+        await contentReclaimer.run(reason: .launch)
       }
     }
   }
@@ -83,7 +114,8 @@ public enum AppStackHolder {
     if let cached {
       return cached
     }
-    let stack = AppStack(database: try Database(), suspension: suspension)
+    let stack = AppStack(
+      database: try Database(), suspension: suspension, contentStore: try? ContentStore())
     cached = stack
     return stack
   }

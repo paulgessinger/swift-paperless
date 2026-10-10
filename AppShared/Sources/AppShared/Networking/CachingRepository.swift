@@ -263,10 +263,6 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// behind it, naming the pass that repairs the cache. The mutation itself
   /// still succeeds. The owning `ServerSession` installs this.
   var onCacheWriteLost: (@MainActor (CacheHeal) -> Void)? { get set }
-
-  /// The blob store ``reclaimDocumentContent()`` sweeps, or `nil` when there is
-  /// none to open.
-  func openContentStore() -> ContentStore?
 }
 
 /// The sync pass that brings the cache up to a server-accepted change whose
@@ -296,35 +292,6 @@ extension CachingBackend {
 
   public func reconcileDocumentChanges() async throws {
     try await reconcileDocumentChanges(progress: nil)
-  }
-
-  /// Reclaim downloaded document files no cached document version references
-  /// any more: superseded versions, and documents (or whole servers) the
-  /// database has since dropped.
-  ///
-  /// A protocol extension rather than a requirement: everything it needs is
-  /// already on the protocol (`database`, `openContentStore()`), so there is
-  /// nothing per-backend to implement.
-  ///
-  /// The reachable set is read across *every* server in one query — the store is
-  /// shared, and a per-server answer could not tell a removed server's leftovers
-  /// from another server's live files. Callers therefore need not (and must not)
-  /// run this once per server.
-  @discardableResult
-  public func reclaimDocumentContent() async throws -> ContentStore.ReclaimReport {
-    // No app-group container (previews, a mis-configured entitlement) means
-    // no blob store to sweep. Not an error: the download
-    // path degrades the same way, straight to a temporary file.
-    guard let store = openContentStore() else { return ContentStore.ReclaimReport() }
-    let retained = try await database.retainedContentVersions()
-    // Off the main actor: conformers are `@MainActor`, and this walks one
-    // directory entry per downloaded document and unlinks files. Detached
-    // because that isolation is what we are escaping; the sweep is bounded and
-    // idempotent, so not inheriting cancellation costs at most one short pass —
-    // and the caller's own `Task.checkCancellation` still sees the cancel.
-    return await Task.detached(priority: .utility) {
-      store.reclaim(retaining: retained)
-    }.value
   }
 }
 
@@ -383,23 +350,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  private let contentStoreFactory: () -> ContentStore?
-
-  /// `contentStore` opens the blob store per reclaim; tests root it in a
-  /// temporary directory, since opening the app-group container blocks on a
-  /// macOS host.
-  public init(
-    wrapping: Wrapped, database: Database, serverID: UUID,
-    contentStore: @escaping () -> ContentStore? = { try? ContentStore() }
-  ) {
+  public init(wrapping: Wrapped, database: Database, serverID: UUID) {
     wrapped = wrapping
     self.database = database
     self.serverID = serverID
-    contentStoreFactory = contentStore
-  }
-
-  public func openContentStore() -> ContentStore? {
-    contentStoreFactory()
   }
 
   public var offlineBrowsingMode: OfflineBrowsingMode {

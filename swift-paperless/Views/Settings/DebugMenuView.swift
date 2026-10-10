@@ -52,19 +52,16 @@ struct DebugMenuView: View {
   /// Outcome of the on-demand blob reclaim, in an alert for the same reason as
   /// ``ExportResult``.
   private struct ReclaimResult: Identifiable {
-    let report: ContentStore.ReclaimReport
-    var id: String { "\(report.removedFiles)-\(report.reclaimedBytes)-\(report.examinedVersions)" }
+    let report: ContentReclaimer.Report
+    var id: String {
+      "\(report.removedFiles)-\(report.removedBytes)-\(report.adoptedFiles)-\(report.orphanRows)"
+    }
   }
 
   private func reclaimDocumentContent() async {
     isReclaiming = true
     defer { isReclaiming = false }
-    do {
-      reclaimResult = ReclaimResult(report: try await store.reclaimDocumentContent())
-    } catch {
-      Logger.shared.error("Failed to reclaim document content: \(error)")
-      errorController.push(error: error)
-    }
+    reclaimResult = await store.reclaimDocumentContent().map(ReclaimResult.init)
   }
 
   private func clearCache() async {
@@ -228,9 +225,13 @@ struct DebugMenuView: View {
         message: Text(
           verbatim: """
             Removed \(result.report.removedFiles) files \
-            (\(ByteCountFormatter.string(fromByteCount: result.report.reclaimedBytes, countStyle: .file))) \
-            across \(result.report.examinedVersions) cached versions. \
-            \(result.report.keptRecent) kept for now (written too recently).
+            (\(ByteCountFormatter.string(fromByteCount: result.report.removedBytes, countStyle: .file))): \
+            \(result.report.unreferencedRows) unreferenced, \(result.report.evictedFiles) evicted, \
+            \(result.report.orphanFiles) without a row. \
+            Adopted \(result.report.adoptedFiles) files, dropped \(result.report.orphanRows) rows \
+            without a file, kept \(result.report.keptRecent) for now (written too recently). \
+            \(ByteCountFormatter.string(fromByteCount: result.report.evictableBytes, countStyle: .file)) \
+            evictable.
             """),
         dismissButton: .default(Text(.app(.ok))))
     }

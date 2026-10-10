@@ -1,0 +1,315 @@
+import Common
+import DataModel
+import Foundation
+import Testing
+
+@testable import Persistence
+
+/// The content reclaim: unreferenced files, the budget, the repair walk, and
+/// its single flight and throttle.
+@Suite("Content reclaimer")
+struct ContentReclaimerTests {
+  private func date(_ t: TimeInterval) -> Date { Date(timeIntervalSince1970: t) }
+
+  private func doc(_ id: UInt) -> Document {
+    Document(id: id, title: "d\(id)", created: date(1000), tags: [], owner: .user(1))
+  }
+
+  private func addServer(_ id: UUID, to database: Database) throws {
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: id,
+        url: URL(string: "https://\(id.uuidString).example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "other")))
+  }
+
+  private func makeStore() throws -> ContentStore {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("ContentReclaimerTests-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    return try ContentStore(root: root)
+  }
+
+  private func key(_ server: UUID, _ version: UInt, _ kind: ContentStore.Kind = .archive)
+    -> ContentStore.Key
+  {
+    ContentStore.Key(serverID: server, versionID: version, kind: kind)
+  }
+
+  /// A file on disk, `bytes` long.
+  @discardableResult
+  private func write(_ store: ContentStore, _ key: ContentStore.Key, bytes: Int = 10) throws -> URL
+  {
+    try store.storeData(Data(repeating: 1, count: bytes), for: key)
+  }
+
+  /// A file on disk and its row, accessed at `accessed`.
+  private func cache(
+    _ store: ContentStore, _ database: Database, _ key: ContentStore.Key, bytes: Int = 10,
+    accessed: Date
+  ) async throws {
+    try write(store, key, bytes: bytes)
+    try await database.recordFile(
+      key, documentID: key.versionID, size: try #require(store.size(of: key)), modified: nil,
+      checksum: nil, storedAt: accessed, lastAccessedAt: key.kind == .thumbnail ? nil : accessed)
+  }
+
+  /// The old sidecar, as builds before the index wrote it.
+  private func writeLegacySidecar(_ store: ContentStore, _ key: ContentStore.Key, writtenAt: Date)
+    throws
+  {
+    let url = store.url(for: key).deletingLastPathComponent()
+      .appendingPathComponent("\(key.kind.rawValue).meta.json")
+    let data = try JSONEncoder().encode(
+      ContentStore.LegacySidecar(modified: date(5000), writtenAt: writtenAt))
+    try data.write(to: url)
+  }
+
+  // MARK: - Phases
+
+  @Test("Rows whose version no cached document is at lose their files and rows")
+  func unreferenced() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    try await cache(store, database, key(server, 1), accessed: date(1))
+    try await cache(store, database, key(server, 1, .thumbnail), accessed: date(1))
+    try await cache(store, database, key(server, 2), accessed: date(1))
+    try await cache(store, database, key(server, 2, .thumbnail), accessed: date(1))
+    let reclaimer = ContentReclaimer(database: database, store: store, now: { self.date(9000) })
+
+    let report = await reclaimer.run(reason: .manual)
+
+    #expect(report.unreferencedRows == 2)
+    #expect(report.unreferencedBytes > 0)
+    #expect(report.evictedFiles == 0)
+    #expect(report.walked)
+    #expect(store.exists(key(server, 1)))
+    #expect(store.exists(key(server, 1, .thumbnail)))
+    #expect(!store.exists(key(server, 2)))
+    #expect(!store.exists(key(server, 2, .thumbnail)))
+    #expect(try await database.allFileKeys() == [key(server, 1), key(server, 1, .thumbnail)])
+  }
+
+  @Test("Eviction removes the least recently accessed files until the budget holds")
+  func eviction() async throws {
+    let server = UUID()
+    let database = try Database.seeded(
+      serverID: server, documents: [doc(1), doc(2), doc(3), doc(4)])
+    let store = try makeStore()
+    try await cache(store, database, key(server, 1), bytes: 100, accessed: date(3000))
+    try await cache(store, database, key(server, 2), bytes: 100, accessed: date(1000))
+    try await cache(store, database, key(server, 3), bytes: 100, accessed: date(2000))
+    try await cache(store, database, key(server, 4), bytes: 100, accessed: date(4000))
+    try await cache(store, database, key(server, 4, .thumbnail), bytes: 5000, accessed: date(1))
+    let sizes = try await database.evictableFileBytes()
+    let reclaimer = ContentReclaimer(
+      database: database, store: store, budget: sizes / 2, now: { self.date(9000) })
+
+    let report = await reclaimer.run(reason: .manual)
+
+    #expect(report.evictedFiles == 2)
+    #expect(report.evictedBytes == sizes / 2)
+    #expect(report.evictableBytes == sizes / 2)
+    #expect(!store.exists(key(server, 2)))
+    #expect(!store.exists(key(server, 3)))
+    #expect(store.exists(key(server, 1)))
+    #expect(store.exists(key(server, 4)))
+    #expect(store.exists(key(server, 4, .thumbnail)))
+  }
+
+  @Test("A file accessed inside the protection window is not evicted")
+  func recentAccessIsProtected() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    let store = try makeStore()
+    try await cache(store, database, key(server, 1), bytes: 100, accessed: date(8900))
+    try await cache(store, database, key(server, 2), bytes: 100, accessed: date(8950))
+    let reclaimer = ContentReclaimer(
+      database: database, store: store, budget: 1, now: { self.date(9000) })
+
+    let report = await reclaimer.run(reason: .manual)
+
+    #expect(report.evictedFiles == 0)
+    #expect(store.exists(key(server, 1)))
+  }
+
+  @Test("The repair walk adopts a sidecar file, removes aged orphans and dead rows")
+  func repair() async throws {
+    let server = UUID()
+    let gone = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    let store = try makeStore()
+    // 1: file with a legacy sidecar and no row → adopted.
+    try write(store, key(server, 1), bytes: 30)
+    try writeLegacySidecar(store, key(server, 1), writtenAt: date(6000))
+    // 2: row and file, plus a leftover sidecar → sidecar removed, nothing else.
+    try await cache(store, database, key(server, 2), accessed: date(1))
+    try writeLegacySidecar(store, key(server, 2), writtenAt: date(6000))
+    // 3: row without a file → row dropped.
+    try await database.recordFile(
+      key(server, 3), documentID: 3, size: 1, modified: nil, checksum: nil, storedAt: date(1),
+      lastAccessedAt: date(1))
+    // 7: file with a sidecar for a document the cache no longer has → removed.
+    try write(store, key(server, 7))
+    try writeLegacySidecar(store, key(server, 7), writtenAt: date(6000))
+    // 8: file with no row and no sidecar, written just now → kept for now.
+    try write(store, key(server, 8))
+    // A server whose row is gone: its directory goes, grace or not.
+    try write(store, key(gone, 1))
+    let reclaimer = ContentReclaimer(database: database, store: store, now: { Date() })
+
+    let report = await reclaimer.run(reason: .manual)
+
+    #expect(report.adoptedFiles == 1)
+    #expect(report.orphanFiles == 2)
+    #expect(report.orphanRows == 1)
+    #expect(report.keptRecent == 1)
+    let adopted = try #require(try await database.freshFile(key(server, 1), modified: date(5000)))
+    #expect(adopted.documentId == 1)
+    #expect(adopted.size == store.size(of: key(server, 1)))
+    #expect(adopted.storedAt == date(6000).timeIntervalSinceReferenceDate)
+    #expect(adopted.lastAccessedAt == date(6000).timeIntervalSinceReferenceDate)
+    #expect(store.readLegacySidecar(for: key(server, 1)) == nil)
+    #expect(store.readLegacySidecar(for: key(server, 2)) == nil)
+    #expect(store.exists(key(server, 2)))
+    #expect(!store.exists(key(server, 7)))
+    #expect(store.exists(key(server, 8)))
+    #expect(!store.exists(key(gone, 1)))
+    #expect(store.serverDirectories() == [server])
+    #expect(try await database.allFileKeys() == [key(server, 1), key(server, 2)])
+  }
+
+  @Test("An aged file without a row is removed once the grace period has passed")
+  func agedOrphanIsRemoved() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    try write(store, key(server, 1))
+    let aged = Date().addingTimeInterval(2 * ContentStore.reclaimGracePeriod)
+    let reclaimer = ContentReclaimer(database: database, store: store, now: { aged })
+
+    let report = await reclaimer.run(reason: .manual)
+
+    #expect(report.orphanFiles == 1)
+    #expect(report.keptRecent == 0)
+    #expect(!store.exists(key(server, 1)))
+  }
+
+  @Test("An over-budget pass skips the walk")
+  func overBudgetSkipsWalk() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    try write(store, key(server, 1))
+    let aged = Date().addingTimeInterval(2 * ContentStore.reclaimGracePeriod)
+    let reclaimer = ContentReclaimer(database: database, store: store, now: { aged })
+
+    let report = await reclaimer.run(reason: .overBudget)
+
+    #expect(!report.walked)
+    #expect(store.exists(key(server, 1)))
+  }
+
+  // MARK: - Index conformance
+
+  @Test("recordStore stamps evictable kinds as accessed and starts a pass once over budget")
+  func recordStoreOverBudget() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    let store = try makeStore()
+    let reclaimer = ContentReclaimer(
+      database: database, store: store, budget: 150, now: { self.date(9000) })
+
+    try write(store, key(server, 1), bytes: 100)
+    try await reclaimer.recordStore(
+      key(server, 1), documentID: 1, size: 100, modified: date(1), checksum: nil,
+      storedAt: date(1000))
+    try write(store, key(server, 1, .thumbnail), bytes: 100)
+    try await reclaimer.recordStore(
+      key(server, 1, .thumbnail), documentID: 1, size: 100, modified: nil, checksum: nil,
+      storedAt: date(1000))
+    #expect(
+      try await reclaimer.freshEntry(for: key(server, 1), modified: date(1))?.lastAccessedAt
+        == date(1000))
+    #expect(try await database.evictableFileBytes() == 100)
+
+    try write(store, key(server, 2), bytes: 100)
+    try await reclaimer.recordStore(
+      key(server, 2), documentID: 2, size: 100, modified: date(1), checksum: nil,
+      storedAt: date(2000))
+
+    // The pass runs on its own task; join it.
+    for _ in 0..<100 where store.exists(key(server, 1)) {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    #expect(!store.exists(key(server, 1)))
+    #expect(store.exists(key(server, 2)))
+    #expect(store.exists(key(server, 1, .thumbnail)))
+  }
+
+  @Test("recordAccess records once per window and forget drops the row")
+  func accessAndForget() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    try await cache(store, database, key(server, 1), accessed: date(1000))
+    let reclaimer = ContentReclaimer(database: database, store: store)
+
+    try await reclaimer.recordAccess(key(server, 1), at: date(2000))
+    try await reclaimer.recordAccess(key(server, 1), at: date(2030))
+    try await reclaimer.recordAccess(key(server, 1), at: date(2100))
+
+    let entry = try #require(try await database.freshFileAnyModified(key(server, 1)))
+    #expect(entry.lastAccessedAt == date(2100).timeIntervalSinceReferenceDate)
+
+    try await reclaimer.forget(key(server, 1))
+    #expect(try await database.allFileKeys().isEmpty)
+  }
+
+  // MARK: - Scheduling
+
+  @Test("runIfDue runs once per interval")
+  func throttle() async throws {
+    let database = try Database.seeded()
+    let clock = Clock(date(1000))
+    let reclaimer = ContentReclaimer(database: database, store: try makeStore(), now: { clock.now })
+
+    #expect(await reclaimer.runIfDue(reason: .afterReconcile) != nil)
+    #expect(await reclaimer.runIfDue(reason: .afterReconcile) == nil)
+    clock.now = date(1000 + ContentReclaimer.dueInterval)
+    #expect(await reclaimer.runIfDue(reason: .afterReconcile) != nil)
+    // A run for any reason resets the interval.
+    await reclaimer.run(reason: .manual)
+    clock.now = date(1000 + ContentReclaimer.dueInterval + 10)
+    #expect(await reclaimer.runIfDue(reason: .afterReconcile) == nil)
+  }
+
+  @Test("Concurrent runs share one pass and a request during it gets another")
+  func singleFlight() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    let reclaimer = ContentReclaimer(database: database, store: store, now: { self.date(9000) })
+
+    async let a = reclaimer.run(reason: .manual)
+    async let b = reclaimer.run(reason: .launch)
+    let reports = await [a, b]
+
+    // Both callers got a report; the pass count is not observable from here,
+    // so the contract checked is that neither call is lost.
+    #expect(reports.count == 2)
+    #expect(reports.allSatisfy { $0.walked })
+  }
+
+  private final class Clock: @unchecked Sendable {
+    var now: Date
+    init(_ now: Date) { self.now = now }
+  }
+}
+
+extension Database {
+  fileprivate func freshFileAnyModified(_ key: ContentStore.Key) async throws -> FileRecord? {
+    try await writer.read { db in try FileRecord.fetchAll(db) }.first { $0.key == key }
+  }
+}

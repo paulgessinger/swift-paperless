@@ -273,8 +273,10 @@ public struct ConnectionsView: View {
     .task {
       if let stored = connectionManager.storedConnection {
         do {
+          // A version probe only: it downloads nothing, so it needs no store.
           let repository = try await ApiRepository(
-            connection: stored.connection, mode: Bundle.main.appConfiguration.mode)
+            connection: stored.connection, mode: Bundle.main.appConfiguration.mode,
+            contentStore: nil, fileIndex: nil)
           backendVersion = repository.backendVersion
           updateAvailable = try await repository.remoteVersion().updateAvailable
         } catch {

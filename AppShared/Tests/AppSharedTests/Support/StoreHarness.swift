@@ -47,13 +47,7 @@ struct StoreHarness {
       documents: documents,
       uiSettings: UISettings(user: user, settings: settings, permissions: permissions))
     let transient = TransientRepository()
-    // The app-group content store blocks on a macOS host; the reconcile's
-    // reclaim gets one in a temporary directory instead.
-    let contentRoot = FileManager.default.temporaryDirectory
-      .appendingPathComponent("StoreHarness-\(UUID().uuidString)")
-    let caching = CachingRepository(
-      wrapping: transient, database: database, serverID: serverID,
-      contentStore: { try? ContentStore(root: contentRoot) })
+    let caching = CachingRepository(wrapping: transient, database: database, serverID: serverID)
     let session = ServerSession(serverID: serverID, repository: caching, suspension: suspension)
     let store = DocumentStore(session: session)
     try await waitUntil({ store.permissionsKnown }, "projection never hydrated")

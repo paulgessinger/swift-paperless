@@ -57,3 +57,4 @@
 - Switching away from the app while it is syncing no longer cuts the sync off: it gets some time to finish in the background, and stops cleanly if that time runs out
 - Offline data now refreshes in the background, even when you haven't opened the app for a while. With "Entire library", the full download also continues in the background, mostly overnight. This needs Background App Refresh to be on for the app
 - The debug menu now has a "Sync runs" screen listing what each recent sync did, step by step, and how it ended, including background runs
+- Documents you have opened are kept for offline use within a 500 MB budget: once it is full, the ones you opened longest ago are removed first. Files that no longer belong to any cached document are cleaned up at launch and when a server is removed, and the debug menu shows what each cleanup did

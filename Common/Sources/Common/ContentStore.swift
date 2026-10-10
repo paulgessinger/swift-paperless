@@ -104,23 +104,6 @@ public struct ContentStore: Sendable {
     FileManager.default.fileExists(atPath: url(for: key).path)
   }
 
-  /// Returns the canonical URL if the blob exists, the sidecar is present,
-  /// and the sidecar's `modified` equals the passed value.
-  ///
-  /// A nil `modified` (either side) is treated as "no staleness signal" and
-  /// returns nil — the cache will not serve a hit without a positive
-  /// validity check. Callers that genuinely have no timestamp should bypass
-  /// the cache entirely rather than calling `read` with nil.
-  public func read(_ key: Key, freshAgainst modified: Date?) -> URL? {
-    guard let modified else { return nil }
-    let canonical = url(for: key)
-    guard FileManager.default.fileExists(atPath: canonical.path),
-      let sidecar = readSidecar(for: key),
-      sidecar.modified == modified
-    else { return nil }
-    return canonical
-  }
-
   /// Move the downloaded file at `tempURL` into place, replacing what is
   /// there. Freshness is the file index's business, not the store's: the
   /// caller records the row once the file is in place.
@@ -136,17 +119,6 @@ public struct ContentStore: Sendable {
       try FileManager.default.moveItem(at: tempURL, to: canonical)
     }
     applyFileProtection(canonical)
-    return canonical
-  }
-
-  /// Legacy: store and write the sidecar `read(_:freshAgainst:)` checks. Goes
-  /// with that reader once every caller consults the file index instead.
-  @discardableResult
-  public func store(
-    _ key: Key, movingFrom tempURL: URL, modified: Date?
-  ) throws -> URL {
-    let canonical = try store(key, movingFrom: tempURL)
-    try writeSidecar(for: key, modified: modified)
     return canonical
   }
 
@@ -253,103 +225,18 @@ public struct ContentStore: Sendable {
     }
   }
 
-  // MARK: - Reclamation
+  // MARK: - Grace
 
-  /// Files younger than this are never reclaimed, whatever the database says
-  /// about them.
+  /// A file without an index row is left alone while anything in its version
+  /// directory is younger than this.
   ///
-  /// A blob and the `document` row that makes it reachable are written by two
-  /// different subsystems — and, with the Share Extension, two different
-  /// processes — with no transaction spanning both. A download therefore exists
-  /// on disk for a short window before the row that references it, and the app
-  /// group is shared, so the other process may be mid-write while this one
-  /// sweeps. An hour is orders of magnitude longer than that window and still
-  /// nothing against the lifetime of a superseded version.
+  /// A blob and its row are written by two different subsystems — and, with
+  /// the Share Extension, two different processes — with no transaction
+  /// spanning both. A download therefore exists on disk for a short window
+  /// before the row that records it, and the app group is shared, so the other
+  /// process may be mid-write while this one sweeps. An hour is orders of
+  /// magnitude longer than that window.
   public static let reclaimGracePeriod: TimeInterval = 3600
-
-  /// What one ``reclaim(retaining:gracePeriod:now:)`` pass did.
-  public struct ReclaimReport: Sendable, Equatable {
-    /// Blobs and sidecars actually unlinked.
-    public var removedFiles = 0
-    /// Bytes those files occupied, as reported just before the unlink.
-    public var reclaimedBytes: Int64 = 0
-    /// Unreferenced versions left in place because something in their directory
-    /// was written inside the grace window.
-    public var keptRecent = 0
-    /// Version directories looked at, referenced ones included.
-    public var examinedVersions = 0
-
-    public init() {}
-  }
-
-  /// Delete every stored blob no live document version points at.
-  ///
-  /// Reachability, not reference counting: the database already knows exactly
-  /// which version each cached document is at, so one query answers the whole
-  /// question — whereas a refcount would have to be kept in step across two
-  /// processes and would drift the moment either was killed mid-update.
-  ///
-  /// - Parameter retaining: the **complete** `server → live version ids` map,
-  ///   across every server, read from the database in one pass. Anything absent
-  ///   from it is unreachable: a superseded version, a document deleted on the
-  ///   server, or a whole server whose connection was removed (its cache rows
-  ///   cascade away with it). A map narrowed to one server would delete every
-  ///   other server's live blobs, so callers must not narrow it.
-  /// - Parameter now: injectable clock, so tests can age files without having
-  ///   to backdate them.
-  ///
-  /// Non-throwing on purpose: every failure mode here is per-file (a directory
-  /// that vanished, a file another process removed first) and the response to
-  /// each is to skip it and carry on, not to abandon the sweep.
-  public func reclaim(
-    retaining: [UUID: Set<UInt>],
-    gracePeriod: TimeInterval = ContentStore.reclaimGracePeriod,
-    now: Date = Date()
-  ) -> ReclaimReport {
-    var report = ReclaimReport()
-
-    for serverDirectory in contents(of: canonicalRoot) {
-      // Anything whose name isn't one of our own path components was not
-      // written by this store; leave it alone rather than guess at it.
-      guard let serverID = UUID(uuidString: serverDirectory.lastPathComponent) else { continue }
-      let retainedVersions = retaining[serverID] ?? []
-
-      for versionDirectory in contents(of: serverDirectory) {
-        guard let versionID = UInt(versionDirectory.lastPathComponent) else { continue }
-        report.examinedVersions += 1
-        if retainedVersions.contains(versionID) { continue }
-
-        if let youngest = youngestModification(in: versionDirectory),
-          now.timeIntervalSince(youngest) < gracePeriod
-        {
-          report.keptRecent += 1
-          continue
-        }
-
-        // Only the names this store itself writes are candidates, so a
-        // temporary or partial file a concurrent writer left behind is never
-        // touched — the canonical blobs arrive by rename and are complete the
-        // moment they appear under these names.
-        for kind in Kind.allCases {
-          let key = Key(serverID: serverID, versionID: versionID, kind: kind)
-          for file in [url(for: key), sidecarURL(for: key)] {
-            guard let bytes = removeIfPresent(file) else { continue }
-            report.removedFiles += 1
-            report.reclaimedBytes += bytes
-          }
-        }
-
-        removeIfEmpty(versionDirectory)
-      }
-
-      removeIfEmpty(serverDirectory)
-    }
-
-    Logger.cache.info(
-      "ContentStore reclaim removed \(report.removedFiles, privacy: .public) files (\(report.reclaimedBytes, privacy: .public) bytes) across \(report.examinedVersions, privacy: .public) versions, kept \(report.keptRecent, privacy: .public) recent"
-    )
-    return report
-  }
 
   // MARK: - Usage
 
@@ -421,27 +308,7 @@ public struct ContentStore: Sendable {
     try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
   }
 
-  /// Unlink `url`, returning the bytes it held, or nil when there was nothing
-  /// to remove. Tolerates the file disappearing between the listing and here —
-  /// another process pruning the same blob, or a `purge()` racing this sweep —
-  /// because the end state is the one we wanted either way.
-  private func removeIfPresent(_ url: URL) -> Int64? {
-    let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? nil
-    do {
-      try FileManager.default.removeItem(at: url)
-    } catch let error as NSError
-      where error.domain == NSCocoaErrorDomain && error.code == NSFileNoSuchFileError
-    {
-      return nil
-    } catch {
-      Logger.cache.debug(
-        "ContentStore reclaim could not remove \(url.path, privacy: .public): \(error)")
-      return nil
-    }
-    return Int64(size ?? 0)
-  }
-
-  /// Drop a directory that reclamation emptied.
+  /// Drop a directory the sweep emptied.
   ///
   /// `rmdir(2)` rather than `FileManager.removeItem`: it fails atomically with
   /// `ENOTEMPTY` instead of deleting a subtree, so a blob another process wrote
@@ -458,6 +325,11 @@ public struct ContentStore: Sendable {
   public struct LegacySidecar: Codable, Sendable, Equatable {
     public var modified: Date?
     public var writtenAt: Date
+
+    public init(modified: Date?, writtenAt: Date) {
+      self.modified = modified
+      self.writtenAt = writtenAt
+    }
   }
 
   private typealias Sidecar = LegacySidecar
@@ -468,22 +340,6 @@ public struct ContentStore: Sendable {
 
   public func removeLegacySidecar(for key: Key) {
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
-  }
-
-  private func writeSidecar(for key: Key, modified: Date?) throws {
-    let sidecar = Sidecar(modified: modified, writtenAt: Date())
-    let encoder = JSONEncoder()
-    // Encode dates as numeric time intervals (JSONEncoder's default strategy),
-    // NOT ISO-8601: `.iso8601` truncates to whole seconds, but paperless
-    // `modified` timestamps carry sub-second precision. A truncated sidecar
-    // would never equal the live `document.modified`, so `read(_:freshAgainst:)`
-    // would miss on every lookup and the cache would never serve a hit. A
-    // numeric interval round-trips exactly.
-    encoder.outputFormatting = [.sortedKeys]
-    let data = try encoder.encode(sidecar)
-    let url = sidecarURL(for: key)
-    try data.write(to: url, options: .atomic)
-    applyFileProtection(url)
   }
 
   private func readSidecar(for key: Key) -> Sidecar? {
