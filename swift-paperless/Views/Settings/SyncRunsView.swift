@@ -18,22 +18,9 @@ struct SyncRunsView: View {
 
   private enum LoadState {
     case loading
-    case loaded([Run])
+    case loaded([SyncRunEntry])
     case unavailable
     case failed(String)
-  }
-
-  /// The steps of one run, newest step first.
-  private struct Run: Identifiable {
-    let id: UUID
-    let steps: [SyncRunEntry]
-
-    var first: SyncRunEntry { steps.last! }
-    var startedAt: Date { steps.map(\.startedAt).min() ?? first.startedAt }
-    /// `nil` while a step is still open.
-    var endedAt: Date? {
-      steps.contains(where: \.isOpen) ? nil : steps.compactMap(\.endedAt).max()
-    }
   }
 
   @State private var state = LoadState.loading
@@ -45,7 +32,7 @@ struct SyncRunsView: View {
         state = .unavailable
         return
       }
-      state = .loaded(Self.group(entries))
+      state = .loaded(entries)
     } catch is CancellationError {
       // Left as it was: a cancelled refresh is not a failure.
     } catch {
@@ -60,17 +47,6 @@ struct SyncRunsView: View {
     } catch {
       state = .failed(String(describing: error))
     }
-  }
-
-  /// Runs in the order of their newest step; entries arrive newest first.
-  private static func group(_ entries: [SyncRunEntry]) -> [Run] {
-    var order: [UUID] = []
-    var steps: [UUID: [SyncRunEntry]] = [:]
-    for entry in entries {
-      if steps[entry.runID] == nil { order.append(entry.runID) }
-      steps[entry.runID, default: []].append(entry)
-    }
-    return order.map { Run(id: $0, steps: steps[$0] ?? []) }
   }
 
   var body: some View {
@@ -89,22 +65,17 @@ struct SyncRunsView: View {
         } header: {
           Text(verbatim: "Failed to read sync runs")
         }
-      case .loaded(let runs):
-        if runs.isEmpty {
+      case .loaded(let entries):
+        if entries.isEmpty {
           Text(verbatim: "No sync steps recorded yet.")
             .foregroundStyle(.secondary)
         }
-        ForEach(runs) { run in
-          Section {
-            ForEach(run.steps) { step in
-              StepRow(step: step)
-            }
-          } header: {
-            Text(verbatim: header(run))
-          }
+        ForEach(entries) { step in
+          StepRow(step: step, subject: subject(step))
         }
       }
     }
+    .listStyle(.plain)
     .monospacedDigit()
     .navigationTitle(Text(verbatim: "Sync runs"))
     .navigationBarTitleDisplayMode(.inline)
@@ -147,23 +118,18 @@ struct SyncRunsView: View {
 
   // MARK: - Labels
 
-  private func header(_ run: Run) -> String {
-    let first = run.first
-    let subject =
-      first.serverID.map(serverTitle) ?? (first.step == "task" ? "background task" : "no server")
-    let when = Self.timestamp(run.startedAt)
-    let duration =
-      run.endedAt.map { " · \(Self.duration(from: run.startedAt, to: $0))" } ?? " · running"
-    return "\(first.trigger) · \(subject)\n\(when)\(duration)"
+  private func subject(_ step: SyncRunEntry) -> String {
+    guard let id = step.serverID else {
+      return step.step == "task" ? "background task" : "no server"
+    }
+    return connectionManager.connections[id]?.label ?? "Unknown server"
   }
 
-  private func serverTitle(_ id: UUID) -> String {
-    let label = connectionManager.connections[id]?.label ?? "Unknown server"
-    return id == connectionManager.activeConnectionId ? "\(label) (active)" : label
-  }
-
+  /// Local date and time to the second, without the zone offset.
   fileprivate static func timestamp(_ date: Date) -> String {
-    date.formatted(Date.ISO8601FormatStyle(timeZone: .current))
+    date.formatted(
+      Date.ISO8601FormatStyle(dateSeparator: .dash, dateTimeSeparator: .space, timeZone: .current)
+        .year().month().day().time(includingFractionalSeconds: false))
   }
 
   fileprivate static func duration(from start: Date, to end: Date) -> String {
@@ -176,9 +142,11 @@ struct SyncRunsView: View {
   }
 }
 
-/// One step: its name and outcome, then timing, counts and message.
+/// One step: name, counts, duration and outcome, then when, trigger, server
+/// and message.
 private struct StepRow: View {
   let step: SyncRunEntry
+  let subject: String
 
   private var outcome: String { step.outcome ?? "running" }
 
@@ -192,23 +160,21 @@ private struct StepRow: View {
   }
 
   private var timing: String {
-    var parts = ["started \(SyncRunsView.timestamp(step.startedAt))"]
-    if let endedAt = step.endedAt {
-      parts.append("took \(SyncRunsView.duration(from: step.startedAt, to: endedAt))")
-    }
-    return parts.joined(separator: " · ")
+    guard let endedAt = step.endedAt else { return "" }
+    return SyncRunsView.duration(from: step.startedAt, to: endedAt)
   }
 
   private var counts: String? {
     var parts: [String] = []
-    if let succeeded = step.succeeded { parts.append("succeeded \(succeeded)") }
-    if let failed = step.failed { parts.append("failed \(failed)") }
+    if let succeeded = step.succeeded { parts.append("\(succeeded) ok") }
+    if let failed = step.failed, failed > 0 { parts.append("\(failed) failed") }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
 
   private var copyText: String {
     [
-      "\(step.trigger) \(step.step) \(outcome)", timing, counts, step.message,
+      "\(step.trigger) \(subject) \(step.step) \(outcome)",
+      "started \(SyncRunsView.timestamp(step.startedAt))", timing, counts, step.message,
       "run \(step.runID.uuidString)", step.serverID.map { "server \($0.uuidString)" },
     ]
     .compactMap { $0 }
@@ -216,29 +182,34 @@ private struct StepRow: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 2) {
-      HStack {
+    VStack(alignment: .leading, spacing: 1) {
+      HStack(spacing: 6) {
         Text(verbatim: step.step)
-          .font(.subheadline.weight(.semibold))
+          .font(.subheadline)
+        if let counts {
+          Text(verbatim: counts)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
         Spacer()
+        Text(verbatim: timing)
+          .font(.caption)
+          .foregroundStyle(.secondary)
         Text(verbatim: outcome)
           .font(.subheadline)
           .foregroundStyle(outcomeColor)
       }
-      Group {
-        Text(verbatim: timing)
-        if let counts {
-          Text(verbatim: counts)
-        }
-        if let message = step.message {
-          Text(verbatim: message)
-            .foregroundStyle(outcomeColor)
-            .lineLimit(4)
-        }
+      Text(verbatim: "\(SyncRunsView.timestamp(step.startedAt)) · \(step.trigger) · \(subject)")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+      if let message = step.message {
+        Text(verbatim: message)
+          .font(.caption)
+          .foregroundStyle(outcomeColor)
+          .lineLimit(3)
       }
-      .font(.caption)
-      .foregroundStyle(.secondary)
     }
+    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     .contextMenu {
       Button {
         UIPasteboard.general.string = copyText
