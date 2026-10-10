@@ -193,7 +193,7 @@ public final class DocumentStore: Sendable {
   /// The pipelines' disk cache: thumbnails in the content store, recorded in
   /// the file index. `nil` without a store (a fixture), so nothing is kept on
   /// disk.
-  @ObservationIgnored private let thumbnailCache: (any DataCaching)?
+  @ObservationIgnored private let thumbnailCache: ContentStoreDataCache?
 
   @ObservationIgnored
   private var taskUpdateTask: Task<Void, Never>?
@@ -218,7 +218,8 @@ public final class DocumentStore: Sendable {
     self.registry = registry
     self.session = session
     if let reclaimer = registry?.contentReclaimer, let store = reclaimer.store {
-      thumbnailCache = ContentStoreDataCache(store: store, index: reclaimer)
+      thumbnailCache = ContentStoreDataCache(
+        store: store, index: reclaimer, variants: ThumbnailVariantCache.make())
     } else {
       thumbnailCache = nil
     }
@@ -377,9 +378,20 @@ public final class DocumentStore: Sendable {
     }
     var config = ImagePipeline.Configuration(dataLoader: dataLoader)
     config.dataCache = dataCache
-    // The store holds the server's bytes for the version; resized variants
-    // are derived from them in memory.
-    config.dataCachePolicy = .storeOriginalData
+    // The server's bytes under the exact id, and the encoded result of a
+    // request with processors under the id plus their identifiers; the data
+    // cache files the first in the content store and the second in the
+    // variant cache.
+    config.dataCachePolicy = .storeAll
+    // The variants: the server's thumbnails are opaque (paperless renders
+    // them with the alpha removed), but the decoded WebP still reports an
+    // alpha channel, which would send Nuke's default encoder to PNG. HEIC
+    // is the one format that comes out smaller than the source; JPEG where
+    // the hardware cannot encode it.
+    config.makeImageEncoder = { _ in
+      let type: AssetType = ImageEncoders.ImageIO.isSupported(type: .heic) ? .heic : .jpeg
+      return ImageEncoders.ImageIO(type: type, compressionRatio: 0.8)
+    }
     return ImagePipeline(configuration: config)
   }
 
@@ -981,7 +993,8 @@ extension DocumentStore {
     if let contentStore = registry?.contentReclaimer?.store {
       try? contentStore.purge()
     }
-    // Nuke's memory cache; its disk copies went with the store.
+    // Nuke's memory cache and, through the data cache, the thumbnail
+    // variants; the thumbnails themselves went with the store.
     imagePipeline.cache.removeAll()
   }
 
@@ -993,8 +1006,9 @@ extension DocumentStore {
   /// then anyway).
   public func storageUsage() async -> OfflineStorageUsage {
     let database = session?.backend?.database
+    let variants = thumbnailCache?.variants
     return await Task.detached(priority: .utility) {
-      await OfflineStorageUsage.measure(database: database)
+      await OfflineStorageUsage.measure(database: database, variants: variants)
     }.value
   }
 

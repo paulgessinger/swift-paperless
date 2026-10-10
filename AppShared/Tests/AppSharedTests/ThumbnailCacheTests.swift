@@ -93,6 +93,15 @@ struct ThumbnailCacheTests {
       ThumbnailImageID.parse("swift-paperless:thumbnail/\(Self.server.uuidString)/x/7") == nil)
   }
 
+  @Test("An id with a processor suffix is a variant; an exact id or a foreign key is not")
+  func idVariants() {
+    let id = ThumbnailImageID.make(serverID: Self.server, document: document(7, versions: [7, 91]))
+    #expect(ThumbnailImageID.isVariant(id + "com.github.kean/nuke/resize?s=(130.0, 9.0)"))
+    #expect(!ThumbnailImageID.isVariant(id))
+    #expect(!ThumbnailImageID.isVariant("https://example.com/api/documents/7/thumb"))
+    #expect(!ThumbnailImageID.isVariant("swift-paperless:thumbnail/not-a-uuid/7/7resize"))
+  }
+
   // MARK: - Data cache
 
   @Test("A stored thumbnail lands at the version's file and in the index")
@@ -118,6 +127,39 @@ struct ThumbnailCacheTests {
     cache.removeData(for: id)
     #expect(await index.forgotten(key))
     #expect(!cache.containsData(for: id))
+  }
+
+  @Test("A resized variant goes to the variant cache, not the store or the index")
+  func variantsAreCachedApart() async throws {
+    let store = try makeStore()
+    let index = Index()
+    let variants = try ThumbnailVariantCache.make(
+      at: FileManager.default.temporaryDirectory
+        .appendingPathComponent("ThumbnailCacheTests-variants-\(UUID().uuidString)"))
+    let cache = ContentStoreDataCache(store: store, index: index, variants: variants)
+    let id = ThumbnailImageID.make(serverID: Self.server, document: document(7))
+    let resized = id + "com.github.kean/nuke/resize?s=(130.0, 9.0)"
+    #expect(!cache.containsData(for: resized))
+
+    cache.storeData(Data("small".utf8), for: resized)
+    cache.storeData(Data("png".utf8), for: id)
+    let key = ContentStore.Key(serverID: Self.server, versionID: 7, kind: .thumbnail)
+    _ = await index.entry(for: key)
+
+    #expect(cache.containsData(for: resized))
+    #expect(cache.cachedData(for: resized) == Data("small".utf8))
+    #expect(variants.cachedData(for: resized) == Data("small".utf8))
+    #expect(store.inventory().map(\.key) == [key])
+    #expect(await index.entries.count == 1)
+
+    // The wipe empties the variants and leaves the store's files to the purge.
+    cache.removeAll()
+    #expect(!cache.containsData(for: resized))
+    #expect(cache.containsData(for: id))
+
+    cache.storeData(Data("again".utf8), for: resized)
+    cache.removeData(for: resized)
+    #expect(!cache.containsData(for: resized))
   }
 
   @Test("A key that is not a thumbnail id is neither read nor written")

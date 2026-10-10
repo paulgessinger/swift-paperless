@@ -6,22 +6,11 @@
 //  live in the content store now; the old directory is removed once.
 //
 
-import Common
 import Foundation
 import os
 
 enum LegacyThumbnailCache {
-  /// `nil` without an app-group container, and on macOS, where touching the
-  /// group container from a test process raises a privacy prompt.
-  static var url: URL? {
-    #if os(iOS)
-      FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: ContentStore.appGroup
-      )?.appendingPathComponent("Caches/Nuke", isDirectory: true)
-    #else
-      nil
-    #endif
-  }
+  static var url: URL? { AppGroupCaches.directory("Nuke") }
 
   /// Cheap when the directory is already gone: one failed stat.
   static func remove() {
