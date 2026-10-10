@@ -58,3 +58,4 @@
 - Offline data now refreshes in the background, even when you haven't opened the app for a while. With "Entire library", the full download also continues in the background, mostly overnight. This needs Background App Refresh to be on for the app
 - The debug menu now has a "Sync runs" screen listing what each recent sync did, step by step, and how it ended, including background runs
 - Documents you have opened are kept for offline use within a 500 MB budget: once it is full, the ones you opened longest ago are removed first. Files that no longer belong to any cached document are cleaned up at launch and when a server is removed, and the debug menu shows what each cleanup did
+- Thumbnails are now stored alongside the downloaded document files and removed with them, instead of in a separate cache that could drop them at any time; the Offline & Sync storage figures now come from the app's own records of what it has downloaded

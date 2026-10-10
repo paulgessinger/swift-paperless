@@ -92,6 +92,7 @@ struct DatabaseStatisticsView: View {
       row("Pages", "\(stats.pageCount) (\(stats.freePageCount) free)")
       row("Main file", bytes(Int64(stats.pageCount) * Int64(stats.pageSize)))
       row("On disk incl. WAL", bytes(stats.diskUsageBytes))
+      row("Evictable files", bytes(stats.evictableFileBytes))
       DisclosureGroup {
         ForEach(stats.appliedMigrations, id: \.self) { identifier in
           Text(verbatim: identifier)
@@ -132,6 +133,9 @@ struct DatabaseStatisticsView: View {
       row("Unreferenced documents", "\(server.unreferencedDocuments)")
       row("Awaiting notes", "\(server.documentsAwaitingNotes)")
       row("Awaiting file metadata", "\(server.documentsAwaitingFileMetadata)")
+      ForEach(server.files) { kind in
+        row("Files: \(kind.kind)", "\(kind.count) (\(bytes(kind.bytes)))")
+      }
       DisclosureGroup {
         ForEach(server.rowsByTable.sorted { $0.key < $1.key }, id: \.key) { table, rows in
           row(table, "\(rows)", monospacedLabel: true)
