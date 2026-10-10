@@ -773,7 +773,7 @@ extension ApiRepository: Repository {
     _ key: ContentStore.Key, modified: Date, in fileIndex: any FileIndex
   ) async throws -> Bool {
     do {
-      return try await fileIndex.freshEntry(for: key, modified: modified) != nil
+      return try await fileIndex.isFresh(key, modified: modified)
     } catch is CancellationError {
       throw CancellationError()
     } catch {

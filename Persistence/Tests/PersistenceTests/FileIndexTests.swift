@@ -9,42 +9,25 @@ import Testing
 /// freshness lookup, the eviction order and the repair walk's adoption.
 @Suite("File index")
 struct FileIndexTests {
-  private func date(_ t: TimeInterval) -> Date { Date(timeIntervalSince1970: t) }
-
+  private func date(_ t: TimeInterval) -> Date { FileFixtures.date(t) }
   private func doc(_ id: UInt, modified: Date? = nil) -> Document {
-    Document(
-      id: id, title: "d\(id)", created: date(1000), tags: [], modified: modified, owner: .user(1))
+    FileFixtures.doc(id, modified: modified)
   }
-
   private func versioned(_ id: UInt, versions: [UInt]) -> Document {
-    Document(
-      id: id, title: "v", created: date(1000), tags: [], owner: .user(1),
-      versions: versions.map {
-        DocumentVersion(id: $0, added: date(1000), isRoot: $0 == versions.first)
-      })
+    FileFixtures.versioned(id, versions: versions)
   }
-
   private func addServer(_ id: UUID, to database: Database) throws {
-    try database.upsertConnection(
-      ConnectionRecord(
-        id: id,
-        url: URL(string: "https://\(id.uuidString).example.com/api/")!,
-        user: .init(id: 1, isSuperUser: true, username: "other")))
+    try FileFixtures.addServer(id, to: database)
   }
-
   private func key(_ server: UUID, _ version: UInt, _ kind: ContentStore.Kind = .archive)
     -> ContentStore.Key
   {
-    ContentStore.Key(serverID: server, versionID: version, kind: kind)
+    FileFixtures.key(server, version, kind)
   }
-
-  /// Insert an archive row accessed at `accessed`, for the eviction tests.
   private func record(
     _ database: Database, _ key: ContentStore.Key, size: Int64, accessed: Date
   ) async throws {
-    try await database.recordFile(
-      key, documentID: key.versionID, size: size, modified: nil, checksum: nil,
-      storedAt: accessed, lastAccessedAt: accessed)
+    try await FileFixtures.record(database, key, size: size, accessed: accessed)
   }
 
   // MARK: - Rows
@@ -284,10 +267,5 @@ extension Database {
   /// Every row, in the shape the reclaim reads them.
   fileprivate func unreferencedFilesForTest() async throws -> [FileRecord] {
     try await writer.read { db in try FileRecord.fetchAll(db) }
-  }
-
-  /// The row for `key` whatever it was fetched against.
-  fileprivate func anyFile(_ key: ContentStore.Key) async throws -> FileRecord? {
-    try await writer.read { db in try FileRecord.fetchAll(db) }.first { $0.key == key }
   }
 }

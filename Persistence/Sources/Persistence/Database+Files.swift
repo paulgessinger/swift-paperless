@@ -65,11 +65,8 @@ extension Database {
     try await wrappingAsync("recordFile") {
       try await writer.write { db in
         try FileRecord(
-          serverId: key.serverID, versionId: key.versionID, kind: key.kind.rawValue,
-          documentId: documentID, size: size,
-          modified: modified?.timeIntervalSinceReferenceDate, checksum: checksum,
-          storedAt: storedAt.timeIntervalSinceReferenceDate,
-          lastAccessedAt: lastAccessedAt?.timeIntervalSinceReferenceDate
+          key, documentID: documentID, size: size, modified: modified, checksum: checksum,
+          storedAt: storedAt, lastAccessedAt: lastAccessedAt
         ).save(db)
         return try Self.evictableBytes(db)
       }
@@ -102,12 +99,8 @@ extension Database {
       try await writer.write { db in
         var deleted = 0
         for row in rows {
-          deleted +=
-            try FileRecord
-            .filter(
-              Column("server_id") == row.serverId && Column("version_id") == row.versionId
-                && Column("kind") == row.kind && Column("stored_at") == row.storedAt
-            )
+          deleted += try Self.file(serverID: row.serverId, versionID: row.versionId, kind: row.kind)
+            .filter(Column("stored_at") == row.storedAt)
             .deleteAll(db)
         }
         return deleted
@@ -186,6 +179,8 @@ extension Database {
       try await writer.write { db in
         var unresolved: [ContentStore.Key] = []
         for candidate in candidates {
+          // The document whose current version the file is filed under; the
+          // same rule as `retainedContentVersions`.
           let documentID = try UInt.fetchOne(
             db,
             sql: """
@@ -198,11 +193,9 @@ extension Database {
             continue
           }
           try FileRecord(
-            serverId: candidate.key.serverID, versionId: candidate.key.versionID,
-            kind: candidate.key.kind.rawValue, documentId: documentID, size: candidate.size,
-            modified: candidate.modified?.timeIntervalSinceReferenceDate, checksum: nil,
-            storedAt: candidate.storedAt.timeIntervalSinceReferenceDate,
-            lastAccessedAt: candidate.lastAccessedAt?.timeIntervalSinceReferenceDate
+            candidate.key, documentID: documentID, size: candidate.size,
+            modified: candidate.modified, checksum: nil, storedAt: candidate.storedAt,
+            lastAccessedAt: candidate.lastAccessedAt
           ).save(db)
         }
         return unresolved
@@ -215,19 +208,12 @@ extension Database {
     try await wrappingAsync("fileUsage") {
       try await writer.read { db in
         var usage = FileUsage()
-        for row in try Row.fetchAll(
-          db,
-          sql: """
-            SELECT server_id, kind, COUNT(*) AS n, COALESCE(SUM(size), 0) AS bytes
-            FROM file GROUP BY server_id, kind
-            """)
-        {
-          let measured = DiskUsage(bytes: row["bytes"], files: row["n"])
-          if row["kind"] == ContentStore.Kind.thumbnail.rawValue {
-            usage.thumbnails += measured
+        for row in try Self.fileUsageByServerAndKind(db) {
+          if row.kind == ContentStore.Kind.thumbnail.rawValue {
+            usage.thumbnails += row.usage
           } else {
-            usage.documents += measured
-            usage.documentsByServer[row["server_id"], default: .zero] += measured
+            usage.documents += row.usage
+            usage.documentsByServer[row.serverID, default: .zero] += row.usage
           }
         }
         return usage
@@ -237,16 +223,56 @@ extension Database {
 
   // MARK: - Query bodies
 
-  private static func file(for key: ContentStore.Key) -> QueryInterfaceRequest<FileRecord> {
+  static func file(serverID: UUID, versionID: UInt, kind: String)
+    -> QueryInterfaceRequest<FileRecord>
+  {
     FileRecord.filter(
-      Column("server_id") == key.serverID && Column("version_id") == key.versionID
-        && Column("kind") == key.kind.rawValue)
+      Column("server_id") == serverID && Column("version_id") == versionID
+        && Column("kind") == kind)
   }
 
-  private static func evictableBytes(_ db: GRDB.Database) throws -> Int64 {
-    try Int64.fetchOne(
-      db,
-      sql: "SELECT COALESCE(SUM(size), 0) FROM file WHERE kind IN (?, ?)",
-      arguments: StatementArguments(FileRecord.evictableKinds)) ?? 0
+  private static func file(for key: ContentStore.Key) -> QueryInterfaceRequest<FileRecord> {
+    file(serverID: key.serverID, versionID: key.versionID, kind: key.kind.rawValue)
+  }
+
+  static func evictableBytes(_ db: GRDB.Database) throws -> Int64 {
+    try FileRecord.evictable
+      .select(sum(Column("size")) ?? 0, as: Int64.self)
+      .fetchOne(db) ?? 0
+  }
+
+  /// Count and bytes per server and kind, ordered by kind, for the usage sums
+  /// and the statistics.
+  static func fileUsageByServerAndKind(_ db: GRDB.Database) throws
+    -> [(serverID: UUID, kind: String, usage: DiskUsage)]
+  {
+    let request =
+      FileRecord
+      .select(
+        Column("server_id"), Column("kind"), count(Column("kind")).forKey("n"),
+        (sum(Column("size")) ?? 0).forKey("bytes")
+      )
+      .group(Column("server_id"), Column("kind"))
+      .order(Column("kind"))
+    return try Row.fetchAll(db, request).map {
+      (
+        serverID: $0["server_id"], kind: $0["kind"],
+        usage: DiskUsage(bytes: $0["bytes"], files: $0["n"])
+      )
+    }
+  }
+}
+
+extension FileRecord {
+  /// A row for `key`, with the dates as the table stores them.
+  init(
+    _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
+    storedAt: Date, lastAccessedAt: Date?
+  ) {
+    self.init(
+      serverId: key.serverID, versionId: key.versionID, kind: key.kind.rawValue,
+      documentId: documentID, size: size, modified: modified?.timeIntervalSinceReferenceDate,
+      checksum: checksum, storedAt: storedAt.timeIntervalSinceReferenceDate,
+      lastAccessedAt: lastAccessedAt?.timeIntervalSinceReferenceDate)
   }
 }

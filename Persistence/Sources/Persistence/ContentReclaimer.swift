@@ -148,7 +148,9 @@ public actor ContentReclaimer: FileIndex {
       Logger.persistence.error("Content reclaim: dropping unreferenced files failed: \(error)")
     }
 
-    if store != nil {
+    // Without a store nothing can be unlinked, so neither phase below has
+    // anything to do.
+    if let store {
       do {
         let candidates = try await database.evictionCandidates(
           budget: budget, protectAccessedAfter: now.addingTimeInterval(-Self.recentAccessGrace))
@@ -160,13 +162,13 @@ public actor ContentReclaimer: FileIndex {
       } catch {
         Logger.persistence.error("Content reclaim: eviction failed: \(error)")
       }
-    }
 
-    if reason != .overBudget, let store {
-      do {
-        try await repair(store, now: now, report: &report)
-      } catch {
-        Logger.persistence.error("Content reclaim: repair walk failed: \(error)")
+      if reason != .overBudget {
+        do {
+          try await repair(store, now: now, report: &report)
+        } catch {
+          Logger.persistence.error("Content reclaim: repair walk failed: \(error)")
+        }
       }
     }
 
@@ -254,14 +256,8 @@ public actor ContentReclaimer: FileIndex {
 
   // MARK: - FileIndex
 
-  public func freshEntry(for key: ContentStore.Key, modified: Date) async throws -> FileIndexEntry?
-  {
-    guard let row = try await database.freshFile(key, modified: modified) else { return nil }
-    return FileIndexEntry(
-      key: key, documentID: row.documentId, size: row.size,
-      modified: row.modified.map(Date.init(timeIntervalSinceReferenceDate:)),
-      storedAt: Date(timeIntervalSinceReferenceDate: row.storedAt),
-      lastAccessedAt: row.lastAccessedAt.map(Date.init(timeIntervalSinceReferenceDate:)))
+  public func isFresh(_ key: ContentStore.Key, modified: Date) async throws -> Bool {
+    try await database.freshFile(key, modified: modified) != nil
   }
 
   /// Records the row and, when the evictable total has gone over the budget,

@@ -9,31 +9,16 @@ import Testing
 /// its single flight and throttle.
 @Suite("Content reclaimer")
 struct ContentReclaimerTests {
-  private func date(_ t: TimeInterval) -> Date { Date(timeIntervalSince1970: t) }
-
-  private func doc(_ id: UInt) -> Document {
-    Document(id: id, title: "d\(id)", created: date(1000), tags: [], owner: .user(1))
-  }
-
+  private func date(_ t: TimeInterval) -> Date { FileFixtures.date(t) }
+  private func doc(_ id: UInt) -> Document { FileFixtures.doc(id) }
   private func addServer(_ id: UUID, to database: Database) throws {
-    try database.upsertConnection(
-      ConnectionRecord(
-        id: id,
-        url: URL(string: "https://\(id.uuidString).example.com/api/")!,
-        user: .init(id: 1, isSuperUser: true, username: "other")))
+    try FileFixtures.addServer(id, to: database)
   }
-
-  private func makeStore() throws -> ContentStore {
-    let root = FileManager.default.temporaryDirectory
-      .appendingPathComponent("ContentReclaimerTests-\(UUID().uuidString)")
-    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-    return try ContentStore(root: root)
-  }
-
+  private func makeStore() throws -> ContentStore { try FileFixtures.makeStore() }
   private func key(_ server: UUID, _ version: UInt, _ kind: ContentStore.Kind = .archive)
     -> ContentStore.Key
   {
-    ContentStore.Key(serverID: server, versionID: version, kind: kind)
+    FileFixtures.key(server, version, kind)
   }
 
   /// A file on disk, `bytes` long.
@@ -229,9 +214,10 @@ struct ContentReclaimerTests {
     try await reclaimer.recordStore(
       key(server, 1, .thumbnail), documentID: 1, size: 100, modified: nil, checksum: nil,
       storedAt: date(1000))
+    #expect(try await reclaimer.isFresh(key(server, 1), modified: date(1)))
     #expect(
-      try await reclaimer.freshEntry(for: key(server, 1), modified: date(1))?.lastAccessedAt
-        == date(1000))
+      try await database.anyFile(key(server, 1))?.lastAccessedAt
+        == date(1000).timeIntervalSinceReferenceDate)
     #expect(try await database.evictableFileBytes() == 100)
 
     try write(store, key(server, 2), bytes: 100)
@@ -260,7 +246,7 @@ struct ContentReclaimerTests {
     try await reclaimer.recordAccess(key(server, 1), at: date(2030))
     try await reclaimer.recordAccess(key(server, 1), at: date(2100))
 
-    let entry = try #require(try await database.freshFileAnyModified(key(server, 1)))
+    let entry = try #require(try await database.anyFile(key(server, 1)))
     #expect(entry.lastAccessedAt == date(2100).timeIntervalSinceReferenceDate)
 
     try await reclaimer.forget(key(server, 1))
@@ -305,11 +291,5 @@ struct ContentReclaimerTests {
   private final class Clock: @unchecked Sendable {
     var now: Date
     init(_ now: Date) { self.now = now }
-  }
-}
-
-extension Database {
-  fileprivate func freshFileAnyModified(_ key: ContentStore.Key) async throws -> FileRecord? {
-    try await writer.read { db in try FileRecord.fetchAll(db) }.first { $0.key == key }
   }
 }

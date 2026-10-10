@@ -55,21 +55,24 @@ final class DownloadMockURLProtocol: URLProtocol, @unchecked Sendable {
 
 /// A `FileIndex` in a dictionary, recording what the repository tells it.
 actor InMemoryFileIndex: FileIndex {
-  private(set) var entries: [ContentStore.Key: FileIndexEntry] = [:]
+  struct Entry: Equatable {
+    var documentID: UInt
+    var size: Int64
+    var modified: Date?
+  }
+
+  private(set) var entries: [ContentStore.Key: Entry] = [:]
   private(set) var accesses: [ContentStore.Key] = []
 
-  func freshEntry(for key: ContentStore.Key, modified: Date) async throws -> FileIndexEntry? {
-    guard let entry = entries[key], entry.modified == modified else { return nil }
-    return entry
+  func isFresh(_ key: ContentStore.Key, modified: Date) async throws -> Bool {
+    entries[key]?.modified == modified
   }
 
   func recordStore(
     _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
     storedAt: Date
   ) async throws {
-    entries[key] = FileIndexEntry(
-      key: key, documentID: documentID, size: size, modified: modified, storedAt: storedAt,
-      lastAccessedAt: storedAt)
+    entries[key] = Entry(documentID: documentID, size: size, modified: modified)
   }
 
   func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {

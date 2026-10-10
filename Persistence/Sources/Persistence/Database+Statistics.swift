@@ -228,21 +228,11 @@ extension Database {
     }
 
     var files: [UUID: [DatabaseStatistics.FileKind]] = [:]
-    for row in try Row.fetchAll(
-      db,
-      sql: """
-        SELECT server_id, kind, COUNT(*) AS n, COALESCE(SUM(size), 0) AS bytes
-        FROM file GROUP BY server_id, kind ORDER BY kind
-        """)
-    {
-      files[row["server_id"], default: []].append(
-        .init(kind: row["kind"], count: row["n"], bytes: row["bytes"]))
+    for row in try fileUsageByServerAndKind(db) {
+      files[row.serverID, default: []].append(
+        .init(kind: row.kind, count: row.usage.files, bytes: row.usage.bytes))
     }
-    let evictableBytes =
-      try Int64.fetchOne(
-        db,
-        sql: "SELECT COALESCE(SUM(size), 0) FROM file WHERE kind IN (?, ?)",
-        arguments: StatementArguments(FileRecord.evictableKinds)) ?? 0
+    let evictableBytes = try evictableBytes(db)
 
     var syncState: [UUID: ServerSyncStateRecord] = [:]
     for record in try ServerSyncStateRecord.fetchAll(db) {
