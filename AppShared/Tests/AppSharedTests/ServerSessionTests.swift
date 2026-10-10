@@ -129,4 +129,71 @@ struct ServerSessionTests {
     let tags = try await harness.database.elements(TagRecord.self, serverID: harness.serverID)
     #expect(tags.count == 1)
   }
+
+  // MARK: - Cancellation between phases
+
+  /// Records the transient repository's reads, and holds the first document
+  /// fetch until released.
+  @MainActor
+  private final class Traffic {
+    var calls: [String] = []
+    var fetchReached = false
+    var released = false
+
+    func hook(_ name: String) async {
+      calls.append(name)
+      guard name == "fetch", !fetchReached else { return }
+      fetchReached = true
+      while !released, !Task.isCancelled {
+        try? await Task.sleep(for: .milliseconds(2))
+      }
+    }
+  }
+
+  /// A harness whose server fills its entire library, with one document whose
+  /// details are still missing, so a completed library fill is followed by a
+  /// detail fill.
+  private func fillingHarness(_ traffic: Traffic) async throws -> (
+    StoreHarness, StoredConnection
+  ) {
+    let harness = try await StoreHarness.make(documents: [document(1)])
+    try harness.database.upsertConnection(
+      ConnectionRecord(
+        id: harness.serverID,
+        url: URL(string: "https://paperless.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "preview"),
+        offlineBrowsingMode: "entireLibrary"))
+    harness.transient.onRequest = { name in await traffic.hook(name) }
+    let stored = StoredConnection(
+      id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
+      extraHeaders: [], user: StoreHarness.user)
+    return (harness, stored)
+  }
+
+  @Test("A full pass runs the detail fill after the library fill")
+  func passRunsDetailFillAfterLibraryFill() async throws {
+    let traffic = Traffic()
+    let (harness, stored) = try await fillingHarness(traffic)
+    traffic.released = true
+
+    await harness.session.sync(stored: stored, phases: [.fill])
+
+    #expect(traffic.calls.contains("fetch"))
+    #expect(traffic.calls.contains("notes") || traffic.calls.contains("metadata"))
+  }
+
+  @Test("A pass called off during the library fill never starts the detail fill")
+  func cancelledPassStartsNoFurtherPhase() async throws {
+    let traffic = Traffic()
+    let (harness, stored) = try await fillingHarness(traffic)
+
+    let pass = Task { await harness.session.sync(stored: stored, phases: [.fill]) }
+    try await waitUntil({ traffic.fetchReached }, "library fill never reached the network")
+    harness.session.cancelWork()
+    traffic.released = true
+    await pass.value
+
+    #expect(!traffic.calls.contains("notes"))
+    #expect(!traffic.calls.contains("metadata"))
+  }
 }

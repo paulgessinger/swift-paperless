@@ -808,6 +808,9 @@ public final class ServerSession {
       var reconcile = ReconcileResult()
       var filled = true
       for phase in phases.ordered {
+        // A pass called off mid-phase must not start the next one: that phase's
+        // slot would begin a fresh, uncancelled task.
+        try Task.checkCancellation()
         switch phase {
         case .elements:
           try await syncElements()
@@ -821,6 +824,7 @@ public final class ServerSession {
           // unwanted; don't start paging the library behind it.
           guard !reconcile.cancelled else { continue }
           filled = await fillLibrary(force: false)
+          try Task.checkCancellation()
           filled = await fillDocumentDetails() && filled
         }
       }

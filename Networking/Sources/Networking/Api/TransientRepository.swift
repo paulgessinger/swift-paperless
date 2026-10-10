@@ -34,6 +34,10 @@ public class TransientRepository {
   private var nextId: UInt = 1
   private var currentLoggedInUser: User?
 
+  /// Runs before a read is answered, with the name of the read. Tests use it to
+  /// stall or record the "network" traffic of a sync.
+  public var onRequest: (@Sendable (String) async -> Void)?
+
   public init() {
     documents = [:]
     tags = [:]
@@ -160,7 +164,8 @@ extension TransientRepository: Repository {
       }
       return true
     }.sorted { $0.id < $1.id }
-    return TransientDocumentSource(sequence: filteredDocs)
+    let onRequest = onRequest
+    return TransientDocumentSource(sequence: filteredDocs) { await onRequest?("fetch") }
   }
 
   // In-memory fixture: paging the full list is the cheap path here.
@@ -450,7 +455,8 @@ extension TransientRepository: Repository {
   // MARK: - Document Operations
 
   public func metadata(documentId _: UInt) async throws -> Metadata {
-    Metadata(
+    await onRequest?("metadata")
+    return Metadata(
       originalChecksum: "transient-checksum",
       originalSize: 0,
       originalMimeType: "application/pdf",
@@ -467,7 +473,8 @@ extension TransientRepository: Repository {
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {
-    notesByDocument[documentId, default: []]
+    await onRequest?("notes")
+    return notesByDocument[documentId, default: []]
   }
 
   public func createNote(documentId: UInt, note: ProtoDocument.Note) async throws -> [Document
@@ -624,13 +631,16 @@ public actor TransientDocumentSource: PagedSource {
   public typealias DocumentSequence = [Document]
 
   var sequence: DocumentSequence
+  private let onFetch: (@Sendable () async -> Void)?
 
-  public init(sequence: DocumentSequence) {
+  public init(sequence: DocumentSequence, onFetch: (@Sendable () async -> Void)? = nil) {
     self.sequence = sequence
+    self.onFetch = onFetch
   }
 
   public func fetch(limit: UInt) async -> [Document] {
-    Array(sequence.prefix(Int(limit)))
+    await onFetch?()
+    return Array(sequence.prefix(Int(limit)))
   }
 
   public var isExhausted: Bool { true }
