@@ -72,6 +72,33 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v16 creates the sync_run table with its indexes")
+  func v16CreatesSyncRun() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(try db.tableExists("sync_run"))
+      let columns = try db.columns(in: "sync_run")
+      #expect(
+        Set(columns.map(\.name)) == [
+          "id", "run_id", "server_id", "trigger", "step", "started_at", "ended_at", "outcome",
+          "message", "succeeded", "failed",
+        ])
+      // Task rows have no server; a step's outcome is unknown until it ends.
+      let serverID = try #require(columns.first(where: { $0.name == "server_id" }))
+      #expect(!serverID.isNotNull)
+      let endedAt = try #require(columns.first(where: { $0.name == "ended_at" }))
+      #expect(!endedAt.isNotNull)
+      #expect(endedAt.type.uppercased() == "REAL")
+
+      let fkTargets = Set(try db.foreignKeys(on: "sync_run").map(\.destinationTable))
+      #expect(fkTargets == ["server"])
+
+      let indexes = try db.indexes(on: "sync_run").map(\.columns)
+      #expect(indexes.contains(["server_id", "started_at"]))
+      #expect(indexes.contains(["run_id"]))
+    }
+  }
+
   @Test("v10 adds a nullable viewed_at to query_meta")
   func v10AddsQueryViewedAt() throws {
     let database = try Database.inMemory()
