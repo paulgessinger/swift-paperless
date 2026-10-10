@@ -88,6 +88,8 @@ public final class AppStack {
   /// which builds a stack of its own, does not walk the store on every share.
   public func runLaunchMaintenance() {
     Task { @MainActor in
+      // Thumbnails moved into the content store; the old cache is dead weight.
+      await Task.detached(priority: .utility) { LegacyThumbnailCache.remove() }.value
       _ = await suspension.performBackgroundWork {
         await contentReclaimer.run(reason: .launch)
       }

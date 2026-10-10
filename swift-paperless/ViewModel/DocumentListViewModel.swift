@@ -625,10 +625,9 @@ class DocumentListViewModel {
     // Skeletons have no thumbnail to fetch.
     let fresh = entries.compactMap(\.document).filter { prefetchedIds.insert($0.id).inserted }
     guard !fresh.isEmpty else { return }
-    let requests =
-      fresh
-      .compactMap { try? store.repository.thumbnailRequest(document: $0) }
-      .map { ImageRequest(urlRequest: $0, processors: [.resize(width: 130)]) }
+    let requests = fresh.compactMap {
+      try? store.thumbnailImageRequest(for: $0, processors: [.resize(width: 130)])
+    }
     guard !requests.isEmpty else { return }
     updatePrefetcherIfNeeded()
     imagePrefetcher.startPrefetching(with: requests)
