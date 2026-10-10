@@ -58,14 +58,13 @@ extension Database {
   ) async throws {
     try await wrappingAsync("endSyncStep") {
       try await writer.write { db in
-        try db.execute(
-          sql: """
-            UPDATE sync_run
-            SET ended_at = ?, outcome = ?, message = ?, succeeded = ?, failed = ?
-            WHERE id = ?
-            """,
-          arguments: [date.timeIntervalSinceReferenceDate, outcome, message, succeeded, failed, id]
-        )
+        _ = try SyncRunRecord.filter(Column("id") == id).updateAll(
+          db,
+          Column("ended_at").set(to: date.timeIntervalSinceReferenceDate),
+          Column("outcome").set(to: outcome),
+          Column("message").set(to: message),
+          Column("succeeded").set(to: succeeded),
+          Column("failed").set(to: failed))
       }
     }
   }
@@ -79,13 +78,15 @@ extension Database {
   {
     try await wrappingAsync("closeInterruptedSyncSteps") {
       try await writer.write { db in
-        try db.execute(
-          sql: """
-            UPDATE sync_run SET ended_at = ?, outcome = 'interrupted'
-            WHERE ended_at IS NULL AND started_at < ?
-            """,
-          arguments: [date.timeIntervalSinceReferenceDate, cutoff.timeIntervalSinceReferenceDate])
-        return db.changesCount
+        try SyncRunRecord
+          .filter(
+            Column("ended_at") == nil
+              && Column("started_at") < cutoff.timeIntervalSinceReferenceDate
+          )
+          .updateAll(
+            db,
+            Column("ended_at").set(to: date.timeIntervalSinceReferenceDate),
+            Column("outcome").set(to: "interrupted"))
       }
     }
   }
@@ -106,7 +107,7 @@ extension Database {
   public func clearSyncRuns() async throws {
     try await wrappingAsync("clearSyncRuns") {
       try await writer.write { db in
-        try db.execute(sql: "DELETE FROM sync_run")
+        _ = try SyncRunRecord.deleteAll(db)
       }
     }
   }
@@ -114,18 +115,14 @@ extension Database {
   /// Keep the newest rows for `serverID` (or the task rows when nil).
   private static func capSyncRuns(_ db: GRDB.Database, serverID: UUID?) throws {
     let cap = serverID == nil ? syncRunCapForTasks : syncRunCapPerServer
-    // `IS` matches NULL as well as a value.
-    try db.execute(
-      sql: """
-        DELETE FROM sync_run
-        WHERE id IN (
-          SELECT id FROM sync_run
-          WHERE server_id IS ?
-          ORDER BY started_at DESC, id DESC
-          LIMIT -1 OFFSET ?
-        )
-        """,
-      arguments: [serverID, cap])
+    // `== nil` renders as IS NULL, so one filter covers both kinds of row.
+    let ofServer = SyncRunRecord.filter(Column("server_id") == serverID)
+    let kept =
+      ofServer
+      .select(Column("id"))
+      .order(Column("started_at").desc, Column("id").desc)
+      .limit(cap)
+    _ = try ofServer.filter(!kept.contains(Column("id"))).deleteAll(db)
   }
 }
 
