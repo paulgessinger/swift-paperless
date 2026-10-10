@@ -247,7 +247,7 @@ struct DatabaseSchemaTests {
           """, arguments: [server])
     }
     migrator.eraseDatabaseOnSchemaChange = false
-    try migrator.migrate(queue)
+    try migrator.migrate(queue, upTo: "v14_persist_sync_freshness")
 
     try queue.read { db in
       let columns = try db.columns(in: "server_sync_state")
@@ -268,6 +268,48 @@ struct DatabaseSchemaTests {
       #expect(row["library_coverage_at"] as Double? == 200.5)
       #expect(row["last_reconcile_at"] as Double? == nil)
       #expect(row["last_successful_sync_at"] as Double? == nil)
+    }
+  }
+
+  @Test(
+    "v15 renames last_reconcile_at to last_refreshed_at and drops last_successful_sync_at, keeping the values"
+  )
+  func v15SingleFreshnessStamp() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v14_persist_sync_freshness")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: """
+          INSERT INTO server_sync_state
+            (server_id, delta_watermark, library_coverage_at, last_reconcile_at, last_successful_sync_at)
+          VALUES (?, 100.5, 200.5, 300.5, 400.5)
+          """, arguments: [server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let columns = try db.columns(in: "server_sync_state").map(\.name)
+      #expect(!columns.contains("last_successful_sync_at"))
+      #expect(!columns.contains("last_reconcile_at"))
+
+      let row = try #require(
+        try Row.fetchOne(
+          db,
+          sql: """
+            SELECT delta_watermark, library_coverage_at, last_refreshed_at
+            FROM server_sync_state
+            """))
+      #expect(row["delta_watermark"] as Double? == 100.5)
+      #expect(row["library_coverage_at"] as Double? == 200.5)
+      #expect(row["last_refreshed_at"] as Double? == 300.5)
     }
   }
 

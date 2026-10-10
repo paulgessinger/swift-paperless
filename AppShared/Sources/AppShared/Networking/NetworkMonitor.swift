@@ -40,6 +40,10 @@ public final class NetworkMonitor {
   /// facts are only meaningful together, and every consumer wants both.
   public private(set) var cost: LinkCost = .unrestricted
 
+  /// Whether a path has been reported. Until then `isOnline` and `cost` are
+  /// defaults, not readings.
+  @ObservationIgnored private var hasReportedPath = false
+
   @ObservationIgnored private let monitor = NWPathMonitor()
   @ObservationIgnored private let queue = DispatchQueue(label: "NetworkMonitor.queue")
 
@@ -60,6 +64,7 @@ public final class NetworkMonitor {
           self.interfaceOnline = online
         }
         if self.cost != cost { self.cost = cost }
+        self.hasReportedPath = true
       }
     }
     monitor.start(queue: queue)
@@ -67,5 +72,19 @@ public final class NetworkMonitor {
 
   deinit {
     monitor.cancel()
+  }
+
+  /// The current path's cost, or `nil` if there is no usable path.
+  ///
+  /// For a process iOS just launched, which has had no path callback yet: waits
+  /// for the first one. After `timeout` it reads `.unknown` (expensive and
+  /// constrained), so a fill is skipped rather than risked.
+  public func currentCost(timeout: Duration = .seconds(2)) async -> LinkCost? {
+    let deadline = ContinuousClock.now + timeout
+    while !hasReportedPath {
+      guard ContinuousClock.now < deadline else { return .unknown }
+      try? await Task.sleep(for: .milliseconds(20))
+    }
+    return isOnline ? cost : nil
   }
 }

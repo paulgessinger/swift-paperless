@@ -75,13 +75,20 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     suspension.attach(
       isInBackground: application.applicationState == .background,
       requestTime: BackgroundTime.request)
+    BackgroundTaskManager.registerTasks()
+    // Covers a first launch and Background App Refresh being turned back on;
+    // a pending request is left alone.
+    BackgroundTaskManager.ensureScheduled()
 
     // UIKit posts these on the main thread, and `queue: nil` delivers there.
     let center = NotificationCenter.default
     center.addObserver(
       forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil
     ) { _ in
-      MainActor.assumeIsolated { suspension.didEnterBackground() }
+      MainActor.assumeIsolated {
+        suspension.didEnterBackground()
+        BackgroundTaskManager.ensureScheduled()
+      }
     }
     center.addObserver(
       forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil

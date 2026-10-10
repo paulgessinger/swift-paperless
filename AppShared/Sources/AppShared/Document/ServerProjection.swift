@@ -63,9 +63,9 @@ public final class ServerProjection {
   public private(set) var libraryCoverageAt: Date?
 
   /// When the reconcile last refreshed something for this server (`nil` if
-  /// never): an observed mirror of `server_sync_state.last_reconcile_at`, so it
+  /// never): an observed mirror of `server_sync_state.last_refreshed_at`, so it
   /// tracks passes the scheduler runs, relaunches, and a cache wipe.
-  public private(set) var lastReconcileAt: Date?
+  public private(set) var lastRefreshedAt: Date?
 
   /// Views (saved or default) whose proactive offline fill the server most
   /// recently rejected, from `query_sync_error`, so the Offline & Sync screen
@@ -126,7 +126,7 @@ public final class ServerProjection {
       observeValue(
         database.observeLibraryCoverageAt(serverID: serverID), into: \.libraryCoverageAt),
       observeValue(
-        database.observeLastReconcileAt(serverID: serverID), into: \.lastReconcileAt),
+        database.observeLastRefreshedAt(serverID: serverID), into: \.lastRefreshedAt),
       observeValue(database.observeQuerySyncErrors(serverID: serverID), into: \.syncErrors),
       observeValue(database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount),
     ])

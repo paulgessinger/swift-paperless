@@ -156,7 +156,7 @@ public final class ServerSession {
   ///
   /// Stamped on every attempt, deliberately: a server that fails every sweep
   /// must not refetch its whole live id set on each of the seventeen on-appear
-  /// triggers. Distinct from `server_sync_state.last_reconcile_at` for exactly
+  /// triggers. Distinct from `server_sync_state.last_refreshed_at` for exactly
   /// that reason.
   @ObservationIgnored private var reconcileGate = ReconcileGate(interval: 300)
 
@@ -429,6 +429,13 @@ public final class ServerSession {
     detailFillSlot.retire()
   }
 
+  /// Call off every step in flight, keeping the repository. Used when iOS's
+  /// background time runs out; the next trigger starts afresh.
+  public func cancelWork() {
+    syncSlot.retire()
+    retirePhases()
+  }
+
   /// Drop the retained stack. Used when the server row goes away — the row
   /// delete FK-cascades the cache, so there is nothing else to clean up.
   public func invalidate() {
@@ -489,19 +496,12 @@ public final class ServerSession {
   }
 
   /// What one reconcile pass achieved.
-  ///
-  /// Two stamps ask two different questions of the same pass — the scheduler
-  /// wants "fully clean" before it advances a throttle that could hide a broken
-  /// server for fifteen minutes; the Offline & Sync screen wants "did anything
-  /// refresh", because one flaky sweep shouldn't erase the two that worked. One
-  /// pass, both answers.
   public struct ReconcileResult: Sendable {
     public var succeeded = 0
     public var failed = false
     public var cancelled = false
 
-    /// Neither failed nor called off. Only a clean pass advances the scheduler's
-    /// freshness stamp.
+    /// Neither failed nor called off.
     public var isClean: Bool { !failed && !cancelled }
   }
 
@@ -608,12 +608,13 @@ public final class ServerSession {
       }
     }
 
-    // A pass in which *something* refreshed counts. A cancelled pass stamps
-    // nothing — it didn't finish, it was called off. Persisted, so the Offline
-    // & Sync screen's "Last refreshed" survives a relaunch.
+    // A pass in which *something* refreshed counts, so one flaky sweep doesn't
+    // erase the ones that worked. A cancelled pass stamps nothing — it didn't
+    // finish, it was called off. The stamp backs "Last refreshed" and the
+    // scheduler's throttle and stalest-first order.
     if result.succeeded > 0, !result.cancelled {
-      await persistStamp("last reconcile") {
-        try await backend.database.setLastReconcileAt(Date(), serverID: backend.serverID)
+      await persistStamp("last refreshed") {
+        try await backend.database.setLastRefreshedAt(Date(), serverID: backend.serverID)
       }
     }
     return result
@@ -807,6 +808,9 @@ public final class ServerSession {
       var reconcile = ReconcileResult()
       var filled = true
       for phase in phases.ordered {
+        // A pass called off mid-phase must not start the next one: that phase's
+        // slot would begin a fresh, uncancelled task.
+        try Task.checkCancellation()
         switch phase {
         case .elements:
           try await syncElements()
@@ -820,27 +824,15 @@ public final class ServerSession {
           // unwanted; don't start paging the library behind it.
           guard !reconcile.cancelled else { continue }
           filled = await fillLibrary(force: false)
+          try Task.checkCancellation()
           filled = await fillDocumentDetails() && filled
         }
       }
 
-      // Advance the stamp only on a *fully* successful pass — a pass that failed
-      // or was called off partway retries on the next trigger.
       guard reconcile.isClean, filled else {
         Logger.sync.info(
-          "Server \(stored.logLabel, privacy: .public) partially synced; stamp not advanced")
+          "Server \(stored.logLabel, privacy: .public) partially synced")
         return
-      }
-      // Same question as `sweep` asks, for the phases that don't run through
-      // it: a cancelled pass must not advance the stamp that decides when this
-      // server is swept again. The `catch` below turns it back into a quiet
-      // return.
-      try Task.checkCancellation()
-      // The scheduler's throttle input, persisted so it holds across launches.
-      if let backend {
-        await persistStamp("last successful sync") {
-          try await backend.database.setLastSuccessfulSync(Date(), serverID: backend.serverID)
-        }
       }
       Logger.sync.info("Server \(stored.logLabel, privacy: .public) synced")
     } catch {

@@ -118,9 +118,9 @@ public final class DocumentStore: Sendable {
   }
 
   /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**,
-  /// observed from `server_sync_state.last_reconcile_at`: it repaints when a
+  /// observed from `server_sync_state.last_refreshed_at`: it repaints when a
   /// sweep lands — including one the *scheduler* ran — and survives a relaunch.
-  public var lastReconcileAt: Date? { projection?.lastReconcileAt }
+  public var lastRefreshedAt: Date? { projection?.lastRefreshedAt }
 
   /// When the active server's library was last fully filled (`nil` if never),
   /// observed from `server_sync_state.library_coverage_at` so the Offline & Sync

@@ -54,41 +54,30 @@ extension Database {
 
   /// When the reconcile last refreshed something for this server, or `nil` if
   /// never (or since the cache was cleared).
-  public func setLastReconcileAt(_ date: Date?, serverID: UUID) async throws {
-    try await wrappingAsync("setLastReconcileAt") {
+  public func setLastRefreshedAt(_ date: Date?, serverID: UUID) async throws {
+    try await wrappingAsync("setLastRefreshedAt") {
       try await writer.write {
         try Self.updateSyncState($0, serverID: serverID) {
-          $0.lastReconcileAt = date?.timeIntervalSinceReferenceDate
+          $0.lastRefreshedAt = date?.timeIntervalSinceReferenceDate
         }
       }
     }
   }
 
-  /// Observe this server's `last_reconcile_at`, like
+  /// Observe this server's `last_refreshed_at`, like
   /// ``observeLibraryCoverageAt(serverID:)``.
-  public func observeLastReconcileAt(serverID: UUID) -> AsyncThrowingStream<Date?, Error> {
-    observeDate(\.lastReconcileAt, serverID: serverID)
+  public func observeLastRefreshedAt(serverID: UUID) -> AsyncThrowingStream<Date?, Error> {
+    observeDate(\.lastRefreshedAt, serverID: serverID)
   }
 
-  /// When a scheduled sync pass last completed cleanly for this server.
-  public func setLastSuccessfulSync(_ date: Date?, serverID: UUID) async throws {
-    try await wrappingAsync("setLastSuccessfulSync") {
-      try await writer.write {
-        try Self.updateSyncState($0, serverID: serverID) {
-          $0.lastSuccessfulSyncAt = date?.timeIntervalSinceReferenceDate
-        }
-      }
-    }
-  }
-
-  /// Every server's last clean sync pass, for the scheduler. Servers that have
-  /// never completed one are absent.
-  public func lastSuccessfulSyncs() async throws -> [UUID: Date] {
-    try await wrappingAsync("lastSuccessfulSyncs") {
+  /// Every server's `last_refreshed_at`, for the scheduler. Servers that have
+  /// never refreshed are absent.
+  public func lastRefreshes() async throws -> [UUID: Date] {
+    try await wrappingAsync("lastRefreshes") {
       try await writer.read { db in
         var result: [UUID: Date] = [:]
         for record in try ServerSyncStateRecord.fetchAll(db) {
-          if let stamp = record.lastSuccessfulSyncAt {
+          if let stamp = record.lastRefreshedAt {
             result[record.serverId] = Date(timeIntervalSinceReferenceDate: stamp)
           }
         }

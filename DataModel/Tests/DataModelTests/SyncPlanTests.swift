@@ -36,7 +36,7 @@ struct SyncPlanTests {
     #expect(actions.map(\.serverID) == [Self.b])
   }
 
-  @Test("Inactive servers are ordered deterministically by id")
+  @Test("Servers that were never swept are ordered by id")
   func stableOrdering() {
     let actions = SyncPlan.inactiveActions(
       connections: [snapshot(Self.c), snapshot(Self.a), snapshot(Self.b)],
@@ -125,6 +125,48 @@ struct SyncPlanTests {
     #expect(actions.count == 1)
     #expect(actions.first?.needsAuthOnly == false)
     #expect(actions.first?.phases.contains(.fill) == false)
+  }
+
+  // MARK: - Scope and order
+
+  @Test("The all scope includes the active server")
+  func allIncludesActive() {
+    let actions = SyncPlan.actions(
+      connections: [snapshot(Self.a), snapshot(Self.b)],
+      scope: .all, lastSweep: [:], now: now, throttle: throttle,
+      cost: .unrestricted, allowsFill: true)
+    #expect(actions.map(\.serverID) == [Self.a, Self.b])
+  }
+
+  @Test("Servers are swept stalest first, never-swept ones before all others")
+  func stalestFirst() {
+    let actions = SyncPlan.actions(
+      connections: [snapshot(Self.a), snapshot(Self.b), snapshot(Self.c)],
+      scope: .all,
+      lastSweep: [
+        Self.a: now.addingTimeInterval(-2 * throttle),
+        Self.b: now.addingTimeInterval(-3 * throttle),
+      ],
+      now: now, throttle: throttle, cost: .unrestricted, allowsFill: true)
+    #expect(actions.map(\.serverID) == [Self.c, Self.b, Self.a])
+  }
+
+  @Test("The throttle applies to the active server in the all scope")
+  func allScopeThrottles() {
+    let actions = SyncPlan.actions(
+      connections: [snapshot(Self.a), snapshot(Self.b)],
+      scope: .all, lastSweep: [Self.a: now], now: now, throttle: throttle,
+      cost: .unrestricted, allowsFill: true)
+    #expect(actions.map(\.serverID) == [Self.b])
+  }
+
+  @Test("Without allowsFill every server runs the cheap phases, even on an unmetered link")
+  func noFillWhenNotAllowed() {
+    let actions = SyncPlan.actions(
+      connections: [snapshot(Self.a, isEntireLibrary: true), snapshot(Self.b)],
+      scope: .all, lastSweep: [:], now: now, throttle: throttle,
+      cost: .unrestricted, allowsFill: false)
+    #expect(actions.map(\.phases) == [.cheap, .cheap])
   }
 
   @Test("newlyAdded returns only genuinely new, non-active ids")

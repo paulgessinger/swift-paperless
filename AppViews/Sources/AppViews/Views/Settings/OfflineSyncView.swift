@@ -185,7 +185,7 @@ public struct OfflineSyncView: View {
             String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
         }
         dateStatusRow(
-          String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastReconcileAt)
+          String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastRefreshedAt)
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
           value: store.cachedDocumentCount.formatted())

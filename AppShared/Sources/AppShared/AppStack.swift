@@ -41,8 +41,10 @@ public final class AppStack {
     self.suspension = suspension
     let connectionManager = ConnectionManager(database: database)
     self.connectionManager = connectionManager
-    sessionRegistry = ServerSessionRegistry(
+    let sessionRegistry = ServerSessionRegistry(
       database: database, manager: connectionManager, suspension: suspension)
+    self.sessionRegistry = sessionRegistry
+    suspension.onExpire = { [weak sessionRegistry] in sessionRegistry?.cancelAllWork() }
   }
 }
 
