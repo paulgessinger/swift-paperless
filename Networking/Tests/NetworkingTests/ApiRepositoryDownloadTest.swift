@@ -53,6 +53,42 @@ final class DownloadMockURLProtocol: URLProtocol, @unchecked Sendable {
   override func stopLoading() {}
 }
 
+/// A `FileIndex` in a dictionary, recording what the repository tells it.
+actor InMemoryFileIndex: FileIndex {
+  private(set) var entries: [ContentStore.Key: FileIndexEntry] = [:]
+  private(set) var accesses: [ContentStore.Key] = []
+
+  func freshEntry(for key: ContentStore.Key, modified: Date) async throws -> FileIndexEntry? {
+    guard let entry = entries[key], entry.modified == modified else { return nil }
+    return entry
+  }
+
+  func recordStore(
+    _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
+    storedAt: Date
+  ) async throws {
+    entries[key] = FileIndexEntry(
+      key: key, documentID: documentID, size: size, modified: modified, storedAt: storedAt,
+      lastAccessedAt: storedAt)
+  }
+
+  func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {
+    accesses.append(key)
+  }
+
+  func forget(_ key: ContentStore.Key) async throws {
+    entries[key] = nil
+  }
+
+  /// Wait for the fire-and-forget access record to land.
+  func accessCount() async -> Int {
+    for _ in 0..<50 where accesses.isEmpty {
+      try? await Task.sleep(for: .milliseconds(10))
+    }
+    return accesses.count
+  }
+}
+
 @MainActor
 @Suite(.serialized)
 struct ApiRepositoryDownloadTest {
@@ -60,13 +96,16 @@ struct ApiRepositoryDownloadTest {
   nonisolated static let serverID = UUID(
     uuidString: "11111111-2222-3333-4444-555555555555")!
 
-  static func makeRepo(contentStore: ContentStore) -> ApiRepository {
+  static func makeRepo(contentStore: ContentStore, index: (any FileIndex)? = InMemoryFileIndex())
+    -> ApiRepository
+  {
     let session = DownloadMockURLProtocol.makeSession()
     return ApiRepository(
       connection: Connection(
         url: baseURL, token: "t", identityName: nil, serverID: serverID),
       mode: .release,
       contentStore: contentStore,
+      fileIndex: index,
       urlSession: session)
   }
 
@@ -126,17 +165,30 @@ struct ApiRepositoryDownloadTest {
   }
 
   @Test
-  func firstCallWritesToContentStore() async throws {
+  func firstCallWritesToContentStoreAndRecordsTheFile() async throws {
     let (store, _) = try Self.makeStore()
-    let repo = Self.makeRepo(contentStore: store)
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
     let payload = Data("HELLO".utf8)
     DownloadMockURLProtocol.responder = { req in (Self.okResponse(for: req), payload) }
     defer { DownloadMockURLProtocol.reset() }
 
-    let url = try await repo.download(document: Self.makeDocument())
+    let document = Self.makeDocument(
+      versions: [
+        DocumentVersion(
+          id: 7, added: Date(timeIntervalSince1970: 1000), checksum: "abc", isRoot: true)
+      ])
+    let url = try await repo.download(document: document)
 
-    #expect(url == store.url(for: Self.canonicalKey(for: Self.makeDocument())))
+    let key = Self.canonicalKey(for: document)
+    #expect(url == store.url(for: key))
     #expect(try Data(contentsOf: url) == payload)
+    #expect(store.readLegacySidecar(for: key) == nil)
+    let entry = try #require(await index.entries[key])
+    #expect(entry.documentID == 7)
+    #expect(entry.size == store.size(of: key))
+    #expect(entry.size >= Int64(payload.count))
+    #expect(entry.modified == document.modified)
   }
 
   @Test
@@ -157,9 +209,64 @@ struct ApiRepositoryDownloadTest {
   }
 
   @Test
+  func cacheHitRecordsAnAccess() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    DownloadMockURLProtocol.responder = { req in (Self.okResponse(for: req), Data("X".utf8)) }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(document: Self.makeDocument())
+    #expect(await index.accesses.isEmpty)
+    _ = try await repo.download(document: Self.makeDocument())
+
+    #expect(await index.accessCount() == 1)
+  }
+
+  @Test
+  func indexedFileThatWentMissingIsAMiss() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    let counter = Counter()
+    DownloadMockURLProtocol.responder = { req in
+      counter.bump()
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let url = try await repo.download(document: Self.makeDocument())
+    try FileManager.default.removeItem(at: url)
+    let again = try await repo.download(document: Self.makeDocument())
+
+    #expect(counter.value == 2)
+    #expect(again == url)
+    #expect(FileManager.default.fileExists(atPath: url.path))
+  }
+
+  @Test
+  func withoutAnIndexNothingIsCached() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store, index: nil)
+    let counter = Counter()
+    DownloadMockURLProtocol.responder = { req in
+      counter.bump()
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(document: Self.makeDocument())
+    _ = try await repo.download(document: Self.makeDocument())
+
+    #expect(counter.value == 2)
+    #expect(!store.exists(Self.canonicalKey(for: Self.makeDocument())))
+  }
+
+  @Test
   func staleCacheRefetchesWhenModifiedChanges() async throws {
     let (store, _) = try Self.makeStore()
-    let repo = Self.makeRepo(contentStore: store)
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
     let counter = Counter()
     DownloadMockURLProtocol.responder = { req in
       counter.bump()
@@ -175,6 +282,8 @@ struct ApiRepositoryDownloadTest {
       document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
 
     #expect(counter.value == 2)
+    let entry = try #require(await index.entries[Self.canonicalKey(for: Self.makeDocument())])
+    #expect(entry.modified == Date(timeIntervalSince1970: 2))
   }
 
   @Test
@@ -237,7 +346,8 @@ struct ApiRepositoryDownloadTest {
     // calls must each hit the network and the result must not appear in the
     // cache for a subsequent lookup.
     let (store, _) = try Self.makeStore()
-    let repo = Self.makeRepo(contentStore: store)
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
     let counter = Counter()
     DownloadMockURLProtocol.responder = { req in
       counter.bump()
@@ -249,8 +359,8 @@ struct ApiRepositoryDownloadTest {
     _ = try await repo.download(document: doc)
     _ = try await repo.download(document: doc)
     #expect(counter.value == 2)
-    #expect(
-      store.read(Self.canonicalKey(for: doc), freshAgainst: nil) == nil)
+    #expect(!store.exists(Self.canonicalKey(for: doc)))
+    #expect(await index.entries.isEmpty)
   }
 
   @Test
@@ -307,8 +417,8 @@ struct ApiRepositoryDownloadTest {
 
   // Coalescing is keyed on the staleness stamp too. Two callers holding the
   // same version but different `modified` must not share a task — the winner
-  // would otherwise write its own stamp into the sidecar for both, and a blob
-  // recorded as fresher than it is would then survive `freshAgainst:`.
+  // would otherwise record its own stamp in the index for both, and a blob
+  // recorded as fresher than it is would then pass the freshness lookup.
   @Test
   func concurrentDownloadsWithDifferentModifiedNotDeduped() async throws {
     let (store, _) = try Self.makeStore()
