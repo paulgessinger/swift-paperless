@@ -24,6 +24,9 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
   /// Whether this server's *proactive* sweeps may run on a metered link.
   public var syncOverCellular: Bool = false
+  /// The server's versions as last probed, which seed its repository so
+  /// activation needs no network. `nil` until a probe has succeeded.
+  public var knownVersions: BackendVersions? = nil
 
   public init(
     id: UUID = .init(),
@@ -33,7 +36,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     identity: String? = nil,
     friendlyName: String? = nil,
     offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed,
-    syncOverCellular: Bool = false
+    syncOverCellular: Bool = false,
+    knownVersions: BackendVersions? = nil
   ) {
     self.id = id
     self.url = url
@@ -43,6 +47,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.friendlyName = friendlyName
     self.offlineBrowsingMode = offlineBrowsingMode
     self.syncOverCellular = syncOverCellular
+    self.knownVersions = knownVersions
   }
 
   public var token: String? {
