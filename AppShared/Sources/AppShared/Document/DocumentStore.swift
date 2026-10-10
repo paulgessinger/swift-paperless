@@ -970,10 +970,9 @@ extension DocumentStore {
     if let backend = session?.backend {
       try await backend.database.clearCache()
     }
-    // Downloaded originals/archives/thumbnails (app-group blob store). Rooted at
-    // the app group, so a fresh handle addresses the same files the repository
-    // wrote — no need to reach into the active repository.
-    if let contentStore = try? ContentStore() {
+    // Downloaded originals/archives, after their rows: the store the
+    // repositories write into is the reclaimer's.
+    if let contentStore = registry?.contentReclaimer?.store {
       try? contentStore.purge()
     }
     // Nuke memory + disk image cache.
@@ -1013,15 +1012,13 @@ extension DocumentStore {
     try await session?.backend?.database.clearSyncRuns()
   }
 
-  /// Debug / maintenance: drop downloaded document files that no cached document
-  /// version references any more, keeping everything still reachable.
-  ///
-  /// The same sweep the reconcile runs, minus its hourly throttle — the point of
-  /// the debug affordance is to see the effect now, on demand.
+  /// Debug / maintenance: run the content reclaim now — unreferenced files,
+  /// the budget and the repair walk — without the reconcile's hourly throttle.
+  /// `nil` without a registry (a fixture), which has no reclaimer.
   @discardableResult
-  public func reclaimDocumentContent() async throws -> ContentStore.ReclaimReport {
-    guard let backend = session?.backend else { return ContentStore.ReclaimReport() }
-    return try await backend.reclaimDocumentContent()
+  public func reclaimDocumentContent() async -> ContentReclaimer.Report? {
+    guard let reclaimer = registry?.contentReclaimer else { return nil }
+    return await reclaimer.run(reason: .manual)
   }
 }
 

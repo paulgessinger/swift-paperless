@@ -34,16 +34,19 @@ public class ApiRepository {
   private let urlSessionDelegate: PaperlessURLSessionDelegate
   private let thumbnailSessionDelegate: PaperlessURLSessionDelegate
   private let contentStore: ContentStore?
+  /// The index the store's files are recorded in. Without it (or without the
+  /// store) downloads go to a temporary file and nothing is cached.
+  private let fileIndex: (any FileIndex)?
 
   // Per-key in-flight task map: two concurrent downloads of the same blob
   // share one network request rather than racing into the ContentStore.
   //
   // Keyed by the staleness stamp as well as the content key. Coalescing on the
   // content key alone would merge callers holding the same version but
-  // different `modified` timestamps, and whichever won the race would write its
-  // own stamp into the sidecar — recording the blob as fresher than it is if
-  // the loser held the newer stamp, which `read(_:freshAgainst:)` would then
-  // happily serve.
+  // different `modified` timestamps, and whichever won the race would record
+  // its own stamp in the index for both — recording the blob as fresher than
+  // it is if the loser held the newer stamp, which the freshness lookup would
+  // then happily serve.
   private struct DownloadKey: Hashable {
     let content: ContentStore.Key
     let modified: Date
@@ -78,21 +81,18 @@ public class ApiRepository {
     min(Self.maximumApiVersion, apiVersion ?? Self.minimumApiVersion)
   }
 
-  public convenience init(connection: Connection, mode: Mode) async {
-    let store = try? ContentStore()
-    await self.init(connection: connection, mode: mode, contentStore: store)
-  }
-
   // Test seam: skips the backend-version discovery network call and accepts
   // a caller-provided URLSession (typically backed by `MockURLProtocol`).
   init(
     connection: Connection, mode: Mode, contentStore: ContentStore?,
+    fileIndex: (any FileIndex)? = nil,
     urlSession: URLSession, apiVersion: UInt? = nil,
     backendVersion: Version? = nil
   ) {
     self.connection = connection
     self.mode = mode
     self.contentStore = contentStore
+    self.fileIndex = fileIndex
     let delegate = PaperlessURLSessionDelegate(identityName: connection.identity)
     urlSessionDelegate = delegate
     thumbnailSessionDelegate = Self.makeThumbnailSessionDelegate(from: delegate)
@@ -101,10 +101,17 @@ public class ApiRepository {
     self.backendVersion = backendVersion
   }
 
-  init(connection: Connection, mode: Mode, contentStore: ContentStore?) async {
+  /// - Parameters:
+  ///   - contentStore: where downloaded files are kept, shared by every server.
+  ///   - fileIndex: the index those files are recorded in. Both or neither:
+  ///     a store without an index would hold files nothing can account for.
+  public init(
+    connection: Connection, mode: Mode, contentStore: ContentStore?, fileIndex: (any FileIndex)?
+  ) async {
     self.connection = connection
     self.mode = mode
     self.contentStore = contentStore
+    self.fileIndex = fileIndex
     let sanitizedUrl = Self.sanitizeUrlForLog(connection.url)
     let tokenStr = sanitize(token: connection.token)
     Logger.networking.notice(
@@ -693,11 +700,11 @@ extension ApiRepository: Repository {
     let queryVersion = document.versionQueryID
 
     // Without a staleness signal (modified timestamp) we can't validate a
-    // cached blob — and writing one back without `modified` would cache it
+    // cached blob — and recording one without `modified` would cache it
     // indefinitely with no way to detect server-side changes. Bypass the
-    // ContentStore entirely in that case. Also fall back when the app-group
-    // container isn't available (host tests, mis-configured entitlement).
-    guard let contentStore, let modified = document.modified else {
+    // ContentStore entirely in that case. Also fall back when there is no
+    // store or no index to record in (host tests, mis-configured entitlement).
+    guard let contentStore, let fileIndex, let modified = document.modified else {
       return try await fetchToTemp(
         documentID: document.id, original: original, version: queryVersion,
         progress: progress)
@@ -709,16 +716,29 @@ extension ApiRepository: Repository {
       kind: original ? .original : .archive)
     let inFlightKey = DownloadKey(content: key, modified: modified)
 
-    if let cached = contentStore.read(key, freshAgainst: modified) {
+    // The index says whether the file is fresh; the disk says whether it is
+    // still there. A row whose file went missing is a miss, and the download
+    // below replaces the row.
+    if try await Self.isFresh(key, modified: modified, in: fileIndex), contentStore.exists(key) {
       Logger.networking.info(
         "ContentStore hit for documentID \(document.id) version \(version) (original: \(original))"
       )
+      // Not awaited: a hit must not wait on the writer.
+      Task { [fileIndex] in
+        do {
+          try await fileIndex.recordAccess(key, at: Date())
+        } catch {
+          Logger.networking.debug("Recording a file access failed: \(error)")
+        }
+      }
       progress?(1.0)
-      return cached
+      return contentStore.url(for: key)
     }
 
+    // The version's checksum is the original's; the archive has none here.
+    let checksum = original ? document.versions.first { $0.id == version }?.checksum : nil
     return try await inFlightDownloads.run(key: inFlightKey, progress: progress) {
-      @MainActor [contentStore] report in
+      @MainActor [contentStore, fileIndex] report in
       let request = try self.request(
         .download(documentId: document.id, original: original, version: queryVersion))
       // Coalesced callers share this one task, so its bytes are recorded once.
@@ -732,8 +752,33 @@ extension ApiRepository: Repository {
 
       try self.validateDownloadResponse(response, request: request)
 
-      return try contentStore.store(
-        key, movingFrom: tempURL, modified: modified)
+      // File first, row second: a file without a row is removed by the repair
+      // walk once it is old enough, a row without a file would be served.
+      let url = try contentStore.store(key, movingFrom: tempURL)
+      do {
+        try await fileIndex.recordStore(
+          key, documentID: document.id, size: contentStore.size(of: key) ?? 0,
+          modified: modified, checksum: checksum, storedAt: Date())
+      } catch {
+        // The download succeeded; the file just isn't accounted for until the
+        // next download of it, and the walk removes it meanwhile if it ages.
+        Logger.networking.error("Recording a downloaded file in the index failed: \(error)")
+      }
+      return url
+    }
+  }
+
+  /// Whether the index has a fresh entry for `key`. A failed lookup is a miss.
+  private nonisolated static func isFresh(
+    _ key: ContentStore.Key, modified: Date, in fileIndex: any FileIndex
+  ) async throws -> Bool {
+    do {
+      return try await fileIndex.isFresh(key, modified: modified)
+    } catch is CancellationError {
+      throw CancellationError()
+    } catch {
+      Logger.networking.debug("File index lookup failed, treating as a miss: \(error)")
+      return false
     }
   }
 

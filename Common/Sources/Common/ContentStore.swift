@@ -104,27 +104,11 @@ public struct ContentStore: Sendable {
     FileManager.default.fileExists(atPath: url(for: key).path)
   }
 
-  /// Returns the canonical URL if the blob exists, the sidecar is present,
-  /// and the sidecar's `modified` equals the passed value.
-  ///
-  /// A nil `modified` (either side) is treated as "no staleness signal" and
-  /// returns nil — the cache will not serve a hit without a positive
-  /// validity check. Callers that genuinely have no timestamp should bypass
-  /// the cache entirely rather than calling `read` with nil.
-  public func read(_ key: Key, freshAgainst modified: Date?) -> URL? {
-    guard let modified else { return nil }
-    let canonical = url(for: key)
-    guard FileManager.default.fileExists(atPath: canonical.path),
-      let sidecar = readSidecar(for: key),
-      sidecar.modified == modified
-    else { return nil }
-    return canonical
-  }
-
+  /// Move the downloaded file at `tempURL` into place, replacing what is
+  /// there. Freshness is the file index's business, not the store's: the
+  /// caller records the row once the file is in place.
   @discardableResult
-  public func store(
-    _ key: Key, movingFrom tempURL: URL, modified: Date?
-  ) throws -> URL {
+  public func store(_ key: Key, movingFrom tempURL: URL) throws -> URL {
     let directory = directory(for: key)
     try createDirectory(directory)
     let canonical = url(for: key)
@@ -135,14 +119,58 @@ public struct ContentStore: Sendable {
       try FileManager.default.moveItem(at: tempURL, to: canonical)
     }
     applyFileProtection(canonical)
-
-    try writeSidecar(for: key, modified: modified)
     return canonical
+  }
+
+  /// Write `data` as the blob for `key`: to a temporary name in the key's own
+  /// directory first, then renamed into place, so the canonical name only ever
+  /// holds a complete file. For small payloads that arrive in memory
+  /// (thumbnails); downloads go through ``store(_:movingFrom:)``.
+  @discardableResult
+  public func storeData(_ data: Data, for key: Key) throws -> URL {
+    let directory = directory(for: key)
+    try createDirectory(directory)
+    let temp = directory.appendingPathComponent(".\(key.kind.rawValue)-\(UUID().uuidString).tmp")
+    try data.write(to: temp, options: .atomic)
+    return try store(key, movingFrom: temp)
+  }
+
+  /// Bytes the blob for `key` occupies on disk, or `nil` when there is none.
+  /// Allocated size, like ``DiskUsage``, so the index sums to what deleting
+  /// the files would free.
+  public func size(of key: Key) -> Int64? {
+    guard
+      let values = try? url(for: key).resourceValues(forKeys: [
+        .totalFileAllocatedSizeKey, .fileSizeKey,
+      ])
+    else { return nil }
+    return (values.totalFileAllocatedSize ?? values.fileSize).map(Int64.init)
   }
 
   public func delete(_ key: Key) throws {
     try? FileManager.default.removeItem(at: url(for: key))
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
+  }
+
+  /// Remove the blob for `key` unless it was written after `date`, and return
+  /// the bytes it held; `nil` when it was newer or absent.
+  ///
+  /// For a sweep that has claimed the file's index row: a download that
+  /// replaced the file since the row was recorded has a newer modification
+  /// date (files arrive by rename, which keeps the date they were written
+  /// with, and the row is recorded after), and is that download's to keep.
+  @discardableResult
+  public func delete(_ key: Key, ifNotModifiedAfter date: Date) -> Int64? {
+    let canonical = url(for: key)
+    guard
+      let values = try? canonical.resourceValues(forKeys: [
+        .contentModificationDateKey, .totalFileAllocatedSizeKey, .fileSizeKey,
+      ]),
+      let modified = values.contentModificationDate, modified <= date,
+      (try? FileManager.default.removeItem(at: canonical)) != nil
+    else { return nil }
+    try? FileManager.default.removeItem(at: sidecarURL(for: key))
+    return Int64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
   }
 
   /// Remove every cached blob (all servers, all kinds) by tearing down the
@@ -163,103 +191,73 @@ public struct ContentStore: Sendable {
     try createDirectory(canonicalRoot)
   }
 
-  // MARK: - Reclamation
+  // MARK: - Inventory
 
-  /// Files younger than this are never reclaimed, whatever the database says
-  /// about them.
-  ///
-  /// A blob and the `document` row that makes it reachable are written by two
-  /// different subsystems — and, with the Share Extension, two different
-  /// processes — with no transaction spanning both. A download therefore exists
-  /// on disk for a short window before the row that references it, and the app
-  /// group is shared, so the other process may be mid-write while this one
-  /// sweeps. An hour is orders of magnitude longer than that window and still
-  /// nothing against the lifetime of a superseded version.
-  public static let reclaimGracePeriod: TimeInterval = 3600
-
-  /// What one ``reclaim(retaining:gracePeriod:now:)`` pass did.
-  public struct ReclaimReport: Sendable, Equatable {
-    /// Blobs and sidecars actually unlinked.
-    public var removedFiles = 0
-    /// Bytes those files occupied, as reported just before the unlink.
-    public var reclaimedBytes: Int64 = 0
-    /// Unreferenced versions left in place because something in their directory
-    /// was written inside the grace window.
-    public var keptRecent = 0
-    /// Version directories looked at, referenced ones included.
-    public var examinedVersions = 0
-
-    public init() {}
+  /// One blob found on disk, for the repair walk that matches the directory
+  /// against the file index.
+  public struct InventoryEntry: Sendable, Equatable {
+    public let key: Key
+    public let size: Int64
+    /// Newest modification anywhere in the version's directory, the directory
+    /// itself included: the grace-window input, as for the reclaim.
+    public let youngestModification: Date?
+    /// A sidecar from a build that recorded freshness next to the file.
+    public let hasLegacySidecar: Bool
   }
 
-  /// Delete every stored blob no live document version points at.
-  ///
-  /// Reachability, not reference counting: the database already knows exactly
-  /// which version each cached document is at, so one query answers the whole
-  /// question — whereas a refcount would have to be kept in step across two
-  /// processes and would drift the moment either was killed mid-update.
-  ///
-  /// - Parameter retaining: the **complete** `server → live version ids` map,
-  ///   across every server, read from the database in one pass. Anything absent
-  ///   from it is unreachable: a superseded version, a document deleted on the
-  ///   server, or a whole server whose connection was removed (its cache rows
-  ///   cascade away with it). A map narrowed to one server would delete every
-  ///   other server's live blobs, so callers must not narrow it.
-  /// - Parameter now: injectable clock, so tests can age files without having
-  ///   to backdate them.
-  ///
-  /// Non-throwing on purpose: every failure mode here is per-file (a directory
-  /// that vanished, a file another process removed first) and the response to
-  /// each is to skip it and carry on, not to abandon the sweep.
-  public func reclaim(
-    retaining: [UUID: Set<UInt>],
-    gracePeriod: TimeInterval = ContentStore.reclaimGracePeriod,
-    now: Date = Date()
-  ) -> ReclaimReport {
-    var report = ReclaimReport()
-
+  /// Every blob under the store root with one of this store's own names. Other
+  /// entries are not this store's to judge and are skipped.
+  public func inventory() -> [InventoryEntry] {
+    var entries: [InventoryEntry] = []
     for serverDirectory in contents(of: canonicalRoot) {
-      // Anything whose name isn't one of our own path components was not
-      // written by this store; leave it alone rather than guess at it.
       guard let serverID = UUID(uuidString: serverDirectory.lastPathComponent) else { continue }
-      let retainedVersions = retaining[serverID] ?? []
-
       for versionDirectory in contents(of: serverDirectory) {
         guard let versionID = UInt(versionDirectory.lastPathComponent) else { continue }
-        report.examinedVersions += 1
-        if retainedVersions.contains(versionID) { continue }
-
-        if let youngest = youngestModification(in: versionDirectory),
-          now.timeIntervalSince(youngest) < gracePeriod
-        {
-          report.keptRecent += 1
-          continue
-        }
-
-        // Only the names this store itself writes are candidates, so a
-        // temporary or partial file a concurrent writer left behind is never
-        // touched — the canonical blobs arrive by rename and are complete the
-        // moment they appear under these names.
+        let youngest = youngestModification(in: versionDirectory)
         for kind in Kind.allCases {
           let key = Key(serverID: serverID, versionID: versionID, kind: kind)
-          for file in [url(for: key), sidecarURL(for: key)] {
-            guard let bytes = removeIfPresent(file) else { continue }
-            report.removedFiles += 1
-            report.reclaimedBytes += bytes
-          }
+          guard let size = size(of: key) else { continue }
+          entries.append(
+            InventoryEntry(
+              key: key, size: size, youngestModification: youngest,
+              hasLegacySidecar: FileManager.default.fileExists(atPath: sidecarURL(for: key).path)))
         }
+      }
+    }
+    return entries
+  }
 
+  /// The UUIDs of the server directories under the store root, a removed
+  /// server's leftovers included.
+  public func serverDirectories() -> Set<UUID> {
+    Set(contents(of: canonicalRoot).compactMap { UUID(uuidString: $0.lastPathComponent) })
+  }
+
+  /// Drop every version and server directory that is empty. `rmdir(2)` fails
+  /// atomically on a directory something was just written into, so a blob
+  /// another process is adding survives.
+  public func removeEmptyDirectories() {
+    for serverDirectory in contents(of: canonicalRoot) {
+      guard UUID(uuidString: serverDirectory.lastPathComponent) != nil else { continue }
+      for versionDirectory in contents(of: serverDirectory) {
         removeIfEmpty(versionDirectory)
       }
-
       removeIfEmpty(serverDirectory)
     }
-
-    Logger.cache.info(
-      "ContentStore reclaim removed \(report.removedFiles, privacy: .public) files (\(report.reclaimedBytes, privacy: .public) bytes) across \(report.examinedVersions, privacy: .public) versions, kept \(report.keptRecent, privacy: .public) recent"
-    )
-    return report
   }
+
+  // MARK: - Grace
+
+  /// A file without an index row is left alone while anything in its version
+  /// directory is younger than this.
+  ///
+  /// A blob and its row are written by two different subsystems — and, with
+  /// the Share Extension, two different processes — with no transaction
+  /// spanning both. A download therefore exists on disk for a short window
+  /// before the row that records it, and the app group is shared, so the other
+  /// process may be mid-write while this one sweeps. An hour is orders of
+  /// magnitude longer than that window.
+  public static let reclaimGracePeriod: TimeInterval = 3600
 
   // MARK: - Usage
 
@@ -331,27 +329,7 @@ public struct ContentStore: Sendable {
     try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
   }
 
-  /// Unlink `url`, returning the bytes it held, or nil when there was nothing
-  /// to remove. Tolerates the file disappearing between the listing and here —
-  /// another process pruning the same blob, or a `purge()` racing this sweep —
-  /// because the end state is the one we wanted either way.
-  private func removeIfPresent(_ url: URL) -> Int64? {
-    let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? nil
-    do {
-      try FileManager.default.removeItem(at: url)
-    } catch let error as NSError
-      where error.domain == NSCocoaErrorDomain && error.code == NSFileNoSuchFileError
-    {
-      return nil
-    } catch {
-      Logger.cache.debug(
-        "ContentStore reclaim could not remove \(url.path, privacy: .public): \(error)")
-      return nil
-    }
-    return Int64(size ?? 0)
-  }
-
-  /// Drop a directory that reclamation emptied.
+  /// Drop a directory the sweep emptied.
   ///
   /// `rmdir(2)` rather than `FileManager.removeItem`: it fails atomically with
   /// `ENOTEMPTY` instead of deleting a subtree, so a blob another process wrote
@@ -363,25 +341,26 @@ public struct ContentStore: Sendable {
 
   // MARK: - Sidecar
 
-  private struct Sidecar: Codable {
-    var modified: Date?
-    var writtenAt: Date
+  /// What builds before the file index wrote next to each blob. Read once by
+  /// the repair walk to adopt such a file, then removed.
+  public struct LegacySidecar: Codable, Sendable, Equatable {
+    public var modified: Date?
+    public var writtenAt: Date
+
+    public init(modified: Date?, writtenAt: Date) {
+      self.modified = modified
+      self.writtenAt = writtenAt
+    }
   }
 
-  private func writeSidecar(for key: Key, modified: Date?) throws {
-    let sidecar = Sidecar(modified: modified, writtenAt: Date())
-    let encoder = JSONEncoder()
-    // Encode dates as numeric time intervals (JSONEncoder's default strategy),
-    // NOT ISO-8601: `.iso8601` truncates to whole seconds, but paperless
-    // `modified` timestamps carry sub-second precision. A truncated sidecar
-    // would never equal the live `document.modified`, so `read(_:freshAgainst:)`
-    // would miss on every lookup and the cache would never serve a hit. A
-    // numeric interval round-trips exactly.
-    encoder.outputFormatting = [.sortedKeys]
-    let data = try encoder.encode(sidecar)
-    let url = sidecarURL(for: key)
-    try data.write(to: url, options: .atomic)
-    applyFileProtection(url)
+  private typealias Sidecar = LegacySidecar
+
+  public func readLegacySidecar(for key: Key) -> LegacySidecar? {
+    readSidecar(for: key)
+  }
+
+  public func removeLegacySidecar(for key: Key) {
+    try? FileManager.default.removeItem(at: sidecarURL(for: key))
   }
 
   private func readSidecar(for key: Key) -> Sidecar? {

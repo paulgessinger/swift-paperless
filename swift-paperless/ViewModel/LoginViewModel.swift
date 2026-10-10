@@ -690,8 +690,10 @@ class LoginViewModel {
     }
 
     Logger.shared.debug("Building repository instance with connection for testing")
+    // A login probe only: it downloads nothing, so it needs no store.
     let repository = await ApiRepository(
-      connection: connection, mode: Bundle.main.appConfiguration.mode)
+      connection: connection, mode: Bundle.main.appConfiguration.mode, contentStore: nil,
+      fileIndex: nil)
 
     Logger.shared.info("Requesting current user")
     let currentUser: User

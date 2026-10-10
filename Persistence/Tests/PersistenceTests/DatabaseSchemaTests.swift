@@ -99,6 +99,37 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v17 creates the file table with its key and indexes")
+  func v17CreatesFile() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(try db.tableExists("file"))
+      let columns = try db.columns(in: "file")
+      #expect(
+        Set(columns.map(\.name)) == [
+          "server_id", "version_id", "kind", "document_id", "size", "modified", "checksum",
+          "stored_at", "last_accessed_at",
+        ])
+      // Thumbnails carry no freshness stamp and are not access-tracked.
+      let modified = try #require(columns.first(where: { $0.name == "modified" }))
+      #expect(!modified.isNotNull)
+      #expect(modified.type.uppercased() == "REAL")
+      let accessed = try #require(columns.first(where: { $0.name == "last_accessed_at" }))
+      #expect(!accessed.isNotNull)
+      let size = try #require(columns.first(where: { $0.name == "size" }))
+      #expect(size.isNotNull)
+      #expect(size.type.uppercased() == "INTEGER")
+
+      #expect(try db.primaryKey("file").columns == ["server_id", "version_id", "kind"])
+      let fkTargets = Set(try db.foreignKeys(on: "file").map(\.destinationTable))
+      #expect(fkTargets == ["server"])
+
+      let indexes = try db.indexes(on: "file").map(\.columns)
+      #expect(indexes.contains(["kind", "last_accessed_at"]))
+      #expect(indexes.contains(["server_id", "document_id"]))
+    }
+  }
+
   @Test("v10 adds a nullable viewed_at to query_meta")
   func v10AddsQueryViewedAt() throws {
     let database = try Database.inMemory()

@@ -1,3 +1,4 @@
+import Common
 import DataModel
 import Foundation
 import Testing
@@ -37,6 +38,7 @@ struct DatabaseStatisticsTests {
     #expect(stats.pageCount > 0)
     #expect(stats.pageSize > 0)
     #expect(stats.diskUsageBytes == 0)
+    #expect(stats.evictableFileBytes == 0)
 
     let rows = Dictionary(uniqueKeysWithValues: stats.tables.map { ($0.name, $0.rows) })
     #expect(rows["server"] == 1)
@@ -44,7 +46,9 @@ struct DatabaseStatisticsTests {
     #expect(rows["query_order"] == 0)
     #expect(rows["grdb_migrations"] == stats.registeredMigrationCount)
     // Every cache table appears without being listed by hand.
-    for table in ["tag", "query_meta", "server_sync_state", "query_sync_error", "file_metadata"] {
+    for table in [
+      "tag", "query_meta", "server_sync_state", "query_sync_error", "file_metadata", "file",
+    ] {
       #expect(rows[table] == 0, "\(table)")
     }
     #expect(!rows.keys.contains { $0.hasPrefix("sqlite_") })
@@ -86,8 +90,21 @@ struct DatabaseStatisticsTests {
     try await database.setFileMetadata(
       metadata, serverID: server, versionID: 2, documentModified: nil)
 
+    // Cached files: an archive and a thumbnail for 1, an original for 2.
+    let archive = ContentStore.Key(serverID: server, versionID: 1, kind: .archive)
+    try await database.recordFile(
+      archive, documentID: 1, size: 100, modified: date(5000), checksum: nil, storedAt: date(1),
+      lastAccessedAt: date(1))
+    try await database.recordFile(
+      ContentStore.Key(serverID: server, versionID: 1, kind: .thumbnail), documentID: 1, size: 5,
+      modified: nil, checksum: nil, storedAt: date(1), lastAccessedAt: nil)
+    try await database.recordFile(
+      ContentStore.Key(serverID: server, versionID: 2, kind: .original), documentID: 2, size: 40,
+      modified: nil, checksum: nil, storedAt: date(1), lastAccessedAt: date(1))
+
     let stats = try await database.statistics()
 
+    #expect(stats.evictableFileBytes == 140)
     #expect(Set(stats.servers.map(\.id)) == [server, quiet])
     let main = try #require(stats.servers.first { $0.id == server })
     #expect(main.offlineBrowsingMode == "recentlyBrowsed")
@@ -105,6 +122,12 @@ struct DatabaseStatisticsTests {
     #expect(main.unreferencedDocuments == 1)
     #expect(main.documentsAwaitingNotes == 1)
     #expect(main.documentsAwaitingFileMetadata == 2)
+    #expect(main.rowsByTable["file"] == 3)
+    #expect(
+      main.files == [
+        .init(kind: "archive", count: 1, bytes: 100), .init(kind: "original", count: 1, bytes: 40),
+        .init(kind: "thumbnail", count: 1, bytes: 5),
+      ])
 
     #expect(main.queries.map(\.id) == ["broken", "list", "other"])
     let filled = try #require(main.queries.first { $0.key == list })
@@ -140,6 +163,7 @@ struct DatabaseStatisticsTests {
     #expect(idle.needsAuth)
     #expect(idle.deltaWatermark == nil)
     #expect(idle.rowsByTable.isEmpty)
+    #expect(idle.files.isEmpty)
     #expect(idle.queries.isEmpty)
     #expect(idle.skeletonRows == 0)
   }

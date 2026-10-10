@@ -35,6 +35,13 @@ public final class ServerSessionRegistry {
   @ObservationIgnored private let manager: ConnectionManager
   @ObservationIgnored private let mode: ApiRepository.Mode
   @ObservationIgnored private let suspension: DatabaseSuspensionController?
+  /// The process's file index and reclaim, handed to every session.
+  @ObservationIgnored public let contentReclaimer: ContentReclaimer?
+
+  /// Called with the ids of servers whose rows just vanished. Lifecycle only:
+  /// the cache rows cascaded with the row, this is for what lives outside the
+  /// database.
+  @ObservationIgnored public var onServersRemoved: (@MainActor (Set<UUID>) -> Void)?
 
   /// One session per known server. Observable so a screen can show every
   /// server's state, not just the active one's.
@@ -55,12 +62,14 @@ public final class ServerSessionRegistry {
     database: Database,
     manager: ConnectionManager,
     mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
-    suspension: DatabaseSuspensionController? = nil
+    suspension: DatabaseSuspensionController? = nil,
+    contentReclaimer: ContentReclaimer? = nil
   ) {
     self.database = database
     self.manager = manager
     self.mode = mode
     self.suspension = suspension
+    self.contentReclaimer = contentReclaimer
   }
 
   deinit {
@@ -98,9 +107,13 @@ public final class ServerSessionRegistry {
     let current = Set(manager.connections.keys)
     // A vanished row has already FK-cascaded its whole cache, so there is no
     // cache work here — just stop and release the session.
-    for id in serverIDs.subtracting(current) {
+    let removed = serverIDs.subtracting(current)
+    for id in removed {
       sessions.removeValue(forKey: id)?.invalidate()
       Logger.sync.info("Server row removed; dropped its session")
+    }
+    if !removed.isEmpty {
+      onServersRemoved?(removed)
     }
     if serverIDs != current {
       serverIDs = current
@@ -119,7 +132,8 @@ public final class ServerSessionRegistry {
       return existing
     }
     let session = ServerSession(
-      serverID: id, database: database, mode: mode, suspension: suspension)
+      serverID: id, database: database, mode: mode, suspension: suspension,
+      contentReclaimer: contentReclaimer)
     sessions[id] = session
     return session
   }

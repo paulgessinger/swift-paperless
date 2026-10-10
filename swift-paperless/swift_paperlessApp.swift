@@ -371,6 +371,7 @@ struct MainView: View {
       // Begin observing the server table for newly-added servers, and warm every
       // inactive server's cache (the active server was just synced above).
       syncEngine.start()
+      stack.runLaunchMaintenance()
       Task {
         await syncEngine.syncInactiveServers()
       }

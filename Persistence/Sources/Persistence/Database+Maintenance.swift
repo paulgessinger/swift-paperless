@@ -23,6 +23,7 @@ extension Database {
       + V5_CreateDocumentDetailCache.tables
       + V6_DropProjectionAndQueryOrderFK.tables
       + V7_CreateQuerySyncError.tables
+      + V17_CreateFile.tables
     try await wrappingAsync("clearCache") {
       try await writer.write { db in
         for table in tables {
@@ -48,17 +49,9 @@ extension Database {
         // for `Document.currentVersionID` (see `ApiRepository.streamDownload`),
         // so every other version's blob is superseded by definition — including
         // the root version, whose id equals the document id.
-        //
-        // `NULLIF`/`COALESCE` covers the column's `NOT NULL DEFAULT 0`: a row
-        // that somehow carries 0 falls back to the document id, which is the
-        // right answer for a document with no versions and a conservative one
-        // otherwise (it retains a blob rather than dropping a live file).
         let rows = try Row.fetchAll(
           db,
-          sql: """
-            SELECT server_id, COALESCE(NULLIF(current_version_id, 0), id) AS version_id
-            FROM document
-            """)
+          DocumentRecord.select(Column("server_id"), Self.currentVersionID.forKey("version_id")))
         var retained: [UUID: Set<UInt>] = [:]
         for row in rows {
           let serverID: UUID = row["server_id"]
