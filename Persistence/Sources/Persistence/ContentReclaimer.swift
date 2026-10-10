@@ -25,8 +25,10 @@ import os
 /// left fits the budget. *Repair*: the directory is matched against the
 /// index, so a file without a row is adopted (when a build from before the
 /// index left its sidecar) or removed, and a row without a file is dropped.
-/// Files always go before rows: a row without a file is repaired on the next
-/// pass, a file without a row would sit unaccounted for.
+/// A file is unlinked only after its row was claimed, and only if nothing
+/// newer was written at that key since: a download that replaced the file
+/// between the read and the unlink has recorded a newer row, which the claim
+/// misses, and a newer file, which the unlink leaves alone.
 public actor ContentReclaimer: FileIndex {
   /// What the evictable files may take, in total across servers.
   public static let budgetBytes: Int64 = 500_000_000
@@ -139,11 +141,11 @@ public actor ContentReclaimer: FileIndex {
     lastRun = now
 
     do {
-      let unreferenced = try await database.unreferencedFiles()
-      for row in unreferenced {
-        report.unreferencedBytes += unlink(row.key)
+      let claimed = try await database.deleteFiles(database.unreferencedFiles())
+      report.unreferencedRows = claimed.count
+      for row in claimed {
+        report.unreferencedBytes += unlink(row)
       }
-      report.unreferencedRows = try await database.deleteFiles(unreferenced)
     } catch {
       Logger.persistence.error("Content reclaim: dropping unreferenced files failed: \(error)")
     }
@@ -154,11 +156,10 @@ public actor ContentReclaimer: FileIndex {
       do {
         let candidates = try await database.evictionCandidates(
           budget: budget, protectAccessedAfter: now.addingTimeInterval(-Self.recentAccessGrace))
-        for row in candidates {
-          report.evictedBytes += unlink(row.key)
+        for row in try await database.deleteFiles(candidates) {
+          report.evictedBytes += unlink(row)
           report.evictedFiles += 1
         }
-        _ = try await database.deleteFiles(candidates)
       } catch {
         Logger.persistence.error("Content reclaim: eviction failed: \(error)")
       }
@@ -182,14 +183,15 @@ public actor ContentReclaimer: FileIndex {
   /// Match the directory against the index.
   private func repair(_ store: ContentStore, now: Date, report: inout Report) async throws {
     report.walked = true
-    let indexed = try await database.allFileKeys()
+    let indexed = try await database.allFiles()
+    let indexedKeys = Set(indexed.compactMap(\.key))
     let servers = Set(try database.allConnections().map(\.id))
     var present: Set<ContentStore.Key> = []
     var adoptions: [FileAdoption] = []
 
     for entry in store.inventory() {
       present.insert(entry.key)
-      if indexed.contains(entry.key) {
+      if indexedKeys.contains(entry.key) {
         // The row is the record now; a sidecar left over is just a file.
         if entry.hasLegacySidecar { store.removeLegacySidecar(for: entry.key) }
         continue
@@ -234,17 +236,23 @@ public actor ContentReclaimer: FileIndex {
       }
     }
 
-    for key in indexed.subtracting(present) {
-      try await database.deleteFile(key)
-      report.orphanRows += 1
-    }
+    let fileless = indexed.filter { $0.key.map { !present.contains($0) } ?? true }
+    report.orphanRows = try await database.deleteFiles(fileless).count
 
     store.removeEmptyDirectories()
   }
 
-  /// Remove the file for `key`; returns the bytes it held.
-  private func unlink(_ key: ContentStore.Key?) -> Int64 {
-    guard let key, let store else { return 0 }
+  /// Remove the file behind a claimed row, unless a newer one has taken its
+  /// place; returns the bytes it held.
+  private func unlink(_ row: FileRecord) -> Int64 {
+    guard let key = row.key, let store else { return 0 }
+    return store.delete(
+      key, ifNotModifiedAfter: Date(timeIntervalSinceReferenceDate: row.storedAt)) ?? 0
+  }
+
+  /// Remove a file no row claims; returns the bytes it held.
+  private func unlink(_ key: ContentStore.Key) -> Int64 {
+    guard let store else { return 0 }
     let size = store.size(of: key) ?? 0
     try? store.delete(key)
     return size

@@ -106,7 +106,7 @@ struct FileIndexTests {
     try await record(database, key(server, 2), size: 2, accessed: date(3000))
     let deleted = try await database.deleteFiles(read)
 
-    #expect(deleted == 1)
+    #expect(deleted.compactMap(\.key) == [key(server, 1)])
     #expect(try await database.allFileKeys() == [key(server, 2)])
   }
 

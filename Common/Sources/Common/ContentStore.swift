@@ -152,6 +152,27 @@ public struct ContentStore: Sendable {
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
   }
 
+  /// Remove the blob for `key` unless it was written after `date`, and return
+  /// the bytes it held; `nil` when it was newer or absent.
+  ///
+  /// For a sweep that has claimed the file's index row: a download that
+  /// replaced the file since the row was recorded has a newer modification
+  /// date (files arrive by rename, which keeps the date they were written
+  /// with, and the row is recorded after), and is that download's to keep.
+  @discardableResult
+  public func delete(_ key: Key, ifNotModifiedAfter date: Date) -> Int64? {
+    let canonical = url(for: key)
+    guard
+      let values = try? canonical.resourceValues(forKeys: [
+        .contentModificationDateKey, .totalFileAllocatedSizeKey, .fileSizeKey,
+      ]),
+      let modified = values.contentModificationDate, modified <= date,
+      (try? FileManager.default.removeItem(at: canonical)) != nil
+    else { return nil }
+    try? FileManager.default.removeItem(at: sidecarURL(for: key))
+    return Int64(values.totalFileAllocatedSize ?? values.fileSize ?? 0)
+  }
+
   /// Remove every cached blob (all servers, all kinds) by tearing down the
   /// store root, then recreate the empty directory. Used by the debug
   /// "clear local storage" action.

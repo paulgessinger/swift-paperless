@@ -104,6 +104,21 @@ struct ContentStoreTests {
     #expect(store.readLegacySidecar(for: Self.key()) == nil)
   }
 
+  @Test("A conditional delete leaves a blob written after the given date")
+  func deleteUnlessNewer() throws {
+    let (store, _) = try Self.makeStore()
+    let url = try store.store(Self.key(), movingFrom: Self.writeTempFile(Data("x".utf8)))
+    let written = try #require(
+      try url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
+
+    #expect(store.delete(Self.key(), ifNotModifiedAfter: written.addingTimeInterval(-1)) == nil)
+    #expect(store.exists(Self.key()))
+    let removed = try #require(store.delete(Self.key(), ifNotModifiedAfter: written))
+    #expect(removed > 0)
+    #expect(!store.exists(Self.key()))
+    #expect(store.delete(Self.key(), ifNotModifiedAfter: written) == nil)
+  }
+
   @Test
   func deleteIsIdempotent() throws {
     let (store, _) = try Self.makeStore()

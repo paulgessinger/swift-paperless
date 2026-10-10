@@ -28,7 +28,8 @@ struct ContentReclaimerTests {
     try store.storeData(Data(repeating: 1, count: bytes), for: key)
   }
 
-  /// A file on disk and its row, accessed at `accessed`.
+  /// A file on disk and its row, accessed at `accessed`. Stored now, after the
+  /// file, as a download records it.
   private func cache(
     _ store: ContentStore, _ database: Database, _ key: ContentStore.Key, bytes: Int = 10,
     accessed: Date
@@ -36,7 +37,7 @@ struct ContentReclaimerTests {
     try write(store, key, bytes: bytes)
     try await database.recordFile(
       key, documentID: key.versionID, size: try #require(store.size(of: key)), modified: nil,
-      checksum: nil, storedAt: accessed, lastAccessedAt: key.kind == .thumbnail ? nil : accessed)
+      checksum: nil, storedAt: Date(), lastAccessedAt: key.kind == .thumbnail ? nil : accessed)
   }
 
   /// The old sidecar, as builds before the index wrote it.
@@ -74,6 +75,26 @@ struct ContentReclaimerTests {
     #expect(!store.exists(key(server, 2)))
     #expect(!store.exists(key(server, 2, .thumbnail)))
     #expect(try await database.allFileKeys() == [key(server, 1), key(server, 1, .thumbnail)])
+  }
+
+  @Test("A file written after its row was claimed is left to the download that wrote it")
+  func newerFileSurvivesTheClaim() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    // The row for version 2 is from before the file: as if a download had
+    // replaced the file between the sweep's read and its unlink.
+    try await database.recordFile(
+      key(server, 2), documentID: 2, size: 1, modified: nil, checksum: nil,
+      storedAt: Date().addingTimeInterval(-60), lastAccessedAt: nil)
+    try write(store, key(server, 2))
+    let reclaimer = ContentReclaimer(database: database, store: store, now: { self.date(9000) })
+
+    let report = await reclaimer.run(reason: .overBudget)
+
+    #expect(report.unreferencedRows == 1)
+    #expect(report.unreferencedBytes == 0)
+    #expect(store.exists(key(server, 2)))
   }
 
   @Test("Eviction removes the least recently accessed files until the budget holds")
@@ -203,27 +224,27 @@ struct ContentReclaimerTests {
     let server = UUID()
     let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
     let store = try makeStore()
-    let reclaimer = ContentReclaimer(
-      database: database, store: store, budget: 150, now: { self.date(9000) })
+    let later = Date().addingTimeInterval(3600)
+    let reclaimer = ContentReclaimer(database: database, store: store, budget: 150, now: { later })
 
     try write(store, key(server, 1), bytes: 100)
+    let first = Date()
     try await reclaimer.recordStore(
-      key(server, 1), documentID: 1, size: 100, modified: date(1), checksum: nil,
-      storedAt: date(1000))
+      key(server, 1), documentID: 1, size: 100, modified: date(1), checksum: nil, storedAt: first)
     try write(store, key(server, 1, .thumbnail), bytes: 100)
     try await reclaimer.recordStore(
       key(server, 1, .thumbnail), documentID: 1, size: 100, modified: nil, checksum: nil,
-      storedAt: date(1000))
+      storedAt: first)
     #expect(try await reclaimer.isFresh(key(server, 1), modified: date(1)))
     #expect(
       try await database.anyFile(key(server, 1))?.lastAccessedAt
-        == date(1000).timeIntervalSinceReferenceDate)
+        == first.timeIntervalSinceReferenceDate)
     #expect(try await database.evictableFileBytes() == 100)
 
     try write(store, key(server, 2), bytes: 100)
     try await reclaimer.recordStore(
       key(server, 2), documentID: 2, size: 100, modified: date(1), checksum: nil,
-      storedAt: date(2000))
+      storedAt: Date())
 
     // The pass runs on its own task; join it.
     for _ in 0..<100 where store.exists(key(server, 1)) {

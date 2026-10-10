@@ -91,19 +91,25 @@ extension Database {
     }
   }
 
-  /// Delete `rows` as they were read: a row re-written since, with a newer
-  /// `stored_at`, describes a new file and is left alone.
+  /// Delete `rows` as they were read and return the ones that were still
+  /// there: a row re-written since, with a newer `stored_at`, describes a new
+  /// file and is left alone. The caller unlinks only what it claimed here.
   @discardableResult
-  public func deleteFiles(_ rows: [FileRecord]) async throws -> Int {
+  public func deleteFiles(_ rows: [FileRecord]) async throws -> [FileRecord] {
     try await wrappingAsync("deleteFiles") {
       try await writer.write { db in
-        var deleted = 0
+        var claimed: [FileRecord] = []
         for row in rows {
-          deleted += try Self.file(serverID: row.serverId, versionID: row.versionId, kind: row.kind)
-            .filter(Column("stored_at") == row.storedAt)
-            .deleteAll(db)
+          let deleted = try Self.file(
+            serverID: row.serverId, versionID: row.versionId, kind: row.kind
+          )
+          .filter(Column("stored_at") == row.storedAt)
+          .deleteAll(db)
+          if deleted > 0 {
+            claimed.append(row)
+          }
         }
-        return deleted
+        return claimed
       }
     }
   }
@@ -159,13 +165,16 @@ extension Database {
     }
   }
 
+  /// Every row the index holds.
+  public func allFiles() async throws -> [FileRecord] {
+    try await wrappingAsync("allFiles") {
+      try await writer.read { db in try FileRecord.fetchAll(db) }
+    }
+  }
+
   /// Every key the index holds.
   public func allFileKeys() async throws -> Set<ContentStore.Key> {
-    try await wrappingAsync("allFileKeys") {
-      try await writer.read { db in
-        Set(try FileRecord.fetchAll(db).compactMap(\.key))
-      }
-    }
+    Set(try await allFiles().compactMap(\.key))
   }
 
   /// Enter files found on disk into the index, resolving each one's document
