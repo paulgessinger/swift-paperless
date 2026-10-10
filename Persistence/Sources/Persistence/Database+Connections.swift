@@ -88,6 +88,22 @@ extension Database {
     }
   }
 
+  /// Update only the `api_version` / `backend_version` columns on one row.
+  ///
+  /// No-op if the id doesn't match a row.
+  public func setServerVersions(
+    apiVersion: Int, backendVersion: String, forConnection id: UUID
+  ) throws(DatabaseError) {
+    try wrapping("setServerVersions") {
+      try writer.write { db in
+        _ = try ConnectionRecord.filter(key: id).updateAll(
+          db,
+          ConnectionRecord.Columns.apiVersion.set(to: apiVersion),
+          ConnectionRecord.Columns.backendVersion.set(to: backendVersion))
+      }
+    }
+  }
+
   /// An `AsyncSequence` of full connection-table snapshots, fired whenever
   /// the `server` table is written in this process. Backed by GRDB's
   /// `ValueObservation`; consumers don't see GRDB types.

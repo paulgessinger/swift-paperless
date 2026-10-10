@@ -26,6 +26,10 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
   /// Whether this server's *proactive* sweeps may run on a metered link.
   /// Interactive work the user asked for is never gated on it.
   public var syncOverCellular: Bool
+  /// Last-known `X-Api-Version`, or `nil` until a probe has succeeded.
+  public var apiVersion: Int?
+  /// Last-known `X-Version` string, or `nil` until a probe has succeeded.
+  public var backendVersion: String?
 
   public init(
     id: UUID,
@@ -36,7 +40,9 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     extraHeaders: [StoredHeader] = [],
     needsAuth: Bool = false,
     offlineBrowsingMode: String = "recentlyBrowsed",
-    syncOverCellular: Bool = false
+    syncOverCellular: Bool = false,
+    apiVersion: Int? = nil,
+    backendVersion: String? = nil
   ) {
     self.id = id
     self.url = url
@@ -47,6 +53,8 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     self.needsAuth = needsAuth
     self.offlineBrowsingMode = offlineBrowsingMode
     self.syncOverCellular = syncOverCellular
+    self.apiVersion = apiVersion
+    self.backendVersion = backendVersion
   }
 
   public struct StoredUser: Codable, Equatable, Sendable {
@@ -85,6 +93,8 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     case needsAuth = "needs_auth"
     case offlineBrowsingMode = "offline_browsing_mode"
     case syncOverCellular = "sync_over_cellular"
+    case apiVersion = "api_version"
+    case backendVersion = "backend_version"
   }
 }
 
@@ -103,6 +113,8 @@ extension ConnectionRecord: FetchableRecord, PersistableRecord, TableRecord {
     public static let needsAuth = Column(CodingKeys.needsAuth)
     public static let offlineBrowsingMode = Column(CodingKeys.offlineBrowsingMode)
     public static let syncOverCellular = Column(CodingKeys.syncOverCellular)
+    public static let apiVersion = Column(CodingKeys.apiVersion)
+    public static let backendVersion = Column(CodingKeys.backendVersion)
   }
 
   // Storage-dedicated JSON coders. Sorted keys for deterministic on-disk

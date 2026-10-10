@@ -111,6 +111,21 @@ struct DatabaseConnectionsTests {
     #expect(try database.allConnections().isEmpty)
   }
 
+  @Test("setServerVersions writes only the version columns")
+  func setServerVersionsWritesOnlyThoseColumns() throws {
+    let database = try makeDatabase()
+    let stored = record(needsAuth: true)
+    try database.upsertConnection(stored)
+
+    try database.setServerVersions(
+      apiVersion: 9, backendVersion: "2.18.4", forConnection: stored.id)
+    let fetched = try #require(try database.allConnections().first)
+    #expect(fetched.apiVersion == 9)
+    #expect(fetched.backendVersion == "2.18.4")
+    #expect(fetched.needsAuth)
+    #expect(fetched.friendlyName == stored.friendlyName)
+  }
+
   // MARK: - Error wrapping
 
   @Test("a failed operation surfaces as DatabaseError.operationFailed")
