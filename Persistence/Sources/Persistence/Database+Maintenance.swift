@@ -23,6 +23,7 @@ extension Database {
       + V5_CreateDocumentDetailCache.tables
       + V6_DropProjectionAndQueryOrderFK.tables
       + V7_CreateQuerySyncError.tables
+      + V17_CreateFile.tables
     try await wrappingAsync("clearCache") {
       try await writer.write { db in
         for table in tables {

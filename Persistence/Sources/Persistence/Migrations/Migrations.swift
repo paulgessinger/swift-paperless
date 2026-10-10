@@ -115,6 +115,10 @@ enum Migrations {
       try V16_CreateSyncRun.run(db)
     }
 
+    migrator.registerMigration("v17_create_file") { db in
+      try V17_CreateFile.run(db)
+    }
+
     return migrator
   }
 }

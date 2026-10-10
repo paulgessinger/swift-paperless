@@ -19,6 +19,8 @@ public struct DatabaseStatistics: Sendable, Equatable {
   public var freePageCount: Int
   /// Main file plus `-wal` / `-shm`; zero for an in-memory database.
   public var diskUsageBytes: Int64
+  /// Bytes of indexed files the storage budget may evict (originals and archives).
+  public var evictableFileBytes: Int64
 
   /// Every table in `sqlite_master` except SQLite's internal ones, by name.
   public var tables: [TableRowCount]
@@ -50,8 +52,19 @@ public struct DatabaseStatistics: Sendable, Equatable {
     public var documentsAwaitingNotes: Int
     /// Documents whose current version has no cached `file_metadata` row.
     public var documentsAwaitingFileMetadata: Int
+    /// Indexed files by kind, ordered by kind; kinds without rows are absent.
+    public var files: [FileKind]
     /// Ordered by key.
     public var queries: [Query]
+  }
+
+  /// The indexed files of one kind for one server.
+  public struct FileKind: Sendable, Equatable, Identifiable {
+    /// Raw `ContentStore.Kind`.
+    public var kind: String
+    public var id: String { kind }
+    public var count: Int
+    public var bytes: Int64
   }
 
   /// One cached list: the union of its `query_meta`, `query_order` and
@@ -214,6 +227,23 @@ extension Database {
       }
     }
 
+    var files: [UUID: [DatabaseStatistics.FileKind]] = [:]
+    for row in try Row.fetchAll(
+      db,
+      sql: """
+        SELECT server_id, kind, COUNT(*) AS n, COALESCE(SUM(size), 0) AS bytes
+        FROM file GROUP BY server_id, kind ORDER BY kind
+        """)
+    {
+      files[row["server_id"], default: []].append(
+        .init(kind: row["kind"], count: row["n"], bytes: row["bytes"]))
+    }
+    let evictableBytes =
+      try Int64.fetchOne(
+        db,
+        sql: "SELECT COALESCE(SUM(size), 0) FROM file WHERE kind IN (?, ?)",
+        arguments: StatementArguments(FileRecord.evictableKinds)) ?? 0
+
     var syncState: [UUID: ServerSyncStateRecord] = [:]
     for record in try ServerSyncStateRecord.fetchAll(db) {
       syncState[record.serverId] = record
@@ -234,6 +264,7 @@ extension Database {
         unreferencedDocuments: unreferenced[server.id] ?? 0,
         documentsAwaitingNotes: awaitingNotes[server.id] ?? 0,
         documentsAwaitingFileMetadata: awaitingMetadata[server.id] ?? 0,
+        files: files[server.id] ?? [],
         queries: (queries[server.id] ?? [:]).values.sorted { $0.id < $1.id })
     }
 
@@ -247,6 +278,7 @@ extension Database {
       pageCount: try Int.fetchOne(db, sql: "PRAGMA page_count") ?? 0,
       freePageCount: try Int.fetchOne(db, sql: "PRAGMA freelist_count") ?? 0,
       diskUsageBytes: diskBytes,
+      evictableFileBytes: evictableBytes,
       tables: tables,
       servers: servers)
   }
