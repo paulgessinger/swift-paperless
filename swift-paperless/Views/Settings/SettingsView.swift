@@ -45,10 +45,9 @@ struct SettingsView: View {
         URLQueryItem(name: "app_version", value: appVersion),
       ]
 
-      if let backendVersion = (store.repository as? ApiRepository)?.backendVersion?
-        .description
-      {
-        queryItems.append(URLQueryItem(name: "backend_version", value: backendVersion))
+      if let backendVersion = connectionManager.storedConnection?.knownVersions?.backendVersion {
+        queryItems.append(
+          URLQueryItem(name: "backend_version", value: backendVersion.description))
       }
 
       url = url.appending(queryItems: queryItems)
