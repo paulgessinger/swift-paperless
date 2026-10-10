@@ -22,7 +22,7 @@ public enum BackgroundSync {
   /// - Returns: `false` if the sweep was cancelled.
   public static func run(stack: AppStack, allowsFill: Bool) async -> Bool {
     TransferStatistics.install()
-    guard let cost = await LinkCostProbe.current() else {
+    guard let cost = await stack.networkMonitor.currentCost() else {
       Logger.sync.info("Background sync skipped: no network")
       return true
     }
