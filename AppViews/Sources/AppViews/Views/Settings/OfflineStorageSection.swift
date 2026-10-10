@@ -23,10 +23,11 @@ struct OfflineStorageSection: View {
     Section {
       sizeRow(String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes)
       sizeRow(
-        String(localized: .settings(.offlineStorageDocuments)), bytes: usage?.documents.bytes,
+        String(localized: .settings(.offlineStorageDocuments)), bytes: usage?.files.documents.bytes,
         caption: documentsCaption)
       sizeRow(
-        String(localized: .settings(.offlineStorageThumbnails)), bytes: usage?.thumbnails.bytes)
+        String(localized: .settings(.offlineStorageThumbnails)),
+        bytes: usage?.files.thumbnails.bytes)
       sizeRow(String(localized: .settings(.offlineSyncTotal)), bytes: usage?.totalBytes)
     } header: {
       Text(.settings(.offlineStorageHeader))
@@ -56,10 +57,10 @@ struct OfflineStorageSection: View {
   /// database and thumbnails are shared and can't be split by server.
   private var documentsCaption: Text? {
     guard let usage else { return nil }
-    let total = usage.documents
+    let total = usage.files.documents
     let files = String(localized: .settings(.offlineStorageFileCount(total.files)))
     guard let id = connectionManager.activeConnectionId else { return Text(files) }
-    let thisServer = usage.documentsByServer[id] ?? .zero
+    let thisServer = usage.files.documentsByServer[id] ?? .zero
     // With just the one server the share would repeat the row's own figure.
     guard thisServer != total else { return Text(files) }
     return Text(

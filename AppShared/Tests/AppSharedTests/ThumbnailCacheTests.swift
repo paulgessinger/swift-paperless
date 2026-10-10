@@ -28,19 +28,23 @@ struct ThumbnailCacheTests {
 
   /// A `FileIndex` in a dictionary.
   private actor Index: FileIndex {
-    var entries: [ContentStore.Key: FileIndexEntry] = [:]
+    struct Entry: Equatable {
+      var documentID: UInt
+      var size: Int64
+      var modified: Date?
+    }
 
-    func freshEntry(for key: ContentStore.Key, modified: Date) async throws -> FileIndexEntry? {
-      entries[key]
+    var entries: [ContentStore.Key: Entry] = [:]
+
+    func isFresh(_ key: ContentStore.Key, modified: Date) async throws -> Bool {
+      entries[key]?.modified == modified
     }
 
     func recordStore(
       _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
       storedAt: Date
     ) async throws {
-      entries[key] = FileIndexEntry(
-        key: key, documentID: documentID, size: size, modified: modified, storedAt: storedAt,
-        lastAccessedAt: nil)
+      entries[key] = Entry(documentID: documentID, size: size, modified: modified)
     }
 
     func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {}
@@ -49,7 +53,7 @@ struct ThumbnailCacheTests {
       entries[key] = nil
     }
 
-    func entry(for key: ContentStore.Key) async -> FileIndexEntry? {
+    func entry(for key: ContentStore.Key) async -> Entry? {
       for _ in 0..<100 where entries[key] == nil {
         try? await Task.sleep(for: .milliseconds(10))
       }
