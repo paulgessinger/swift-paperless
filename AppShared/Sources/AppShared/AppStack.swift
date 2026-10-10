@@ -45,6 +45,22 @@ public final class AppStack {
       database: database, manager: connectionManager, suspension: suspension)
     self.sessionRegistry = sessionRegistry
     suspension.onExpire = { [weak sessionRegistry] in sessionRegistry?.cancelAllWork() }
+
+    // Steps the previous process never finished. Only rows older than this
+    // process, so a step this one starts first is left alone.
+    let launchedAt = Date()
+    Task { @MainActor in
+      await suspension.performBackgroundWork {
+        do {
+          let closed = try await database.closeInterruptedSyncSteps(before: launchedAt)
+          if closed > 0 {
+            Logger.sync.info("Closed \(closed, privacy: .public) interrupted sync step(s)")
+          }
+        } catch {
+          Logger.sync.debug("Closing interrupted sync steps failed: \(error)")
+        }
+      }
+    }
   }
 }
 

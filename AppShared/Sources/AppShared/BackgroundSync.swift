@@ -16,18 +16,31 @@ public enum BackgroundSync {
   ///
   /// The whole sweep is one piece of background work, so the database writer
   /// stays open between servers. Cancelling the calling task stops it before
-  /// the next server.
+  /// the next server. The task as a whole gets a `sync_run` row of its own
+  /// (step `task`, no server), and the per-server runs carry its trigger.
   ///
-  /// - Parameter allowsFill: `false` limits every server to the cheap phases.
+  /// - Parameter trigger: `.refreshTask` limits every server to the cheap
+  ///   phases; `.processingTask` allows the fill.
   /// - Returns: `false` if the sweep was cancelled.
-  public static func run(stack: AppStack, allowsFill: Bool) async -> Bool {
+  public static func run(stack: AppStack, trigger: SyncTrigger) async -> Bool {
     TransferStatistics.install()
-    guard let cost = await stack.networkMonitor.currentCost() else {
-      Logger.sync.info("Background sync skipped: no network")
-      return true
-    }
-    let completed = await stack.suspension.performBackgroundWork {
-      await stack.syncEngine.syncAllServers(allowsFill: allowsFill, cost: cost)
+    let context = SyncRunContext(trigger: trigger)
+    let recorder = SyncRunRecorder(database: stack.database, serverID: nil)
+    let completed = await SyncRunContext.$current.withValue(context) {
+      await stack.suspension.performBackgroundWork {
+        let row = await recorder.begin(.task)
+        guard let cost = await stack.networkMonitor.currentCost() else {
+          Logger.sync.info("Background sync skipped: no network")
+          await recorder.end(row, .skipped, message: "no network")
+          return true
+        }
+        let completed = await stack.syncEngine.syncAllServers(
+          allowsFill: trigger == .processingTask, cost: cost)
+        // After expiry the writer is already suspended, so this write is lost
+        // and the row is closed as interrupted at the next launch.
+        await recorder.end(row, completed ? .ok : .cancelled)
+        return completed
+      }
     }
     TransferStatistics.shared.persist()
     return completed
