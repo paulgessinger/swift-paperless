@@ -90,9 +90,16 @@ public struct DocumentCell: View {
   /// removal is in flight.
   public var isRemovingInboxTags: Bool
 
-  public init(document: Document, store: DocumentStore, isRemovingInboxTags: Bool = false) {
+  /// Draws the kept-offline badge on the thumbnail.
+  public var isKeptOffline: Bool
+
+  public init(
+    document: Document, store: DocumentStore, isKeptOffline: Bool = false,
+    isRemovingInboxTags: Bool = false
+  ) {
     self.document = document
     self.store = store
+    self.isKeptOffline = isKeptOffline
     self.isRemovingInboxTags = isRemovingInboxTags
   }
 
@@ -142,6 +149,16 @@ public struct DocumentCell: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .frame(width: 130, height: 170, alignment: .topLeading)
         .shadow(color: Color("ImageShadow"), radius: 5)
+        .overlay(alignment: .topTrailing) {
+          if isKeptOffline {
+            Image(systemName: "arrow.down.circle.fill")
+              .symbolRenderingMode(.palette)
+              .foregroundStyle(.white, .indigo)
+              .font(.title2)
+              .padding(5)
+              .accessibilityLabel(Text(.app(.keptOffline)))
+          }
+        }
         .transaction { tx in
           tx.animation = nil
         }

@@ -93,10 +93,14 @@ class DocumentListViewModel {
       fillFailed: fillError != nil || replacementStoppedShort)
   }
 
+  /// A list the app keeps itself: served from the database, never filled.
+  private var isLocalView: Bool { filterState.localView != nil }
+
   /// Which list the failure belongs to, for wording it.
   var scope: DocumentListScope {
     let savedView = filterState.savedView.flatMap { store.savedViews[$0] }
     return DocumentListScope(
+      localView: filterState.localView,
       savedView: filterState.savedView,
       modified: savedView.map { filterState.isModified(from: $0) } ?? false,
       filtering: filterState.filtering)
@@ -195,6 +199,11 @@ class DocumentListViewModel {
     if key != queryKey {
       subscribe(to: key, resettingWindow: true)
     }
+    if isLocalView {
+      awaitingFill = false
+      ready = true
+      return
+    }
     do {
       try await runFill()
     } catch {
@@ -263,6 +272,13 @@ class DocumentListViewModel {
     if key != queryKey {
       subscribe(to: key, resettingWindow: true)
     }
+    if isLocalView {
+      // The sync above is the refresh: its reconcile fetches the members'
+      // missing rows and tops the downloads up.
+      awaitingFill = false
+      surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
+      return
+    }
     do {
       try await runFill()
     } catch {
@@ -288,7 +304,7 @@ class DocumentListViewModel {
   /// the outcome shows in the list itself — but an offline device still gets
   /// the offline indicator, so the tap visibly answers.
   func retry() async {
-    guard queryKey != nil else { return }
+    guard queryKey != nil, !isLocalView else { return }
     errorController.noteOfflineIfNeeded()
     do {
       try await runFill()

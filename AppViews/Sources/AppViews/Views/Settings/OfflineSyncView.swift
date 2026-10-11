@@ -197,6 +197,16 @@ public struct OfflineSyncView: View {
                   libraryFileProgress.totalDocuments,
                   libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file))))))
         }
+        if (status?.keptOfflineFileProgress ?? .zero).totalDocuments > 0 {
+          let progress = (status?.keptOfflineFileProgress ?? .zero)
+          statusRow(
+            String(localized: .settings(.offlineSyncKeptOffline)),
+            value: String(
+              localized: .settings(
+                .offlineSyncFilesDownloadedValue(
+                  progress.downloadedFiles, progress.totalDocuments,
+                  progress.downloadedBytes.formatted(.byteCount(style: .file))))))
+        }
         dateStatusRow(
           String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
         statusRow(

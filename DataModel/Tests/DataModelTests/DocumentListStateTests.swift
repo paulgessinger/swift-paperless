@@ -101,4 +101,13 @@ struct DocumentListStateTests {
     #expect(DocumentListScope(savedView: 3, modified: true, filtering: true) == .filtered)
     #expect(DocumentListScope(savedView: 3, modified: true, filtering: false) == .allDocuments)
   }
+
+  @Test("The scope names the local view before anything the filter says")
+  func scopeOfALocalView() {
+    #expect(
+      DocumentListScope(localView: .keptOffline, savedView: 3, modified: false, filtering: true)
+        == .keptOffline)
+    #expect(DocumentListScope(savedView: 3, modified: false, filtering: true) == .savedView(id: 3))
+    #expect(DocumentListScope(savedView: nil, modified: false, filtering: false) == .allDocuments)
+  }
 }
