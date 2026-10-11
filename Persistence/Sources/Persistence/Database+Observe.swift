@@ -166,7 +166,7 @@ extension Database {
   /// Generic over the reducer rather than over `ValueReducers.Fetch` so the
   /// `removeDuplicates()`/`map` chains above — each of which wraps the reducer
   /// in another one — all go through this same adapter.
-  private func stream<Reducer: ValueReducer>(
+  func stream<Reducer: ValueReducer>(
     _ observation: ValueObservation<Reducer>
   ) -> AsyncThrowingStream<Reducer.Value, Error> {
     let writer = writer
