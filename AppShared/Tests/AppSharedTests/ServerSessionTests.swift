@@ -251,11 +251,19 @@ struct ServerSessionTests {
     await browsing.fileDownloader?.invalidate()
   }
 
-  @Test("The reconcile fetches a kept document's missing row and releases one the server lost")
+  @Test(
+    "The reconcile fetches a kept document's missing row, queues its file, and releases one the server lost"
+  )
   func reconcileHydratesAndReleasesKeptDocuments() async throws {
-    let harness = try await StoreHarness.make(documents: [document(1)])
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let harness = try await StoreHarness.make(
+      documents: [document(1)], fileDownloader: StoreHarness.stubbedDownloader)
     for id: UInt in [1, 2] {
-      _ = try await harness.transient.update(document: document(id))
+      var document = document(id)
+      document.modified = Date(timeIntervalSince1970: 500)
+      _ = try await harness.transient.update(document: document)
     }
     for id: UInt in [1, 2, 3] {
       try await harness.database.setKeptOffline(
@@ -270,6 +278,10 @@ struct ServerSessionTests {
     #expect(try await harness.database.document(serverID: harness.serverID, id: 2) != nil)
     #expect(try await harness.database.keptOfflineIDs(serverID: harness.serverID) == [1, 2])
     #expect(harness.session.syncFailures.isEmpty)
+    // Both kept documents are missing their archive; the hydration queued them.
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 2 }, "the kept files were never requested")
+    await harness.fileDownloader?.invalidate()
   }
 
   @Test("A pass called off during the library fill never starts the detail fill")
