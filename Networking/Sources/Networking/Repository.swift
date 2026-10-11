@@ -117,6 +117,11 @@ public protocol Repository<Documents, Tasks>: Sendable {
     progress: (@Sendable (Double) -> Void)?
   ) async throws -> URL
 
+  /// The locally stored file for the document's current version, if any,
+  /// without validating it against `Document.modified` and without touching
+  /// the network. It may be outdated; `download` is what validates.
+  func storedDownload(document: Document, original: Bool) async -> URL?
+
   func suggestions(documentId: UInt) async throws -> Suggestions
 
   // MARK: Saved views

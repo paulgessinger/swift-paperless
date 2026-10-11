@@ -509,6 +509,8 @@ extension TransientRepository: Repository {
     return notes
   }
 
+  public func storedDownload(document _: Document, original _: Bool) async -> URL? { nil }
+
   public func download(
     document: Document, original: Bool = false,
     progress: (@Sendable (Double) -> Void)? = nil

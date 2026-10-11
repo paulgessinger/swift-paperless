@@ -297,6 +297,8 @@ public class PreviewRepository: Repository {
   public func delete(document _: Document) async throws {}
   public func create(document _: ProtoDocument, file _: URL, filename _: String) async throws {}
 
+  public func storedDownload(document _: Document, original _: Bool) async -> URL? { nil }
+
   public func download(
     document _: Document, original _: Bool = false,
     progress: (@Sendable (Double) -> Void)? = nil

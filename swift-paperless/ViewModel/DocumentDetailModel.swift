@@ -107,6 +107,8 @@ private final class LoadErrorCollector {
 class DocumentDetailModel {
   var download: DocumentDownloadState = .initial
   var downloadProgress: Double = 0.0
+  /// A download is checking a stored preview that is already on screen.
+  var isValidatingPreview = false
 
   enum OriginalDownloadState {
     case initial
@@ -133,6 +135,17 @@ class DocumentDetailModel {
   /// happened to start it. See `startLoad(onError:)`.
   @ObservationIgnored
   private var loadTask: Task<Void, Never>?
+
+  /// The preview on screen came from storage and no download has confirmed it
+  /// yet, so it may be outdated.
+  @ObservationIgnored
+  private var previewNeedsValidation = false
+
+  /// Identifies the file behind the preview on screen. A download that
+  /// replaced the file returns the same URL, so the URL alone can't tell
+  /// whether the preview needs reloading.
+  @ObservationIgnored
+  private var previewFileStamp: FileStamp?
 
   init(
     store: DocumentStore, connection: Connection?, document: Document
@@ -198,10 +211,10 @@ class DocumentDetailModel {
   /// only need the document id, so they run concurrently afterwards.
   ///
   /// The PDF itself doesn't wait for that metadata round-trip, though: on a
-  /// fresh open, `loadDocument` fires a provisional download off the
-  /// already-known (possibly stale) `document` in parallel with the metadata
-  /// refresh, so a cached PDF renders immediately on a slow connection instead
-  /// of sitting behind a blurred thumbnail.
+  /// fresh open, a stored PDF for the already-known `document` is shown before
+  /// any request, and `loadDocument` fires a provisional download off that
+  /// (possibly stale) `document` in parallel with the metadata refresh to
+  /// validate or replace it.
   ///
   /// Once metadata comes back — on *every* load, not just a fresh open — the
   /// resolved document's version/`modified` is compared against what was on
@@ -285,21 +298,45 @@ class DocumentDetailModel {
 
   /// No PDF is on screen and none is in flight: either the document was just
   /// opened, or the last download failed and a refresh should retry it.
-  private var needsPreviewDownload: Bool {
+  private var hasNoPreview: Bool {
     switch download {
     case .initial, .error: true
     case .loading, .loaded: false
     }
   }
 
+  /// Nothing on screen, or only an unconfirmed stored file.
+  private var needsPreviewDownload: Bool {
+    hasNoPreview || previewNeedsValidation
+  }
+
+  /// Show the stored PDF for `document`, if there is one, before any request
+  /// is made. The server can take a long time to answer (e.g. disks spinning
+  /// up), and the stored file is usually current.
+  private func showStoredPreview(for document: Document) async {
+    guard let url = await store.repository.storedDownload(document: document, original: false)
+    else { return }
+    let stamp = FileStamp(url: url)
+    // Read into memory: the download that validates it may replace the file
+    // at this same path while it is on screen.
+    guard let pdfDocument = await PDFDocument.loadBackgroundInMemory(url: url),
+      case .initial = download
+    else { return }
+    download = .loaded(url: url, document: pdfDocument)
+    previewFileStamp = stamp
+    previewNeedsValidation = true
+  }
+
   func loadDocument(onError: (@MainActor @Sendable (any Error) -> Void)? = nil) async {
     let priorDocument = document
 
+    if case .initial = download {
+      await showStoredPreview(for: priorDocument)
+    }
+
     // Fire the provisional PDF load off the already-known document right away
     // — its own cache check (ContentStore, keyed on `currentVersionID` +
-    // `modified`) is what decides whether this is an instant hit or a real
-    // download, so starting it here rather than after the metadata round-trip
-    // is what lets a cached PDF appear immediately on a slow connection.
+    // `modified`) decides whether a stored preview is confirmed or replaced.
     // Runs on a refresh after a failed download too, so an unchanged document
     // is retried rather than left on the error placeholder.
     let provisionalDownload: Task<Void, Never>? =
@@ -346,7 +383,7 @@ class DocumentDetailModel {
     // A retry after a failed download shows loading like a fresh open does,
     // replacing the error placeholder. A PDF already on screen stays there.
     let setLoading =
-      needsPreviewDownload
+      hasNoPreview
       ? Task {
         try? await Task.sleep(for: .seconds(0.5))
         guard !Task.isCancelled else { return }
@@ -357,6 +394,18 @@ class DocumentDetailModel {
     // the just-set `.error` back to `.loading` — pinning the preview's loading
     // overlay on screen even though the download already failed.
     defer { setLoading?.cancel() }
+    // Delayed so a check that resolves straight from the cache doesn't flash.
+    let showValidating =
+      previewNeedsValidation
+      ? Task {
+        try? await Task.sleep(for: .seconds(0.5))
+        guard !Task.isCancelled else { return }
+        isValidatingPreview = true
+      } : nil
+    defer {
+      showValidating?.cancel()
+      isValidatingPreview = false
+    }
     do {
       let url = try await store.repository.download(
         document: document,
@@ -367,9 +416,13 @@ class DocumentDetailModel {
           }
         })
 
-      if case .loaded(let existingURL, _) = download, existingURL == url {
-        // Re-validation after the metadata refresh resolved to the same
-        // cached file the provisional load already rendered — nothing to do.
+      let stamp = FileStamp(url: url)
+      if case .loaded(let existingURL, _) = download, existingURL == url,
+        stamp != nil, stamp == previewFileStamp
+      {
+        // The file on screen is the one the download resolved to.
+        previewNeedsValidation = false
+        Task { await downloadOriginal() }
         return
       }
 
@@ -379,6 +432,8 @@ class DocumentDetailModel {
       }
 
       download = .loaded(url: url, document: pdfDocument)
+      previewFileStamp = stamp
+      previewNeedsValidation = false
 
       // Start downloading the original in the background
       Task { await downloadOriginal() }
@@ -447,5 +502,20 @@ class DocumentDetailModel {
     let withoutServer: Route? = Route(action: .document(id: document.id, edit: nil))
     return (withServer, withoutServer)
 
+  }
+}
+
+/// Identity of a file on disk. A replacement arrives by rename, which gives the
+/// path a different file number.
+private struct FileStamp: Equatable {
+  let fileNumber: Int
+  let modified: Date?
+
+  init?(url: URL) {
+    guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+      let fileNumber = attributes[.systemFileNumber] as? Int
+    else { return nil }
+    self.fileNumber = fileNumber
+    modified = attributes[.modificationDate] as? Date
   }
 }

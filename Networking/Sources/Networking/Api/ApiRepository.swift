@@ -752,6 +752,17 @@ extension ApiRepository: Repository {
     try await streamDownload(document: document, original: original, progress: progress)
   }
 
+  public func storedDownload(document: Document, original: Bool) async -> URL? {
+    guard let contentStore else { return nil }
+    let key = ContentStore.Key(
+      serverID: connection.serverID,
+      versionID: document.currentVersionID,
+      kind: original ? .original : .archive)
+    // Files only arrive at the canonical path by rename, so one that exists is
+    // complete.
+    return contentStore.exists(key) ? contentStore.url(for: key) : nil
+  }
+
   private func streamDownload(
     document: Document, original: Bool,
     progress: (@Sendable (Double) -> Void)?
