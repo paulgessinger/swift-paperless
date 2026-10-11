@@ -82,11 +82,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var activeSheet: AuxiliarySheet? = nil
   @State private var showPreview = false
   @State private var previewPage = 0
-  // iPad-only: drives the .inspector-presented edit panel. Defaults open so
-  // the document's metadata is visible alongside the PDF the first time
-  // someone opens it on iPad. SceneStorage so the open/closed state
-  // persists across app launches per scene.
-  @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = true
+  // iPad-only: drives the .inspector-presented edit panel. Starts closed, so
+  // the PDF isn't covered where the inspector can't sit beside it; the toolbar
+  // button opens it. SceneStorage so the open/closed state persists across
+  // app launches per scene.
+  @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = false
   @State private var isRefreshing = false
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
