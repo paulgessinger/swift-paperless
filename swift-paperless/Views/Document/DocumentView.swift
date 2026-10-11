@@ -67,11 +67,21 @@ struct DocumentView: View {
 
   // MARK: State
 
+  // The open document for both layouts: pushed when compact, the detail
+  // column's selection when regular. One source, so a size class change
+  // (folding iPhone Duo) keeps the same document open.
   @State private var navPath: [NavigationState] = []
+
+  private var selectedDocument: Document? {
+    navPath.compactMap { if case .detail(let document) = $0 { document } else { nil } }.last
+  }
+
+  private func select(_ document: Document?) {
+    navPath = document.map { [.detail(document: $0)] } ?? []
+  }
 
   // iPad split-view state. Compact size class ignores these.
   @State private var sidebarSelection: SidebarSelection? = .allDocuments
-  @State private var selectedDocument: Document?
   // An iPhone at regular width (iPhone Duo's inner display) has no room for
   // three columns; asking for them makes the list overlay the document.
   // Start with list and document, saved views behind the sidebar button.
@@ -149,15 +159,7 @@ struct DocumentView: View {
           guard case .document(let reqId, _) = route.action else { return }
 
           // Check if currently open id is the one that's requested
-          if horizontalSizeClass == .regular {
-            if selectedDocument?.id == reqId { return }
-          } else {
-            if let last = navPath.last {
-              if case .detail(let open) = last {
-                if reqId == open.id { return }
-              }
-            }
-          }
+          if selectedDocument?.id == reqId { return }
 
           guard let document = try await store.document(id: id) else {
             Logger.shared.error("Document with id \(id) was not found")
@@ -171,7 +173,7 @@ struct DocumentView: View {
 
           store.preloadThumbnail(for: document)
           if horizontalSizeClass == .regular {
-            selectedDocument = document
+            select(document)
           } else {
             await clear()
             navPath.append(NavigationState.detail(document: document))
@@ -554,7 +556,7 @@ struct DocumentView: View {
   private var contentColumn: some View {
     DocumentList(
       store: store,
-      onSelect: { selectedDocument = $0 },
+      onSelect: { select($0) },
       filterModel: filterModel,
       errorController: errorController,
       isFetching: $isFetching,
@@ -587,13 +589,7 @@ struct DocumentView: View {
   @ViewBuilder
   private var detailColumn: some View {
     if let doc = selectedDocument {
-      let bridge = Binding<[NavigationState]>(
-        get: { [.detail(document: doc)] },
-        set: { newValue in
-          if newValue.isEmpty { selectedDocument = nil }
-        }
-      )
-      DocumentDetailView(store: store, document: doc, navPath: bridge)
+      DocumentDetailView(store: store, document: doc, navPath: $navPath)
         .id(doc.id)
     } else {
       ContentUnavailableView {
