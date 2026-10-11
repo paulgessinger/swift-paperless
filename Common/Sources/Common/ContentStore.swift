@@ -241,19 +241,6 @@ public struct ContentStore: Sendable {
     }
   }
 
-  // MARK: - Grace
-
-  /// A file without an index row is left alone while anything in its version
-  /// directory is younger than this.
-  ///
-  /// A blob and its row are written by two different subsystems — and, with
-  /// the Share Extension, two different processes — with no transaction
-  /// spanning both. A download therefore exists on disk for a short window
-  /// before the row that records it, and the app group is shared, so the other
-  /// process may be mid-write while this one sweeps. An hour is orders of
-  /// magnitude longer than that window.
-  public static let reclaimGracePeriod: TimeInterval = 3600
-
   // MARK: - Directory helpers
 
   private func contents(of directory: URL) -> [URL] {

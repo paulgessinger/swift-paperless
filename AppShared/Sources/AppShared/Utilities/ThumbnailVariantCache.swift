@@ -13,16 +13,12 @@ import Nuke
 import os
 
 enum ThumbnailVariantCache {
-  /// A variant is around the size of its thumbnail, tens of kilobytes; this
-  /// holds thousands.
-  static let sizeLimit = 150 * 1024 * 1024
-
   /// The cache under `root`, next to the content store; `nil` when its
   /// directory cannot be made.
   static func make(under root: URL) -> DataCache? {
     do {
       let cache = try DataCache(path: AppGroup.Layout.thumbnailVariants(in: root))
-      cache.sizeLimit = sizeLimit
+      cache.sizeLimit = StoragePolicy.thumbnailVariantCacheBytes
       return cache
     } catch {
       Logger.shared.error("Opening the thumbnail variant cache failed: \(error)")

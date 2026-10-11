@@ -30,16 +30,6 @@ import os
 /// between the read and the unlink has recorded a newer row, which the claim
 /// misses, and a newer file, which the unlink leaves alone.
 public actor ContentReclaimer: FileIndex {
-  /// What the evictable files may take, in total across servers.
-  public static let budgetBytes: Int64 = 500_000_000
-  /// A file accessed inside this window is never evicted, so a pass does not
-  /// unlink a file that is on screen.
-  public static let recentAccessGrace: TimeInterval = 300
-  /// How often ``runIfDue(reason:)`` lets a pass run.
-  public static let dueInterval: TimeInterval = 3600
-  /// Accesses to one file inside this window are recorded once.
-  static let accessCoalescing: TimeInterval = 60
-
   public enum Reason: String, Sendable {
     case launch
     case connectionRemoved
@@ -97,7 +87,7 @@ public actor ContentReclaimer: FileIndex {
   /// - Parameter now: injectable clock, so tests can age files and accesses
   ///   without backdating them.
   public init(
-    database: Database, store: ContentStore?, budget: Int64 = ContentReclaimer.budgetBytes,
+    database: Database, store: ContentStore?, budget: Int64 = StoragePolicy.documentBudgetBytes,
     now: @escaping @Sendable () -> Date = { Date() }
   ) {
     self.database = database
@@ -126,10 +116,10 @@ public actor ContentReclaimer: FileIndex {
     return report
   }
 
-  /// Run a pass if none has run for ``dueInterval``; `nil` otherwise.
+  /// Run a pass if none has run for ``StoragePolicy/sweepInterval``; `nil` otherwise.
   @discardableResult
   public func runIfDue(reason: Reason) async -> Report? {
-    if let lastRun, now().timeIntervalSince(lastRun) < Self.dueInterval {
+    if let lastRun, now().timeIntervalSince(lastRun) < StoragePolicy.sweepInterval {
       return nil
     }
     return await run(reason: reason)
@@ -155,7 +145,8 @@ public actor ContentReclaimer: FileIndex {
     if let store {
       do {
         let candidates = try await database.evictionCandidates(
-          budget: budget, protectAccessedAfter: now.addingTimeInterval(-Self.recentAccessGrace))
+          budget: budget,
+          protectAccessedAfter: now.addingTimeInterval(-StoragePolicy.recentAccessGrace))
         for row in try await database.deleteFiles(candidates) {
           report.evictedBytes += unlink(row)
           report.evictedFiles += 1
@@ -214,7 +205,7 @@ public actor ContentReclaimer: FileIndex {
       // its row is written, possibly from the other process, so only an aged
       // file is an orphan.
       if let youngest = entry.youngestModification,
-        now.timeIntervalSince(youngest) < ContentStore.reclaimGracePeriod
+        now.timeIntervalSince(youngest) < StoragePolicy.unindexedFileGrace
       {
         report.keptRecent += 1
       } else {
@@ -284,7 +275,7 @@ public actor ContentReclaimer: FileIndex {
   }
 
   public func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {
-    if let last = lastTouched[key], date.timeIntervalSince(last) < Self.accessCoalescing {
+    if let last = lastTouched[key], date.timeIntervalSince(last) < StoragePolicy.accessCoalescing {
       return
     }
     lastTouched[key] = date
