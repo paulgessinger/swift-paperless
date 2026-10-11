@@ -80,7 +80,7 @@ struct FilterAssemblyiOS18: View {
           .fill(
             Material.bar
           )
-          .ignoresSafeArea(.container, edges: .top)
+          .ignoresSafeArea(.container, edges: [.top, .horizontal])
       }
     }
 
