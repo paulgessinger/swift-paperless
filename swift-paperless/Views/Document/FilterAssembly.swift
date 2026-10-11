@@ -108,7 +108,7 @@ struct FilterAssembly: View {
 
           }
 
-          .ignoresSafeArea(.container, edges: .top)
+          .ignoresSafeArea(.container, edges: [.top, .horizontal])
       }
     }
   }
