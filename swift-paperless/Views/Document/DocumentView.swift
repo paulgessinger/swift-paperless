@@ -72,7 +72,11 @@ struct DocumentView: View {
   // iPad split-view state. Compact size class ignores these.
   @State private var sidebarSelection: SidebarSelection? = .allDocuments
   @State private var selectedDocument: Document?
-  @State private var columnVisibility: NavigationSplitViewVisibility = .all
+  // An iPhone at regular width (iPhone Duo's inner display) has no room for
+  // three columns; asking for them makes the list overlay the document.
+  // Start with list and document, saved views behind the sidebar button.
+  @State private var columnVisibility: NavigationSplitViewVisibility =
+    UIDevice.current.userInterfaceIdiom == .phone ? .doubleColumn : .all
 
   @State private var showFileImporter = false
   @State private var isDocumentScannerAvailable = false
