@@ -133,9 +133,8 @@ struct ThumbnailCacheTests {
   func variantsAreCachedApart() async throws {
     let store = try makeStore()
     let index = Index()
-    let variants = try ThumbnailVariantCache.make(
-      at: FileManager.default.temporaryDirectory
-        .appendingPathComponent("ThumbnailCacheTests-variants-\(UUID().uuidString)"))
+    let variants = try #require(ThumbnailVariantCache.make(under: store.root))
+    #expect(variants.path == AppGroup.Layout.thumbnailVariants(in: store.root))
     let cache = ContentStoreDataCache(store: store, index: index, variants: variants)
     let id = ThumbnailImageID.make(serverID: Self.server, document: document(7))
     let resized = id + "com.github.kean/nuke/resize?s=(130.0, 9.0)"

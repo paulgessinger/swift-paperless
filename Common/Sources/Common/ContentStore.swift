@@ -56,15 +56,12 @@ public struct ContentStore: Sendable {
     case appGroupUnavailable(identifier: String)
   }
 
-  public static let appGroup = AppGroup.identifier
+  /// The container the store is laid out under, where the other caches live
+  /// next to it (see ``AppGroup/Layout``).
+  public let root: URL
 
-  private let root: URL
-
-  public init(appGroupIdentifier: String = ContentStore.appGroup) throws {
-    guard
-      let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: appGroupIdentifier)
-    else {
+  public init(appGroupIdentifier: String = AppGroup.identifier) throws {
+    guard let container = AppGroup.container(identifier: appGroupIdentifier) else {
       throw StoreError.appGroupUnavailable(identifier: appGroupIdentifier)
     }
     try self.init(root: container)
@@ -79,9 +76,7 @@ public struct ContentStore: Sendable {
 
   // MARK: - Paths
 
-  private var canonicalRoot: URL {
-    root.appendingPathComponent("Caches/ContentStore", isDirectory: true)
-  }
+  private var canonicalRoot: URL { AppGroup.Layout.contentStore(in: root) }
 
   private func directory(for key: Key) -> URL {
     canonicalRoot

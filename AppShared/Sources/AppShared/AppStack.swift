@@ -89,7 +89,9 @@ public final class AppStack {
   public func runLaunchMaintenance() {
     Task { @MainActor in
       // Thumbnails moved into the content store; the old cache is dead weight.
-      await Task.detached(priority: .utility) { LegacyThumbnailCache.remove() }.value
+      if let root = contentReclaimer.store?.root {
+        await Task.detached(priority: .utility) { LegacyThumbnailCache.remove(under: root) }.value
+      }
       _ = await suspension.performBackgroundWork {
         await contentReclaimer.run(reason: .launch)
       }

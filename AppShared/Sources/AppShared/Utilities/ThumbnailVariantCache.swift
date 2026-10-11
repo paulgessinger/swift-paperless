@@ -7,30 +7,26 @@
 //  so a plain least-recently-used cache with a size cap is all they need.
 //
 
+import Common
 import Foundation
 import Nuke
 import os
 
 enum ThumbnailVariantCache {
-  /// A variant is around ten kilobytes as JPEG; this holds over ten thousand.
+  /// A variant is around the size of its thumbnail, tens of kilobytes; this
+  /// holds thousands.
   static let sizeLimit = 150 * 1024 * 1024
 
-  static var url: URL? { AppGroupCaches.directory("ThumbnailVariants") }
-
-  /// `nil` without an app-group container (previews, host tests).
-  static func make() -> DataCache? {
-    guard let url else { return nil }
+  /// The cache under `root`, next to the content store; `nil` when its
+  /// directory cannot be made.
+  static func make(under root: URL) -> DataCache? {
     do {
-      return try make(at: url)
+      let cache = try DataCache(path: AppGroup.Layout.thumbnailVariants(in: root))
+      cache.sizeLimit = sizeLimit
+      return cache
     } catch {
       Logger.shared.error("Opening the thumbnail variant cache failed: \(error)")
       return nil
     }
-  }
-
-  static func make(at url: URL) throws -> DataCache {
-    let cache = try DataCache(path: url)
-    cache.sizeLimit = sizeLimit
-    return cache
   }
 }

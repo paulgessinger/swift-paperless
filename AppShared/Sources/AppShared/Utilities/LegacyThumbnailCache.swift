@@ -6,15 +6,14 @@
 //  live in the content store now; the old directory is removed once.
 //
 
+import Common
 import Foundation
 import os
 
 enum LegacyThumbnailCache {
-  static var url: URL? { AppGroupCaches.directory("Nuke") }
-
   /// Cheap when the directory is already gone: one failed stat.
-  static func remove() {
-    guard let url else { return }
+  static func remove(under root: URL) {
+    let url = AppGroup.Layout.legacyThumbnailCache(in: root)
     do {
       try FileManager.default.removeItem(at: url)
       Logger.shared.info("Removed the legacy thumbnail cache")

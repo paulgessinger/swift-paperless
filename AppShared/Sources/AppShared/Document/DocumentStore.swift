@@ -219,7 +219,7 @@ public final class DocumentStore: Sendable {
     self.session = session
     if let reclaimer = registry?.contentReclaimer, let store = reclaimer.store {
       thumbnailCache = ContentStoreDataCache(
-        store: store, index: reclaimer, variants: ThumbnailVariantCache.make())
+        store: store, index: reclaimer, variants: ThumbnailVariantCache.make(under: store.root))
     } else {
       thumbnailCache = nil
     }
