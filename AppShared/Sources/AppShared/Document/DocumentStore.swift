@@ -190,6 +190,11 @@ public final class DocumentStore: Sendable {
 
   public private(set) var imagePipeline: ImagePipeline
 
+  /// The pipelines' disk cache: thumbnails in the content store, recorded in
+  /// the file index. `nil` without a store (a fixture), so nothing is kept on
+  /// disk.
+  @ObservationIgnored private let thumbnailCache: ContentStoreDataCache?
+
   @ObservationIgnored
   private var taskUpdateTask: Task<Void, Never>?
 
@@ -212,7 +217,14 @@ public final class DocumentStore: Sendable {
   private init(registry: ServerSessionRegistry?, session: ServerSession?) {
     self.registry = registry
     self.session = session
-    imagePipeline = Self.makeImagePipeline(delegate: session?.repository?.imageSessionDelegate)
+    if let reclaimer = registry?.contentReclaimer, let store = reclaimer.store {
+      thumbnailCache = ContentStoreDataCache(
+        store: store, index: reclaimer, variants: ThumbnailVariantCache.make(under: store.root))
+    } else {
+      thumbnailCache = nil
+    }
+    imagePipeline = Self.makeImagePipeline(
+      delegate: session?.repository?.imageSessionDelegate, dataCache: thumbnailCache)
     rebuildProjection()
   }
 
@@ -336,7 +348,8 @@ public final class DocumentStore: Sendable {
     // so pointing the store at a new one *is* switching which server's progress
     // the Offline & Sync screen shows.
     self.session = session
-    imagePipeline = Self.makeImagePipeline(delegate: session.repository?.imageSessionDelegate)
+    imagePipeline = Self.makeImagePipeline(
+      delegate: session.repository?.imageSessionDelegate, dataCache: thumbnailCache)
     rebuildProjection()
     if reload {
       events.emit(.repositoryChanged)
@@ -344,17 +357,16 @@ public final class DocumentStore: Sendable {
     }
   }
 
-  private static func makeImagePipeline(delegate: (any URLSessionDelegate)?) -> ImagePipeline {
+  private static func makeImagePipeline(
+    delegate: (any URLSessionDelegate)?, dataCache: (any DataCaching)?
+  ) -> ImagePipeline {
     // Nuke's default `URLSessionConfiguration` installs `sharedUrlCache`, a
     // 150 MB on-disk `URLCache` in *this process's* caches directory. With the
-    // app-group `DataCache` below, every thumbnail would be written to both —
-    // and the pipeline reads the `DataCache` before it makes a request, so the
-    // `URLCache` copy is only ever reached for an image the `DataCache` has
-    // already evicted. Keep the one cache the share extension shares and the
-    // storage section can account for. Without an app-group container
-    // (previews, host tests) there is no `DataCache`, so the `URLCache` stays
-    // as the only one.
-    let dataCache = sharedThumbnailCacheURL().flatMap { try? DataCache(path: $0) }
+    // content store as the disk cache, every thumbnail would be written to
+    // both — and the pipeline reads the data cache before it makes a request,
+    // so the `URLCache` copy is only ever reached for an image the store has
+    // lost. Keep the one cache the file index accounts for. Without a store
+    // (previews, host tests) the `URLCache` stays as the only one.
     let configuration = DataLoader.defaultConfiguration
     if dataCache != nil {
       configuration.urlCache = nil
@@ -366,38 +378,44 @@ public final class DocumentStore: Sendable {
     }
     var config = ImagePipeline.Configuration(dataLoader: dataLoader)
     config.dataCache = dataCache
+    // The server's bytes under the exact id, and the encoded result of a
+    // request with processors under the id plus their identifiers; the data
+    // cache files the first in the content store and the second in the
+    // variant cache.
+    config.dataCachePolicy = .storeAll
+    // The variants: the server's thumbnails are opaque (paperless renders
+    // them with the alpha removed), but the decoded WebP still reports an
+    // alpha channel, which would send Nuke's default encoder to PNG. HEIC
+    // is the one format that comes out smaller than the source; JPEG where
+    // the hardware cannot encode it.
+    config.makeImageEncoder = { _ in
+      let type: AssetType = ImageEncoders.ImageIO.isSupported(type: .heic) ? .heic : .jpeg
+      return ImageEncoders.ImageIO(type: type, compressionRatio: 0.8)
+    }
     return ImagePipeline(configuration: config)
   }
 
-  /// Where the image pipelines keep their on-disk thumbnail cache — `nil`
-  /// without an app-group container (previews, macOS host tests). Only the
-  /// path: the storage statistics read it off the main actor, and must not
-  /// create it.
-  nonisolated static func thumbnailCacheURL() -> URL? {
-    #if os(iOS)
-      FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: ContentStore.appGroup
-      )?.appendingPathComponent("Caches/Nuke", isDirectory: true)
-    #else
-      // macOS returns a group-container path even to an unsigned test process,
-      // and touching it raises a privacy prompt that blocks until answered.
-      nil
-    #endif
-  }
-
-  private static func sharedThumbnailCacheURL() -> URL? {
-    guard let url = thumbnailCacheURL() else { return nil }
-    try? FileManager.default.createDirectory(
-      at: url, withIntermediateDirectories: true)
-    try? FileManager.default.setAttributes(
-      [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
-      ofItemAtPath: url.path)
-    return url
+  /// The request for a document's thumbnail, keyed by server and version so
+  /// the pipeline's disk cache is the content store's file for that version.
+  /// Without a session there is no server to file it under, and the request
+  /// stays keyed by its URL, which the disk cache ignores.
+  public func thumbnailImageRequest(
+    for document: Document, processors: [any ImageProcessing] = [],
+    priority: ImageRequest.Priority = .normal
+  ) throws -> ImageRequest {
+    let urlRequest = try repository.thumbnailRequest(document: document)
+    var userInfo: [ImageRequest.UserInfoKey: Any] = [:]
+    if let serverID = session?.serverID {
+      userInfo[.imageIdKey] = ThumbnailImageID.make(serverID: serverID, document: document)
+    }
+    return ImageRequest(
+      urlRequest: urlRequest, processors: processors, priority: priority,
+      userInfo: userInfo.isEmpty ? nil : userInfo)
   }
 
   public func preloadThumbnail(for document: Document) {
-    guard let urlRequest = try? repository.thumbnailRequest(document: document) else { return }
-    imagePipeline.loadImage(with: ImageRequest(urlRequest: urlRequest, priority: .high)) { _ in }
+    guard let request = try? thumbnailImageRequest(for: document, priority: .high) else { return }
+    imagePipeline.loadImage(with: request) { _ in }
   }
 
   public func updateDocument(_ document: Document) async throws -> Document {
@@ -970,25 +988,27 @@ extension DocumentStore {
     if let backend = session?.backend {
       try await backend.database.clearCache()
     }
-    // Downloaded originals/archives, after their rows: the store the
-    // repositories write into is the reclaimer's.
+    // Downloaded files and thumbnails, after their rows: the store the
+    // repositories and the image pipeline write into is the reclaimer's.
     if let contentStore = registry?.contentReclaimer?.store {
       try? contentStore.purge()
     }
-    // Nuke memory + disk image cache.
+    // Nuke's memory cache and, through the data cache, the thumbnail
+    // variants; the thumbnails themselves went with the store.
     imagePipeline.cache.removeAll()
   }
 
   /// How much disk the offline data takes, for the Offline & Sync screen.
   ///
-  /// Detached, because it walks the blob and thumbnail directories — thousands
-  /// of files for a fully-cached library — and that must not stall the UI. The
-  /// database is read through the active session; before login there is none,
-  /// and it reads as zero (the screen isn't reachable then anyway).
+  /// Detached, because measuring the database walks its files, and that must
+  /// not stall the UI. The database is read through the active session; before
+  /// login there is none, and it reads as zero (the screen isn't reachable
+  /// then anyway).
   public func storageUsage() async -> OfflineStorageUsage {
     let database = session?.backend?.database
+    let variants = thumbnailCache?.variants
     return await Task.detached(priority: .utility) {
-      OfflineStorageUsage.measure(database: database)
+      await OfflineStorageUsage.measure(database: database, variants: variants)
     }.value
   }
 

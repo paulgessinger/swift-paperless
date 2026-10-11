@@ -30,7 +30,7 @@ public final class TransferStatistics {
   public var total: Int64 { bytesByCategory.values.reduce(0, +) }
 
   private static let storeKey = "transferStatistics.v1"
-  private var defaults: UserDefaults { UserDefaults(suiteName: ContentStore.appGroup) ?? .standard }
+  private var defaults: UserDefaults { UserDefaults(suiteName: AppGroup.identifier) ?? .standard }
 
   private init() { load() }
 

@@ -157,7 +157,7 @@ extension Database {
   /// App-group convenience for ``exportConnectionsToLegacyUserDefaults(_:)``.
   @discardableResult
   public func exportConnectionsToLegacyUserDefaults(
-    appGroupIdentifier: String = ContentStore.appGroup
+    appGroupIdentifier: String = AppGroup.identifier
   ) throws(DatabaseError) -> Int {
     try wrapping("exportConnectionsToLegacyUserDefaults") {
       guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else {

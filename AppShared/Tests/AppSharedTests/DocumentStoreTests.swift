@@ -9,6 +9,20 @@ import Testing
 @MainActor
 @Suite
 struct DocumentStoreTests {
+  // MARK: - Thumbnails
+
+  @Test("A thumbnail request is keyed by the session's server and the document's version")
+  func thumbnailRequestCarriesTheImageID() async throws {
+    let harness = try await StoreHarness.make()
+
+    let request = try harness.store.thumbnailImageRequest(for: document(10))
+
+    #expect(
+      request.userInfo[.imageIdKey] as? String
+        == ThumbnailImageID.make(serverID: harness.serverID, document: document(10)))
+    #expect(request.urlRequest != nil)
+  }
+
   // MARK: - updateDocument
 
   @Test(

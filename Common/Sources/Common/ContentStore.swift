@@ -56,15 +56,12 @@ public struct ContentStore: Sendable {
     case appGroupUnavailable(identifier: String)
   }
 
-  public static let appGroup = AppGroup.identifier
+  /// The container the store is laid out under, where the other caches live
+  /// next to it (see ``AppGroup/Layout``).
+  public let root: URL
 
-  private let root: URL
-
-  public init(appGroupIdentifier: String = ContentStore.appGroup) throws {
-    guard
-      let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: appGroupIdentifier)
-    else {
+  public init(appGroupIdentifier: String = AppGroup.identifier) throws {
+    guard let container = AppGroup.container(identifier: appGroupIdentifier) else {
       throw StoreError.appGroupUnavailable(identifier: appGroupIdentifier)
     }
     try self.init(root: container)
@@ -79,9 +76,7 @@ public struct ContentStore: Sendable {
 
   // MARK: - Paths
 
-  private var canonicalRoot: URL {
-    root.appendingPathComponent("Caches/ContentStore", isDirectory: true)
-  }
+  private var canonicalRoot: URL { AppGroup.Layout.contentStore(in: root) }
 
   private func directory(for key: Key) -> URL {
     canonicalRoot
@@ -246,62 +241,7 @@ public struct ContentStore: Sendable {
     }
   }
 
-  // MARK: - Grace
-
-  /// A file without an index row is left alone while anything in its version
-  /// directory is younger than this.
-  ///
-  /// A blob and its row are written by two different subsystems — and, with
-  /// the Share Extension, two different processes — with no transaction
-  /// spanning both. A download therefore exists on disk for a short window
-  /// before the row that records it, and the app group is shared, so the other
-  /// process may be mid-write while this one sweeps. An hour is orders of
-  /// magnitude longer than that window.
-  public static let reclaimGracePeriod: TimeInterval = 3600
-
-  // MARK: - Usage
-
-  /// Disk taken by the store, as a whole and per server.
-  public struct Usage: Sendable, Equatable {
-    /// Everything under the store root, including anything not filed under a
-    /// server (so the total never hides space the per-server rows can't place).
-    public var total: DiskUsage = .zero
-    public var byServer: [UUID: DiskUsage] = [:]
-
-    public init(total: DiskUsage = .zero, byServer: [UUID: DiskUsage] = [:]) {
-      self.total = total
-      self.byServer = byServer
-    }
-  }
-
-  /// Measure the store with a full directory walk — slow for a large store, so
-  /// call it off the main actor.
-  ///
-  /// Per-server figures come straight from the layout: every blob lives under
-  /// its server's directory, so attributing it costs nothing beyond the walk
-  /// that the total needs anyway, and doesn't need the database at all.
-  ///
-  /// ``DiskUsage/files`` counts blobs only. The metadata sidecar next to each
-  /// one still adds to the bytes, but counting it would double the number of
-  /// downloads the user is told about.
-  public func usage() -> Usage {
-    var usage = Usage()
-    for entry in contents(of: canonicalRoot) {
-      let measured = DiskUsage.measure(entry, counting: Self.isBlob)
-      usage.total += measured
-      if let serverID = UUID(uuidString: entry.lastPathComponent) {
-        usage.byServer[serverID, default: .zero] += measured
-      }
-    }
-    return usage
-  }
-
-  private static let blobNames = Set(
-    Kind.allCases.map { "\($0.rawValue).\($0.fileExtension)" })
-
-  private static func isBlob(_ url: URL) -> Bool {
-    blobNames.contains(url.lastPathComponent)
-  }
+  // MARK: - Directory helpers
 
   private func contents(of directory: URL) -> [URL] {
     // No `.skipsHiddenFiles`: this listing also feeds the grace-window check,

@@ -5,8 +5,8 @@ import os
 
 /// Owns the single shared GRDB connection for the app process.
 ///
-/// The on-disk SQLite file lives in the app-group container at
-/// `<container>/Library/Application Support/Database/swift-paperless.sqlite`
+/// The on-disk SQLite file lives in the app-group container, at
+/// ``AppGroup/Layout/database(in:)``,
 /// so the main app and the Share Extension can both read it; on iOS the file
 /// and its `-wal` / `-shm` sidecars are protected with
 /// `.completeUntilFirstUserAuthentication` so BGTasks and the Share Extension
@@ -37,20 +37,12 @@ public final class Database: Sendable {
   // MARK: - Init
 
   /// Production initializer. Opens (or creates) the app-group SQLite file.
-  public convenience init(appGroupIdentifier: String = ContentStore.appGroup) throws {
-    guard
-      let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: appGroupIdentifier)
-    else {
+  public convenience init(appGroupIdentifier: String = AppGroup.identifier) throws {
+    guard let container = AppGroup.container(identifier: appGroupIdentifier) else {
       throw DatabaseError.appGroupUnavailable(identifier: appGroupIdentifier)
     }
-    let directory =
-      container
-      .appendingPathComponent("Library", isDirectory: true)
-      .appendingPathComponent("Application Support", isDirectory: true)
-      .appendingPathComponent("Database", isDirectory: true)
-    try Self.createDirectory(directory)
-    let url = directory.appendingPathComponent("swift-paperless.sqlite")
+    let url = AppGroup.Layout.database(in: container)
+    try Self.createDirectory(url.deletingLastPathComponent())
     try self.init(
       path: url,
       legacyConnectionsUserDefaults: UserDefaults(suiteName: appGroupIdentifier),
@@ -172,19 +164,11 @@ public final class Database: Sendable {
   /// Callers must not hold a live ``Database`` instance against the same
   /// path when invoking this — there should be no open `DatabasePool` for
   /// the file being deleted.
-  public static func wipe(appGroupIdentifier: String = ContentStore.appGroup) throws {
-    guard
-      let container = FileManager.default.containerURL(
-        forSecurityApplicationGroupIdentifier: appGroupIdentifier)
-    else {
+  public static func wipe(appGroupIdentifier: String = AppGroup.identifier) throws {
+    guard let container = AppGroup.container(identifier: appGroupIdentifier) else {
       throw DatabaseError.appGroupUnavailable(identifier: appGroupIdentifier)
     }
-    let base =
-      container
-      .appendingPathComponent("Library", isDirectory: true)
-      .appendingPathComponent("Application Support", isDirectory: true)
-      .appendingPathComponent("Database", isDirectory: true)
-      .appendingPathComponent("swift-paperless.sqlite")
+    let base = AppGroup.Layout.database(in: container)
     for file in files(of: base) where FileManager.default.fileExists(atPath: file.path) {
       try FileManager.default.removeItem(at: file)
     }

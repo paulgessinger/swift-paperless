@@ -192,7 +192,7 @@ struct ContentReclaimerTests {
     let database = try Database.seeded(serverID: server, documents: [doc(1)])
     let store = try makeStore()
     try write(store, key(server, 1))
-    let aged = Date().addingTimeInterval(2 * ContentStore.reclaimGracePeriod)
+    let aged = Date().addingTimeInterval(2 * StoragePolicy.unindexedFileGrace)
     let reclaimer = ContentReclaimer(database: database, store: store, now: { aged })
 
     let report = await reclaimer.run(reason: .manual)
@@ -208,7 +208,7 @@ struct ContentReclaimerTests {
     let database = try Database.seeded(serverID: server, documents: [doc(1)])
     let store = try makeStore()
     try write(store, key(server, 1))
-    let aged = Date().addingTimeInterval(2 * ContentStore.reclaimGracePeriod)
+    let aged = Date().addingTimeInterval(2 * StoragePolicy.unindexedFileGrace)
     let reclaimer = ContentReclaimer(database: database, store: store, now: { aged })
 
     let report = await reclaimer.run(reason: .overBudget)
@@ -284,11 +284,11 @@ struct ContentReclaimerTests {
 
     #expect(await reclaimer.runIfDue(reason: .afterReconcile) != nil)
     #expect(await reclaimer.runIfDue(reason: .afterReconcile) == nil)
-    clock.now = date(1000 + ContentReclaimer.dueInterval)
+    clock.now = date(1000 + StoragePolicy.sweepInterval)
     #expect(await reclaimer.runIfDue(reason: .afterReconcile) != nil)
     // A run for any reason resets the interval.
     await reclaimer.run(reason: .manual)
-    clock.now = date(1000 + ContentReclaimer.dueInterval + 10)
+    clock.now = date(1000 + StoragePolicy.sweepInterval + 10)
     #expect(await reclaimer.runIfDue(reason: .afterReconcile) == nil)
   }
 

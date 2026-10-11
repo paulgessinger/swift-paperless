@@ -36,16 +36,15 @@ public struct DocumentPreviewImage: View {
     // identity, and a list refresh swaps in a new `Document` at the same row
     // position without changing that identity — so a version added or deleted
     // server-side would keep showing the thumbnail from the first load.
-    // `versionQueryID` is exactly what `thumbnailRequest` puts in the URL, so
-    // this re-fires when the URL would change and never otherwise.
+    // `versionQueryID` is exactly what `thumbnailRequest` puts in the URL, and
+    // the version is what the request is keyed by, so this re-fires when the
+    // request would change and never otherwise.
     .task(id: document.versionQueryID) {
       image.transaction = Transaction(animation: .linear(duration: 0.1))
       do {
         image.pipeline = store.imagePipeline
         try image.load(
-          ImageRequest(
-            urlRequest: store.repository.thumbnailRequest(document: document),
-            processors: [.resize(width: 130)]))
+          store.thumbnailImageRequest(for: document, processors: [.resize(width: 130)]))
 
         store.preloadThumbnail(for: document)
       } catch {
