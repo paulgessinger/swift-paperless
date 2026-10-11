@@ -777,17 +777,21 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
               isRefreshing = false
             }
           } label: {
-            if isRefreshing {
+            // Spin the icon rather than swapping in a ProgressView: a vertical
+            // toolbar sizes a bare ProgressView to the whole bar for a few frames.
+            if #available(iOS 18.0, *) {
+              Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
+                .labelStyle(.iconOnly)
+                .symbolEffect(.rotate, isActive: isRefreshing)
+            } else if isRefreshing {
               ProgressView()
+                .accessibilityLabel(Text(.app(.documentDetailRefresh)))
             } else {
               Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
                 .labelStyle(.iconOnly)
             }
           }
           .disabled(isRefreshing)
-          // Explicit, because the in-progress branch renders no label at all —
-          // without this VoiceOver would announce nothing while refreshing.
-          .accessibilityLabel(Text(.app(.documentDetailRefresh)))
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
