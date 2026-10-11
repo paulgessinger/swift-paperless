@@ -18,7 +18,9 @@ import os
 /// root version id server-side.
 ///
 /// Lives in the app-group container so the Share Extension (and a future
-/// File Provider extension) can read it on a locked device. Files are written
+/// File Provider extension) can read it on a locked device, under Application
+/// Support rather than Caches so iOS does not purge it, and excluded from
+/// backups since everything in it comes from the server. Files are written
 /// with `.completeUntilFirstUserAuthentication` protection on iOS; on macOS
 /// (host tests) the protection class is a no-op.
 ///
@@ -71,7 +73,19 @@ public struct ContentStore: Sendable {
   // ContentStore rooted at a temp directory rather than an app-group container.
   public init(root: URL) throws {
     self.root = root
+    let legacy = AppGroup.Layout.legacyContentStore(in: root)
+    if FileManager.default.fileExists(atPath: legacy.path),
+      !FileManager.default.fileExists(atPath: canonicalRoot.path)
+    {
+      // Same volume: a rename, whatever the store holds.
+      try createDirectory(canonicalRoot.deletingLastPathComponent())
+      try FileManager.default.moveItem(at: legacy, to: canonicalRoot)
+    }
     try createDirectory(canonicalRoot)
+    var excluded = canonicalRoot
+    var values = URLResourceValues()
+    values.isExcludedFromBackup = true
+    try? excluded.setResourceValues(values)
   }
 
   // MARK: - Paths
