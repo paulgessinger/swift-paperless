@@ -37,6 +37,9 @@ public final class ServerSessionRegistry {
   @ObservationIgnored private let suspension: DatabaseSuspensionController?
   /// The process's file index and reclaim, handed to every session.
   @ObservationIgnored public let contentReclaimer: ContentReclaimer?
+  /// The app's library file downloads, shared by every session; `nil` in a
+  /// process that does not own the background session.
+  @ObservationIgnored public let fileDownloader: LibraryFileDownloader?
 
   /// Called with the ids of servers whose rows just vanished. Lifecycle only:
   /// the cache rows cascaded with the row, this is for what lives outside the
@@ -63,13 +66,20 @@ public final class ServerSessionRegistry {
     manager: ConnectionManager,
     mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
     suspension: DatabaseSuspensionController? = nil,
-    contentReclaimer: ContentReclaimer? = nil
+    contentReclaimer: ContentReclaimer? = nil,
+    fileDownloader: LibraryFileDownloader? = nil
   ) {
     self.database = database
     self.manager = manager
     self.mode = mode
     self.suspension = suspension
     self.contentReclaimer = contentReclaimer
+    self.fileDownloader = fileDownloader
+    // A failed download lands in its server's ledger, like a failed step.
+    fileDownloader?.onFailure = { [weak self] serverID, error in
+      guard let self, sessions[serverID] != nil || serverIDs.contains(serverID) else { return }
+      session(for: serverID).recordFileDownloadFailure(error)
+    }
   }
 
   deinit {
@@ -133,7 +143,7 @@ public final class ServerSessionRegistry {
     }
     let session = ServerSession(
       serverID: id, database: database, mode: mode, suspension: suspension,
-      contentReclaimer: contentReclaimer)
+      contentReclaimer: contentReclaimer, fileDownloader: fileDownloader)
     sessions[id] = session
     return session
   }

@@ -143,6 +143,21 @@ public final class DocumentStore: Sendable {
   /// debugger.
   public var cachedDocumentCount: Int { projection?.cachedDocumentCount ?? 0 }
 
+  /// How many of the active server's documents have their archive on the
+  /// device, observed from the file index.
+  public var libraryFileProgress: LibraryFileProgress { projection?.libraryFileProgress ?? .zero }
+
+  /// The active server's archive downloads in flight on the background session.
+  public var libraryFilesInFlight: Int {
+    guard let session, let downloader = registry?.fileDownloader else { return 0 }
+    return downloader.inFlight[session.serverID] ?? 0
+  }
+
+  /// Whether the library's file downloads stopped for want of free space.
+  public var libraryFilesPausedLowStorage: Bool {
+    registry?.fileDownloader?.pausedLowStorage ?? false
+  }
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }
@@ -938,13 +953,18 @@ extension DocumentStore {
   /// on disk. Every caller already paired them — except the one that forgot,
   /// leaving notes and file metadata to wait for the next launch.
   public func fillIfEnabled(phases: SyncPhases, force: Bool = false) async {
-    guard phases.contains(.fill) else { return }
-    // One session for both halves: re-reading it between them would page one
+    guard phases.contains(.fill) || phases.contains(.files) else { return }
+    // One session for every part: re-reading it between them would page one
     // server's library and then walk a different server's details.
     guard let session else { return }
     await SyncRunContext.$current.withValue(.child(.foreground)) {
-      await session.fillLibrary(force: force)
-      await session.fillDocumentDetails()
+      if phases.contains(.fill) {
+        await session.fillLibrary(force: force)
+        await session.fillDocumentDetails()
+      }
+      if phases.contains(.files) {
+        await session.fillFiles()
+      }
     }
   }
 
@@ -990,6 +1010,9 @@ extension DocumentStore {
   /// every cache table is exactly the kind of transaction that must not sit on
   /// the main thread.
   public func wipeLocalCache() async throws {
+    // The downloads first: a file landing after the purge would be a row's
+    // worth of work for the repair walk.
+    await registry?.fileDownloader?.cancelAll()
     if let backend = session?.backend {
       try await backend.database.clearCache()
     }

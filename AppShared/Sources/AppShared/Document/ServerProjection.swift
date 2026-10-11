@@ -77,6 +77,10 @@ public final class ServerProjection {
   /// library* → *Recently browsed*) without a debugger.
   public private(set) var cachedDocumentCount: Int = 0
 
+  /// How many of the library's archives are on the device, from the file
+  /// index, so the Offline & Sync screen's figure survives a relaunch.
+  public private(set) var libraryFileProgress: LibraryFileProgress = .zero
+
   // MARK: Members
 
   @ObservationIgnored
@@ -129,6 +133,8 @@ public final class ServerProjection {
         database.observeLastRefreshedAt(serverID: serverID), into: \.lastRefreshedAt),
       observeValue(database.observeQuerySyncErrors(serverID: serverID), into: \.syncErrors),
       observeValue(database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount),
+      observeValue(
+        database.observeLibraryFileProgress(serverID: serverID), into: \.libraryFileProgress),
     ])
   }
 
