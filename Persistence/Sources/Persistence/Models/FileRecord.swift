@@ -42,11 +42,21 @@ public struct FileRecord:
   }
 
   /// The kinds the storage budget may evict. Thumbnails live and die with
-  /// their document row instead. The one definition of "evictable": the
-  /// library pass and pinning extend it here.
+  /// their document row instead.
   static let evictableKinds = [ContentStore.Kind.original, .archive].map(\.rawValue)
 
+  /// The rows the storage budget may evict: evictable kinds, except the
+  /// archives of a server in *Entire library*, which the library pass keeps
+  /// downloading ahead of time. The one definition of "evictable"; pinning
+  /// extends it here.
   static var evictable: QueryInterfaceRequest<FileRecord> {
-    filter(evictableKinds.contains(Column("kind")))
+    let file = TableAlias()
+    let libraryServer =
+      ConnectionRecord
+      .filter(Column("id") == file[Column("server_id")])
+      .filter(ConnectionRecord.Columns.offlineBrowsingMode == "entireLibrary")
+    return aliased(file)
+      .filter(evictableKinds.contains(Column("kind")))
+      .filter(!(Column("kind") == ContentStore.Kind.archive.rawValue && libraryServer.exists()))
   }
 }

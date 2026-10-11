@@ -22,12 +22,15 @@ enum FileFixtures {
       })
   }
 
-  static func addServer(_ id: UUID, to database: Database) throws {
+  static func addServer(
+    _ id: UUID, to database: Database, offlineBrowsingMode: String = "recentlyBrowsed"
+  ) throws {
     try database.upsertConnection(
       ConnectionRecord(
         id: id,
         url: URL(string: "https://\(id.uuidString).example.com/api/")!,
-        user: .init(id: 1, isSuperUser: true, username: "other")))
+        user: .init(id: 1, isSuperUser: true, username: "other"),
+        offlineBrowsingMode: offlineBrowsingMode))
   }
 
   static func key(_ server: UUID, _ version: UInt, _ kind: ContentStore.Kind = .archive)
