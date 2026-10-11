@@ -77,7 +77,8 @@ struct DocumentView: View {
   // An iPhone at regular width (iPhone Duo's inner display) has no room for
   // three columns; asking for them makes the list overlay the document.
   // Start with list and document, saved views behind the sidebar button.
-  @State private var columnVisibility: NavigationSplitViewVisibility =
+  @State private var columnVisibility = Self.defaultColumnVisibility
+  private static let defaultColumnVisibility: NavigationSplitViewVisibility =
     UIDevice.current.userInterfaceIdiom == .phone ? .doubleColumn : .all
 
   @State private var showFileImporter = false
@@ -518,6 +519,10 @@ struct DocumentView: View {
         trailingToolbar
       }
     }
+    // Collapsing writes .detailOnly into the binding, so the split view would
+    // come back showing only the document. iPhone Duo passes through compact
+    // on every trip to the background, presumably for the outer display.
+    .onAppear { columnVisibility = Self.defaultColumnVisibility }
   }
 
   // MARK: Regular body (iPad / regular size class)
