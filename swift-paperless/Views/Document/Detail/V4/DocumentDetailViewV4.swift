@@ -114,6 +114,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     self.navPath = navPath
   }
 
+  /// PDF plus inspector, on iPad. An iPhone at regular width (iPhone Duo's
+  /// inner display) shows the document beside the list, too narrow for the
+  /// inspector to sit next to the PDF, so it keeps the iPhone layout.
+  private var usesInspectorLayout: Bool {
+    horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom != .phone
+  }
+
   private func handlePendingRoute() {
     guard let action = routeManager.pendingRoute?.action,
       case .document(let docId, let edit) = action,
@@ -131,7 +138,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         // Edit popovers anchor to rows inside the inspector on iPad. Force
         // it open so the deep link doesn't silently no-op when the user
         // had previously collapsed the inspector.
-        if horizontalSizeClass == .regular {
+        if usesInspectorLayout {
           showEditInspector = true
         }
         activeFieldEdit = fieldEdit
@@ -139,11 +146,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         activeSheet = .notes
       }
     case .all:
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         showEditInspector = true
       }
     case .close:
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         showEditInspector = false
       }
       activeFieldEdit = nil
@@ -184,7 +191,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     // Inspector lays out one column so each aspect spans full width;
     // iPhone keeps the two-column pill layout.
     let columns: [GridItem] =
-      horizontalSizeClass == .regular
+      usesInspectorLayout
       ? [GridItem(.flexible(), spacing: 12)]
       : [
         GridItem(.flexible(), spacing: 12),
@@ -730,10 +737,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   var body: some View {
     Group {
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         regularBody
       } else {
         compactBody
+          // Edit popovers and the bottom bar follow the iPhone layout too.
+          .environment(\.horizontalSizeClass, .compact)
       }
     }
     .navigationTitle(String(localized: .app(.details)))
@@ -748,7 +757,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             .labelStyle(.iconOnly)
         }
       }
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         // The regular layout's primary surface is a PDFKit view, not a scroll
         // view, so `.refreshable` has nothing to bind to and would be a silent
         // no-op — this button is the iPad's only way to reach the refresh path
