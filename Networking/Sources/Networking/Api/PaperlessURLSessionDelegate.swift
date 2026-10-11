@@ -36,7 +36,7 @@ public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate
     {
       Logger.networking.info(
         "URLSessionDelegate initializing with identity: \(pName, privacy: .public)")
-      credential = Self.makeCredential(identity: identity)
+      credential = Self.credential(for: identity)
     } else {
       Logger.networking.info("URLSessionDelegate initializing without identity")
       credential = nil
@@ -46,7 +46,7 @@ public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate
   public init(identity: TLSIdentity?) {
     onTransfer = nil
     if let identity {
-      credential = Self.makeCredential(identity: identity.identity)
+      credential = Self.credential(for: identity.identity)
     } else {
       credential = nil
     }
@@ -61,7 +61,9 @@ public final class PaperlessURLSessionDelegate: NSObject, URLSessionTaskDelegate
     PaperlessURLSessionDelegate(credential: credential, onTransfer: onTransfer)
   }
 
-  private static func makeCredential(identity: SecIdentity) -> URLCredential {
+  /// The client-certificate credential for `identity`, for any session
+  /// delegate that answers a challenge for one of this app's servers.
+  public static func credential(for identity: SecIdentity) -> URLCredential {
     var leafCertificate: SecCertificate?
     let status = SecIdentityCopyCertificate(identity, &leafCertificate)
 

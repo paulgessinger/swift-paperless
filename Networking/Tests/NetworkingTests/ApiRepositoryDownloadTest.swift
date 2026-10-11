@@ -175,6 +175,20 @@ struct ApiRepositoryDownloadTest {
     func set(_ v: T) { lock.withLock { _value = v } }
   }
 
+  @Test("downloadRequest is the archive request the on-demand download sends")
+  @MainActor func downloadRequestMatchesTheDownload() throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+
+    let request = try repo.downloadRequest(documentID: 7, version: 91)
+    let url = try #require(request.url)
+    #expect(url.path == "/api/documents/7/preview")
+    #expect(url.query == "version=91")
+    #expect(request.value(forHTTPHeaderField: "Authorization") == "Token t")
+    #expect(request.value(forHTTPHeaderField: "Accept")?.hasPrefix("application/json") == true)
+    #expect(try repo.downloadRequest(documentID: 7, version: nil).url?.query == nil)
+  }
+
   @Test
   func firstCallWritesToContentStoreAndRecordsTheFile() async throws {
     let (store, _) = try Self.makeStore()

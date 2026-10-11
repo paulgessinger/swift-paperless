@@ -824,8 +824,11 @@ extension ApiRepository: Repository {
       // no ETag for it, so ask for the original outright.
       let requestOriginal = original || document.archivedFileName == nil
       @MainActor func fetch(ifNoneMatch checksum: String?) async throws -> (URL, URLResponse) {
-        var request = try self.request(
-          .preview(documentId: document.id, original: requestOriginal, version: queryVersion))
+        var request =
+          requestOriginal
+          ? try self.request(
+            .preview(documentId: document.id, original: true, version: queryVersion))
+          : try self.downloadRequest(documentID: document.id, version: queryVersion)
         // A 304 must reach this code rather than be resolved by `URLCache`.
         request.cachePolicy = .reloadIgnoringLocalCacheData
         if let checksum {
@@ -1229,6 +1232,10 @@ extension ApiRepository: Repository {
     } else {
       Logger.networking.info("NOT adding token to request (token is nil)")
     }
+  }
+
+  public func downloadRequest(documentID: UInt, version: UInt?) throws -> URLRequest {
+    try request(.preview(documentId: documentID, original: false, version: version))
   }
 
   public nonisolated

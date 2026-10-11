@@ -60,6 +60,7 @@ struct SyncFailuresSection: View {
     case .reachability: .settings(.offlineSyncFailureSiteReachability)
     case .libraryFill: .settings(.offlineSyncFailureSiteLibraryFill)
     case .detailFill: .settings(.offlineSyncFailureSiteDetailFill)
+    case .fileFill: .settings(.offlineSyncFailureSiteFileFill)
     }
   }
 }
