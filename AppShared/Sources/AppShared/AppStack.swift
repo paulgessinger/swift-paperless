@@ -84,9 +84,11 @@ public final class AppStack {
     }
   }
 
-  /// The once-per-launch content sweep. The app calls it; the Share Extension,
-  /// which builds a stack of its own, does not walk the store on every share.
+  /// The once-per-launch content sweep and keychain upkeep. The app calls it;
+  /// the Share Extension, which builds a stack of its own, does not walk the
+  /// store on every share.
   public func runLaunchMaintenance() {
+    Keychain.migrateAccessibilityIfNeeded()
     Task { @MainActor in
       // Thumbnails moved into the content store; the old cache is dead weight.
       if let root = contentReclaimer.store?.root {
