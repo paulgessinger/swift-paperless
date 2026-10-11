@@ -165,7 +165,8 @@ public enum SyncPlan {
   /// server's mode from the database before filling) on purpose: this is the
   /// copy that is unit-tested, and the executor's is a guard, not a decision.
   public static func phases(isEntireLibrary: Bool, condition: SyncCondition) -> SyncPhases {
-    condition.allowsProactiveSync && isEntireLibrary ? .full : .cheap
+    guard condition.allowsProactiveSync else { return .cheap }
+    return isEntireLibrary ? .full : .cheapWithFiles
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an

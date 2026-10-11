@@ -231,16 +231,22 @@ struct LibraryFileDownloaderTests {
     await roomy.downloader.invalidate()
   }
 
-  @Test("A server outside Entire library, or unknown, queues nothing")
-  func onlyLibraryServers() async throws {
+  @Test("A server outside Entire library queues only its kept documents; an unknown one nothing")
+  func keptDocumentsOutsideTheLibrary() async throws {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1], isEntireLibrary: false)
+    let fixture = try makeFixture(documents: [1, 2, 3], isEntireLibrary: false)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .complete)
     #expect(try await fixture.downloader.refill(serverID: UUID()) == .complete)
     #expect(StubDownloadURLProtocol.requests.isEmpty)
+
+    try await fixture.database.setKeptOffline(serverID: server, documentID: 2, kept: true)
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+    try await waitUntil { StubDownloadURLProtocol.requests.count == 1 }
+    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/2/download")
+    #expect(fixture.downloader.inFlight[server] == 1)
     await fixture.downloader.invalidate()
   }
 

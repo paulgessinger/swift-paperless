@@ -366,7 +366,7 @@ struct MainView: View {
       // without waiting for a sync.
       Task {
         await stack.suspension.performBackgroundWork {
-          await stack.fileDownloader?.refillAllLibraryServers()
+          await stack.fileDownloader?.refillAllServers()
         }
       }
       Task {

@@ -587,9 +587,10 @@ public final class ServerSession {
     }
 
     // Deletes first (correctness), then the changed-metadata delta (freshness),
-    // then the saved-view membership sweep (so newly-matched docs — now landed
-    // at detail by the delta — appear in every offline list). Those last two are
-    // no-ops unless *Entire library* is enabled.
+    // then the kept documents' missing rows, then the saved-view membership
+    // sweep (so newly-matched docs — now landed at detail by the delta — appear
+    // in every offline list). The delta and the membership sweep are no-ops
+    // unless *Entire library* is enabled.
     //
     // The query-key GC goes last, in both modes, and specifically *after* the
     // membership sweep: it prunes documents no cached query lists any more, and
@@ -604,6 +605,7 @@ public final class ServerSession {
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
       }
+      await sweep(.keptOffline) { try await backend.hydrateKeptOffline() }
       await sweep(.membership) { try await backend.reconcileSavedViewMembership() }
       await sweep(.reachability) { try await backend.collectUnreachableQueries() }
     }
@@ -691,16 +693,15 @@ public final class ServerSession {
     }
   }
 
-  /// Proactive *Entire library* document files: top the downloader's window
-  /// up with this server's missing archives. Returns at once; the downloads
-  /// run on the background session and refill the window themselves. `true`
-  /// also when there is nothing to queue; `false` when it errored or was
-  /// called off.
+  /// Proactive document files: top the downloader's window up with this
+  /// server's missing archives, the whole library in *Entire library* and the
+  /// documents kept offline otherwise. Returns at once; the downloads run on
+  /// the background session and refill the window themselves. `true` also
+  /// when there is nothing to queue; `false` when it errored or was called
+  /// off.
   @discardableResult
   public func fillFiles() async -> Bool {
-    guard let backend = current, backend.offlineBrowsingMode == .entireLibrary,
-      let fileDownloader
-    else {
+    guard current != nil, let fileDownloader else {
       recordSuccess(at: .fileFill)
       return true
     }

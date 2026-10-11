@@ -2782,7 +2782,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documents and PDF files downloaded for offline use on this server will be removed, apart from the most recent documents in your document list. Files download again when you open a document."
+            "value" : "Documents and PDF files downloaded for offline use on this server will be removed, apart from the most recent documents in your document list and the documents you keep offline. Files download again when you open a document."
           }
         },
         "fr" : {
@@ -4217,6 +4217,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloading document files"
+          }
+        }
+      }
+    },
+    "offlineSyncFailureSiteKeptOffline" : {
+      "comment" : "Offline & Sync, Sync errors: the reconcile step that fetches the rows of documents kept offline",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching documents kept offline"
           }
         }
       }

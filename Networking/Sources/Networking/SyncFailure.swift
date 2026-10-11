@@ -135,6 +135,8 @@ public enum SyncFailureSite: String, Sendable, Hashable, CaseIterable {
   case deletions
   /// Reconcile: the changed-metadata delta.
   case changes
+  /// Reconcile: fetching the documents kept offline whose rows are missing.
+  case keptOffline
   /// Reconcile: saved-view membership.
   case membership
   /// Reconcile: collecting query keys nothing reaches any more.
@@ -144,15 +146,15 @@ public enum SyncFailureSite: String, Sendable, Hashable, CaseIterable {
   case libraryFill
   /// *Entire library*: the per-document notes / file metadata fill.
   case detailFill
-  /// *Entire library*: queueing the document files, and the downloads
-  /// themselves.
+  /// Queueing the document files, and the downloads themselves: the whole
+  /// library in *Entire library*, the documents kept offline otherwise.
   case fileFill
 
   /// Whether this part only runs in *Entire library* mode. Its failure is
   /// hidden in *Recently browsed*, where nothing will run it again to clear it.
   public var isEntireLibraryOnly: Bool {
     switch self {
-    case .libraryFill, .detailFill, .fileFill: true
+    case .libraryFill, .detailFill: true
     default: false
     }
   }
