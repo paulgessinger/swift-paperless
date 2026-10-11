@@ -349,9 +349,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     private var isRegular: Bool { horizontalSizeClass == .regular }
 
     var body: some View {
-      // iPad: match the SearchablePDFPreview search button — 13pt padding,
-      // semibold .title2 icon, circular glass. Badge becomes a corner pill
-      // overlay so the circle isn't stretched.
+      // Regular width: match the SearchablePDFPreview search button — 13pt
+      // padding, semibold .title2 icon, circular glass. No badge, so the circle
+      // isn't stretched.
       Button(action: action) {
         HStack {
           Label(localized: label, systemImage: image)
@@ -377,18 +377,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             $0.backport.glassEffect(.regular.interactive(), in: Circle())
           } else {
             $0.backport.glassEffect(.regular.interactive())
-          }
-        }
-        .overlay(alignment: .topTrailing) {
-          if isRegular, let badge {
-            Text(badge)
-              .font(.caption2)
-              .fontWeight(.bold)
-              .foregroundStyle(.white)
-              .padding(.horizontal, 5)
-              .padding(.vertical, 1)
-              .background(.red, in: Capsule())
-              .offset(x: 6, y: -4)
           }
         }
       }
