@@ -34,4 +34,11 @@ public enum StoragePolicy {
   /// Accesses to one file inside this window are recorded once, so a hit
   /// never costs a write per tap.
   public static let accessCoalescing: TimeInterval = 60
+
+  /// How many library file downloads are handed to the system at once; the
+  /// window is refilled as they finish, so the queue iOS holds stays small.
+  public static let libraryDownloadWindow = 8
+
+  /// The free space below which the library pass stops queueing downloads.
+  public static let libraryDownloadFreeSpaceFloorBytes: Int64 = 1_000_000_000
 }

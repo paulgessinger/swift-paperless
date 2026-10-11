@@ -452,6 +452,10 @@ public class PreviewRepository: Repository {
     URLRequest(url: URL(string: "https://picsum.photos/id/\(document.id + 100)/1500/1000")!)
   }
 
+  public func downloadRequest(documentID: UInt, version _: UInt?) throws -> URLRequest {
+    URLRequest(url: URL(string: "https://example.com/documents/\(documentID)/download/")!)
+  }
+
   public func suggestions(documentId _: UInt) async -> Suggestions {
     .init(
       correspondents: [1], tags: [2, 3], documentTypes: [4], storagePaths: [2],

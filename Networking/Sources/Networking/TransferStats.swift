@@ -38,7 +38,8 @@ public enum TransferCategory: String, Sendable, CaseIterable {
   case fill  // proactive library / document-detail fill
   case reconcile  // R2 / R3δ / membership sweeps
   case thumbnails  // image pipeline: list prefetch, cell loads, previews
-  case documents  // document file downloads (archive PDF or original)
+  case documents  // document file downloads (archive PDF or original) to view or share
+  case libraryFiles  // archive PDFs the Entire-library pass downloads ahead of time
   case other  // everything else (on-open detail, notes, suggestions, …)
 }
 

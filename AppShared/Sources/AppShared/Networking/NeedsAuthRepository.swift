@@ -267,6 +267,10 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try wrapped.thumbnailRequest(document: document)
   }
 
+  public func downloadRequest(documentID: UInt, version: UInt?) throws -> URLRequest {
+    try wrapped.downloadRequest(documentID: documentID, version: version)
+  }
+
   public func download(
     document: Document, original: Bool,
     progress: (@Sendable (Double) -> Void)?

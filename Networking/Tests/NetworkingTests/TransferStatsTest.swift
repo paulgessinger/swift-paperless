@@ -157,7 +157,8 @@ struct TransferStatsTest {
     // can't decode. Renaming one silently zeroes that category's history.
     let expected: [TransferCategory: String] = [
       .sync: "sync", .list: "list", .fill: "fill", .reconcile: "reconcile",
-      .thumbnails: "thumbnails", .documents: "documents", .other: "other",
+      .thumbnails: "thumbnails", .documents: "documents", .libraryFiles: "libraryFiles",
+      .other: "other",
     ]
     #expect(Set(TransferCategory.allCases) == Set(expected.keys))
     for (category, raw) in expected {
