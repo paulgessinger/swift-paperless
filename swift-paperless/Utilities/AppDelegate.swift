@@ -71,6 +71,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // Before anything asks for the stack: this process owns the library's
+    // background download session.
+    AppStackHolder.buildsFileDownloader = true
     let suspension = AppStackHolder.suspension
     suspension.attach(
       isInBackground: application.applicationState == .background,
@@ -113,6 +116,30 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       }
     #endif
     return .portrait
+  }
+
+  /// iOS relaunched or woke the app for the library download session's
+  /// events. Building the stack recreates the session under its identifier,
+  /// which delivers the finished tasks to the downloader; it calls the handler
+  /// once it has filed them and refilled its window. Without a stack (the
+  /// database would not open) the handler is called now, and the session
+  /// delivers the events again when it is next created.
+  func application(
+    _ application: UIApplication,
+    handleEventsForBackgroundURLSession identifier: String,
+    completionHandler: @escaping () -> Void
+  ) {
+    guard identifier == LibraryFileDownloader.sessionIdentifier else {
+      completionHandler()
+      return
+    }
+    MainActor.assumeIsolated {
+      guard let downloader = (try? AppStackHolder.shared())?.fileDownloader else {
+        completionHandler()
+        return
+      }
+      downloader.backgroundEventsCompletion = completionHandler
+    }
   }
 
   func application(

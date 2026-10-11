@@ -362,6 +362,13 @@ struct MainView: View {
       // inactive server's cache (the active server was just synced above).
       syncEngine.start()
       stack.runLaunchMaintenance()
+      // A window emptied while the app was not running is filled again
+      // without waiting for a sync.
+      Task {
+        await stack.suspension.performBackgroundWork {
+          await stack.fileDownloader?.refillAllLibraryServers()
+        }
+      }
       Task {
         await syncEngine.syncInactiveServers()
       }

@@ -82,7 +82,7 @@ public final class LibraryFileDownloader {
 
   /// - Parameters:
   ///   - servers: the server to queue for, `nil` for one that is gone.
-  ///   - allServerIDs: every server, for a refill after background events.
+  ///   - allServerIDs: the servers a refill of every window covers.
   ///   - identityName: the client-certificate identity of a server, read on
   ///     the session's queue.
   ///   - makeSession: the session over the delegate; the background
