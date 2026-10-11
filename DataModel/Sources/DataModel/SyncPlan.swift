@@ -38,6 +38,16 @@ public struct SyncServerAction: Equatable, Sendable {
   }
 }
 
+/// Whether a server's stored credential could be read at sweep time.
+public enum CredentialState: Equatable, Sendable {
+  case present
+  /// Nothing stored: the server needs re-authentication.
+  case absent
+  /// The keychain could not be read, e.g. while the device is locked. That says
+  /// nothing about the credential, so the server sits this sweep out.
+  case unavailable
+}
+
 /// Pure planning for the multi-server sync sweep.
 public enum SyncPlan {
   /// A dependency-free snapshot of one configured server, as the engine sees it
@@ -46,15 +56,17 @@ public enum SyncPlan {
   /// does not know `OfflineBrowsingMode`).
   public struct ServerSnapshot: Equatable, Sendable {
     public let id: UUID
-    public let hasToken: Bool
+    public let credential: CredentialState
     public let isEntireLibrary: Bool
     /// This server's own opt-in to proactive syncing on a metered link — see
     /// ``SyncCondition``.
     public let syncOverCellular: Bool
 
-    public init(id: UUID, hasToken: Bool, isEntireLibrary: Bool, syncOverCellular: Bool) {
+    public init(
+      id: UUID, credential: CredentialState, isEntireLibrary: Bool, syncOverCellular: Bool
+    ) {
       self.id = id
-      self.hasToken = hasToken
+      self.credential = credential
       self.isEntireLibrary = isEntireLibrary
       self.syncOverCellular = syncOverCellular
     }
@@ -89,6 +101,7 @@ public enum SyncPlan {
   /// - Uncredentialed servers always yield a `needsAuthOnly` action (cheap,
   ///   throttle-exempt, so a freshly-arrived token is picked up on the very next
   ///   sweep).
+  /// - Servers whose credential can't be read right now yield nothing.
   /// - Credentialed servers are dropped while their last sweep is still within
   ///   `throttle`; otherwise they yield a sync action whose `.fill` phase is
   ///   gated on `allowsFill`, `isEntireLibrary` and that server's own
@@ -119,9 +132,13 @@ public enum SyncPlan {
         }
       }
       .compactMap { server in
-        guard server.hasToken else {
+        switch server.credential {
+        case .present: break
+        case .absent:
           // Uncredentialed: mark needs-auth every sweep (no network, no throttle).
           return SyncServerAction(serverID: server.id, needsAuthOnly: true, phases: .nothing)
+        case .unavailable:
+          return nil
         }
         if let last = lastSweep[server.id], now.timeIntervalSince(last) < throttle {
           return nil  // still fresh — skip the network sweep

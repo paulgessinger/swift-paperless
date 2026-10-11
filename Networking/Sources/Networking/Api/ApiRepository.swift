@@ -384,6 +384,15 @@ public class ApiRepository {
     return await task.value
   }
 
+  /// Whether a request that failed with `error` is retried once: only reads,
+  /// since a write that timed out may already have been applied, and only for
+  /// a connection that stalled or dropped mid-flight.
+  nonisolated static func retriesOnce(_ request: URLRequest, after error: URLError) -> Bool {
+    let method = request.httpMethod ?? "GET"
+    guard method == "GET" || method == "HEAD" else { return false }
+    return error.code == .timedOut || error.code == .networkConnectionLost
+  }
+
   private static func fetchData(
     for request: URLRequest, expectedStatus: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
@@ -431,14 +440,27 @@ public class ApiRepository {
     // silently collapsed the whole breakdown into "Other".
     let transferCategory = NetworkTransfer.category
 
-    let result: (Data, URLResponse)
-    do {
-      result = try await urlSession.getData(for: request, progress: progress) { sent, received in
+    func load() async throws -> (Data, URLResponse) {
+      try await urlSession.getData(for: request, progress: progress) { sent, received in
         // Best-effort data-transfer accounting. Wire bytes from the task
         // metrics, not `data.count`: the API gzips well, so the decoded length
         // overstated actual traffic several-fold, and a `URLCache` hit counted
         // as if it had been fetched.
         NetworkTransfer.record(bytes: Int(sent + received), category: transferCategory)
+      }
+    }
+
+    let result: (Data, URLResponse)
+    do {
+      do {
+        result = try await load()
+      } catch let error as URLError where Self.retriesOnce(request, after: error) {
+        // Typically a pooled connection that died while the device slept (or a
+        // VPN re-established its path); a second attempt opens a fresh one.
+        Logger.networking.notice(
+          "Retrying \(request.httpMethod ?? "GET", privacy: .public) \(sanitizedUrl, privacy: .public) once after \(error.code.rawValue)"
+        )
+        result = try await load()
       }
     } catch let error where error.isCancellationError {
       Logger.networking.info(

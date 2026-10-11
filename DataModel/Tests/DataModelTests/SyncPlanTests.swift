@@ -16,11 +16,11 @@ struct SyncPlanTests {
   private static let c = UUID(uuidString: "00000000-0000-0000-0000-0000000000CC")!
 
   private func snapshot(
-    _ id: UUID, hasToken: Bool = true, isEntireLibrary: Bool = false,
+    _ id: UUID, credential: CredentialState = .present, isEntireLibrary: Bool = false,
     syncOverCellular: Bool = false
   ) -> SyncPlan.ServerSnapshot {
     .init(
-      id: id, hasToken: hasToken, isEntireLibrary: isEntireLibrary,
+      id: id, credential: credential, isEntireLibrary: isEntireLibrary,
       syncOverCellular: syncOverCellular)
   }
 
@@ -68,13 +68,24 @@ struct SyncPlanTests {
   @Test("An uncredentialed server yields a needsAuthOnly action, throttle-exempt")
   func uncredentialedNeedsAuthOnly() {
     let actions = SyncPlan.inactiveActions(
-      connections: [snapshot(Self.a, hasToken: false)],
+      connections: [snapshot(Self.a, credential: .absent)],
       activeID: nil,
       // Even "recently swept" it must re-emit so a freshly-arrived token is caught.
       lastSweep: [Self.a: now],
       now: now, throttle: throttle, cost: .unrestricted)
     #expect(
       actions == [SyncServerAction(serverID: Self.a, needsAuthOnly: true, phases: .nothing)])
+  }
+
+  // A locked device can't read the keychain. That is not a missing token, so
+  // the server must not be marked needs-auth — nor synced without a credential.
+  @Test("A server whose credential can't be read is left out of the sweep")
+  func unavailableCredentialSkipped() {
+    let actions = SyncPlan.actions(
+      connections: [snapshot(Self.a, credential: .unavailable), snapshot(Self.b)],
+      scope: .all, lastSweep: [:], now: now, throttle: throttle,
+      cost: .unrestricted, allowsFill: false)
+    #expect(actions.map(\.serverID) == [Self.b])
   }
 
   @Test("Heavy fill requires both an allowed link and entireLibrary")

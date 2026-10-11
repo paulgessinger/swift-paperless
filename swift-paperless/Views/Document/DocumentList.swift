@@ -69,6 +69,8 @@ struct DocumentList: View {
   @State private var viewModel: DocumentListViewModel
 
   @EnvironmentObject private var errorController: ErrorController
+  @Environment(\.scenePhase) private var scenePhase
+  @Environment(NetworkMonitor.self) private var networkMonitor: NetworkMonitor?
 
   private let appSettings = AppSettings.shared
 
@@ -392,6 +394,20 @@ struct DocumentList: View {
 
     .onChange(of: viewModel.isFetching) { _, fetching in
       filterModel.isFetching = fetching
+    }
+
+    // A failed load otherwise stays on screen until the user retries, even once
+    // the server answers again.
+    .onChange(of: scenePhase) { _, phase in
+      guard phase == .active else { return }
+      Task { await viewModel.retryIfFailed() }
+    }
+    .onChange(of: networkMonitor?.isOnline) { _, online in
+      guard online == true else { return }
+      Task { await viewModel.retryIfFailed() }
+    }
+    .onChange(of: networkMonitor?.cost) { _, _ in
+      Task { await viewModel.retryIfFailed() }
     }
 
     // @TODO: Re-evaluate if we want an animation here

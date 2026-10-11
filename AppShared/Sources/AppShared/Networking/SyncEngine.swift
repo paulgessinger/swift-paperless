@@ -157,7 +157,7 @@ public final class SyncEngine {
     let snapshots = manager.connections.values.map { conn in
       SyncPlan.ServerSnapshot(
         id: conn.id,
-        hasToken: hasToken(conn),
+        credential: credentialState(conn),
         isEntireLibrary: conn.offlineBrowsingMode == .entireLibrary,
         syncOverCellular: conn.syncOverCellular)
     }
@@ -203,10 +203,13 @@ public final class SyncEngine {
     }
     for id in added {
       guard let stored = manager.connections[id] else { continue }
+      let credential = credentialState(stored)
+      // Unreadable now; the next sweep picks it up.
+      if credential == .unavailable { continue }
       // Throttle-exempt initial sync for a freshly-appeared server.
       let action = SyncServerAction(
         serverID: stored.id,
-        needsAuthOnly: !hasToken(stored),
+        needsAuthOnly: credential == .absent,
         phases: SyncPlan.phases(
           isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary,
           condition: SyncCondition(
@@ -235,10 +238,16 @@ public final class SyncEngine {
 
   // MARK: - Helpers
 
-  /// True only when a non-empty credential is present. `try? … ?? nil` flattens
-  /// the double optional so a Keychain read error (`.none`) and an absent token
-  /// (`.some(nil)`) both read as "no token" → per-server needs-auth degrade.
-  private func hasToken(_ stored: StoredConnection) -> Bool {
-    ((try? stored.token) ?? nil) != nil
+  /// A non-empty token is `.present`; none stored is `.absent`. A Keychain read
+  /// error is `.unavailable`, not `.absent`: a background sweep may run while
+  /// the device is locked, when a stored token can't be read.
+  private func credentialState(_ stored: StoredConnection) -> CredentialState {
+    do {
+      return try stored.token == nil ? .absent : .present
+    } catch {
+      Logger.sync.notice(
+        "Server \(stored.logLabel, privacy: .public) credential unreadable; skipping: \(error)")
+      return .unavailable
+    }
   }
 }
