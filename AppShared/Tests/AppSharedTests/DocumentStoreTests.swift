@@ -11,6 +11,31 @@ import Testing
 struct DocumentStoreTests {
   // MARK: - Thumbnails
 
+  @Test("fillIfEnabled runs the files step when the phases include it")
+  func fillIfEnabledReachesTheFiles() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    var document = Document(
+      id: 1, title: "d1", created: Date(timeIntervalSince1970: 1000), tags: [],
+      modified: Date(timeIntervalSince1970: 500), owner: .user(1))
+    document.modified = Date(timeIntervalSince1970: 500)
+    let harness = try await StoreHarness.make(
+      documents: [document], fileDownloader: StoreHarness.stubbedDownloader)
+    try harness.database.upsertConnection(
+      ConnectionRecord(
+        id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "preview"),
+        offlineBrowsingMode: "entireLibrary"))
+
+    await harness.store.fillIfEnabled(phases: [.files])
+
+    let rows = try await harness.database.syncRuns()
+    #expect(rows.map(\.step) == ["fileFill"])
+    #expect(harness.store.libraryFilesInFlight == 0)  // No registry in a fixture store.
+    await harness.fileDownloader?.invalidate()
+  }
+
   @Test("A thumbnail request is keyed by the session's server and the document's version")
   func thumbnailRequestCarriesTheImageID() async throws {
     let harness = try await StoreHarness.make()
