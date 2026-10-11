@@ -24,6 +24,18 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       var didNavigateToInitialPage = false
       var scrollObservation: NSKeyValueObservation?
       var lastReportedPage: Int?
+      var bottomInset: CGFloat = 0
+    }
+
+    /// Reports safe-area changes, so the initial alignment can wait for the
+    /// final insets instead of polling for them.
+    final class InsetObservingPDFView: PDFKit.PDFView {
+      var onSafeAreaInsetsChange: (() -> Void)?
+
+      override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        onSafeAreaInsetsChange?()
+      }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -31,7 +43,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
     }
 
     func makeUIView(context: Context) -> PDFKit.PDFView {
-      let view = PDFKit.PDFView()
+      let view = InsetObservingPDFView()
       // Keep PDFKit defaults close to the native viewer behavior.
       view.document = document
       view.displayMode = .singlePageContinuous
@@ -42,13 +54,19 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       view.isUserInteractionEnabled = true
       publishPDFView(view)
 
+      let coordinator = context.coordinator
+      view.onSafeAreaInsetsChange = { [weak view] in
+        guard let view else { return }
+        applyInsetsAndInitialTopAlignmentIfNeeded(
+          view, bottomInset: coordinator.bottomInset, coordinator: coordinator)
+      }
+
       // Seed the coordinator so the first observation that lands on the
       // initial page does not propagate as a "page changed" event.
       context.coordinator.lastReportedPage = initialPage
 
       if let scrollView = findScrollView(in: view) {
         let onPageChange = onPageChange
-        let coordinator = context.coordinator
         coordinator.scrollObservation = scrollView.observe(
           \.contentOffset, options: [.new]
         ) { [weak view, weak scrollView] _, _ in
@@ -112,6 +130,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
         uiView.document = document
         context.coordinator.didApplyInitialTopAlignment = false
       }
+      context.coordinator.bottomInset = bottomContentInset
       applyInsetsAndInitialTopAlignmentIfNeeded(
         uiView,
         bottomInset: bottomContentInset,
@@ -162,15 +181,9 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       // When extending behind the top bar we expect topInset to be 0 (the
       // PDFView's safe area is excluded by `.ignoresSafeArea(edges: .top)`),
       // so skip the "wait for safe area" gate that would otherwise loop.
+      // Wait until layout/safe area is finalized before applying the initial
+      // offset; `safeAreaInsetsDidChange` calls back in once it is.
       if !extendsBehindTopBar, topInset == 0 {
-        // Wait until layout/safe area is finalized before applying initial offset.
-        DispatchQueue.main.async {
-          applyInsetsAndInitialTopAlignmentIfNeeded(
-            pdfView,
-            bottomInset: bottomInset,
-            coordinator: coordinator
-          )
-        }
         return
       }
 
