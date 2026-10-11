@@ -303,6 +303,7 @@ public struct OfflineSyncView: View {
     switch stage {
     case .libraryFill: String(localized: .settings(.offlineSyncFilling))
     case .detailFill: String(localized: .settings(.offlineSyncDetailFill))
+    case .fileDownload: String(localized: .settings(.offlineSyncFileDownload))
     case .reconcile: String(localized: .settings(.offlineSyncReconciling))
     case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
     }
@@ -316,6 +317,7 @@ public struct OfflineSyncView: View {
   {
     switch stage {
     case .reconcile: .settings(.offlineSyncReconcileProgressCount(completed, total))
+    case .fileDownload: .settings(.offlineSyncFileProgressCount(completed, total))
     case .libraryFill, .detailFill, .elementSync:
       .settings(.offlineSyncProgressCount(completed, total))
     }

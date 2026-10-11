@@ -29,6 +29,8 @@ public struct SyncActivity: Sendable, Equatable, Identifiable {
     case libraryFill
     /// Per-document notes and file metadata.
     case detailFill
+    /// The archive PDFs of the library, downloaded ahead of time.
+    case fileDownload
     /// Remote deletes, the changed-metadata delta, membership.
     case reconcile
   }

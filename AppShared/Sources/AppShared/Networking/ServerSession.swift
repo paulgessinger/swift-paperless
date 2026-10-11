@@ -844,6 +844,9 @@ public final class ServerSession {
           filled = await fillLibrary(force: false)
           try Task.checkCancellation()
           filled = await fillDocumentDetails() && filled
+        case .files:
+          // Nothing downloads the library's files yet.
+          continue
         }
       }
 

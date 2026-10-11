@@ -26,8 +26,8 @@ public struct SyncServerAction: Equatable, Sendable {
   /// `needsAuthOnly` — there is nothing to run without a credential.
   ///
   /// A phase set rather than a "heavy fill?" flag so the executor receives a
-  /// *decision* rather than the inputs to one, and so a new kind of work
-  /// (document binaries, OCR content, thumbnails) is a new case here rather
+  /// *decision* rather than the inputs to one, and so a new kind of work (OCR
+  /// content, thumbnails) is a new case here, like the document files, rather
   /// than another boolean threaded through every layer.
   public let phases: SyncPhases
 
