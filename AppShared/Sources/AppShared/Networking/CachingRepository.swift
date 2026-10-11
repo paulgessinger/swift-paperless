@@ -315,6 +315,9 @@ enum CachingRepositoryError: Error {
   /// first-launch state — and `DocumentStore.fillDocumentQuery` reuses it for
   /// "no caching backend at all". Kept.
   case cacheMiss
+  /// A fill or membership rewrite was asked for a local view, which has no
+  /// server query. The list never asks; this guards the surface.
+  case localView
 }
 
 @MainActor
@@ -485,6 +488,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func fillQuery(filter: FilterState, category: TransferCategory) async throws
     -> QueryFillHandle
   {
+    guard filter.localView == nil else { throw CachingRepositoryError.localView }
     let key = QueryKey(serverID: serverID, filter: filter)
     // Pin the key before the first suspension: from here until the sweep next
     // reconsiders it, this key counts as in use even if its fill never lands a
@@ -1493,6 +1497,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func refreshQueryMembership(filter: FilterState, window: Int) async throws -> Bool {
+    guard filter.localView == nil else { throw CachingRepositoryError.localView }
     let key = QueryKey(serverID: serverID, filter: filter)
     // Pin the key so the reachability sweep doesn't collect it mid-rewrite.
     noteRequested(key)

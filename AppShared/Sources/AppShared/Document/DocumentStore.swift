@@ -937,7 +937,9 @@ extension DocumentStore {
   /// cap keeps it whole for a while. Soft-fail: a missed stamp costs at most a
   /// refill of that list after a later cold start.
   public func markDocumentQueryViewed(_ queryKey: QueryKey) async {
-    guard let backend = session?.backend else { return }
+    // The kept-offline list is not a cached query; a stamp for it would only
+    // give the reachability sweep a row to collect.
+    guard let backend = session?.backend, queryKey != .keptOffline else { return }
     do {
       try await backend.database.markQueryViewed(queryKey: queryKey, serverID: backend.serverID)
     } catch {
