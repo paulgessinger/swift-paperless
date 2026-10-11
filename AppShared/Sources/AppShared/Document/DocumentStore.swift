@@ -188,6 +188,11 @@ public final class DocumentStore: Sendable {
   /// always has.
   public var repository: any Repository { session?.repository ?? nullRepository }
 
+  /// The server this store is installed on, or `nil` before login. It changes
+  /// together with ``repository``, unlike `ConnectionManager.activeConnectionId`,
+  /// which moves before activation finishes.
+  public var activeServerID: UUID? { session?.serverID }
+
   public private(set) var imagePipeline: ImagePipeline
 
   /// The pipelines' disk cache: thumbnails in the content store, recorded in

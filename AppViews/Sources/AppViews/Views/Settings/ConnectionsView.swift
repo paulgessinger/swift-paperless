@@ -101,8 +101,11 @@ public struct ConnectionsView: View {
 
   @State private var logoutRequested = false
 
-  @State private var backendVersion: Version?
   @State private var updateAvailable = false
+
+  private var backendVersion: Version? {
+    connectionManager.storedConnection?.knownVersions?.backendVersion
+  }
 
   @State private var showExtraHeader = false
 
@@ -270,18 +273,13 @@ public struct ConnectionsView: View {
 
     .navigationBarTitleDisplayMode(.inline)
 
-    .task {
-      if let stored = connectionManager.storedConnection {
-        do {
-          // A version probe only: it downloads nothing, so it needs no store.
-          let repository = try await ApiRepository(
-            connection: stored.connection, mode: Bundle.main.appConfiguration.mode,
-            contentStore: nil, fileIndex: nil)
-          backendVersion = repository.backendVersion
-          updateAvailable = try await repository.remoteVersion().updateAvailable
-        } catch {
-          Logger.shared.error("Could not make ApiRepository for settings display: \(error)")
-        }
+    .task(id: store.activeServerID) {
+      guard store.activeServerID != nil else { return }
+      updateAvailable = false
+      do {
+        updateAvailable = try await store.repository.remoteVersion().updateAvailable
+      } catch {
+        Logger.shared.error("Could not check for a backend update: \(error)")
       }
     }
   }

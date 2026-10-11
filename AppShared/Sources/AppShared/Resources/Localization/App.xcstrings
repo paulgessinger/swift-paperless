@@ -8211,59 +8211,6 @@
         }
       }
     },
-    "loginFailSafe" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Det ser ud til, at appen ikke er i stand til at oprette forbindelse til %@. Du kan prøve at skifte server eller afbryde forbindelsen og oprette den igen:"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Es scheint, dass die App nicht in der Lage ist, sich mit %@ zu verbinden. Du kannst versuchen den Server zu wechseln, oder die Verbindung zu trennen und neu aufzubauen:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It seems like the app is not able to connect to %@. You can try switching servers or disconnecting and reconnecting:"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il semble que l'application ne puisse pas se connecter à %@. Vous pouvez essayer de changer de serveur ou de vous déconnecter et de vous reconnecter :"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sembra che l'applicazione non riesca a connettersi a %@. Puoi provare a cambiare server o disconnetterti e riconnetterti:"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Het lijkt erop dat de app geen verbinding kan maken met %@. Je kunt proberen van server te wisselen of de verbinding te verbreken en opnieuw te maken:"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wygląda na to, że aplikacja nie może połączyć się z %@. Możesz spróbować zmienić serwer lub rozłączyć się i połączyć ponownie:"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Görünüşe göre uygulama %@ adresine bağlanamıyor. Sunucuyu değiştirmeyi veya bağlantıyı kesip yeniden bağlanmayı deneyebilirsiniz:"
-          }
-        }
-      }
-    },
     "logout" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -15,7 +15,7 @@ struct DatabaseSchemaTests {
       #expect(
         names == [
           "id", "url", "friendly_name", "identity", "user", "extra_headers", "needs_auth",
-          "offline_browsing_mode", "sync_over_cellular",
+          "offline_browsing_mode", "sync_over_cellular", "api_version", "backend_version",
         ])
 
       // Added by V8 on an existing table, so it needs a default for every row
@@ -368,6 +368,30 @@ struct DatabaseSchemaTests {
       #expect(row["delta_watermark"] as Double? == 100.5)
       #expect(row["library_coverage_at"] as Double? == 200.5)
       #expect(row["last_refreshed_at"] as Double? == 300.5)
+    }
+  }
+
+  @Test("v18 adds nullable server versions and leaves existing rows unseeded")
+  func v18AddServerVersions() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v16_create_sync_run")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let row = try #require(
+        try Row.fetchOne(db, sql: "SELECT api_version, backend_version FROM server"))
+      #expect(row["api_version"] as Int? == nil)
+      #expect(row["backend_version"] as String? == nil)
     }
   }
 

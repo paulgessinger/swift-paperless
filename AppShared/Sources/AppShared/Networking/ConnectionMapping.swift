@@ -9,6 +9,7 @@
 //  already imports both.
 //
 
+import Common
 import DataModel
 import Foundation
 import Networking
@@ -34,7 +35,17 @@ extension StoredConnection {
       friendlyName: record.friendlyName,
       offlineBrowsingMode: OfflineBrowsingMode(rawValue: record.offlineBrowsingMode)
         ?? .recentlyBrowsed,
-      syncOverCellular: record.syncOverCellular)
+      syncOverCellular: record.syncOverCellular,
+      knownVersions: Self.knownVersions(
+        apiVersion: record.apiVersion, backendVersion: record.backendVersion))
+  }
+
+  /// Both columns or nothing: a half-known pair can't seed a repository.
+  private static func knownVersions(apiVersion: Int?, backendVersion: String?) -> BackendVersions? {
+    guard let apiVersion, apiVersion >= 0,
+      let backendVersion, let version = Version(backendVersion)
+    else { return nil }
+    return BackendVersions(apiVersion: UInt(apiVersion), backendVersion: version)
   }
 
   /// Project a `StoredConnection` into a record for write-through to GRDB.
@@ -60,6 +71,17 @@ extension StoredConnection {
       },
       needsAuth: needsAuth,
       offlineBrowsingMode: offlineBrowsingMode.rawValue,
-      syncOverCellular: syncOverCellular)
+      syncOverCellular: syncOverCellular,
+      apiVersion: storableVersions?.apiVersion,
+      backendVersion: storableVersions?.backendVersion)
+  }
+
+  /// The known versions as their columns, or `nil` for an API version the
+  /// column can't hold: a hostile or broken header must not trap the write.
+  private var storableVersions: (apiVersion: Int, backendVersion: String)? {
+    guard let knownVersions, let apiVersion = Int(exactly: knownVersions.apiVersion) else {
+      return nil
+    }
+    return (apiVersion, knownVersions.backendVersion.description)
   }
 }

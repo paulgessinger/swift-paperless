@@ -110,7 +110,10 @@ struct ApiRepositoryVersionReprobeTest {
     }
   }
 
-  static func makeRepo(apiVersion: UInt?, backendVersion: Version? = nil) -> ApiRepository {
+  static func makeRepo(
+    apiVersion: UInt?, backendVersion: Version? = nil,
+    onVersionsChange: (@MainActor (BackendVersions) -> Void)? = nil
+  ) -> ApiRepository {
     ApiRepository(
       connection: Connection(
         url: baseURL, token: "t", identityName: nil, serverID: serverID),
@@ -118,7 +121,8 @@ struct ApiRepositoryVersionReprobeTest {
       contentStore: nil,
       urlSession: VersionMockURLProtocol.makeSession(),
       apiVersion: apiVersion,
-      backendVersion: backendVersion)
+      backendVersion: backendVersion,
+      onVersionsChange: onVersionsChange)
   }
 
   nonisolated static func dataURL() -> URL {
@@ -308,5 +312,83 @@ struct ApiRepositoryVersionReprobeTest {
     }
     #expect(uiSettingsHits.value == 1)
     #expect(repo.effectiveApiVersion == ApiRepository.minimumApiVersion)
+  }
+
+  // Starting from known versions, the background re-probe learns the server
+  // was upgraded: the repository moves to the new versions and reports them
+  // so they can be persisted.
+  @Test
+  func reprobeReportsChangedVersions() async throws {
+    var reported: [BackendVersions] = []
+    let repo = Self.makeRepo(
+      apiVersion: 7, backendVersion: Version(2, 14, 0),
+      onVersionsChange: { reported.append($0) })
+    VersionMockURLProtocol.responder = { req in
+      (
+        Self.uiSettingsResponse(for: req, apiVersion: "9", backendVersion: "2.18.4"),
+        Data("{}".utf8)
+      )
+    }
+    defer { VersionMockURLProtocol.reset() }
+
+    #expect(await repo.reprobeVersion() == 9)
+    let expected = BackendVersions(apiVersion: 9, backendVersion: Version(2, 18, 4))
+    #expect(repo.versions == expected)
+    #expect(reported == [expected])
+  }
+
+  // A re-probe that confirms the known versions has nothing to persist.
+  @Test
+  func reprobeWithUnchangedVersionsReportsNothing() async throws {
+    var reported: [BackendVersions] = []
+    let repo = Self.makeRepo(
+      apiVersion: 7, backendVersion: Version(2, 14, 0),
+      onVersionsChange: { reported.append($0) })
+    VersionMockURLProtocol.responder = { req in
+      (Self.uiSettingsResponse(for: req, apiVersion: "7"), Data("{}".utf8))
+    }
+    defer { VersionMockURLProtocol.reset() }
+
+    #expect(await repo.reprobeVersion() == 7)
+    #expect(reported.isEmpty)
+  }
+
+  // The 406-driven re-probe reports what it learned too, not just the
+  // background one.
+  @Test
+  func unsupportedVersionReprobeReportsVersions() async throws {
+    var reported: [BackendVersions] = []
+    let repo = Self.makeRepo(
+      apiVersion: ApiRepository.minimumApiVersion, onVersionsChange: { reported.append($0) })
+    VersionMockURLProtocol.responder = { req in
+      if (req.url?.path ?? "").contains("ui_settings") {
+        return (Self.uiSettingsResponse(for: req, apiVersion: "7"), Data("{}".utf8))
+      }
+      if (req.value(forHTTPHeaderField: "Accept") ?? "").contains("version=7") {
+        return Self.response(for: req, status: 200, body: Data("[\"ok\"]".utf8))
+      }
+      return Self.response(for: req, status: 406)
+    }
+    defer { VersionMockURLProtocol.reset() }
+
+    _ = try await repo.fetchData(for: repo.request(url: Self.dataURL()), as: [String].self)
+    #expect(reported == [BackendVersions(apiVersion: 7, backendVersion: Version(2, 14, 0))])
+  }
+
+  // A probe that got no answer at all must not be followed by the Accept-version
+  // sweep: that would wait out the same timeout again, once per version tried.
+  @Test
+  func unreachableProbeSkipsFallbackSweep() async throws {
+    let repo = Self.makeRepo(apiVersion: 7, backendVersion: Version(2, 14, 0))
+    let hits = Counter()
+    VersionMockURLProtocol.responder = { _ in
+      hits.bump()
+      throw URLError(.timedOut)
+    }
+    defer { VersionMockURLProtocol.reset() }
+
+    #expect(await repo.reprobeVersion() == nil)
+    #expect(hits.value == 1)
+    #expect(repo.versions == BackendVersions(apiVersion: 7, backendVersion: Version(2, 14, 0)))
   }
 }

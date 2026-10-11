@@ -1,5 +1,5 @@
 //
-//  LogoView.swift
+//  LogoTitle.swift
 //  swift-paperless
 //
 //  Created by Paul Gessinger on 25.03.23.
@@ -7,19 +7,6 @@
 
 import AppShared
 import SwiftUI
-
-public struct LogoView: View {
-  private let logoSize: CGFloat = 64
-  private let logoRadius: CGFloat = 5
-
-  public var body: some View {
-    VStack(spacing: -15) {
-      Image("AppLogoTransparent")
-      Text(.app(.appName))
-        .font(.title)
-    }
-  }
-}
 
 public struct LogoTitle: View {
   @ScaledMetric(relativeTo: .body) private var logoSize = 50.0
@@ -40,7 +27,7 @@ public struct LogoTitle: View {
 
 #Preview {
   NavigationStack {
-    LogoView()
+    Color.clear
       .toolbar {
         ToolbarItem(placement: .principal) {
           LogoTitle()

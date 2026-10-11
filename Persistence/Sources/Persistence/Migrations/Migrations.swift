@@ -119,6 +119,10 @@ enum Migrations {
       try V17_CreateFile.run(db)
     }
 
+    migrator.registerMigration("v18_add_server_versions") { db in
+      try V18_AddServerVersions.run(db)
+    }
+
     return migrator
   }
 }

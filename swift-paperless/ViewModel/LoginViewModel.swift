@@ -756,7 +756,9 @@ class LoginViewModel {
       user: currentUser,
       identity: selectedIdentity?.name,
       friendlyName: friendlyName,
-      offlineBrowsingMode: .initial)
+      offlineBrowsingMode: .initial,
+      // Seeds the new server's repository, so its first activation needs no probe.
+      knownVersions: repository.versions)
     if let token = connection.token {
       Logger.api.info("Have token for connection, storing")
       do throws(Keychain.KeychainError) {
