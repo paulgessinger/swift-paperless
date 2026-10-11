@@ -554,6 +554,7 @@ public final class ServerSession {
     // reconcile. Cancellation is the exception: it means the pass as a whole is
     // unwanted, so it stops the remaining sweeps instead of being stepped over.
     var result = ReconcileResult()
+    var hydratedKept = 0
     func sweep(_ site: SyncFailureSite, _ body: () async throws -> Void) async {
       guard !result.cancelled else { return }
       do {
@@ -603,9 +604,17 @@ public final class ServerSession {
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
       }
-      await sweep(.keptOffline) { try await backend.hydrateKeptOffline() }
+      await sweep(.keptOffline) { hydratedKept = try await backend.hydrateKeptOffline() }
       await sweep(.membership) { try await backend.reconcileSavedViewMembership() }
       await sweep(.reachability) { try await backend.collectUnreachableQueries() }
+    }
+
+    // A kept document that just got its row back has a `modified` to download
+    // against now; the planned files phase would only reach it on the next
+    // pass. Each task carries the server's network policy, so this queues
+    // nothing the link forbids.
+    if !result.cancelled, hydratedKept > 0 {
+      _ = await fillFiles()
     }
 
     // File reclaim last, and outside the transfer category: it touches no
