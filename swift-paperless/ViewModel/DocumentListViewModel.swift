@@ -297,6 +297,21 @@ class DocumentListViewModel {
     }
   }
 
+  /// Fill the query on screen again if its last fill failed and nothing is
+  /// filling it now. For when the server may be reachable again (the app came
+  /// back, the link changed), so the failure state doesn't wait for a tap. The
+  /// outcome shows in the list, as for `retry()`, without its offline notice.
+  func retryIfFailed() async {
+    guard queryKey != nil, fillError != nil || replacementStoppedShort, fillsInFlight == 0
+    else { return }
+    Logger.shared.info("Retrying the failed document fill")
+    do {
+      try await runFill()
+    } catch {
+      Logger.shared.error("Automatic document fill retry failed: \(error)")
+    }
+  }
+
   private func surface(_ error: (any Error)?, userInitiated: Bool, announcedOffline: Bool) {
     guard userInitiated, !announcedOffline, let error else { return }
     errorController.push(readError: error)
