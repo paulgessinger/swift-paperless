@@ -53,5 +53,13 @@ INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*] = YES
 INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*] = YES
 INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*] = UIStatusBarStyleDefault
 INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*] = UIStatusBarStyleDefault
-INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait
+// Landscape too, so a foldable iPhone can rotate on its outer display.
+// AppDelegate narrows other iPhones back to portrait at runtime.
+INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown
+
+// UIHingeInteraction ships in the iOS 27.1 SDK; CI still builds with 27.0.
+HINGE_API_CONDITION = HINGE_API
+HINGE_API_CONDITION[sdk=iphoneos27.0] =
+HINGE_API_CONDITION[sdk=iphonesimulator27.0] =
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(HINGE_API_CONDITION)
