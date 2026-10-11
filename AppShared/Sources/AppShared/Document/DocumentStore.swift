@@ -158,6 +158,16 @@ public final class DocumentStore: Sendable {
     registry?.fileDownloader?.pausedLowStorage ?? false
   }
 
+  /// Debug: top the active server's download window up now.
+  public func refillLibraryFiles() async {
+    await session?.fillFiles()
+  }
+
+  /// Debug: call off every library download.
+  public func cancelLibraryDownloads() async {
+    await registry?.fileDownloader?.cancelAll()
+  }
+
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
   }

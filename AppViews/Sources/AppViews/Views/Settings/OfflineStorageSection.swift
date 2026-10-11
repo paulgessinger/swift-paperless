@@ -43,7 +43,11 @@ struct OfflineStorageSection: View {
     // total, and a background sweep of an inactive server grows the same
     // database and the same blob store. Gating on `store.isSyncing` left the
     // figures stale until the active server happened to sync.
-    .task(id: store.isAnyServerSyncing) {
+    // Re-measured when sync work starts or ends, and when the library's
+    // downloads drain, which move the figures without any step running.
+    .task(
+      id: RefreshKey(syncing: store.isAnyServerSyncing, downloading: store.libraryFilesInFlight > 0)
+    ) {
       let measured = await store.storageUsage()
       // The detached scan ignores cancellation, so a superseded one can still
       // finish after the newer one; drop its result.
@@ -86,4 +90,9 @@ struct OfflineStorageSection: View {
       }
     }
   }
+}
+
+private struct RefreshKey: Equatable {
+  let syncing: Bool
+  let downloading: Bool
 }
