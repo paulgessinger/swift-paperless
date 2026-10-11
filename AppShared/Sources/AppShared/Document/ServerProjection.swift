@@ -81,6 +81,13 @@ public final class ServerProjection {
   /// index, so the Offline & Sync screen's figure survives a relaunch.
   public private(set) var libraryFileProgress: LibraryFileProgress = .zero
 
+  /// The documents kept offline, for the list's badges and the detail view's
+  /// toggle.
+  public private(set) var keptOfflineDocumentIDs: Set<UInt> = []
+
+  /// How many of the kept documents have their archive on the device.
+  public private(set) var keptOfflineFileProgress: LibraryFileProgress = .zero
+
   // MARK: Members
 
   @ObservationIgnored
@@ -135,6 +142,11 @@ public final class ServerProjection {
       observeValue(database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount),
       observeValue(
         database.observeLibraryFileProgress(serverID: serverID), into: \.libraryFileProgress),
+      observeValue(
+        database.observeKeptOfflineIDs(serverID: serverID), into: \.keptOfflineDocumentIDs),
+      observeValue(
+        database.observeLibraryFileProgress(serverID: serverID, scope: .keptOffline),
+        into: \.keptOfflineFileProgress),
     ])
   }
 

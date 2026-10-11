@@ -46,6 +46,11 @@ public struct SyncPhases: Sendable, Equatable, ExpressibleByArrayLiteral {
   /// the server's offline mode or how expensive the link is.
   public static let cheap: Self = [.elements, .reconcile]
 
+  /// The cheap phases plus the document files: a server outside *Entire
+  /// library* on a link that allows proactive work, where the files are the
+  /// documents kept offline.
+  public static let cheapWithFiles: Self = [.elements, .reconcile, .files]
+
   /// The cheap phases plus the proactive fill and the document files.
   public static let full: Self = [.elements, .reconcile, .fill, .files]
 

@@ -210,7 +210,8 @@ struct SyncPlanTests {
 
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: unmetered) == .full)
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: metered) == .cheap)
-    #expect(SyncPlan.phases(isEntireLibrary: false, condition: unmetered) == .cheap)
+    // The kept documents' files need the link, not the mode.
+    #expect(SyncPlan.phases(isEntireLibrary: false, condition: unmetered) == .cheapWithFiles)
     #expect(SyncPlan.phases(isEntireLibrary: false, condition: metered) == .cheap)
   }
 
@@ -267,25 +268,28 @@ struct SyncPhasesTests {
     #expect(SyncPhases([.files, .elements]).ordered == [.elements, .files])
   }
 
-  @Test("cheap omits the fill and the files, full includes both")
+  @Test("cheap omits the fill and the files, cheapWithFiles adds the files, full both")
   func presets() {
     #expect(!SyncPhases.cheap.contains(.fill))
     #expect(!SyncPhases.cheap.contains(.files))
     #expect(SyncPhases.cheap.contains(.elements))
     #expect(SyncPhases.cheap.contains(.reconcile))
+    #expect(!SyncPhases.cheapWithFiles.contains(.fill))
+    #expect(SyncPhases.cheapWithFiles.contains(.files))
     #expect(SyncPhases.full.contains(.fill))
     #expect(SyncPhases.full.contains(.files))
     #expect(SyncPhases.nothing.isEmpty)
   }
 
-  @Test("the files are planned exactly when the fill is")
-  func filesFollowTheFill() {
+  @Test(
+    "the files are planned whenever the link allows proactive work; the fill needs the mode too")
+  func filesFollowTheLink() {
     for entire in [true, false] {
       for cost in [LinkCost.unrestricted, LinkCost(isExpensive: true, isConstrained: false)] {
         let phases = SyncPlan.phases(
           isEntireLibrary: entire, condition: SyncCondition(cost: cost, syncOverCellular: false))
-        #expect(phases.contains(.files) == phases.contains(.fill))
-        #expect(phases.contains(.files) == (entire && !cost.isExpensive))
+        #expect(phases.contains(.files) == !cost.isExpensive)
+        #expect(phases.contains(.fill) == (entire && !cost.isExpensive))
       }
     }
   }

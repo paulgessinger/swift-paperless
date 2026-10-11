@@ -244,6 +244,13 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// edits, and the list fill or detail write-through corrects them instead.
   func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws
 
+  /// Fetch the documents kept offline whose rows are not cached (after a cache
+  /// wipe, or a document pruned before it was kept), so the *Kept offline*
+  /// list has rows and the file pass has a `modified` to download against.
+  /// Fetch only: whether a kept document still exists is
+  /// ``reconcileDocumentDeletions()``'s call, against the server's id set.
+  func hydrateKeptOffline() async throws
+
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
   /// same `(database, serverID)` the writes land in, so the live observation
@@ -1287,7 +1294,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func reconcileDocumentDeletions() async throws {
+    // The kept documents too: one may have no row yet, and a kept document
+    // deleted on the server must leave the membership by the same rule.
     let localIDs = try await database.allDocumentIDs(serverID: serverID)
+      .union(database.keptOfflineIDs(serverID: serverID))
     // Nothing cached yet → nothing to reconcile (skip the id fetch entirely).
     guard !localIDs.isEmpty else { return }
 
@@ -1410,6 +1420,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         try await setDeltaWatermark(cursor)
       }
       if await source.isExhausted { break }
+    }
+  }
+
+  public func hydrateKeptOffline() async throws {
+    let missing = try await database.keptOfflineIDsMissingRows(serverID: serverID)
+    guard !missing.isEmpty else { return }
+    Logger.sync.info(
+      "Reconcile: fetching \(missing.count, privacy: .public) kept documents without a row")
+    // `documents(ids:)` writes the rows through; in pages so a long list after
+    // a wipe is not one request.
+    var start = missing.startIndex
+    while start < missing.endIndex {
+      try Task.checkCancellation()
+      let end = min(start + 100, missing.endIndex)
+      _ = try await documents(ids: Array(missing[start..<end]))
+      start = end
     }
   }
 

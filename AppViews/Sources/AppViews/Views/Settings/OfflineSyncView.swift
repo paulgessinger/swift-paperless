@@ -341,7 +341,7 @@ public struct OfflineSyncView: View {
   /// Only reached when nothing is running — the stage rows speak for themselves
   /// otherwise. Says *why* it's not running where there's a reason to give.
   private var activityText: String {
-    if mode == .entireLibrary, store.libraryFilesPausedLowStorage {
+    if store.libraryFilesPausedLowStorage {
       String(localized: .settings(.offlineSyncPausedLowStorage))
     } else if waitingForNetwork {
       String(localized: .settings(.offlineSyncWaitingForWifi))
