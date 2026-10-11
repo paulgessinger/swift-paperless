@@ -26,6 +26,10 @@ public final class AppStack {
   public let suspension: DatabaseSuspensionController
   /// The cached files' index and budget, one for every server's store.
   public let contentReclaimer: ContentReclaimer
+  /// The library's file downloads on the background session. Only the app
+  /// process builds one: the session's identifier is the app's, and the Share
+  /// Extension must not create a second session under it.
+  public let fileDownloader: LibraryFileDownloader?
 
   /// Lazy, so the Share Extension, which never schedules syncs, does not
   /// start a path monitor.
@@ -38,13 +42,18 @@ public final class AppStack {
     // work starts.
     linkCost: { [weak self] in self?.networkMonitor.cost ?? .unknown })
 
-  /// - Parameter contentStore: where downloaded files live; `nil` caches no
-  ///   files. Only the on-disk database may be paired with the app-group store:
-  ///   an index that does not outlive the process would judge every file on
-  ///   disk unaccounted for.
+  /// - Parameters:
+  ///   - contentStore: where downloaded files live; `nil` caches no files.
+  ///     Only the on-disk database may be paired with the app-group store: an
+  ///     index that does not outlive the process would judge every file on
+  ///     disk unaccounted for.
+  ///   - buildsFileDownloader: whether this process owns the background
+  ///     session; needs a store.
+  ///   - fileDownloaderSession: a test's session in place of the background one.
   init(
     database: Database, suspension: DatabaseSuspensionController? = nil,
-    contentStore: ContentStore? = nil
+    contentStore: ContentStore? = nil, buildsFileDownloader: Bool = false,
+    fileDownloaderSession: ((URLSessionDownloadDelegate) -> URLSession)? = nil
   ) {
     self.database = database
     let suspension = suspension ?? DatabaseSuspensionController()
@@ -53,17 +62,53 @@ public final class AppStack {
     self.connectionManager = connectionManager
     let contentReclaimer = ContentReclaimer(database: database, store: contentStore)
     self.contentReclaimer = contentReclaimer
+    // The downloader asks the registry for a server's repository, and the
+    // registry hands the downloader to every session; the box breaks the loop.
+    let registryBox = RegistryBox()
+    let fileDownloader: LibraryFileDownloader? =
+      if buildsFileDownloader, let contentStore {
+        LibraryFileDownloader(
+          database: database, store: contentStore, index: contentReclaimer,
+          suspension: suspension,
+          servers: { [connectionManager, registryBox] id in
+            guard let stored = connectionManager.connections[id],
+              let registry = registryBox.registry
+            else { return nil }
+            let repository = try await registry.session(for: id).prepareRepository(for: stored)
+            return LibraryDownloadServer(
+              repository: repository, syncOverCellular: stored.syncOverCellular,
+              isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary)
+          },
+          allServerIDs: { [connectionManager] in Array(connectionManager.connections.keys) },
+          identityName: { [database] id in (try? database.connection(id: id))?.identity },
+          makeSession: fileDownloaderSession ?? LibraryFileDownloader.makeBackgroundSession)
+      } else {
+        nil
+      }
+    self.fileDownloader = fileDownloader
     let sessionRegistry = ServerSessionRegistry(
       database: database, manager: connectionManager, suspension: suspension,
-      contentReclaimer: contentReclaimer)
+      contentReclaimer: contentReclaimer, fileDownloader: fileDownloader)
     self.sessionRegistry = sessionRegistry
+    registryBox.registry = sessionRegistry
     suspension.onExpire = { [weak sessionRegistry] in sessionRegistry?.cancelAllWork() }
-    // The rows went with the server; its files are only found by the walk.
-    sessionRegistry.onServersRemoved = { _ in
+    // The rows went with the server; its files are only found by the walk,
+    // and its downloads are called off.
+    sessionRegistry.onServersRemoved = { removed in
       Task { @MainActor in
+        for serverID in removed {
+          await fileDownloader?.cancel(serverID: serverID)
+        }
         _ = await suspension.performBackgroundWork {
           await contentReclaimer.run(reason: .connectionRemoved)
         }
+      }
+    }
+    // Leaving Entire library drops the server's archives, after its downloads.
+    connectionManager.onDowngrade = { serverID in
+      await fileDownloader?.cancel(serverID: serverID)
+      _ = await suspension.performBackgroundWork {
+        await contentReclaimer.removeArchives(serverID: serverID)
       }
     }
 
@@ -101,11 +146,21 @@ public final class AppStack {
   }
 }
 
+/// Holds the registry for a closure made before it exists.
+private final class RegistryBox: @unchecked Sendable {
+  weak var registry: ServerSessionRegistry?
+}
+
 /// Builds the process's ``AppStack`` on first use and hands the same one to
 /// every later caller: the scene, the Share Extension and the App Intents,
 /// which run in the app's process.
 @MainActor
 public enum AppStackHolder {
+  /// Whether ``shared()`` builds the library file downloader. The app's
+  /// `AppDelegate` sets it before anything asks for the stack; extensions
+  /// leave it off, so only the app process owns the background session.
+  public static var buildsFileDownloader = false
+
   /// Only holds a stack over the on-disk database; the in-memory fallback is not
   /// cached so a transient failure does not outlive its cause.
   private static var cached: AppStack?
@@ -121,7 +176,8 @@ public enum AppStackHolder {
       return cached
     }
     let stack = AppStack(
-      database: try Database(), suspension: suspension, contentStore: try? ContentStore())
+      database: try Database(), suspension: suspension, contentStore: try? ContentStore(),
+      buildsFileDownloader: buildsFileDownloader)
     cached = stack
     return stack
   }
