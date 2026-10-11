@@ -103,6 +103,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom != .phone
   }
 
+  private func previewBinding(regular: Bool) -> Binding<Bool> {
+    Binding(
+      get: { showPreview && (horizontalSizeClass == .regular) == regular },
+      set: { showPreview = $0 }
+    )
+  }
+
   private func handlePendingRoute() {
     guard let action = routeManager.pendingRoute?.action,
       case .document(let docId, let edit) = action,
@@ -745,7 +752,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       }
     }
 
-    .sheet(isPresented: $showPreview) {
+    // A sheet at regular width is a small form sheet, so the PDF goes full
+    // screen there. Two bindings rather than swapping modifiers, which would
+    // rebuild the view whenever the size class changes.
+    .sheet(isPresented: previewBinding(regular: false)) {
+      previewContent
+    }
+    .fullScreenCover(isPresented: previewBinding(regular: true)) {
       previewContent
     }
 
