@@ -222,6 +222,16 @@ extension Endpoint {
     return Endpoint(path: "/api/documents/\(documentId)/download", queryItems: queryItems)
   }
 
+  /// Serves the same file as ``download(documentId:original:version:)``, but
+  /// answers `If-None-Match` against the file's checksum with a 304.
+  public static func preview(
+    documentId: UInt, original: Bool = false, version: UInt? = nil
+  ) -> Endpoint {
+    let download = download(documentId: documentId, original: original, version: version)
+    return Endpoint(
+      path: "/api/documents/\(documentId)/preview", queryItems: download.queryItems)
+  }
+
   public static func suggestions(documentId: UInt) -> Endpoint {
     Endpoint(path: "/api/documents/\(documentId)/suggestions", queryItems: [])
   }

@@ -32,6 +32,7 @@ struct ThumbnailCacheTests {
       var documentID: UInt
       var size: Int64
       var modified: Date?
+      var checksum: String?
     }
 
     var entries: [ContentStore.Key: Entry] = [:]
@@ -40,11 +41,16 @@ struct ThumbnailCacheTests {
       entries[key]?.modified == modified
     }
 
+    func storedChecksum(_ key: ContentStore.Key) async throws -> String? {
+      entries[key]?.checksum
+    }
+
     func recordStore(
       _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
       storedAt: Date
     ) async throws {
-      entries[key] = Entry(documentID: documentID, size: size, modified: modified)
+      entries[key] = Entry(
+        documentID: documentID, size: size, modified: modified, checksum: checksum)
     }
 
     func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {}

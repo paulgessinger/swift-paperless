@@ -812,37 +812,102 @@ extension ApiRepository: Repository {
       return contentStore.url(for: key)
     }
 
-    // The version's checksum is the original's; the archive has none here.
-    let checksum = original ? document.versions.first { $0.id == version }?.checksum : nil
+    // The version's checksum is the original's; for the archive the server
+    // only reports it as the response's ETag.
+    let versionChecksum =
+      original ? document.versions.first { $0.id == version }?.checksum : nil
     return try await inFlightDownloads.run(key: inFlightKey, progress: progress) {
       @MainActor [contentStore, fileIndex] report in
-      let request = try self.request(
-        .download(documentId: document.id, original: original, version: queryVersion))
-      // Coalesced callers share this one task, so its bytes are recorded once.
-      let (tempURL, response): (URL, URLResponse)
-      do {
-        (tempURL, response) = try await self.urlSession.getDownload(
-          for: request, progress: report, onTransfer: Self.recordDocumentTransfer)
-      } catch {
-        throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
+      // `/preview` rather than `/download`: same file, but it supports
+      // `If-None-Match`, which `/download` ignores. Without an archive version
+      // the server serves the original for an archive request too, but sends
+      // no ETag for it, so ask for the original outright.
+      let requestOriginal = original || document.archivedFileName == nil
+      @MainActor func fetch(ifNoneMatch checksum: String?) async throws -> (URL, URLResponse) {
+        var request = try self.request(
+          .preview(documentId: document.id, original: requestOriginal, version: queryVersion))
+        // A 304 must reach this code rather than be resolved by `URLCache`.
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        if let checksum {
+          request.setValue("\"\(checksum)\"", forHTTPHeaderField: "If-None-Match")
+        }
+        // Coalesced callers share this one task, so its bytes are recorded once.
+        let (tempURL, response): (URL, URLResponse)
+        do {
+          (tempURL, response) = try await self.urlSession.getDownload(
+            for: request, progress: report, onTransfer: Self.recordDocumentTransfer)
+        } catch {
+          throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
+        }
+        if (response as? HTTPURLResponse)?.statusCode != 304 {
+          try self.validateDownloadResponse(response, request: request)
+        }
+        return (tempURL, response)
       }
 
-      try self.validateDownloadResponse(response, request: request)
+      @MainActor func record(checksum: String?) async {
+        do {
+          try await fileIndex.recordStore(
+            key, documentID: document.id, size: contentStore.size(of: key) ?? 0,
+            modified: modified, checksum: checksum, storedAt: Date())
+        } catch {
+          // The file is in place; it just isn't accounted for until the next
+          // download of it, and the walk removes it meanwhile if it ages.
+          Logger.networking.error("Recording a downloaded file in the index failed: \(error)")
+        }
+      }
+
+      // `modified` also changes on metadata-only edits, while the checksum
+      // changes only with the file, so a stored file is offered for a 304.
+      let storedChecksum =
+        contentStore.exists(key) ? try await Self.storedChecksum(key, in: fileIndex) : nil
+      var (tempURL, response) = try await fetch(ifNoneMatch: storedChecksum)
+
+      if (response as? HTTPURLResponse)?.statusCode == 304 {
+        try? FileManager.default.removeItem(at: tempURL)
+        if contentStore.exists(key) {
+          Logger.networking.info(
+            "Stored file for documentID \(document.id) version \(version) is unchanged (original: \(original))"
+          )
+          await record(checksum: storedChecksum)
+          report(1.0)
+          return contentStore.url(for: key)
+        }
+        // Reclaimed while the request was out.
+        (tempURL, response) = try await fetch(ifNoneMatch: nil)
+      }
 
       // File first, row second: a file without a row is removed by the repair
       // walk once it is old enough, a row without a file would be served.
       let url = try contentStore.store(key, movingFrom: tempURL)
-      do {
-        try await fileIndex.recordStore(
-          key, documentID: document.id, size: contentStore.size(of: key) ?? 0,
-          modified: modified, checksum: checksum, storedAt: Date())
-      } catch {
-        // The download succeeded; the file just isn't accounted for until the
-        // next download of it, and the walk removes it meanwhile if it ages.
-        Logger.networking.error("Recording a downloaded file in the index failed: \(error)")
-      }
+      await record(checksum: Self.entityTag(of: response) ?? versionChecksum)
       return url
     }
+  }
+
+  /// The checksum recorded for `key`. A failed lookup counts as none.
+  private nonisolated static func storedChecksum(
+    _ key: ContentStore.Key, in fileIndex: any FileIndex
+  ) async throws -> String? {
+    do {
+      return try await fileIndex.storedChecksum(key)
+    } catch is CancellationError {
+      throw CancellationError()
+    } catch {
+      Logger.networking.debug("File index lookup failed, sending no validator: \(error)")
+      return nil
+    }
+  }
+
+  /// The response's ETag without quotes or weak prefix. paperless-ngx sets it
+  /// to the served file's checksum.
+  nonisolated static func entityTag(of response: URLResponse) -> String? {
+    guard var tag = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "ETag") else {
+      return nil
+    }
+    if tag.hasPrefix("W/") { tag.removeFirst(2) }
+    tag = tag.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+    return tag.isEmpty ? nil : tag
   }
 
   /// Whether the index has a fresh entry for `key`. A failed lookup is a miss.

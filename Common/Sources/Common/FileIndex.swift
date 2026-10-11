@@ -15,6 +15,9 @@ public protocol FileIndex: Sendable {
   /// Whether the file at `key` was fetched against exactly `modified`.
   func isFresh(_ key: ContentStore.Key, modified: Date) async throws -> Bool
 
+  /// The checksum recorded with the file at `key`, whether or not it is fresh.
+  func storedChecksum(_ key: ContentStore.Key) async throws -> String?
+
   /// Record the file now at `key`, replacing any earlier entry.
   func recordStore(
     _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
