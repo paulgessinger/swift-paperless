@@ -46,17 +46,21 @@ public struct FileRecord:
   static let evictableKinds = [ContentStore.Kind.original, .archive].map(\.rawValue)
 
   /// The rows the storage budget may evict: evictable kinds, except the
-  /// archives of a server in *Entire library*, which the library pass keeps
-  /// downloading ahead of time. The one definition of "evictable"; pinning
-  /// extends it here.
+  /// archives the file pass keeps on the device, those of a server in *Entire
+  /// library* and those of a document kept offline. The one definition of
+  /// "evictable".
   static var evictable: QueryInterfaceRequest<FileRecord> {
     let file = TableAlias()
     let libraryServer =
       ConnectionRecord
       .filter(Column("id") == file[Column("server_id")])
       .filter(ConnectionRecord.Columns.offlineBrowsingMode == "entireLibrary")
+    let kept = KeptOfflineRecord.keeping(
+      server: file[Column("server_id")], document: file[Column("document_id")])
     return aliased(file)
       .filter(evictableKinds.contains(Column("kind")))
-      .filter(!(Column("kind") == ContentStore.Kind.archive.rawValue && libraryServer.exists()))
+      .filter(
+        !(Column("kind") == ContentStore.Kind.archive.rawValue
+          && (libraryServer.exists() || kept.exists())))
   }
 }

@@ -130,6 +130,20 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v19 creates the kept_offline table keyed by server and document")
+  func v19CreatesKeptOffline() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(try db.tableExists("kept_offline"))
+      let columns = try db.columns(in: "kept_offline")
+      #expect(Set(columns.map(\.name)) == ["server_id", "document_id", "kept_at"])
+      #expect(columns.allSatisfy { $0.isNotNull })
+      #expect(try db.primaryKey("kept_offline").columns == ["server_id", "document_id"])
+      let fkTargets = Set(try db.foreignKeys(on: "kept_offline").map(\.destinationTable))
+      #expect(fkTargets == ["server"])
+    }
+  }
+
   @Test("v10 adds a nullable viewed_at to query_meta")
   func v10AddsQueryViewedAt() throws {
     let database = try Database.inMemory()

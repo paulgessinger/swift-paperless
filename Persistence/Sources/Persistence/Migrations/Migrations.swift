@@ -123,6 +123,10 @@ enum Migrations {
       try V18_AddServerVersions.run(db)
     }
 
+    migrator.registerMigration("v19_create_kept_offline") { db in
+      try V19_CreateKeptOffline.run(db)
+    }
+
     return migrator
   }
 }

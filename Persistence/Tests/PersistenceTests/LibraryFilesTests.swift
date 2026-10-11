@@ -126,4 +126,29 @@ struct LibraryFilesTests {
     #expect(
       next == LibraryFileProgress(totalDocuments: 2, downloadedFiles: 1, downloadedBytes: 100))
   }
+
+  @Test("The kept scope lists only members, cached or stale, and counts every member")
+  func keptScope() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    // 1: kept, stale archive. 2: kept, fresh. 3: not kept, missing. 9: kept, no row.
+    try await recordArchive(database, 1, modified: date(400))
+    try await recordArchive(database, 2, modified: date(500), size: 7)
+    for id: UInt in [1, 2, 9] {
+      try await database.setKeptOffline(serverID: server, documentID: id, kept: true)
+    }
+
+    let kept = try await database.documentsNeedingArchive(
+      serverID: server, scope: .keptOffline, limit: 10
+    ).map(\.documentID)
+    #expect(kept == [1])
+    let library = try await database.documentsNeedingArchive(serverID: server, limit: 10)
+      .map(\.documentID)
+    #expect(library == [3, 1])
+
+    let progress = try await database.libraryFileProgress(serverID: server, scope: .keptOffline)
+    #expect(
+      progress == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
+    let whole = try await database.libraryFileProgress(serverID: server)
+    #expect(whole == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
+  }
 }

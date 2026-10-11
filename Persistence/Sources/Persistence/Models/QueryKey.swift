@@ -23,9 +23,9 @@ import Foundation
 ///   filter *resolves* it, so a filter following the app default and one
 ///   pinning the same value address the same cached query.
 ///
-/// Virtual / client-defined views (e.g. a pinned "Downloaded" list) use
-/// a ``init(sentinel:)`` well-known key instead of a hash, since they have no
-/// server query to replay.
+/// Virtual / client-defined views (``keptOffline``) use a ``init(sentinel:)``
+/// well-known key instead of a hash, since they have no server query to
+/// replay.
 public struct QueryKey: Hashable, Sendable {
   public let rawValue: String
 
@@ -53,6 +53,11 @@ public struct QueryKey: Hashable, Sendable {
   public init(sentinel: String) {
     rawValue = sentinel
   }
+
+  /// The local *Kept offline* view: the documents the user keeps on the
+  /// device, served from the `kept_offline` table rather than `query_order`.
+  /// Nothing fills it, so it never enters the reachability sweep's set.
+  public static let keptOffline = QueryKey(sentinel: "local:kept-offline")
 
   /// Rehydrate a key already on disk (a `query_meta` / `query_order` row's
   /// `query_key`). Package-internal: outside `Persistence` a key is only ever

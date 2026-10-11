@@ -420,4 +420,35 @@ struct DowngradeGCTests {
       try await database.queryDocuments(queryKey: savedViewKey, serverID: server, limit: 10).isEmpty
     )
   }
+
+  // MARK: - Kept offline
+
+  @Test("a kept document survives the prune and the downgrade with its notes")
+  func keptDocumentSurvives() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let keep = QueryKey(sentinel: "default")
+    let drop = QueryKey(sentinel: "saved-view")
+
+    try await database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: drop, serverID: server, orderedIDs: [2, 3], basis: .initial)
+    try await database.setNotes([note(1)], serverID: server, documentID: 2)
+    try await database.setKeptOffline(serverID: server, documentID: 2, kept: true)
+
+    let removed = try await database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+
+    #expect(removed == 1)
+    #expect(try await database.document(serverID: server, id: 2) != nil)
+    #expect(try await database.document(serverID: server, id: 3) == nil)
+    #expect(try await database.notes(serverID: server, documentID: 2)?.count == 1)
+    #expect(try await database.keptOfflineIDs(serverID: server) == [2])
+
+    try await database.setKeptOffline(serverID: server, documentID: 2, kept: false)
+    #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 1)
+    #expect(try await database.document(serverID: server, id: 2) == nil)
+  }
 }
