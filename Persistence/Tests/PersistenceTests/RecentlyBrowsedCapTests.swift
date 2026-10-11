@@ -207,4 +207,22 @@ struct RecentlyBrowsedCapTests {
     #expect(try await ids(list, serverB, database).count == 5)
     #expect(try await database.documentCount(serverID: serverB) == 5)
   }
+
+  // MARK: - Kept offline
+
+  @Test("a kept document outside the cap keeps its row")
+  func keptDocumentSurvivesTheCap() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let list = key("list")
+    try await cacheList(list, ids: 1...10, viewedAt: date(1000), server: server, on: database)
+    try await database.setKeptOffline(serverID: server, documentID: 9, kept: true)
+
+    let result = try await database.capRecentlyBrowsedQueries(
+      serverID: server, keepingFirst: 3, notViewedSince: cutoff)
+
+    #expect(result == RecentlyBrowsedCapResult(truncatedRows: 7, removedDocuments: 6))
+    #expect(try await ids(list, server, database) == [1, 2, 3])
+    #expect(try await database.document(serverID: server, id: 9) != nil)
+  }
 }

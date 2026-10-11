@@ -121,13 +121,19 @@ extension Database {
     }
   }
 
-  /// A server's archive rows, for the downgrade that removes them.
+  /// A server's archive rows apart from the kept documents', for the downgrade
+  /// that removes them.
   public func archiveFiles(serverID: UUID) async throws -> [FileRecord] {
     try await wrappingAsync("archiveFiles") {
       try await writer.read { db in
-        try FileRecord
+        let file = TableAlias()
+        let kept = KeptOfflineRecord.keeping(
+          server: file[Column("server_id")], document: file[Column("document_id")])
+        return
+          try FileRecord.aliased(file)
           .filter(Column("server_id") == serverID)
           .filter(Column("kind") == ContentStore.Kind.archive.rawValue)
+          .filter(!kept.exists())
           .fetchAll(db)
       }
     }
