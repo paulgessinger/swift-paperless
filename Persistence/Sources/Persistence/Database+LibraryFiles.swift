@@ -42,10 +42,13 @@ public struct LibraryFileProgress: Sendable, Equatable {
 /// The library's files: which documents still need their archive, and how far
 /// the pass has come. Async only, like every cache table.
 extension Database {
-  /// The newest documents whose current version has no fresh archive, by id
-  /// descending (`added` is not a column; ids grow with it). Documents
-  /// without `modified` are left out: a file for them could never be
-  /// validated. `excluding` holds the documents already downloading.
+  /// The documents whose current version has no fresh archive, highest id
+  /// first: ingestion order, which is what the pass wants, and what paperless
+  /// itself orders by (`added` can disagree after an import that kept its
+  /// timestamps, and only the order of a pass that downloads everything
+  /// depends on it). Documents without `modified` are left out: a file for
+  /// them could never be validated. `excluding` holds the documents already
+  /// downloading.
   public func documentsNeedingArchive(
     serverID: UUID, excluding: Set<UInt> = [], limit: Int
   ) async throws -> [LibraryFileCandidate] {

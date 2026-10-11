@@ -49,6 +49,30 @@ struct ContentStoreTests {
     ContentStore.Key(serverID: server, versionID: version, kind: kind)
   }
 
+  @Test("A store left under Caches by an older build is moved under Application Support")
+  func legacyStoreIsMoved() throws {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("ContentStoreTests-legacy-\(UUID().uuidString)")
+    let key = ContentStore.Key(serverID: UUID(), versionID: 7, kind: .archive)
+    let legacyFile = AppGroup.Layout.legacyContentStore(in: root)
+      .appendingPathComponent(key.serverID.uuidString, isDirectory: true)
+      .appendingPathComponent("7", isDirectory: true)
+      .appendingPathComponent("archive.pdf")
+    try FileManager.default.createDirectory(
+      at: legacyFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data("PDF".utf8).write(to: legacyFile)
+
+    let store = try ContentStore(root: root)
+
+    #expect(store.exists(key))
+    #expect(store.url(for: key).path.hasPrefix(AppGroup.Layout.contentStore(in: root).path))
+    #expect(
+      !FileManager.default.fileExists(atPath: AppGroup.Layout.legacyContentStore(in: root).path))
+    let values = try AppGroup.Layout.contentStore(in: root)
+      .resourceValues(forKeys: [.isExcludedFromBackupKey])
+    #expect(values.isExcludedFromBackup == true)
+  }
+
   @Test
   func urlIsDeterministic() throws {
     let (store, _) = try Self.makeStore()
