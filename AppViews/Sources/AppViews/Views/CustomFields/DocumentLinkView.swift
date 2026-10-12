@@ -80,22 +80,27 @@ private struct SearchView: View {
       prompt: .customFields(.documentLinkSearchPlaceholder),
     )
 
-    .onChange(of: searchText) {
+    .onChange(of: searchText) { _, searchText in
+      searchTask?.cancel()
       guard searchText.count >= 3 else {
         matchingDocuments = []
         return
       }
 
-      searchTask?.cancel()
       searchTask = Task {
-        try? await Task.sleep(for: .seconds(0.3))
-
         do {
-          matchingDocuments = try await store.repository.documents(containsTitle: searchText)
+          try await Task.sleep(for: .seconds(0.3))
+          let documents = try await store.repository.documents(containsTitle: searchText)
+          guard !Task.isCancelled else { return }
+          matchingDocuments = documents
         } catch {
+          guard !Task.isCancelled else { return }
           Logger.shared.error("Error searching documents: \(error, privacy: .public)")
         }
       }
+    }
+    .onDisappear {
+      searchTask?.cancel()
     }
   }
 }
