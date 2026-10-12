@@ -250,6 +250,9 @@ final class TaskListViewModel {
   private weak var store: DocumentStore?
   private var source: (any TaskSource)?
   private var exhausted = false
+  private var loading = false
+  private var generation = 0
+  private var loadingPageGeneration: Int?
 
   private let initialBatchSize: UInt = 100
   private let batchSize: UInt = 100
@@ -260,14 +263,25 @@ final class TaskListViewModel {
   }
 
   func load() async {
-    guard let store, tasks.isEmpty else { return }
+    guard let store, tasks.isEmpty, !loading else { return }
+    loading = true
+    defer { loading = false }
+    let generation = generation
+
     do {
       let source = try store.repository.tasks()
+      let batch = try await source.fetch(limit: initialBatchSize)
+      let exhausted = await source.isExhausted
+      guard generation == self.generation else { return }
+
+      self.generation += 1
+      loadingPageGeneration = nil
       self.source = source
-      tasks = try await source.fetch(limit: initialBatchSize)
-      exhausted = await source.isExhausted
+      tasks = batch
+      self.exhausted = exhausted
       ready = true
     } catch {
+      guard generation == self.generation else { return }
       Logger.shared.error("TaskList failed to load: \(error)")
       ready = true
     }
@@ -278,9 +292,15 @@ final class TaskListViewModel {
     do {
       let source = try store.repository.tasks()
       let batch = try await source.fetch(limit: initialBatchSize)
+      let exhausted = await source.isExhausted
+
+      // Keep the old source usable until its replacement is ready. A failed
+      // refresh must not discard a page already consumed from that source.
+      generation += 1
+      loadingPageGeneration = nil
       self.source = source
       tasks = batch
-      exhausted = await source.isExhausted
+      self.exhausted = exhausted
       ready = true
     } catch {
       Logger.shared.error("TaskList failed to refresh: \(error)")
@@ -288,18 +308,26 @@ final class TaskListViewModel {
   }
 
   func fetchMoreIfNeeded(currentIndex: Int) async {
-    guard !exhausted, let source else { return }
+    guard !exhausted, let source, loadingPageGeneration != generation else { return }
     guard currentIndex >= tasks.count - fetchMargin else { return }
+
+    let generation = generation
+    loadingPageGeneration = generation
+    defer {
+      if loadingPageGeneration == generation {
+        loadingPageGeneration = nil
+      }
+    }
 
     do {
       let batch = try await source.fetch(limit: batchSize)
-      if batch.isEmpty {
-        exhausted = true
-        return
-      }
+      let exhausted = await source.isExhausted
+      guard generation == self.generation else { return }
+
       tasks.append(contentsOf: batch)
-      exhausted = await source.isExhausted
+      self.exhausted = batch.isEmpty || exhausted
     } catch {
+      guard generation == self.generation else { return }
       Logger.shared.error("TaskList failed to load more: \(error)")
     }
   }
