@@ -1311,8 +1311,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // detail; the setting only governs which docs are kept (every row is written
     // at `.full`). Nothing cached ⇒ the proactive fill (or a list open) seeds
     // first.
-    let localIDs = try await database.allDocumentIDs(serverID: serverID)
-    guard !localIDs.isEmpty else { return }
+    let localIDs: Set<UInt>
+    if entireLibrary {
+      guard try await database.documentCount(serverID: serverID) > 0 else { return }
+      localIDs = []
+    } else {
+      localIDs = try await database.allDocumentIDs(serverID: serverID)
+      guard !localIDs.isEmpty else { return }
+    }
 
     let watermark: Date
     if let stored = try await deltaWatermark() {
@@ -1416,7 +1422,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func reconcileSavedViewMembership() async throws {
     guard offlineBrowsingMode == .entireLibrary else { return }
     // Nothing cached ⇒ the proactive fill seeds membership first.
-    guard try await !database.allDocumentIDs(serverID: serverID).isEmpty else { return }
+    guard try await database.documentCount(serverID: serverID) > 0 else { return }
 
     // Rebuild the default list + each saved view's order from the cheap Tier-0 id
     // projection. Runs *after* the R3δ pass (which lands new docs at detail), so
