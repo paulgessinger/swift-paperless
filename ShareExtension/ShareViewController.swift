@@ -25,8 +25,8 @@ class ShareViewController: UIViewController {
 
     let shareView = ShareView(
       attachmentManager: attachmentManager,
-      callback: {
-        self.extensionContext!.completeRequest(returningItems: nil, completionHandler: nil)
+      callback: { [weak self] in
+        self?.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
       })
 
     childView = UIHostingController(rootView: shareView)
