@@ -631,7 +631,28 @@ extension ApiRepository: Repository {
 
   public func create(document: ProtoDocument, file: URL, filename: String) async throws {
     Logger.networking.notice("Creating document")
-    var request = try request(.createDocument())
+    let request = try await Self.prepareCreateRequest(
+      request: request(.createDocument()), document: document, file: file, filename: filename,
+      supportsCustomFields: supports(feature: .customFieldsOnCreate))
+    try Task.checkCancellation()
+
+    do {
+      let _ = try await fetchData(for: request)
+    } catch let RequestError.unexpectedStatusCode(code, _) where code == .contentTooLarge {
+      throw DocumentCreateError.tooLarge
+    } catch {
+      Logger.networking.error("Error uploading document: \(error)")
+      throw error
+    }
+  }
+
+  @concurrent
+  private nonisolated static func prepareCreateRequest(
+    request: URLRequest, document: ProtoDocument, file: URL, filename: String,
+    supportsCustomFields: Bool
+  ) async throws -> URLRequest {
+    try Task.checkCancellation()
+    var request = request
 
     let mp = MultiPartFormDataRequest()
     if !document.title.isEmpty {
@@ -667,9 +688,11 @@ extension ApiRepository: Repository {
 
     try mp.add(name: "document", url: file, filename: filename)
 
-    if supports(feature: .customFieldsOnCreate), !document.customFields.isEmpty {
+    if supportsCustomFields, !document.customFields.isEmpty {
       Logger.networking.debug("Adding custom fields to document create request")
 
+      let encoder = JSONEncoder()
+      encoder.dateEncodingStrategy = .iso8601
       let encoded = try document.customFields.encodeToDictionary(encoder: encoder)
       if let encodedStr = String(data: encoded, encoding: .utf8) {
         mp.add(name: "custom_fields", string: encodedStr)
@@ -679,15 +702,7 @@ extension ApiRepository: Repository {
     }
 
     mp.addTo(request: &request)
-
-    do {
-      let _ = try await fetchData(for: request)
-    } catch let RequestError.unexpectedStatusCode(code, _) where code == .contentTooLarge {
-      throw DocumentCreateError.tooLarge
-    } catch {
-      Logger.networking.error("Error uploading document: \(error)")
-      throw error
-    }
+    return request
   }
 
   public func delete(document: Document) async throws {
