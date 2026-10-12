@@ -847,6 +847,7 @@ struct CustomFieldFilterView: View {
   }
 
   @State private var state = QueryState.valid
+  @State private var validationTask: Task<Void, Never>?
 
   @Environment(DocumentStore.self) private var store
   @Environment(\.dismiss) private var dismiss
@@ -856,7 +857,8 @@ struct CustomFieldFilterView: View {
     _query = State(initialValue: query.wrappedValue)
   }
 
-  private func validate() async {
+  private func validate(_ query: CustomFieldQuery) async {
+    guard !Task.isCancelled else { return }
     Logger.shared.info("Validating custom field query: \(query.rawValue, privacy: .public)")
 
     guard query != .any else {
@@ -877,7 +879,12 @@ struct CustomFieldFilterView: View {
     }
 
     state = .checking
-    try? await Task.sleep(for: .seconds(2))
+    do {
+      try await Task.sleep(for: .seconds(2))
+    } catch {
+      return
+    }
+    guard !Task.isCancelled else { return }
 
     let filterState = FilterState.empty.with {
       $0.customField = query
@@ -895,10 +902,12 @@ struct CustomFieldFilterView: View {
       Logger.shared.info("Requesting documents to validate custom field query")
       state = .checking
       _ = try await store.repository.documents(filter: filterState).fetch(limit: 1)
+      guard !Task.isCancelled else { return }
       Logger.shared.info("Documents received, setting filter")
       outputQuery = query
       state = .valid
     } catch {
+      guard !Task.isCancelled else { return }
       Logger.shared.error(
         "Received error loading documents with filter, presenting error and not modifying actual filter state: \(error)"
       )
@@ -942,10 +951,14 @@ struct CustomFieldFilterView: View {
 
     .interactiveDismissDisabled(state != .valid)
 
-    .onChange(of: query) {
-      Task {
-        await validate()
+    .onChange(of: query) { _, query in
+      validationTask?.cancel()
+      validationTask = Task {
+        await validate(query)
       }
+    }
+    .onDisappear {
+      validationTask?.cancel()
     }
   }
 }
