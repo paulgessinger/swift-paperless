@@ -9,6 +9,17 @@ import Testing
 @MainActor
 @Suite
 struct DocumentStoreTests {
+  @Test("Starting task polling does not keep an otherwise unowned store alive")
+  func taskPollingDoesNotRetainStore() async throws {
+    var harness: StoreHarness? = try await StoreHarness.make()
+    let storeWasReleased = { [weak store = harness?.store] in store == nil }
+
+    harness?.store.startTaskPolling()
+    harness = nil
+
+    try await waitUntil(storeWasReleased, "task polling retained the store")
+  }
+
   // MARK: - Thumbnails
 
   @Test("A thumbnail request is keyed by the session's server and the document's version")

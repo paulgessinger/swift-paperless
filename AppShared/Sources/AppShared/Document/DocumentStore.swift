@@ -258,45 +258,50 @@ public final class DocumentStore: Sendable {
     projection = ServerProjection(database: backend.database, serverID: backend.serverID)
   }
 
-  @Sendable
-  private func taskPoller() async {
-    Logger.shared.debug("Task poller initialize")
-    repeat {
-      guard !Task.isCancelled else { break }
-      Logger.shared.debug("Polling tasks")
+  private func pollTasksOnce() async -> Duration {
+    Logger.shared.debug("Polling tasks")
 
-      let currentActiveTasks = Set(tasks.filter(\.isActive).map(\.id))
-      Logger.shared.debug("Current active: \(currentActiveTasks)")
-      await fetchTasks()
-      let newErrors: [PaperlessTask] = tasks.filter {
-        $0.status == .FAILURE && currentActiveTasks.contains($0.id)
-      }
-      Logger.shared.debug("New errors: \(newErrors)")
+    let currentActiveTasks = Set(tasks.filter(\.isActive).map(\.id))
+    Logger.shared.debug("Current active: \(currentActiveTasks)")
+    await fetchTasks()
+    let newErrors: [PaperlessTask] = tasks.filter {
+      $0.status == .FAILURE && currentActiveTasks.contains($0.id)
+    }
+    Logger.shared.debug("New errors: \(newErrors)")
 
-      if !newErrors.isEmpty {
-        Task {
-          // don't send the errors all at once if there's multiple
-          for task in newErrors {
-            events.emit(.taskError(task: task))
-            try? await Task.sleep(for: .seconds(2))
-          }
+    if !newErrors.isEmpty {
+      Task { [events] in
+        // don't send the errors all at once if there's multiple
+        for task in newErrors {
+          events.emit(.taskError(task: task))
+          try? await Task.sleep(for: .seconds(2))
         }
       }
+    }
 
-      let emptyDuration = 60.0
-      let activeDuration: Double =
-        ProcessInfo.processInfo.environment["TASK_POLLING_INTERVAL"].flatMap { Double($0) } ?? 2.5
+    let emptyDuration = 60.0
+    let activeDuration: Double =
+      ProcessInfo.processInfo.environment["TASK_POLLING_INTERVAL"].flatMap { Double($0) } ?? 2.5
 
-      let duration: Duration = .seconds(activeTasks.isEmpty ? emptyDuration : activeDuration)
-      Logger.shared.debug("Task poller sleeping for \(duration)")
-      try? await Task.sleep(for: duration)
-    } while !Task.isCancelled
-    Logger.shared.debug("Task poller terminating")
+    let duration: Duration = .seconds(activeTasks.isEmpty ? emptyDuration : activeDuration)
+    return duration
   }
 
   public func startTaskPolling() {
     taskUpdateTask?.cancel()
-    taskUpdateTask = Task(operation: taskPoller)
+    taskUpdateTask = Task { [weak self] in
+      Logger.shared.debug("Task poller initialize")
+      defer { Logger.shared.debug("Task poller terminating") }
+      while !Task.isCancelled {
+        guard let duration = await self?.pollTasksOnce() else { return }
+        Logger.shared.debug("Task poller sleeping for \(duration)")
+        do {
+          try await Task.sleep(for: duration)
+        } catch {
+          return
+        }
+      }
+    }
   }
 
   /// Drop the per-server state this store still holds in memory, on a repository
