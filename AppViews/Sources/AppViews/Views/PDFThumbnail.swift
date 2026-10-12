@@ -15,8 +15,6 @@ public struct PDFThumbnail: View {
 
   public let file: URL
 
-  public let image: Image?
-
   public init?(file: URL) {
     self.file = file
     guard let document = PDFDocument(url: file) else {
@@ -31,10 +29,6 @@ public struct PDFThumbnail: View {
     }
 
     aspectRatio = CGFloat(size.width / size.height)
-
-    image = document.thumbnailPNGData(pageIndex: 0, size: size)
-      .flatMap { UIImage(data: $0) }
-      .map { Image(uiImage: $0) }
   }
 
   public var body: some View {
