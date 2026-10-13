@@ -88,6 +88,8 @@ struct DocumentView: View {
   @State private var columnVisibility = Self.defaultColumnVisibility
   private static let defaultColumnVisibility: NavigationSplitViewVisibility =
     UIDevice.current.userInterfaceIdiom == .phone ? .doubleColumn : .all
+  // The user's last column choice, restored after a trip through compact.
+  @State private var regularColumnVisibility = Self.defaultColumnVisibility
 
   @State private var showFileImporter = false
   @State private var isDocumentScannerAvailable = false
@@ -515,7 +517,7 @@ struct DocumentView: View {
     // Collapsing writes .detailOnly into the binding, so the split view would
     // come back showing only the document. iPhone Duo passes through compact
     // on every trip to the background, presumably for the outer display.
-    .onAppear { columnVisibility = Self.defaultColumnVisibility }
+    .onAppear { columnVisibility = regularColumnVisibility }
   }
 
   // MARK: Regular body (iPad / regular size class)
@@ -649,6 +651,11 @@ struct DocumentView: View {
       } else {
         compactBody
       }
+    }
+    // Outside regularBody so it still runs while the split view collapses.
+    // That collapse writes .detailOnly, so a user choice of it isn't kept.
+    .onChange(of: columnVisibility) { _, new in
+      if new != .detailOnly { regularColumnVisibility = new }
     }
 
     .fileImporter(
