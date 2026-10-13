@@ -60,6 +60,7 @@ actor InMemoryFileIndex: FileIndex {
     var size: Int64
     var modified: Date?
     var checksum: String?
+    var storedAt: Date
   }
 
   private(set) var entries: [ContentStore.Key: Entry] = [:]
@@ -77,7 +78,9 @@ actor InMemoryFileIndex: FileIndex {
     _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
     storedAt: Date
   ) async throws {
-    entries[key] = Entry(documentID: documentID, size: size, modified: modified, checksum: checksum)
+    entries[key] = Entry(
+      documentID: documentID, size: size, modified: modified, checksum: checksum,
+      storedAt: storedAt)
   }
 
   func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {
@@ -438,6 +441,39 @@ struct ApiRepositoryDownloadTest {
       document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
 
     #expect(validators.value == [nil, nil])
+  }
+
+  @Test
+  func revalidatedFileOutlivesAReclaimOfTheOldRow() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    DownloadMockURLProtocol.responder = { req in
+      if req.value(forHTTPHeaderField: "If-None-Match") == "\"md5\"" {
+        return (Self.response(for: req, status: 304, etag: "\"md5\""), Data())
+      }
+      return (Self.response(for: req, etag: "\"md5\""), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+    let key = Self.canonicalKey(for: Self.makeDocument())
+
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 1)))
+    let oldRow = try #require(await index.entries[key])
+    // The file keeps the date of its first write, which is before the row.
+    try store.touch(key, at: oldRow.storedAt.addingTimeInterval(-10))
+
+    let url = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+
+    // A pass that claimed the old row before the 304 was recorded leaves the
+    // file alone, and the new row dates it.
+    #expect(store.delete(key, ifNotModifiedAfter: oldRow.storedAt) == nil)
+    #expect(try Data(contentsOf: url) == Data("X".utf8))
+    let newRow = try #require(await index.entries[key])
+    let modified = try #require(
+      try url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
+    #expect(abs(modified.timeIntervalSince(newRow.storedAt)) < 1)
   }
 
   @Test

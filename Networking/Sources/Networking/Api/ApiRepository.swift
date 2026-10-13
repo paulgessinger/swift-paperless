@@ -845,11 +845,11 @@ extension ApiRepository: Repository {
         return (tempURL, response)
       }
 
-      @MainActor func record(checksum: String?) async {
+      @MainActor func record(checksum: String?, storedAt: Date = Date()) async {
         do {
           try await fileIndex.recordStore(
             key, documentID: document.id, size: contentStore.size(of: key) ?? 0,
-            modified: modified, checksum: checksum, storedAt: Date())
+            modified: modified, checksum: checksum, storedAt: storedAt)
         } catch {
           // The file is in place; it just isn't accounted for until the next
           // download of it, and the walk removes it meanwhile if it ages.
@@ -865,11 +865,16 @@ extension ApiRepository: Repository {
 
       if (response as? HTTPURLResponse)?.statusCode == 304 {
         try? FileManager.default.removeItem(at: tempURL)
-        if contentStore.exists(key) {
+        // A reclaim pass that claimed the old row meanwhile unlinks the file
+        // unless it was modified after that row's `storedAt`. Dating the kept
+        // file to the new row's `storedAt` gives it the same protection as a
+        // replaced file; a touch that fails means the file is already gone.
+        let storedAt = Date()
+        if (try? contentStore.touch(key, at: storedAt)) != nil {
           Logger.networking.info(
             "Stored file for documentID \(document.id) version \(version) is unchanged (original: \(original))"
           )
-          await record(checksum: storedChecksum)
+          await record(checksum: storedChecksum, storedAt: storedAt)
           report(1.0)
           return contentStore.url(for: key)
         }

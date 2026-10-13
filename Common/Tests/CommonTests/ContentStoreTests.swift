@@ -120,6 +120,23 @@ struct ContentStoreTests {
   }
 
   @Test
+  func touchMovesTheBlobPastAGuardedDelete() throws {
+    let (store, _) = try Self.makeStore()
+    try store.storeData(Data("x".utf8), for: Self.key())
+    let url = store.url(for: Self.key())
+    let written = try #require(
+      try url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
+
+    let later = written.addingTimeInterval(10)
+    try store.touch(Self.key(), at: later)
+
+    #expect(store.delete(Self.key(), ifNotModifiedAfter: written) == nil)
+    #expect(store.exists(Self.key()))
+    #expect(store.delete(Self.key(), ifNotModifiedAfter: later) != nil)
+    #expect(throws: (any Error).self) { try store.touch(Self.key(), at: later) }
+  }
+
+  @Test
   func deleteIsIdempotent() throws {
     let (store, _) = try Self.makeStore()
     try store.delete(Self.key())
