@@ -342,12 +342,14 @@ class DocumentDetailModel {
     let provisionalDownload: Task<Void, Never>? =
       needsPreviewDownload ? Task { await runDownload(for: priorDocument) } : nil
 
+    var accessRejected = false
     do {
       if let updated = try await store.document(id: document.id) {
         document = updated
       }
     } catch let error where error.isCancellationError {
     } catch {
+      accessRejected = Self.isAccessRejection(error)
       Logger.shared.error("Error updating document with full perms for editing: \(error)")
       onError?(error)
     }
@@ -355,6 +357,13 @@ class DocumentDetailModel {
     // On a refresh with the PDF already on screen there is nothing to wait for
     // (`provisionalDownload` is nil).
     await provisionalDownload?.value
+
+    // Applied after the provisional download, which may have just set
+    // `.loaded` from the cache without asking the server.
+    if accessRejected {
+      clearPreview()
+      return
+    }
 
     // The original is otherwise only fetched after a preview download, which
     // an unchanged document with its preview on screen doesn't run.
@@ -439,15 +448,31 @@ class DocumentDetailModel {
       Task { await downloadOriginal() }
     } catch let error where error.isCancellationError {
     } catch {
-      if case .loaded = download {
+      if case .loaded = download, !Self.isAccessRejection(error) {
         // The provisional PDF is already on screen; keep showing it rather
         // than clobbering it with an error from the post-metadata re-check.
         Logger.shared.error("Unable to refresh document preview after metadata update: \(error)")
       } else {
-        download = .error
+        clearPreview()
         Logger.shared.error("Unable to get document downloaded for preview rendering: \(error)")
       }
     }
+  }
+
+  /// The server answered 401 or 403: the user may no longer see this document,
+  /// so a stored file must not stand in for it, however current it is.
+  private static func isAccessRejection(_ error: any Error) -> Bool {
+    switch error as? RequestError {
+    case .forbidden, .unauthorized: true
+    default: false
+    }
+  }
+
+  private func clearPreview() {
+    download = .error
+    originalDownload = .initial
+    previewFileStamp = nil
+    previewNeedsValidation = false
   }
 
   /// Fetch the original file, unless it is already loaded or in flight. A
@@ -460,6 +485,11 @@ class DocumentDetailModel {
     originalDownload = .loading
     do {
       let url = try await store.repository.download(document: document, original: true)
+      // The preview may have been cleared meanwhile; the original goes with it.
+      guard case .loaded = download else {
+        originalDownload = .initial
+        return
+      }
       originalDownload = .loaded(url: url)
     } catch {
       originalDownload = .error
