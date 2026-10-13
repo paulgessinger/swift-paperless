@@ -6,3 +6,9 @@
 - Pulling to refresh on a document now also refreshes permissions, so a permission change on the server takes effect without restarting the app
 - The tip jar is back in Settings
 - Fix the app picking the wrong API version when the server rejects the initial version check, for example after a login has expired
+- On iPhone Duo's inner display, the document list now sits beside the open document, and the list and document stay put when you fold or unfold the phone
+- The app now rotates to landscape on iPhone Duo's outer display
+- Fix PDF pages and the filter bar sitting under the side toolbar on iPhone Duo
+- On iPad, the edit panel now starts closed so it doesn't cover the document; the toolbar button opens it
+- The iPad split view keeps the columns you chose after a trip through narrow Split View or Slide Over
+- On iPad you can now refresh an open document from the toolbar, picking up a new version or changed details without closing and reopening it
