@@ -468,3 +468,28 @@ struct PopupDocumentPreview: View {
     }
   }
 }
+
+// MARK: - Previews
+
+/// A stored PDF on screen while the download checks it: the spinner sits next
+/// to the page count. The toggle shows the change in and out.
+#Preview("Validating stored preview") {
+  @Previewable @State var store = DocumentStore.preview()
+  @Previewable @State var currentPage = 0
+  @Previewable @State var isRefreshing = true
+
+  let url = Bundle.main.url(forResource: "demo", withExtension: "pdf")!
+  let pdfDocument = PDFDocument(url: url)!
+  let document = Document(id: 1, title: "Stored preview", created: .now, tags: [])
+
+  VStack {
+    DocumentPreview(
+      document: document,
+      downloadState: .loaded(url: url, document: pdfDocument),
+      isRefreshing: isRefreshing,
+      currentPage: $currentPage)
+    Toggle(isOn: $isRefreshing) { Text(verbatim: "Validating") }
+      .padding(.horizontal)
+  }
+  .environment(store)
+}
