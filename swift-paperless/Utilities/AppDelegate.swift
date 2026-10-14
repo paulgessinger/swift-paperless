@@ -98,6 +98,23 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     return true
   }
 
+  /// iPhones stay portrait; a foldable iPhone also rotates to landscape on both
+  /// displays. The inner display ignores this mask anyway, so it decides the
+  /// outer one. iPad keeps every orientation.
+  func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    guard UIDevice.current.userInterfaceIdiom == .phone else { return .all }
+    #if HINGE_API
+      if #available(iOS 27.1, *), let window {
+        HingeDetector.observe(window)
+        if HingeDetector.deviceHasHinge { return .allButUpsideDown }
+      }
+    #endif
+    return .portrait
+  }
+
   func application(
     _ application: UIApplication,
     configurationForConnecting connectingSceneSession: UISceneSession,

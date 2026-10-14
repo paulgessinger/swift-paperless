@@ -24,6 +24,90 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       var didNavigateToInitialPage = false
       var scrollObservation: NSKeyValueObservation?
       var lastReportedPage: Int?
+      var bottomInset: CGFloat = 0
+    }
+
+    /// Reports safe-area changes, so the initial alignment can wait for the
+    /// final insets instead of polling for them.
+    ///
+    /// Also fits pages to the width beside a side bar (iPhone Duo's vertical
+    /// toolbar) while the scroll view keeps the full width, so zoomed pages
+    /// still run under the bar. `autoScales` would fit to the full width.
+    final class InsetObservingPDFView: PDFKit.PDFView {
+      var onSafeAreaInsetsChange: (() -> Void)?
+
+      /// The scale last set by `fitToSafeWidth`; nil while `autoScales` is in
+      /// charge. A different current scale means the user zoomed.
+      private var fittedScale: CGFloat?
+      private var widestPage: (document: ObjectIdentifier, width: CGFloat)?
+
+      override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        fitToSafeWidth()
+        onSafeAreaInsetsChange?()
+      }
+
+      override func layoutSubviews() {
+        super.layoutSubviews()
+        fitToSafeWidth()
+      }
+
+      private func fitToSafeWidth() {
+        let left = safeAreaInsets.left
+        let right = safeAreaInsets.right
+        guard let scrollView = Self.scrollView(in: self) else { return }
+
+        if scrollView.contentInset.left != left || scrollView.contentInset.right != right {
+          scrollView.contentInset.left = left
+          scrollView.contentInset.right = right
+        }
+
+        guard left + right > 0, let pageWidth = widestPageWidth(), bounds.width > 0 else {
+          if fittedScale != nil {
+            fittedScale = nil
+            autoScales = true
+          }
+          return
+        }
+
+        let available =
+          bounds.width - left - right - pageBreakMargins.left - pageBreakMargins.right
+        let fit = available / pageWidth
+        guard fit > 0 else { return }
+
+        let userZoomed = fittedScale.map { abs(scaleFactor - $0) > 0.001 } ?? false
+        if autoScales { autoScales = false }
+        minScaleFactor = fit
+        maxScaleFactor = fit * 5
+        if !userZoomed, abs(scaleFactor - fit) > 0.001 {
+          scaleFactor = fit
+        }
+        fittedScale = userZoomed ? fittedScale : fit
+      }
+
+      private func widestPageWidth() -> CGFloat? {
+        guard let document else { return nil }
+        let id = ObjectIdentifier(document)
+        if let cached = widestPage, cached.document == id { return cached.width }
+        var width: CGFloat = 0
+        for index in 0..<document.pageCount {
+          guard let page = document.page(at: index) else { continue }
+          let box = page.bounds(for: displayBox)
+          let rotated = page.rotation % 180 != 0
+          width = max(width, rotated ? box.height : box.width)
+        }
+        guard width > 0 else { return nil }
+        widestPage = (id, width)
+        return width
+      }
+
+      private static func scrollView(in view: UIView) -> UIScrollView? {
+        if let scrollView = view as? UIScrollView { return scrollView }
+        for subview in view.subviews {
+          if let scrollView = scrollView(in: subview) { return scrollView }
+        }
+        return nil
+      }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -31,7 +115,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
     }
 
     func makeUIView(context: Context) -> PDFKit.PDFView {
-      let view = PDFKit.PDFView()
+      let view = InsetObservingPDFView()
       // Keep PDFKit defaults close to the native viewer behavior.
       view.document = document
       view.displayMode = .singlePageContinuous
@@ -42,13 +126,19 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       view.isUserInteractionEnabled = true
       publishPDFView(view)
 
+      let coordinator = context.coordinator
+      view.onSafeAreaInsetsChange = { [weak view] in
+        guard let view else { return }
+        applyInsetsAndInitialTopAlignmentIfNeeded(
+          view, bottomInset: coordinator.bottomInset, coordinator: coordinator)
+      }
+
       // Seed the coordinator so the first observation that lands on the
       // initial page does not propagate as a "page changed" event.
       context.coordinator.lastReportedPage = initialPage
 
       if let scrollView = findScrollView(in: view) {
         let onPageChange = onPageChange
-        let coordinator = context.coordinator
         coordinator.scrollObservation = scrollView.observe(
           \.contentOffset, options: [.new]
         ) { [weak view, weak scrollView] _, _ in
@@ -112,6 +202,7 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
         uiView.document = document
         context.coordinator.didApplyInitialTopAlignment = false
       }
+      context.coordinator.bottomInset = bottomContentInset
       applyInsetsAndInitialTopAlignmentIfNeeded(
         uiView,
         bottomInset: bottomContentInset,
@@ -162,15 +253,9 @@ struct SearchablePDFPreview<TrailingContent: View>: View {
       // When extending behind the top bar we expect topInset to be 0 (the
       // PDFView's safe area is excluded by `.ignoresSafeArea(edges: .top)`),
       // so skip the "wait for safe area" gate that would otherwise loop.
+      // Wait until layout/safe area is finalized before applying the initial
+      // offset; `safeAreaInsetsDidChange` calls back in once it is.
       if !extendsBehindTopBar, topInset == 0 {
-        // Wait until layout/safe area is finalized before applying initial offset.
-        DispatchQueue.main.async {
-          applyInsetsAndInitialTopAlignmentIfNeeded(
-            pdfView,
-            bottomInset: bottomInset,
-            coordinator: coordinator
-          )
-        }
         return
       }
 

@@ -114,6 +114,8 @@ private struct PDFPageView: View {
   let pageIndex: Int
   let aspectRatio: CGFloat
 
+  @Environment(\.displayScale) private var displayScale
+
   var body: some View {
     PDFKitView(
       document: document,
@@ -130,7 +132,7 @@ private struct PDFPageView: View {
     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     .overlay(
       RoundedRectangle(cornerRadius: 20, style: .continuous)
-        .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
+        .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / displayScale)
     )
   }
 }
@@ -232,6 +234,7 @@ private struct PDFPagingPreview: View {
 
 private struct IntegratedDocumentPreview: View {
   @Environment(DocumentStore.self) private var store
+  @Environment(\.displayScale) private var displayScale
   @State private var showLoadingOverlay = false
   @State private var thumbnailHidden = false
   var document: Document
@@ -268,7 +271,7 @@ private struct IntegratedDocumentPreview: View {
           .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
           .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / UIScreen.main.scale)
+              .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / displayScale)
           )
           .padding(.horizontal, PDFPagingPreview.pageInset)
           .transition(.identity)

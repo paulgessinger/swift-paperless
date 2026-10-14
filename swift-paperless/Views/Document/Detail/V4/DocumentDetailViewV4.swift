@@ -82,11 +82,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var activeSheet: AuxiliarySheet? = nil
   @State private var showPreview = false
   @State private var previewPage = 0
-  // iPad-only: drives the .inspector-presented edit panel. Defaults open so
-  // the document's metadata is visible alongside the PDF the first time
-  // someone opens it on iPad. SceneStorage so the open/closed state
-  // persists across app launches per scene.
-  @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = true
+  // iPad-only: drives the .inspector-presented edit panel. Starts closed, so
+  // the PDF isn't covered where the inspector can't sit beside it; the toolbar
+  // button opens it. SceneStorage so the open/closed state persists across
+  // app launches per scene.
+  @SceneStorage("DocumentDetailEditInspectorVisible") private var showEditInspector = false
   @State private var isRefreshing = false
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
@@ -114,6 +114,20 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     self.navPath = navPath
   }
 
+  /// PDF plus inspector, on iPad. An iPhone at regular width (iPhone Duo's
+  /// inner display) shows the document beside the list, too narrow for the
+  /// inspector to sit next to the PDF, so it keeps the iPhone layout.
+  private var usesInspectorLayout: Bool {
+    horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom != .phone
+  }
+
+  private func previewBinding(regular: Bool) -> Binding<Bool> {
+    Binding(
+      get: { showPreview && (horizontalSizeClass == .regular) == regular },
+      set: { showPreview = $0 }
+    )
+  }
+
   private func handlePendingRoute() {
     guard let action = routeManager.pendingRoute?.action,
       case .document(let docId, let edit) = action,
@@ -131,7 +145,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         // Edit popovers anchor to rows inside the inspector on iPad. Force
         // it open so the deep link doesn't silently no-op when the user
         // had previously collapsed the inspector.
-        if horizontalSizeClass == .regular {
+        if usesInspectorLayout {
           showEditInspector = true
         }
         activeFieldEdit = fieldEdit
@@ -139,11 +153,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         activeSheet = .notes
       }
     case .all:
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         showEditInspector = true
       }
     case .close:
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         showEditInspector = false
       }
       activeFieldEdit = nil
@@ -184,7 +198,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     // Inspector lays out one column so each aspect spans full width;
     // iPhone keeps the two-column pill layout.
     let columns: [GridItem] =
-      horizontalSizeClass == .regular
+      usesInspectorLayout
       ? [GridItem(.flexible(), spacing: 12)]
       : [
         GridItem(.flexible(), spacing: 12),
@@ -371,9 +385,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     private var isRegular: Bool { horizontalSizeClass == .regular }
 
     var body: some View {
-      // iPad: match the SearchablePDFPreview search button — 13pt padding,
-      // semibold .title2 icon, circular glass. Badge becomes a corner pill
-      // overlay so the circle isn't stretched.
+      // Regular width: match the SearchablePDFPreview search button — 13pt
+      // padding, semibold .title2 icon, circular glass. No badge, so the circle
+      // isn't stretched.
       Button(action: action) {
         HStack {
           Label(localized: label, systemImage: image)
@@ -399,18 +413,6 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             $0.backport.glassEffect(.regular.interactive(), in: Circle())
           } else {
             $0.backport.glassEffect(.regular.interactive())
-          }
-        }
-        .overlay(alignment: .topTrailing) {
-          if isRegular, let badge {
-            Text(badge)
-              .font(.caption2)
-              .fontWeight(.bold)
-              .foregroundStyle(.white)
-              .padding(.horizontal, 5)
-              .padding(.vertical, 1)
-              .background(.red, in: Capsule())
-              .offset(x: 6, y: -4)
           }
         }
       }
@@ -742,10 +744,12 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   var body: some View {
     Group {
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         regularBody
       } else {
         compactBody
+          // Edit popovers and the bottom bar follow the iPhone layout too.
+          .environment(\.horizontalSizeClass, .compact)
       }
     }
     .navigationTitle(String(localized: .app(.details)))
@@ -760,7 +764,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             .labelStyle(.iconOnly)
         }
       }
-      if horizontalSizeClass == .regular {
+      if usesInspectorLayout {
         // The regular layout's primary surface is a PDFKit view, not a scroll
         // view, so `.refreshable` has nothing to bind to and would be a silent
         // no-op — this button is the iPad's only way to reach the refresh path
@@ -777,17 +781,21 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
               isRefreshing = false
             }
           } label: {
-            if isRefreshing {
+            // Spin the icon rather than swapping in a ProgressView: a vertical
+            // toolbar sizes a bare ProgressView to the whole bar for a few frames.
+            if #available(iOS 18.0, *) {
+              Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
+                .labelStyle(.iconOnly)
+                .symbolEffect(.rotate, isActive: isRefreshing)
+            } else if isRefreshing {
               ProgressView()
+                .accessibilityLabel(Text(.app(.documentDetailRefresh)))
             } else {
               Label(localized: .app(.documentDetailRefresh), systemImage: "arrow.clockwise")
                 .labelStyle(.iconOnly)
             }
           }
           .disabled(isRefreshing)
-          // Explicit, because the in-progress branch renders no label at all —
-          // without this VoiceOver would announce nothing while refreshing.
-          .accessibilityLabel(Text(.app(.documentDetailRefresh)))
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button {
@@ -820,7 +828,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     }
     .namedShareSheet(item: $sharedFile)
 
-    .sheet(isPresented: $showPreview) {
+    // A sheet at regular width is a small form sheet, so the PDF goes full
+    // screen there. Two bindings rather than swapping modifiers, which would
+    // rebuild the view whenever the size class changes.
+    .sheet(isPresented: previewBinding(regular: false)) {
+      previewContent
+    }
+    .fullScreenCover(isPresented: previewBinding(regular: true)) {
       previewContent
     }
 
