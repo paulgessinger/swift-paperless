@@ -6,6 +6,7 @@
 //
 
 import AppShared
+import Common
 import DataModel
 import Foundation
 import Networking
@@ -143,6 +144,8 @@ class DocumentListViewModel {
     } catch let error as PermissionsError {
       noPermissions = true
       Logger.shared.warning("Insufficient permissions to load documents: \(error)")
+    } catch let error where error.isCancellationError {
+      // The list view went away mid-load, e.g. folding iPhone Duo swaps layouts.
     } catch {
       Logger.shared.error("DocumentList failed to load documents: \(error)")
       errorController.push(error: error)
@@ -201,6 +204,7 @@ class DocumentListViewModel {
             self.exhausted = true
           }
         }
+      } catch let error where error.isCancellationError {
       } catch {
         Logger.shared.error("DocumentList failed to load more if needed: \(error)")
         await self.errorController.push(error: error)
@@ -247,6 +251,8 @@ class DocumentListViewModel {
     } catch let error as PermissionsError {
       Logger.shared.error("Insufficient permissions to refresh documents: \(error)")
       noPermissions = true
+      throw error
+    } catch let error where error.isCancellationError {
       throw error
     } catch {
       Logger.shared.error("DocumentList failed to refresh: \(error)")
