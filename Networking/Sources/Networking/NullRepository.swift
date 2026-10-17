@@ -28,6 +28,8 @@ public class NullRepository: Repository {
     async throws -> URL
   { throw NotImplemented() }
 
+  public func storedDownload(document _: Document, original _: Bool) async -> URL? { nil }
+
   public func tag(id _: UInt) async -> Tag? { nil }
   public func create(tag _: ProtoTag) async throws -> Tag { throw NotImplemented() }
   public func update(tag _: Tag) async throws -> Tag { throw NotImplemented() }

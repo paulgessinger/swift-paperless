@@ -259,6 +259,10 @@ public actor ContentReclaimer: FileIndex {
     try await database.freshFile(key, modified: modified) != nil
   }
 
+  public func storedChecksum(_ key: ContentStore.Key) async throws -> String? {
+    try await database.storedFile(key)?.checksum
+  }
+
   /// Records the row and, when the evictable total has gone over the budget,
   /// starts a pass to bring it back under.
   public func recordStore(

@@ -1830,6 +1830,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try await wrapped.download(document: document, original: original, progress: progress)
   }
 
+  public func storedDownload(document: Document, original: Bool) async -> URL? {
+    await wrapped.storedDownload(document: document, original: original)
+  }
+
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     try await wrapped.suggestions(documentId: documentId)
   }

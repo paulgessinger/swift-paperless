@@ -55,6 +55,13 @@ extension Database {
     }
   }
 
+  /// The row for `key`, whatever `modified` it was fetched against.
+  public func storedFile(_ key: ContentStore.Key) async throws -> FileRecord? {
+    try await wrappingAsync("storedFile") {
+      try await writer.read { db in try Self.file(for: key).fetchOne(db) }
+    }
+  }
+
   /// Insert or replace the row for `key`. Returns the bytes the evictable
   /// files take after the write, for the caller to hold against the budget.
   @discardableResult

@@ -33,6 +33,7 @@ private enum DownloadState: Equatable {
 struct DocumentPreview: View {
   var document: Document
   var downloadState: DocumentDownloadState
+  var isRefreshing = false
   @Binding var currentPage: Int
 
   var transitionID: AnyHashable? = nil
@@ -43,6 +44,7 @@ struct DocumentPreview: View {
     IntegratedDocumentPreview(
       document: document,
       downloadState: downloadState,
+      isRefreshing: isRefreshing,
       currentPage: $currentPage,
       transitionID: transitionID,
       transitionNamespace: transitionNamespace,
@@ -239,6 +241,9 @@ private struct IntegratedDocumentPreview: View {
   @State private var thumbnailHidden = false
   var document: Document
   var downloadState: DocumentDownloadState
+  /// Shown as a small spinner next to the page count, for a check that runs
+  /// while the PDF stays usable.
+  var isRefreshing = false
   @Binding var currentPage: Int
 
   var transitionID: AnyHashable? = nil
@@ -310,20 +315,28 @@ private struct IntegratedDocumentPreview: View {
       // re-sample its backdrop on insertion, which reads as a brief dark
       // flash before it stabilises.
       if case .loaded(url: _, document: let pdfDocument) = downloadState {
-        Text(.app(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
-          .font(.caption2)
-          .fontWeight(.semibold)
-          .padding(.horizontal, 8)
-          .padding(.vertical, 4)
-          .backport.glassEffect(
-            .regular, in: Capsule(), orFill: .ultraThinMaterial
-          )
-          .contentTransition(.numericText())
-          .animation(.default, value: currentPage)
-          .padding(.bottom, 24)
-          .allowsHitTesting(false)
-          .opacity(thumbnailHidden ? 1 : 0)
-          .animation(.easeOut(duration: 0.2).delay(0.4), value: thumbnailHidden)
+        HStack(spacing: 4) {
+          if isRefreshing {
+            ProgressView()
+              .controlSize(.mini)
+              .transition(.opacity)
+          }
+          Text(.app(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
+        }
+        .animation(.easeOut(duration: 0.2), value: isRefreshing)
+        .font(.caption2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .backport.glassEffect(
+          .regular, in: Capsule(), orFill: .ultraThinMaterial
+        )
+        .contentTransition(.numericText())
+        .animation(.default, value: currentPage)
+        .padding(.bottom, 24)
+        .allowsHitTesting(false)
+        .opacity(thumbnailHidden ? 1 : 0)
+        .animation(.easeOut(duration: 0.2).delay(0.4), value: thumbnailHidden)
       }
     }
 
@@ -454,4 +467,29 @@ struct PopupDocumentPreview: View {
         image: image)
     }
   }
+}
+
+// MARK: - Previews
+
+/// A stored PDF on screen while the download checks it: the spinner sits next
+/// to the page count. The toggle shows the change in and out.
+#Preview("Validating stored preview") {
+  @Previewable @State var store = DocumentStore.preview()
+  @Previewable @State var currentPage = 0
+  @Previewable @State var isRefreshing = true
+
+  let url = Bundle.main.url(forResource: "demo", withExtension: "pdf")!
+  let pdfDocument = PDFDocument(url: url)!
+  let document = Document(id: 1, title: "Stored preview", created: .now, tags: [])
+
+  VStack {
+    DocumentPreview(
+      document: document,
+      downloadState: .loaded(url: url, document: pdfDocument),
+      isRefreshing: isRefreshing,
+      currentPage: $currentPage)
+    Toggle(isOn: $isRefreshing) { Text(verbatim: "Validating") }
+      .padding(.horizontal)
+  }
+  .environment(store)
 }

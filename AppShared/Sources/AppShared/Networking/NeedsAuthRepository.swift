@@ -277,6 +277,10 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     }
   }
 
+  public func storedDownload(document: Document, original: Bool) async -> URL? {
+    await wrapped.storedDownload(document: document, original: original)
+  }
+
   // MARK: - Suggestions
 
   public func suggestions(documentId: UInt) async throws -> Suggestions {

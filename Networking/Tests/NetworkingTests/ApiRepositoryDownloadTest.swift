@@ -59,6 +59,8 @@ actor InMemoryFileIndex: FileIndex {
     var documentID: UInt
     var size: Int64
     var modified: Date?
+    var checksum: String?
+    var storedAt: Date
   }
 
   private(set) var entries: [ContentStore.Key: Entry] = [:]
@@ -68,11 +70,17 @@ actor InMemoryFileIndex: FileIndex {
     entries[key]?.modified == modified
   }
 
+  func storedChecksum(_ key: ContentStore.Key) async throws -> String? {
+    entries[key]?.checksum
+  }
+
   func recordStore(
     _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
     storedAt: Date
   ) async throws {
-    entries[key] = Entry(documentID: documentID, size: size, modified: modified)
+    entries[key] = Entry(
+      documentID: documentID, size: size, modified: modified, checksum: checksum,
+      storedAt: storedAt)
   }
 
   func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {
@@ -132,12 +140,12 @@ struct ApiRepositoryDownloadTest {
 
   nonisolated static func makeDocument(
     id: UInt = 7, modified: Date? = Date(timeIntervalSince1970: 1000),
-    versions: [DocumentVersion] = []
+    archivedFileName: String? = "doc.pdf", versions: [DocumentVersion] = []
   ) -> Document {
     Document(
       id: id, title: "doc", asn: nil, documentType: nil, correspondent: nil,
       created: Date(timeIntervalSince1970: 0), tags: [],
-      added: nil, modified: modified, storagePath: nil,
+      added: nil, modified: modified, archivedFileName: archivedFileName, storagePath: nil,
       versions: versions)
   }
 
@@ -287,6 +295,223 @@ struct ApiRepositoryDownloadTest {
     #expect(counter.value == 2)
     let entry = try #require(await index.entries[Self.canonicalKey(for: Self.makeDocument())])
     #expect(entry.modified == Date(timeIntervalSince1970: 2))
+  }
+
+  nonisolated static func response(
+    for request: URLRequest, status: Int = 200, etag: String? = nil
+  ) -> HTTPURLResponse {
+    var headers = ["Content-Disposition": "inline; filename=\"invoice.pdf\""]
+    if let etag { headers["ETag"] = etag }
+    return HTTPURLResponse(
+      url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: headers)!
+  }
+
+  @Test
+  func fetchesFromThePreviewEndpoint() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let paths = LastValue<[String]>([])
+    DownloadMockURLProtocol.responder = { req in
+      paths.set(paths.value + [req.url!.path])
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(document: Self.makeDocument())
+
+    #expect(paths.value.count == 1)
+    #expect(paths.value.first?.hasPrefix("/api/documents/7/preview") == true)
+  }
+
+  @Test(
+    arguments: [
+      (false, "doc.pdf", nil), (true, "doc.pdf", "true"), (false, nil, "true"),
+    ] as [(Bool, String?, String?)])
+  func requestsTheOriginalWhenThereIsNoArchive(
+    original: Bool, archivedFileName: String?, expected: String?
+  ) async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let query = LastValue<String?>(nil)
+    DownloadMockURLProtocol.responder = { req in
+      query.set(
+        URLComponents(url: req.url!, resolvingAgainstBaseURL: false)?
+          .queryItems?.first { $0.name == "original" }?.value)
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let document = Self.makeDocument(archivedFileName: archivedFileName)
+    let url = try await repo.download(document: document, original: original)
+
+    #expect(query.value == expected)
+    #expect(url == store.url(for: Self.canonicalKey(for: document, original: original)))
+  }
+
+  @Test
+  func recordsTheETagAsTheChecksum() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    DownloadMockURLProtocol.responder = { req in
+      (Self.response(for: req, etag: "\"archive-md5\""), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let document = Self.makeDocument()
+    _ = try await repo.download(document: document)
+
+    #expect(await index.entries[Self.canonicalKey(for: document)]?.checksum == "archive-md5")
+  }
+
+  @Test
+  func unchangedFileIsRevalidatedWithoutABody() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    let validators = LastValue<[String?]>([])
+    DownloadMockURLProtocol.responder = { req in
+      let validator = req.value(forHTTPHeaderField: "If-None-Match")
+      validators.set(validators.value + [validator])
+      if validator == "\"archive-md5\"" {
+        return (Self.response(for: req, status: 304, etag: "\"archive-md5\""), Data())
+      }
+      return (Self.response(for: req, etag: "\"archive-md5\""), Data("ORIGINAL".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let first = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 1)))
+    let second = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+
+    #expect(validators.value == [nil, "\"archive-md5\""])
+    #expect(second == first)
+    #expect(try Data(contentsOf: second) == Data("ORIGINAL".utf8))
+    let entry = try #require(await index.entries[Self.canonicalKey(for: Self.makeDocument())])
+    #expect(entry.modified == Date(timeIntervalSince1970: 2))
+    #expect(entry.checksum == "archive-md5")
+
+    // The refreshed row makes the next open a local hit.
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+    #expect(validators.value.count == 2)
+  }
+
+  @Test
+  func changedFileReplacesTheStoredOne() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    let etag = LastValue("\"v1\"")
+    let body = LastValue(Data("ONE".utf8))
+    DownloadMockURLProtocol.responder = { req in
+      if req.value(forHTTPHeaderField: "If-None-Match") == etag.value {
+        return (Self.response(for: req, status: 304, etag: etag.value), Data())
+      }
+      return (Self.response(for: req, etag: etag.value), body.value)
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 1)))
+    etag.set("\"v2\"")
+    body.set(Data("TWO".utf8))
+    let url = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+
+    #expect(try Data(contentsOf: url) == Data("TWO".utf8))
+    #expect(await index.entries[Self.canonicalKey(for: Self.makeDocument())]?.checksum == "v2")
+  }
+
+  @Test
+  func noValidatorWithoutAStoredChecksum() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let validators = LastValue<[String?]>([])
+    DownloadMockURLProtocol.responder = { req in
+      validators.set(validators.value + [req.value(forHTTPHeaderField: "If-None-Match")])
+      return (Self.okResponse(for: req), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 1)))
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+
+    #expect(validators.value == [nil, nil])
+  }
+
+  @Test
+  func revalidatedFileOutlivesAReclaimOfTheOldRow() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    DownloadMockURLProtocol.responder = { req in
+      if req.value(forHTTPHeaderField: "If-None-Match") == "\"md5\"" {
+        return (Self.response(for: req, status: 304, etag: "\"md5\""), Data())
+      }
+      return (Self.response(for: req, etag: "\"md5\""), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+    let key = Self.canonicalKey(for: Self.makeDocument())
+
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 1)))
+    let oldRow = try #require(await index.entries[key])
+    // The file keeps the date of its first write, which is before the row.
+    try store.touch(key, at: oldRow.storedAt.addingTimeInterval(-10))
+
+    let url = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+
+    // A pass that claimed the old row before the 304 was recorded leaves the
+    // file alone, and the new row dates it.
+    #expect(store.delete(key, ifNotModifiedAfter: oldRow.storedAt) == nil)
+    #expect(try Data(contentsOf: url) == Data("X".utf8))
+    let newRow = try #require(await index.entries[key])
+    let modified = try #require(
+      try url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
+    #expect(abs(modified.timeIntervalSince(newRow.storedAt)) < 1)
+  }
+
+  @Test
+  func notModifiedForAReclaimedFileFetchesInFull() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store)
+    let validators = LastValue<[String?]>([])
+    let storeRef = store
+    let key = Self.canonicalKey(for: Self.makeDocument())
+    DownloadMockURLProtocol.responder = { req in
+      let validator = req.value(forHTTPHeaderField: "If-None-Match")
+      validators.set(validators.value + [validator])
+      if validator != nil {
+        // The reclaimer removes the file while the request is out.
+        try? storeRef.delete(key)
+        return (Self.response(for: req, status: 304, etag: "\"md5\""), Data())
+      }
+      return (Self.response(for: req, etag: "\"md5\""), Data("X".utf8))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 1)))
+    let url = try await repo.download(
+      document: Self.makeDocument(modified: Date(timeIntervalSince1970: 2)))
+
+    #expect(validators.value == [nil, "\"md5\"", nil])
+    #expect(try Data(contentsOf: url) == Data("X".utf8))
+  }
+
+  @Test(
+    arguments: [
+      ("\"abc\"", "abc"), ("W/\"abc\"", "abc"), ("abc", "abc"), ("\"\"", nil),
+    ] as [(String, String?)])
+  func entityTagParsing(header: String, expected: String?) {
+    let response = HTTPURLResponse(
+      url: Self.baseURL, statusCode: 200, httpVersion: nil, headerFields: ["ETag": header])!
+    #expect(ApiRepository.entityTag(of: response) == expected)
   }
 
   @Test

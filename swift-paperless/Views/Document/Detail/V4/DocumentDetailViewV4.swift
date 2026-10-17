@@ -654,6 +654,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         DocumentPreview(
           document: viewModel.document,
           downloadState: viewModel.download,
+          isRefreshing: viewModel.isValidatingPreview,
           currentPage: $previewPage,
           transitionID: TransitionID.doc,
           transitionNamespace: namespace,

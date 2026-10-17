@@ -274,6 +274,22 @@ struct ContentReclaimerTests {
     #expect(try await database.allFileKeys().isEmpty)
   }
 
+  @Test("storedChecksum returns the recorded checksum whatever modified it was stored at")
+  func storedChecksum() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    let store = try makeStore()
+    let reclaimer = ContentReclaimer(database: database, store: store)
+
+    #expect(try await reclaimer.storedChecksum(key(server, 1)) == nil)
+    try await reclaimer.recordStore(
+      key(server, 1), documentID: 1, size: 10, modified: date(1000), checksum: "abc",
+      storedAt: date(1000))
+
+    #expect(try await reclaimer.isFresh(key(server, 1), modified: date(2000)) == false)
+    #expect(try await reclaimer.storedChecksum(key(server, 1)) == "abc")
+  }
+
   // MARK: - Scheduling
 
   @Test("runIfDue runs once per interval")
