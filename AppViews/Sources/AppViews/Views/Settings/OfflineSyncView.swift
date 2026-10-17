@@ -176,6 +176,11 @@ public struct OfflineSyncView: View {
                   .font(.caption)
                   .foregroundStyle(.secondary)
                   .lineLimit(1)
+              } else if activity.stage == .fileDownload {
+                Text(fileDownloadCaption)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
               }
             }
           }
@@ -183,6 +188,16 @@ public struct OfflineSyncView: View {
         if mode == .entireLibrary {
           dateStatusRow(
             String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
+          // From the file index, so it reads right after a relaunch, while
+          // the download row above only shows while tasks are in flight.
+          statusRow(
+            String(localized: .settings(.offlineSyncFilesDownloaded)),
+            value: String(
+              localized: .settings(
+                .offlineSyncFilesDownloadedValue(
+                  store.libraryFileProgress.downloadedFiles,
+                  store.libraryFileProgress.totalDocuments,
+                  store.libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file))))))
         }
         dateStatusRow(
           String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastRefreshedAt)
@@ -326,11 +341,26 @@ public struct OfflineSyncView: View {
   /// Only reached when nothing is running — the stage rows speak for themselves
   /// otherwise. Says *why* it's not running where there's a reason to give.
   private var activityText: String {
-    if waitingForNetwork {
+    if mode == .entireLibrary, store.libraryFilesPausedLowStorage {
+      String(localized: .settings(.offlineSyncPausedLowStorage))
+    } else if waitingForNetwork {
       String(localized: .settings(.offlineSyncWaitingForWifi))
     } else {
       String(localized: .settings(.offlineSyncIdle))
     }
+  }
+
+  /// Under the download row: what is on the device and how many files are
+  /// moving, or why none are.
+  private var fileDownloadCaption: String {
+    if store.libraryFilesPausedLowStorage {
+      return String(localized: .settings(.offlineSyncPausedLowStorage))
+    }
+    return String(
+      localized: .settings(
+        .offlineSyncFileDownloadDetail(
+          store.libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file)),
+          store.libraryFilesInFlight)))
   }
 
   @ViewBuilder

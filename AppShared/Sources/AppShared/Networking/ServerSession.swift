@@ -130,6 +130,7 @@ public final class ServerSession {
   private let reconcileSlot = TaskSlot<ReconcileResult, Never>()
   private let libraryFillSlot = TaskSlot<Bool, Never>()
   private let detailFillSlot = TaskSlot<Bool, Never>()
+  private let fileFillSlot = TaskSlot<Bool, Never>()
 
   /// Whether any work is running for this server.
   ///
@@ -147,7 +148,7 @@ public final class ServerSession {
   /// this flag.
   public var isSyncing: Bool {
     syncSlot.isOccupied || elementSyncSlot.isOccupied || reconcileSlot.isOccupied
-      || libraryFillSlot.isOccupied || detailFillSlot.isOccupied
+      || libraryFillSlot.isOccupied || detailFillSlot.isOccupied || fileFillSlot.isOccupied
   }
 
   public private(set) var state: State = .idle
@@ -172,6 +173,10 @@ public final class ServerSession {
   /// it, and the reconcile asks it for a sweep. `nil` for a fixture, which
   /// caches no files.
   @ObservationIgnored private let contentReclaimer: ContentReclaimer?
+
+  /// The app's library file downloads; the files step tops its window up.
+  /// `nil` for a fixture, and in a process that does not own the session.
+  @ObservationIgnored private let fileDownloader: LibraryFileDownloader?
 
   /// Which parts of this server's sync last failed, and how. Rendered on the
   /// Offline & Sync screen for the active server.
@@ -200,7 +205,12 @@ public final class ServerSession {
   /// Living on the session rather than the store is what makes an *inactive*
   /// server's progress observable at all: the engine's sweeps used to report
   /// nowhere, because the only reporter belonged to the active server's store.
-  public var syncActivities: [SyncActivity] { activeStages.values.sortedForDisplay }
+  public var syncActivities: [SyncActivity] {
+    // The downloads outlive the step that queued them, so their row is the
+    // downloader's, shown for as long as its tasks run.
+    (Array(activeStages.values) + (fileDownloader?.activities[serverID].map { [$0] } ?? []))
+      .sortedForDisplay
+  }
 
   // One entry per sweep currently running. Keyed by stage because each sweep
   // owns exactly one, and because a sweep reporting "done" says only *that* —
@@ -288,12 +298,14 @@ public final class ServerSession {
     database: Database,
     mode: ApiRepository.Mode = Bundle.main.appConfiguration.mode,
     suspension: DatabaseSuspensionController? = nil,
-    contentReclaimer: ContentReclaimer? = nil
+    contentReclaimer: ContentReclaimer? = nil,
+    fileDownloader: LibraryFileDownloader? = nil
   ) {
     self.serverID = serverID
     source = .stored(database: database, mode: mode)
     self.suspension = suspension ?? DatabaseSuspensionController()
     self.contentReclaimer = contentReclaimer
+    self.fileDownloader = fileDownloader
     recorder = SyncRunRecorder(database: database, serverID: serverID)
   }
 
@@ -303,12 +315,14 @@ public final class ServerSession {
   public init(
     serverID: UUID,
     repository: any Repository & CachingBackend,
-    suspension: DatabaseSuspensionController? = nil
+    suspension: DatabaseSuspensionController? = nil,
+    fileDownloader: LibraryFileDownloader? = nil
   ) {
     self.serverID = serverID
     source = .fixed(repository)
     self.suspension = suspension ?? DatabaseSuspensionController()
     contentReclaimer = nil
+    self.fileDownloader = fileDownloader
     recorder = SyncRunRecorder(database: repository.database, serverID: serverID)
     state = .ready
     adopt(repository)
@@ -419,6 +433,7 @@ public final class ServerSession {
     reconcileSlot.retire()
     libraryFillSlot.retire()
     detailFillSlot.retire()
+    fileFillSlot.retire()
   }
 
   /// Call off every step in flight, keeping the repository. Used when iOS's
@@ -674,6 +689,54 @@ public final class ServerSession {
     }
   }
 
+  /// Proactive *Entire library* document files: top the downloader's window
+  /// up with this server's missing archives. Returns at once; the downloads
+  /// run on the background session and refill the window themselves. `true`
+  /// also when there is nothing to queue; `false` when it errored or was
+  /// called off.
+  @discardableResult
+  public func fillFiles() async -> Bool {
+    guard let backend = current, backend.offlineBrowsingMode == .entireLibrary,
+      let fileDownloader
+    else {
+      recordSuccess(at: .fileFill)
+      return true
+    }
+    let serverID = serverID
+    return await fileFillSlot.joinOrStart { [weak self] in
+      guard let self else { return false }
+      return await asBackgroundWork { [weak self] in
+        let row = await self?.recorder.begin(.fileFill)
+        do {
+          let outcome = try await fileDownloader.refill(serverID: serverID)
+          try Task.checkCancellation()
+          self?.recordSuccess(at: .fileFill)
+          switch outcome {
+          case .queued(let count):
+            await self?.recorder.end(row, .ok, succeeded: count)
+          case .complete:
+            await self?.recorder.end(row, .ok)
+          case .pausedLowStorage:
+            await self?.recorder.end(row, .partial, message: "low storage")
+          }
+          return true
+        } catch is CancellationError {
+          await self?.recorder.end(row, .cancelled)
+          return false
+        } catch {
+          self?.recordFailure(error, at: .fileFill)
+          await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
+          return false
+        }
+      }
+    }
+  }
+
+  /// A download the downloader reported failed, into this server's ledger.
+  func recordFileDownloadFailure(_ error: any Error) {
+    recordFailure(error, at: .fileFill)
+  }
+
   /// Proactive *Entire library* per-document detail fill (notes + file
   /// metadata). Run after ``fillLibrary(force:)`` so the document rows
   /// to walk are already on disk. Idempotent and resumable (driven off what's
@@ -845,8 +908,8 @@ public final class ServerSession {
           try Task.checkCancellation()
           filled = await fillDocumentDetails() && filled
         case .files:
-          // Nothing downloads the library's files yet.
-          continue
+          guard !reconcile.cancelled else { continue }
+          filled = await fillFiles() && filled
         }
       }
 
