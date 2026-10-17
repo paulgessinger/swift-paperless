@@ -39,10 +39,12 @@ struct StoreHarness {
     return LibraryFileDownloader(
       database: database, store: store, index: ContentReclaimer(database: database, store: store),
       suspension: DatabaseSuspensionController(),
+      // The mode as the harness's connection row has it, so a test can flip it.
       servers: { id in
-        id == serverID
-          ? LibraryDownloadServer(
-            repository: repository, syncOverCellular: false, isEntireLibrary: true) : nil
+        guard id == serverID else { return nil }
+        let mode = (try? database.connection(id: serverID))?.offlineBrowsingMode
+        return LibraryDownloadServer(
+          repository: repository, syncOverCellular: false, isEntireLibrary: mode == "entireLibrary")
       },
       allServerIDs: { [serverID] }, identityName: { _ in nil },
       availableCapacity: { _ in 10_000_000_000 }, window: 4,

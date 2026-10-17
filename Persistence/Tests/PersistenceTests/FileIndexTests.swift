@@ -282,6 +282,22 @@ struct FileIndexTests {
     #expect(usage.thumbnails == DiskUsage(bytes: 7, files: 1))
     #expect(try await Database.seeded().fileUsage() == FileUsage())
   }
+
+  @Test("A kept document's archive is not evictable, its original is")
+  func keptArchivesAreNotEvictable() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    try addServer(server, to: database)
+    try await record(database, key(server, 1), size: 40, accessed: date(1000))
+    try await record(database, key(server, 1, .original), size: 40, accessed: date(1000))
+    try await record(database, key(server, 2), size: 40, accessed: date(2000))
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+
+    #expect(try await database.evictableFileBytes() == 80)
+    let candidates = try await database.evictionCandidates(
+      budget: 0, protectAccessedAfter: date(9000))
+    #expect(candidates.compactMap(\.key) == [key(server, 1, .original)])
+  }
 }
 
 extension Database {

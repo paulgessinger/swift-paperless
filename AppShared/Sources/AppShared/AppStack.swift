@@ -79,10 +79,7 @@ public final class AppStack {
               repository: repository, syncOverCellular: stored.syncOverCellular,
               isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary)
           },
-          allServerIDs: { [connectionManager] in
-            connectionManager.connections.values
-              .filter { $0.offlineBrowsingMode == .entireLibrary }.map(\.id)
-          },
+          allServerIDs: { [connectionManager] in Array(connectionManager.connections.keys) },
           identityName: { [database] id in (try? database.connection(id: id))?.identity },
           makeSession: fileDownloaderSession ?? LibraryFileDownloader.makeBackgroundSession)
       } else {

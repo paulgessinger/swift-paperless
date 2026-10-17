@@ -395,16 +395,21 @@ extension Database {
       try QueryOrderRow
       .filter(Column("server_id") == serverID && removedIDs.contains(Column("remote_id")))
       .deleteAll(db)
+    // Gone on the server: nothing left to keep.
+    _ =
+      try KeptOfflineRecord
+      .filter(Column("server_id") == serverID && removedIDs.contains(Column("document_id")))
+      .deleteAll(db)
   }
 
   /// Deletes every `document` row for `serverID` no longer referenced by any
   /// `query_order` row for that server (the anti-join mirror of the
-  /// skeleton-read `queryWindowSQL`), plus its detail-cache siblings. Called
-  /// when a server's `OfflineBrowsingMode` transitions `.entireLibrary` →
-  /// `.recentlyBrowsed`, to reclaim documents that were only cached because of
-  /// the proactive fill. "Referenced" today means only `query_order`
-  /// membership — pinning (a second future exemption) doesn't exist yet.
-  /// Returns the number of documents removed (for logging/tests).
+  /// skeleton-read `queryWindowSQL`) and not kept offline, plus its
+  /// detail-cache siblings. Called when a server's `OfflineBrowsingMode`
+  /// transitions `.entireLibrary` → `.recentlyBrowsed`, to reclaim documents
+  /// that were only cached because of the proactive fill, and by the cap and
+  /// the reachability sweep. Returns the number of documents removed (for
+  /// logging/tests).
   @discardableResult
   public func pruneUnreferencedDocuments(serverID: UUID) async throws -> Int {
     try await wrappingAsync("pruneUnreferencedDocuments") {
@@ -421,6 +426,7 @@ extension Database {
         LEFT JOIN query_order q
           ON q.server_id = d.server_id AND q.remote_id = d.id
         WHERE d.server_id = ? AND q.remote_id IS NULL
+          AND NOT \(keptOfflineExists)
         """,
       arguments: [serverID])
     guard !orphanIDs.isEmpty else { return 0 }
@@ -749,8 +755,10 @@ extension Database {
   static func fetchEntries(
     _ db: GRDB.Database, serverID: UUID, queryKey: String, limit: Int, offset: Int
   ) throws -> [DocumentEntry] {
-    let rows = try Row.fetchAll(
-      db, sql: queryWindowSQL, arguments: [serverID, queryKey, limit, offset])
+    let rows =
+      queryKey == QueryKey.keptOffline.rawValue
+      ? try Row.fetchAll(db, sql: keptOfflineWindowSQL, arguments: [serverID, limit, offset])
+      : try Row.fetchAll(db, sql: queryWindowSQL, arguments: [serverID, queryKey, limit, offset])
     return try rows.map { row in
       if (row["id"] as UInt?) != nil {
         return .loaded(try DocumentRecord(row: row).domain)
@@ -774,6 +782,9 @@ extension Database {
   static func fetchQueryStatus(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
   ) throws -> QueryStatus {
+    if queryKey == .keptOffline {
+      return try fetchKeptOfflineStatus(db, serverID: serverID)
+    }
     let meta = try fetchQueryMeta(db, queryKey: queryKey, serverID: serverID)
     let order = try Row.fetchOne(
       db,

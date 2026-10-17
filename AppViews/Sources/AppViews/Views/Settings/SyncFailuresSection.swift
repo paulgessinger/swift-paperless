@@ -56,6 +56,7 @@ struct SyncFailuresSection: View {
     case .elements: .settings(.offlineSyncFailureSiteElements)
     case .deletions: .settings(.offlineSyncFailureSiteDeletions)
     case .changes: .settings(.offlineSyncFailureSiteChanges)
+    case .keptOffline: .settings(.offlineSyncFailureSiteKeptOffline)
     case .membership: .settings(.offlineSyncFailureSiteMembership)
     case .reachability: .settings(.offlineSyncFailureSiteReachability)
     case .libraryFill: .settings(.offlineSyncFailureSiteLibraryFill)

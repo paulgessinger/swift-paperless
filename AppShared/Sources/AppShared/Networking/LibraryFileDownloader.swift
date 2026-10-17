@@ -19,7 +19,10 @@ public struct LibraryDownloadServer: Sendable {
   /// Builds the authenticated requests.
   public let repository: any Repository
   public let syncOverCellular: Bool
+  /// Whether every document is downloaded, or only the ones kept offline.
   public let isEntireLibrary: Bool
+
+  var scope: LibraryFileScope { isEntireLibrary ? .library : .keptOffline }
 
   public init(repository: any Repository, syncOverCellular: Bool, isEntireLibrary: Bool) {
     self.repository = repository
@@ -28,12 +31,13 @@ public struct LibraryDownloadServer: Sendable {
   }
 }
 
-/// Keeps a window of archive downloads in flight for every *Entire library*
-/// server. The index is the source of truth: a refill asks the database for
-/// the newest documents whose archive is missing or outdated, skips the ones
-/// the session already holds, and hands iOS the rest, up to the window. A
-/// finished task's file is moved into the store inside the callback, its row
-/// is recorded, and the window is refilled.
+/// Keeps a window of archive downloads in flight per server: the whole
+/// library of an *Entire library* server, the documents kept offline of any
+/// other. The index is the source of truth: a refill asks the database for
+/// the newest documents in that scope whose archive is missing or outdated,
+/// skips the ones the session already holds, and hands iOS the rest, up to
+/// the window. A finished task's file is moved into the store inside the
+/// callback, its row is recorded, and the window is refilled.
 ///
 /// One instance per app process; the Share Extension never builds one, so
 /// only the app owns the session's identifier.
@@ -47,7 +51,7 @@ public final class LibraryFileDownloader {
   public enum RefillOutcome: Equatable, Sendable {
     /// Handed this many new tasks to the session.
     case queued(Int)
-    /// Nothing is missing, or the server is not in *Entire library*.
+    /// Nothing is missing, or the server is gone.
     case complete
     /// Free space is below the floor; nothing was queued.
     case pausedLowStorage
@@ -135,7 +139,7 @@ public final class LibraryFileDownloader {
   /// session.
   @discardableResult
   public func refill(serverID: UUID) async throws -> RefillOutcome {
-    guard !isInvalidated, let server = try await servers(serverID), server.isEntireLibrary else {
+    guard !isInvalidated, let server = try await servers(serverID) else {
       activities[serverID] = nil
       return .complete
     }
@@ -156,7 +160,8 @@ public final class LibraryFileDownloader {
     recentlyFailed = recentlyFailed.filter { now.timeIntervalSince($0.value) < 3600 }
     let backedOff = Set(recentlyFailed.keys.filter { $0.serverID == serverID }.map(\.versionID))
     let candidates = try await database.documentsNeedingArchive(
-      serverID: serverID, excluding: inFlightDocuments, limit: room + backedOff.count)
+      serverID: serverID, scope: server.scope, excluding: inFlightDocuments,
+      limit: room + backedOff.count)
     var queued = 0
     for candidate in candidates where queued < room {
       let key = ContentStore.Key(
@@ -178,7 +183,7 @@ public final class LibraryFileDownloader {
 
   /// Top every server's window up, after iOS relaunched the app for the
   /// session's events or at launch.
-  public func refillAllLibraryServers() async {
+  public func refillAllServers() async {
     for serverID in allServerIDs() {
       do {
         try await refill(serverID: serverID)
@@ -188,7 +193,8 @@ public final class LibraryFileDownloader {
     }
   }
 
-  /// Call off a server's downloads: it was removed, or left *Entire library*.
+  /// Call off a server's downloads: it was removed, or left *Entire library*
+  /// (a refill then queues the kept documents again).
   public func cancel(serverID: UUID) async {
     for (task, id) in await describedTasks() where id.key.serverID == serverID {
       task.cancel()
@@ -246,7 +252,8 @@ public final class LibraryFileDownloader {
 
   private func publishActivity(_ serverID: UUID) async {
     guard (inFlight[serverID] ?? 0) > 0,
-      let progress = try? await database.libraryFileProgress(serverID: serverID)
+      let scope = try? await servers(serverID)?.scope,
+      let progress = try? await database.libraryFileProgress(serverID: serverID, scope: scope)
     else {
       activities[serverID] = nil
       return
