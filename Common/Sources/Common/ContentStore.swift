@@ -156,6 +156,11 @@ public struct ContentStore: Sendable {
       [.modificationDate: date], ofItemAtPath: url(for: key).path)
   }
 
+  /// A modification date set from a `Date` can read back up to ~100 ns later,
+  /// since `Date` and the file system's timespec round differently; a touched
+  /// file must still count as not modified after the date it was touched to.
+  private static let modificationDateTolerance: TimeInterval = 0.000_001
+
   /// Remove the blob for `key` unless it was written after `date`, and return
   /// the bytes it held; `nil` when it was newer or absent.
   ///
@@ -170,7 +175,8 @@ public struct ContentStore: Sendable {
       let values = try? canonical.resourceValues(forKeys: [
         .contentModificationDateKey, .totalFileAllocatedSizeKey, .fileSizeKey,
       ]),
-      let modified = values.contentModificationDate, modified <= date,
+      let modified = values.contentModificationDate,
+      modified <= date.addingTimeInterval(Self.modificationDateTolerance),
       (try? FileManager.default.removeItem(at: canonical)) != nil
     else { return nil }
     try? FileManager.default.removeItem(at: sidecarURL(for: key))
