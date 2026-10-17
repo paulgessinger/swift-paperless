@@ -181,6 +181,27 @@ struct FileIndexTests {
       try await database.evictionCandidates(budget: 160, protectAccessedAfter: date(9000)).isEmpty)
   }
 
+  @Test("An Entire-library server's archives count for nothing against the budget")
+  func libraryArchivesAreNotEvictable() async throws {
+    let server = UUID()
+    let other = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    try addServer(server, to: database)
+    try FileFixtures.addServer(other, to: database, offlineBrowsingMode: "entireLibrary")
+    try await database.upsertDocuments([doc(3), doc(4)], serverID: other)
+    try await record(database, key(server, 1), size: 40, accessed: date(1000))
+    try await record(database, key(other, 3), size: 40, accessed: date(1000))
+    try await record(database, key(other, 4, .original), size: 40, accessed: date(1000))
+
+    #expect(try await database.evictableFileBytes() == 80)
+    // Two evictable rows; the newest always stays, so one candidate, and
+    // never the library's archive.
+    let candidates = try await database.evictionCandidates(
+      budget: 0, protectAccessedAfter: date(9000))
+    #expect(candidates.count == 1)
+    #expect(!candidates.compactMap(\.key).contains(key(other, 3)))
+  }
+
   @Test("A file accessed inside the protection window stops the eviction")
   func recentAccessGuard() async throws {
     let server = UUID()

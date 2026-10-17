@@ -15,14 +15,14 @@ struct SyncActivityTests {
     // The store holds these in a dictionary, so the order it hands over is
     // arbitrary. Whatever arrives, the list must read the same way — a list that
     // reshuffles as each stage reports progress is unreadable.
-    let stages: [SyncActivity.Stage] = [.reconcile, .libraryFill, .detailFill]
+    let stages: [SyncActivity.Stage] = [.reconcile, .fileDownload, .libraryFill, .detailFill]
     #expect(
       stages.map { activity($0) }.sortedForDisplay.map(\.stage) == [
-        .libraryFill, .detailFill, .reconcile,
+        .libraryFill, .detailFill, .fileDownload, .reconcile,
       ])
     #expect(
       stages.reversed().map { activity($0) }.sortedForDisplay.map(\.stage) == [
-        .libraryFill, .detailFill, .reconcile,
+        .libraryFill, .detailFill, .fileDownload, .reconcile,
       ])
   }
 
