@@ -140,14 +140,12 @@ struct ApiRepositoryDownloadTest {
 
   nonisolated static func makeDocument(
     id: UInt = 7, modified: Date? = Date(timeIntervalSince1970: 1000),
-    originalFileName: String? = "doc.pdf", archivedFileName: String? = "doc.pdf",
-    versions: [DocumentVersion] = []
+    archivedFileName: String? = "doc.pdf", versions: [DocumentVersion] = []
   ) -> Document {
     Document(
       id: id, title: "doc", asn: nil, documentType: nil, correspondent: nil,
       created: Date(timeIntervalSince1970: 0), tags: [],
-      added: nil, modified: modified, originalFileName: originalFileName,
-      archivedFileName: archivedFileName, storagePath: nil,
+      added: nil, modified: modified, archivedFileName: archivedFileName, storagePath: nil,
       versions: versions)
   }
 
@@ -327,13 +325,10 @@ struct ApiRepositoryDownloadTest {
 
   @Test(
     arguments: [
-      (false, "doc.pdf", "doc.pdf", nil), (true, "doc.pdf", "doc.pdf", "true"),
-      (false, "doc.jpg", nil, "true"),
-      // Older servers omit both filenames; an archive may still exist.
-      (false, nil, nil, nil),
-    ] as [(Bool, String?, String?, String?)])
+      (false, "doc.pdf", nil), (true, "doc.pdf", "true"), (false, nil, "true"),
+    ] as [(Bool, String?, String?)])
   func requestsTheOriginalWhenThereIsNoArchive(
-    original: Bool, originalFileName: String?, archivedFileName: String?, expected: String?
+    original: Bool, archivedFileName: String?, expected: String?
   ) async throws {
     let (store, _) = try Self.makeStore()
     let repo = Self.makeRepo(contentStore: store)
@@ -346,8 +341,7 @@ struct ApiRepositoryDownloadTest {
     }
     defer { DownloadMockURLProtocol.reset() }
 
-    let document = Self.makeDocument(
-      originalFileName: originalFileName, archivedFileName: archivedFileName)
+    let document = Self.makeDocument(archivedFileName: archivedFileName)
     let url = try await repo.download(document: document, original: original)
 
     #expect(query.value == expected)
