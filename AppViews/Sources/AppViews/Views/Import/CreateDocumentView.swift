@@ -136,6 +136,7 @@ public struct CreateDocumentView: View {
   @State private var document = ProtoDocument()
   @State private var status = Status.none
   @State private var isAsnValid = true
+  @State private var dismissKeyboardTrigger = false
 
   @AppStorage("IncludeDocumentCreatedDate", store: .group)
   private var includeCreatedDate = true
@@ -384,6 +385,16 @@ public struct CreateDocumentView: View {
             }
           }
         }
+      }
+      .dismissKeyboard(trigger: $dismissKeyboardTrigger)
+
+      // Navigating to a picker (e.g. correspondent) and back can leave the
+      // keyboard shown for a field/responder that's no longer part of the
+      // visible hierarchy. The Form never re-accounts for its height in
+      // that case, which blocks scroll/taps on rows underneath it. Forcing
+      // the keyboard to resign whenever this view (re)appears avoids that.
+      .onAppear {
+        dismissKeyboardTrigger = true
       }
 
       .navigationBarTitleDisplayMode(.inline)
