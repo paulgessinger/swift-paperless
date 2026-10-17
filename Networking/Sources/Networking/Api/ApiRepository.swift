@@ -821,8 +821,10 @@ extension ApiRepository: Repository {
       // `/preview` rather than `/download`: same file, but it supports
       // `If-None-Match`, which `/download` ignores. Without an archive version
       // the server serves the original for an archive request too, but sends
-      // no ETag for it, so ask for the original outright.
-      let requestOriginal = original || document.archivedFileName == nil
+      // no ETag for it, so ask for the original outright. A server that omits
+      // both filenames may still have an archive, so it gets the archive request.
+      let requestOriginal =
+        original || (document.originalFileName != nil && document.archivedFileName == nil)
       @MainActor func fetch(ifNoneMatch checksum: String?) async throws -> (URL, URLResponse) {
         var request = try self.request(
           .preview(documentId: document.id, original: requestOriginal, version: queryVersion))
