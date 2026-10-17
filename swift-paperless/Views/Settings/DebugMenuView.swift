@@ -201,6 +201,12 @@ struct DebugMenuView: View {
         } label: {
           Text(verbatim: "Library downloads in flight")
         }
+        LabeledContent {
+          Text(verbatim: "\(store.keptOfflineDocumentIDs.count)")
+            .monospacedDigit()
+        } label: {
+          Text(verbatim: "Documents kept offline")
+        }
         Button {
           Task { await store.refillLibraryFiles() }
         } label: {

@@ -42,6 +42,7 @@ extension NavigationPath {
 // iPad-only: drives the saved-view sidebar selection.
 enum SidebarSelection: Hashable {
   case allDocuments
+  case keptOffline
   case savedView(UInt)
 }
 
@@ -273,6 +274,9 @@ struct DocumentView: View {
   }
 
   private var savedViewNavigationTitle: String {
+    if filterModel.filterState.localView == .keptOffline {
+      return String(localized: .app(.keptOffline))
+    }
     guard let id = filterModel.filterState.savedView else {
       // No saved view active
       return String(localized: .app(.documents))
@@ -430,13 +434,23 @@ struct DocumentView: View {
 
   @ViewBuilder
   private var titleMenu: some View {
-    if !store.savedViews.isEmpty {
+    if !store.savedViews.isEmpty || filterModel.filterState.localView != nil {
       Button {
         withAnimation {
           filterModel.filterState.clear()
         }
       } label: {
         Text(.app(.allDocuments))
+      }
+    }
+
+    if filterModel.filterState.localView != .keptOffline {
+      Button {
+        withAnimation {
+          filterModel.filterState = .keptOffline
+        }
+      } label: {
+        Label(String(localized: .app(.keptOffline)), systemImage: "arrow.down.circle")
       }
     }
 
@@ -469,13 +483,23 @@ struct DocumentView: View {
 
   // MARK: Filter assembly (shared compact + regular)
 
+  /// Nothing for a local view: its membership is not a server query, so there
+  /// is nothing to search, filter or sort.
   @ViewBuilder
   private func filterAssemblyView(showsBackdrop: Bool) -> some View {
-    if #available(iOS 26.0, *) {
-      FilterAssembly(filterModel: filterModel, showsBackdrop: showsBackdrop)
-    } else {
-      FilterAssemblyiOS18(filterModel: filterModel, showsBackdrop: showsBackdrop)
+    if filterModel.filterState.localView == nil {
+      if #available(iOS 26.0, *) {
+        FilterAssembly(filterModel: filterModel, showsBackdrop: showsBackdrop)
+      } else {
+        FilterAssemblyiOS18(filterModel: filterModel, showsBackdrop: showsBackdrop)
+      }
     }
+  }
+
+  /// The sidebar row the filter on screen stands for.
+  private var sidebarTarget: SidebarSelection {
+    if filterModel.filterState.localView == .keptOffline { return .keptOffline }
+    return filterModel.filterState.savedView.map(SidebarSelection.savedView) ?? .allDocuments
   }
 
   // MARK: Compact body (iPhone / compact size class)
@@ -540,6 +564,9 @@ struct DocumentView: View {
             String(localized: .app(.allDocuments)),
             systemImage: "tray.full"
           )
+        }
+        NavigationLink(value: SidebarSelection.keptOffline) {
+          Label(String(localized: .app(.keptOffline)), systemImage: "arrow.down.circle")
         }
       }
 
@@ -630,6 +657,10 @@ struct DocumentView: View {
           if filterModel.filterState != .default {
             filterModel.filterState.clear()
           }
+        case .keptOffline:
+          if filterModel.filterState.localView != .keptOffline {
+            filterModel.filterState = .keptOffline
+          }
         case .savedView(let id):
           // Same idempotency guard: if we're already on this saved view
           // (e.g., we just adopted it from filterState), don't reassign
@@ -642,8 +673,7 @@ struct DocumentView: View {
     }
     // initial: true makes the sidebar adopt a saved view that was already
     // present in filterState at mount (restored from UserDefaults).
-    .onChange(of: filterModel.filterState.savedView, initial: true) { _, new in
-      let target: SidebarSelection = new.map(SidebarSelection.savedView) ?? .allDocuments
+    .onChange(of: sidebarTarget, initial: true) { _, target in
       if sidebarSelection != target { sidebarSelection = target }
     }
   }

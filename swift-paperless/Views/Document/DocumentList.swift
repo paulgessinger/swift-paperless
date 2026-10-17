@@ -114,6 +114,33 @@ struct DocumentList: View {
       userCanChange && viewModel.hasInboxTags(document: document)
     }
 
+    private var isKeptOffline: Bool { store.isKeptOffline(document.id) }
+
+    private func toggleKeptOffline() {
+      Task { [store, document, isKeptOffline] in
+        do {
+          try await store.setKeptOffline(document.id, !isKeptOffline)
+        } catch {
+          Logger.shared.error("Keeping a document offline failed: \(error)")
+          errorController.push(error: error)
+        }
+      }
+    }
+
+    @ViewBuilder
+    private var keepOfflineButton: some View {
+      Button {
+        toggleKeptOffline()
+      } label: {
+        if isKeptOffline {
+          Label(
+            String(localized: .app(.stopKeepingOffline)), systemImage: "arrow.down.circle.fill")
+        } else {
+          Label(String(localized: .app(.keepOffline)), systemImage: "arrow.down.circle")
+        }
+      }
+    }
+
     private func onDeleteButtonPressed() {
       if documentDeleteConfirmation {
         documentToDelete = document
@@ -130,7 +157,7 @@ struct DocumentList: View {
     }
 
     var body: some View {
-      DocumentCell(document: document, store: store)
+      DocumentCell(document: document, store: store, isKeptOffline: isKeptOffline)
         .contentShape(Rectangle())
 
         .padding(.horizontal)
@@ -156,6 +183,8 @@ struct DocumentList: View {
         }
 
         .swipeActions(edge: .leading) {
+          keepOfflineButton
+            .tint(.indigo)
           if canRemoveInboxTags {
             Button {
               Task { await viewModel.removeInboxTags(document: document) }
@@ -184,6 +213,8 @@ struct DocumentList: View {
           } label: {
             Label(String(localized: .app(.edit)), systemImage: "pencil")
           }
+
+          keepOfflineButton
 
           if canRemoveInboxTags {
             Button {
@@ -286,14 +317,20 @@ struct DocumentList: View {
           // a non-empty count): don't flash "No documents" during the fill.
           LoadingDocumentList()
         case .empty:
-          NoDocumentsView(filtering: filterModel.filterState.filtering)
-            .equatable()
-            .refreshable {
-              await Task {
-                await refresh()
-              }.value
+          Group {
+            if viewModel.scope == .keptOffline {
+              KeptOfflineEmptyView()
+            } else {
+              NoDocumentsView(filtering: filterModel.filterState.filtering)
+                .equatable()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+          }
+          .refreshable {
+            await Task {
+              await refresh()
+            }.value
+          }
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         case .unavailable:
           // The load failed and nothing is cached: say so rather than claim
           // the query matched no documents.
@@ -457,6 +494,20 @@ struct DocumentList: View {
         let document = item
         Text(.app(.deleteDocumentName(document.title)))
       })
+  }
+}
+
+/// The *Kept offline* list with no members: says how to add one.
+private struct KeptOfflineEmptyView: View {
+  var body: some View {
+    ScrollView(.vertical) {
+      ContentUnavailableView {
+        Label(String(localized: .app(.keptOfflineEmptyTitle)), systemImage: "arrow.down.circle")
+      } description: {
+        Text(.app(.keptOfflineEmptyMessage))
+      }
+      .padding(.top, 40)
+    }
   }
 }
 

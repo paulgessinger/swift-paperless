@@ -12,6 +12,7 @@ import DataModel
 import Networking
 import Persistence
 import SwiftUI
+import os
 
 /// Per-field editors. On regular size class these render as popovers anchored
 /// to the source aspect; on compact they adapt back to sheets. Splitting these
@@ -757,6 +758,25 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     .navigationBarTitleDisplayMode(.inline)
 
     .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        let kept = store.isKeptOffline(viewModel.document.id)
+        Button {
+          Task {
+            do {
+              try await store.setKeptOffline(viewModel.document.id, !kept)
+            } catch {
+              Logger.shared.error("Keeping a document offline failed: \(error)")
+              errorController.push(error: error)
+            }
+          }
+        } label: {
+          Label(
+            localized: kept ? .app(.stopKeepingOffline) : .app(.keepOffline),
+            systemImage: kept ? "arrow.down.circle.fill" : "arrow.down.circle"
+          )
+          .labelStyle(.iconOnly)
+        }
+      }
       ToolbarItem(placement: .topBarTrailing) {
         Menu {
           shareMenuContent

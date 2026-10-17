@@ -30,6 +30,10 @@ public struct QueryKey: Hashable, Sendable {
   public let rawValue: String
 
   public init(serverID: UUID, filter: FilterState) {
+    if filter.localView == .keptOffline {
+      self = .keptOffline
+      return
+    }
     let ordering = (filter.sortOrder.reverse ? "-" : "") + filter.sortField.rawValue
     // `.legacy` is used as a *canonical* encoding, not because the request will
     // use it: the same search is spelled `title_content`/`title__icontains`
