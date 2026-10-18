@@ -360,13 +360,20 @@ public struct OfflineSyncView: View {
     }
   }
 
+  /// What the downloads cover: the whole library in *Entire library*, the
+  /// kept documents otherwise, as the downloader scopes them.
+  private var downloadProgress: LibraryFileProgress {
+    mode == .entireLibrary
+      ? libraryFileProgress : (status?.keptOfflineFileProgress ?? .zero)
+  }
+
   /// The download row counts from the file index, the same figure as the
-  /// Document files row, so the two never disagree mid-download.
+  /// files row below it, so the two never disagree mid-download.
   private func displayed(_ activity: SyncActivity) -> SyncActivity {
     guard activity.stage == .fileDownload else { return activity }
     var activity = activity
-    activity.completed = libraryFileProgress.downloadedFiles
-    activity.total = libraryFileProgress.totalDocuments
+    activity.completed = downloadProgress.downloadedFiles
+    activity.total = downloadProgress.totalDocuments
     return activity
   }
 
@@ -393,7 +400,7 @@ public struct OfflineSyncView: View {
     return String(
       localized: .settings(
         .offlineSyncFileDownloadDetail(
-          libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file)),
+          downloadProgress.downloadedBytes.formatted(.byteCount(style: .file)),
           store.libraryFilesInFlight)))
   }
 
