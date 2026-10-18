@@ -795,13 +795,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
       // A per-document report is a main-actor `@Observable` write that
       // repaints the whole Offline & Sync screen; on a fast link that's
-      // dozens a second for as long as the pass runs. Coalesce to a cadence
-      // no one can perceive as choppy, but always report the final count so
-      // the screen doesn't sit one document short of "done".
+      // dozens a second for as long as the pass runs. Coalesce to the
+      // screen's cadence, which animates the bar between reports, but always
+      // report the final count so the screen doesn't sit one document short
+      // of "done".
+      let interval = UpdateThrottle.displayInterval / .seconds(1)
       var lastReportedAt = Date.distantPast
       @MainActor func reportThrottled() {
         let now = Date()
-        guard done == total || now.timeIntervalSince(lastReportedAt) >= 0.1 else { return }
+        guard done == total || now.timeIntervalSince(lastReportedAt) >= interval else { return }
         lastReportedAt = now
         progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
       }

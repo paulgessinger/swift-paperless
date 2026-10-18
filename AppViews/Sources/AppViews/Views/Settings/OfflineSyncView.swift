@@ -148,41 +148,32 @@ public struct OfflineSyncView: View {
           statusRow(String(localized: .settings(.offlineSyncActivity)), value: activityText)
         } else {
           ForEach(store.syncActivities) { activity in
+            let activity = displayed(activity)
+            // The label on a line of its own and the count on the caption
+            // line: side by side, a growing count wrapped the row back and
+            // forth between one line and two.
             VStack(alignment: .leading, spacing: 8) {
-              LabeledContent(stageLabel(for: activity.stage)) {
+              Text(stageLabel(for: activity.stage))
+              // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked
+              // out its total yet.
+              ActivityBar(fraction: activity.fraction)
+              HStack(alignment: .firstTextBaseline) {
+                activityCaption(for: activity)
+                  .lineLimit(1)
+                Spacer(minLength: 8)
                 if let total = activity.total {
                   Text(
                     progressCountText(
                       for: activity.stage, completed: activity.completed, total: total)
                   )
                   .monospacedDigit()
-                  .foregroundStyle(.secondary)
+                  .fixedSize()
                 }
               }
-              // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked
-              // out its total yet.
-              ProgressView(value: activity.fraction)
-                .progressViewStyle(.linear)
-              if let detail = activity.detail {
-                Text(detail)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-                  .lineLimit(1)
-              } else if activity.stage == .libraryFill {
-                // `nil` here means "on the default list" (a saved view's name
-                // is never nil), not "no detail to show" — say so, rather than
-                // leaving the caption blank while it's already working.
-                Text(.settings(.offlineSyncDefaultView))
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-                  .lineLimit(1)
-              } else if activity.stage == .fileDownload {
-                Text(fileDownloadCaption)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-                  .lineLimit(1)
-              }
+              .font(.caption)
+              .foregroundStyle(.secondary)
             }
+            .accessibilityElement(children: .combine)
           }
         }
         if mode == .entireLibrary {
@@ -243,6 +234,7 @@ public struct OfflineSyncView: View {
       } header: {
         Text(.settings(.offlineSyncStatusHeader))
       }
+      .labeledContentStyle(StatusRowStyle())
 
       // Both modes, unlike the per-view list below; empty renders nothing.
       SyncFailuresSection(
@@ -350,6 +342,30 @@ public struct OfflineSyncView: View {
     }
   }
 
+  /// The download row counts from the file index, the same figure as the
+  /// Document files row, so the two never disagree mid-download.
+  private func displayed(_ activity: SyncActivity) -> SyncActivity {
+    guard activity.stage == .fileDownload else { return activity }
+    var activity = activity
+    activity.completed = store.libraryFileProgress.downloadedFiles
+    activity.total = store.libraryFileProgress.totalDocuments
+    return activity
+  }
+
+  @ViewBuilder
+  private func activityCaption(for activity: SyncActivity) -> some View {
+    if let detail = activity.detail {
+      Text(detail)
+    } else if activity.stage == .libraryFill {
+      // `nil` here means "on the default list" (a saved view's name is never
+      // nil), not "no detail to show" — say so, rather than leaving the
+      // caption blank while it's already working.
+      Text(.settings(.offlineSyncDefaultView))
+    } else if activity.stage == .fileDownload {
+      Text(fileDownloadCaption)
+    }
+  }
+
   /// Under the download row: what is on the device and how many files are
   /// moving, or why none are.
   private var fileDownloadCaption: String {
@@ -385,5 +401,61 @@ public struct OfflineSyncView: View {
 
   private func byteText(_ bytes: Int64) -> String {
     ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+  }
+}
+
+/// Label and value on one line whatever the value's length, so a count that
+/// grows doesn't wrap the row; stacked only at accessibility text sizes,
+/// where one line would not fit.
+private struct StatusRowStyle: LabeledContentStyle {
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+  func makeBody(configuration: Configuration) -> some View {
+    if dynamicTypeSize.isAccessibilitySize {
+      VStack(alignment: .leading, spacing: 2) {
+        configuration.label
+        configuration.content
+      }
+      .accessibilityElement(children: .combine)
+    } else {
+      HStack(alignment: .firstTextBaseline) {
+        configuration.label
+          .lineLimit(1)
+        Spacer(minLength: 8)
+        configuration.content
+          .lineLimit(1)
+          .monospacedDigit()
+          .layoutPriority(1)
+      }
+      .accessibilityElement(children: .combine)
+    }
+  }
+}
+
+/// A linear bar whose advance animates across the display cadence, so it
+/// moves on between the throttled updates. Drawn rather than a
+/// `ProgressView`, which jumps to each new value whatever the animation.
+private struct ActivityBar: View {
+  /// `nil` is indeterminate.
+  let fraction: Double?
+
+  var body: some View {
+    if let fraction {
+      Capsule()
+        .fill(.quaternary)
+        .overlay {
+          Capsule()
+            .fill(.tint)
+            .scaleEffect(x: min(max(fraction, 0), 1), anchor: .leading)
+        }
+        .clipShape(Capsule())
+        .frame(height: 4)
+        .animation(.linear(duration: 0.45), value: fraction)
+        .accessibilityElement()
+        .accessibilityValue(Text(fraction, format: .percent.precision(.fractionLength(0))))
+    } else {
+      ProgressView()
+        .progressViewStyle(.linear)
+    }
   }
 }
