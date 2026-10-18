@@ -104,6 +104,33 @@ struct FilterRuleTest {
     //        #expect(result.last == FilterRule(ruleType: .addedAfter, value: .date(value: datetime(year: 2023, month: 1, day: 1, tz: .current))))
   }
 
+  @Test func testDecodingInvalidDate() throws {
+    let input = """
+      [
+          {
+              "rule_type": 14,
+              "value": "10.05.206"
+          },
+          {
+              "rule_type": 6,
+              "value": "66"
+          }
+      ]
+      """.data(using: .utf8)!
+
+    let result = try makeDecoder(tz: .current).decode([FilterRule].self, from: input)
+
+    #expect(
+      result == [
+        FilterRule(ruleType: .addedAfter, value: .invalid(value: "10.05.206"))!,
+        FilterRule(ruleType: .hasTagsAll, value: .tag(id: 66))!,
+      ])
+
+    let encoded = try JSONEncoder().encode(result[0])
+    let roundTrip = try JSONDecoder().decode(FilterRule.self, from: encoded)
+    #expect(roundTrip == result[0])
+  }
+
   @Test
   func testEncoding() throws {
     let input = FilterRule(ruleType: .hasTagsAll, value: .tag(id: 6))

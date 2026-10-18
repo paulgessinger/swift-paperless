@@ -252,13 +252,17 @@ extension FilterRule: Codable {
       case .date:
         let dateStr = try container.decode(String.self, forKey: .value)
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-        guard let date = dateFormatter.date(from: dateStr) else {
-          //                    Logger.shared.error("Unable to decode filter rule date string: \(dateStr, privacy: .public)")
-          throw DateDecodingError.invalidDate(string: dateStr)
+        if let date = dateFormatter.date(from: dateStr) {
+          value = .date(value: date)
+        } else {
+          // Keep the rule so one malformed saved view doesn't fail the whole response decode.
+          Logger.dataModel.error(
+            "Invalid filter rule date: \(dateStr, privacy: .public)")
+          value = .invalid(value: dateStr)
         }
-        value = .date(value: date)
       case .number:
         value = try .number(value: container.decodeOrConvert(Int.self, forKey: .value))
       case .tag:
