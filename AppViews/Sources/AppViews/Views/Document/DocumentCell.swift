@@ -147,23 +147,29 @@ public struct DocumentCell: View {
             .stroke(.gray, lineWidth: 0.33)
         )
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        // On the image, not the frame: a page narrower than the frame left
-        // the badge hanging off its edge.
-        .overlay(alignment: .topTrailing) {
-          if isKeptOffline {
-            Image(systemName: "arrow.down.circle.fill")
-              .symbolRenderingMode(.palette)
-              .foregroundStyle(.white, .indigo)
-              .font(.title2)
-              .padding(5)
-              .accessibilityLabel(Text(.app(.keptOffline)))
-          }
-        }
-        .frame(width: 130, height: 170, alignment: .topLeading)
         .shadow(color: Color("ImageShadow"), radius: 5)
         .transaction { tx in
           tx.animation = nil
         }
+        // On the image, not the frame: a page narrower than the frame left
+        // the badge hanging off its edge. Outside the image's transaction, so
+        // it can animate in.
+        .overlay(alignment: .topTrailing) {
+          ZStack {
+            if isKeptOffline {
+              Image(systemName: "arrow.down.circle.fill")
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, .indigo)
+                .font(.title2)
+                .shadow(color: Color("ImageShadow"), radius: 2)
+                .padding(5)
+                .transition(.scale(scale: 0.4).combined(with: .opacity))
+                .accessibilityLabel(Text(.app(.keptOffline)))
+            }
+          }
+          .animation(.spring(duration: 0.35, bounce: 0.45), value: isKeptOffline)
+        }
+        .frame(width: 130, height: 170, alignment: .topLeading)
       }
 
       VStack(alignment: .leading) {
