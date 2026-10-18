@@ -17,9 +17,10 @@ public final class OIDCClient {
   static let urlFragment = "api/auth/headless"
 
   private let baseURL: URL
-  private let session: URLSession
+  let session: URLSession
   private let redirectURI: URL
   private let callbackScheme: String
+  private let extraHeaders: [Connection.HeaderValue]
 
   public private(set) var token: String? = nil
 
@@ -32,8 +33,12 @@ public final class OIDCClient {
 
   private let logger = Logger(subsystem: "com.paulgessinger.swift-paperless", category: "OIDC")
 
-  public init(baseURL: URL, redirectURI: URL, session: URLSession? = nil) throws(OIDCError) {
+  public init(
+    baseURL: URL, redirectURI: URL, extraHeaders: [Connection.HeaderValue] = [],
+    identity: TLSIdentity? = nil, session: URLSession? = nil
+  ) throws(OIDCError) {
     self.baseURL = baseURL
+    self.extraHeaders = extraHeaders
 
     self.redirectURI = redirectURI
 
@@ -51,7 +56,11 @@ public final class OIDCClient {
       let config = URLSessionConfiguration.default
       config.httpCookieStorage = .shared
       config.httpShouldSetCookies = true
-      self.session = URLSession(configuration: config)
+      // Answers client-certificate challenges, e.g. from an mTLS reverse proxy.
+      self.session = URLSession(
+        configuration: config,
+        delegate: PaperlessURLSessionDelegate(identity: identity),
+        delegateQueue: nil)
     }
   }
 
@@ -163,7 +172,7 @@ public final class OIDCClient {
       throw OIDCError.invalidURL
     }
 
-    var request = URLRequest(url: url)
+    var request = makeRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(sessionToken, forHTTPHeaderField: "x-session-token")
@@ -225,7 +234,8 @@ public final class OIDCClient {
 
   private func fetchCSRF() async throws -> String {
     logger.info("Fetching CSRF cookie")
-    _ = try await session.data(from: baseURL.appendingPathComponent("accounts/login"))
+    _ = try await session.data(
+      for: makeRequest(url: baseURL.appendingPathComponent("accounts/login")))
     let cookies = HTTPCookieStorage.shared.cookies(for: baseURL) ?? []
     guard let csrf = cookies.first(where: { $0.name == "csrftoken" })?.value else {
       logger.error("Response to login request did not contain a CSRF token")
@@ -247,7 +257,7 @@ public final class OIDCClient {
       let data: DataContainer
     }
 
-    let (data, _) = try await session.data(from: url)
+    let (data, _) = try await session.data(for: makeRequest(url: url))
 
     let config: HeadlessConfig
     do {
@@ -270,7 +280,7 @@ public final class OIDCClient {
       logger.error("Failed to build provider redirect url")
       throw OIDCError.invalidURL
     }
-    var request = URLRequest(url: url)
+    var request = makeRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
     request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
@@ -307,7 +317,7 @@ public final class OIDCClient {
 
   private func fetchDiscovery(url: URL) async throws -> OIDCDiscovery {
     logger.info("Fetching discovery from url \(url)")
-    let (data, _) = try await session.data(from: url)
+    let (data, _) = try await session.data(for: makeRequest(url: url))
     return try JSONDecoder().decode(OIDCDiscovery.self, from: data)
   }
 
@@ -318,7 +328,7 @@ public final class OIDCClient {
     pkce: PKCE
   ) async throws -> TokenResponse {
     logger.info("Exchanging code with oidc token")
-    var request = URLRequest(url: tokenEndpoint)
+    var request = makeRequest(url: tokenEndpoint)
     request.httpMethod = "POST"
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
     request.httpBody = try formBody([
@@ -358,7 +368,7 @@ public final class OIDCClient {
       logger.error("Failed to construct URL for obtaining Paperless token")
       throw OIDCError.invalidURL
     }
-    var request = URLRequest(url: url)
+    var request = makeRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
@@ -455,6 +465,24 @@ public final class OIDCClient {
     URLComponents(url: url, resolvingAgainstBaseURL: false)?
       .queryItems?
       .reduce(into: [:]) { $0[$1.name] = $1.value } ?? [:]
+  }
+
+  // The extra headers are configured for the Paperless server (e.g. a reverse
+  // proxy secret), so they must not leak to an identity provider on another origin.
+  func makeRequest(url: URL) -> URLRequest {
+    var request = URLRequest(url: url)
+    if isPaperlessOrigin(url) {
+      extraHeaders.apply(toRequest: &request)
+    }
+    return request
+  }
+
+  private func isPaperlessOrigin(_ url: URL) -> Bool {
+    let lhs = url.absoluteURL
+    let rhs = baseURL.absoluteURL
+    return lhs.scheme?.lowercased() == rhs.scheme?.lowercased()
+      && lhs.host()?.lowercased() == rhs.host()?.lowercased()
+      && lhs.port == rhs.port
   }
 
   // Django's CSRF middleware rejects HTTPS POSTs that carry neither an `Origin`
