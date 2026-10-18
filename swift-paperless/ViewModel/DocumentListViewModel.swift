@@ -39,9 +39,10 @@ class DocumentListViewModel {
   /// object isn't cached yet.
   var documents: [DocumentEntry] = []
 
-  /// The local view ``documents`` belong to, set with them. The list takes a
-  /// fresh identity when it changes, so switching to or from one starts at
-  /// the top instead of keeping the other list's scroll offset.
+  /// The local view ``documents`` belong to. When it changes, it is set only
+  /// once the rows have animated to the new list: the filter bar and the
+  /// scroll to the top follow it, and moving the inset above the list while
+  /// the rows move made them overlap.
   private(set) var documentsLocalView: FilterState.LocalView?
   var ready = false
   var noPermissions = false
@@ -535,10 +536,18 @@ class DocumentListViewModel {
       do {
         for try await docs in store.observeDocumentPrefix(queryKey: key, limit: limit) {
           guard let self else { break }
-          if documentsLocalView != localView {
+          if documentsLocalView != localView, !documents.isEmpty {
+            withAnimation {
+              documents = docs
+            } completion: { [weak self] in
+              withAnimation {
+                self?.documentsLocalView = localView
+              }
+            }
+          } else {
             documentsLocalView = localView
+            documents = docs
           }
-          documents = docs
           settleInboxTagRemovals(in: docs)
           prefetchThumbnails(for: docs)
         }

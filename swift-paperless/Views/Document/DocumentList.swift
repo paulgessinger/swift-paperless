@@ -398,10 +398,14 @@ struct DocumentList: View {
               .listSectionSeparator(.hidden)
             }
             .listStyle(.plain)
-            .id(viewModel.documentsLocalView)
-            // Swapped in place: the list's animation otherwise crossfades the
-            // old rows into the new ones.
-            .transition(.identity)
+            // A switch to or from a local view keeps the other list's scroll
+            // offset otherwise.
+            .onChange(of: viewModel.documentsLocalView) {
+              guard let first = viewModel.documents.first else { return }
+              withAnimation {
+                proxy.scrollTo(first.id, anchor: .top)
+              }
+            }
             // Pinned below the filter bar: the rows scroll under it, so the
             // notice stays in view however far down the truncated list goes.
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -429,6 +433,13 @@ struct DocumentList: View {
             }
           }
         }
+      }
+    }
+    // The filter bar follows the rows on screen, not the filter: see
+    // `FilterModel.displayedLocalView`.
+    .onChange(of: viewModel.documentsLocalView) { _, localView in
+      withAnimation {
+        filterModel.displayedLocalView = localView
       }
     }
     .animation(.default, value: viewModel.ready)

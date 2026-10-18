@@ -488,7 +488,7 @@ struct DocumentView: View {
   /// scrolls under the title.
   @ViewBuilder
   private func filterAssemblyView(showsBackdrop: Bool) -> some View {
-    if filterModel.filterState.localView == nil {
+    if filterModel.displayedLocalView == nil {
       if #available(iOS 26.0, *) {
         FilterAssembly(filterModel: filterModel, showsBackdrop: showsBackdrop)
       } else {

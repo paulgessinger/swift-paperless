@@ -53,6 +53,12 @@ public final class FilterModel {
     }
   }
 
+  /// The local view whose documents the list shows. It trails `filterState`
+  /// while the list animates to the new rows, and the filter bar follows it,
+  /// so the inset above the list changes only once the rows have moved.
+  public var displayedLocalView: FilterState.LocalView? =
+    FilterModel.restoredFilterState().localView
+
   public var filterState: FilterState = FilterModel.restoredFilterState()
   {
     didSet {
