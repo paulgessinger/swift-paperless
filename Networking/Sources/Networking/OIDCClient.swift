@@ -17,7 +17,7 @@ public final class OIDCClient {
   static let urlFragment = "api/auth/headless"
 
   private let baseURL: URL
-  private let session: URLSession
+  let session: URLSession
   private let redirectURI: URL
   private let callbackScheme: String
   private let extraHeaders: [Connection.HeaderValue]
@@ -35,7 +35,7 @@ public final class OIDCClient {
 
   public init(
     baseURL: URL, redirectURI: URL, extraHeaders: [Connection.HeaderValue] = [],
-    session: URLSession? = nil
+    identity: TLSIdentity? = nil, session: URLSession? = nil
   ) throws(OIDCError) {
     self.baseURL = baseURL
     self.extraHeaders = extraHeaders
@@ -56,7 +56,11 @@ public final class OIDCClient {
       let config = URLSessionConfiguration.default
       config.httpCookieStorage = .shared
       config.httpShouldSetCookies = true
-      self.session = URLSession(configuration: config)
+      // Answers client-certificate challenges, e.g. from an mTLS reverse proxy.
+      self.session = URLSession(
+        configuration: config,
+        delegate: PaperlessURLSessionDelegate(identity: identity),
+        delegateQueue: nil)
     }
   }
 

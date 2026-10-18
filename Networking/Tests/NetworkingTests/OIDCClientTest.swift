@@ -288,6 +288,14 @@ struct OIDCClientTest {
     }
   }
 
+  // MARK: - client certificate
+
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/608", id: 608))
+  func defaultSession_answersClientCertificateChallenges() throws {
+    let client = try OIDCClient(baseURL: Self.baseURL, redirectURI: Self.redirectURI)
+    #expect(client.session.delegate is PaperlessURLSessionDelegate)
+  }
+
   // MARK: - exchangeIdTokenWithPaperless
 
   @Test func exchangeIdTokenWithPaperless_returnsTokenOnSuccess() async throws {
