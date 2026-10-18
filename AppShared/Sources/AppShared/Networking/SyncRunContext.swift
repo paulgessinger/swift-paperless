@@ -33,7 +33,7 @@ public enum SyncTrigger: String, Sendable {
 
 /// One recorded step. Stored by raw value.
 public enum SyncStep: String, Sendable {
-  case connection, elements, reconcile, libraryFill, detailFill
+  case connection, elements, reconcile, libraryFill, detailFill, fileFill
   /// A background task as a whole (`server_id` NULL).
   case task
 }

@@ -260,16 +260,33 @@ struct SyncPlanTests {
 struct SyncPhasesTests {
   @Test("ordered is dependency order regardless of how the set was built")
   func orderedIsCanonical() {
-    #expect(SyncPhases([.fill, .elements, .reconcile]).ordered == [.elements, .reconcile, .fill])
-    #expect(SyncPhases([.fill, .elements]).ordered == [.elements, .fill])
+    #expect(
+      SyncPhases([.files, .fill, .elements, .reconcile]).ordered == [
+        .elements, .reconcile, .fill, .files,
+      ])
+    #expect(SyncPhases([.files, .elements]).ordered == [.elements, .files])
   }
 
-  @Test("cheap omits the fill, full includes it")
+  @Test("cheap omits the fill and the files, full includes both")
   func presets() {
     #expect(!SyncPhases.cheap.contains(.fill))
+    #expect(!SyncPhases.cheap.contains(.files))
     #expect(SyncPhases.cheap.contains(.elements))
     #expect(SyncPhases.cheap.contains(.reconcile))
     #expect(SyncPhases.full.contains(.fill))
+    #expect(SyncPhases.full.contains(.files))
     #expect(SyncPhases.nothing.isEmpty)
+  }
+
+  @Test("the files are planned exactly when the fill is")
+  func filesFollowTheFill() {
+    for entire in [true, false] {
+      for cost in [LinkCost.unrestricted, LinkCost(isExpensive: true, isConstrained: false)] {
+        let phases = SyncPlan.phases(
+          isEntireLibrary: entire, condition: SyncCondition(cost: cost, syncOverCellular: false))
+        #expect(phases.contains(.files) == phases.contains(.fill))
+        #expect(phases.contains(.files) == (entire && !cost.isExpensive))
+      }
+    }
   }
 }

@@ -109,6 +109,11 @@ public protocol Repository<Documents, Tasks>: Sendable {
   nonisolated
     func thumbnailRequest(document: Document) throws -> URLRequest
 
+  /// The authenticated request for a document's archive, for a download task
+  /// the caller runs itself (the library's background session). `version` is
+  /// the `?version=` to send, `nil` when the server reports none.
+  func downloadRequest(documentID: UInt, version: UInt?) throws -> URLRequest
+
   // Conformers receive a full Document handle so the cache layer can use
   // Document.modified as a staleness key and Document.currentVersionID to
   // address the right server-side version row.

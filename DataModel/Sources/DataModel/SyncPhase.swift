@@ -17,6 +17,9 @@ public enum SyncPhase: Int, Sendable, Equatable, CaseIterable, Comparable {
   /// The proactive *Entire library* fill: every query's pages, then the
   /// per-document details.
   case fill
+  /// The archive PDF of every cached document, queued on the background
+  /// session; needs the rows the fill has paged in.
+  case files
 
   public static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
 }
@@ -43,8 +46,8 @@ public struct SyncPhases: Sendable, Equatable, ExpressibleByArrayLiteral {
   /// the server's offline mode or how expensive the link is.
   public static let cheap: Self = [.elements, .reconcile]
 
-  /// The cheap phases plus the proactive fill.
-  public static let full: Self = [.elements, .reconcile, .fill]
+  /// The cheap phases plus the proactive fill and the document files.
+  public static let full: Self = [.elements, .reconcile, .fill, .files]
 
   /// No network work at all — an uncredentialed server.
   ///

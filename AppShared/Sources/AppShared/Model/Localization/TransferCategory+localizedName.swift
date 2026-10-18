@@ -18,6 +18,8 @@ extension TransferCategory {
       String(localized: .settings(.transferCategoryThumbnails))
     case .documents:
       String(localized: .settings(.transferCategoryDocuments))
+    case .libraryFiles:
+      String(localized: .settings(.transferCategoryLibraryFiles))
     case .reconcile:
       String(localized: .settings(.transferCategoryReconcile))
     case .other:

@@ -35,6 +35,7 @@ public actor ContentReclaimer: FileIndex {
     case connectionRemoved
     case overBudget
     case afterReconcile
+    case afterDowngrade
     case manual
   }
 
@@ -114,6 +115,26 @@ public actor ContentReclaimer: FileIndex {
       return await run(reason: reason)
     }
     return report
+  }
+
+  /// Remove a server's archives, rows and files, when it leaves *Entire
+  /// library*: the index cannot tell the ones the library pass downloaded
+  /// from the ones an open did, and the user confirmed that downloaded
+  /// documents go. A pass follows for what the downgrade's prune left
+  /// unreferenced.
+  @discardableResult
+  public func removeArchives(serverID: UUID) async -> (files: Int, bytes: Int64) {
+    var removed = (files: 0, bytes: Int64(0))
+    do {
+      for row in try await database.deleteFiles(database.archiveFiles(serverID: serverID)) {
+        removed.bytes += unlink(row)
+        removed.files += 1
+      }
+    } catch {
+      Logger.persistence.error("Content reclaim: dropping a server's archives failed: \(error)")
+    }
+    await run(reason: .afterDowngrade)
+    return removed
   }
 
   /// Run a pass if none has run for ``StoragePolicy/sweepInterval``; `nil` otherwise.
