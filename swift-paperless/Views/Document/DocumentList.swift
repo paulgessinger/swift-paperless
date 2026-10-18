@@ -118,10 +118,9 @@ struct DocumentList: View {
       viewModel.removingInboxTags.contains(document.id)
     }
 
-    private var isKeptOffline: Bool { store.isKeptOffline(document.id) }
-
-    /// Reads the state when it runs, not when the row was drawn, so the
-    /// swipe action below can stay the same in both states.
+    /// Reads the state when it runs: nothing in the row's own body reads it,
+    /// so a toggle does not re-run that body and rebuild the row's swipe and
+    /// menu actions, which drew a row closing its swipe below its place.
     private func toggleKeptOffline() {
       Task { [store, document] in
         do {
@@ -129,20 +128,6 @@ struct DocumentList: View {
         } catch {
           Logger.shared.error("Keeping a document offline failed: \(error)")
           errorController.push(error: error)
-        }
-      }
-    }
-
-    @ViewBuilder
-    private var keepOfflineButton: some View {
-      Button {
-        toggleKeptOffline()
-      } label: {
-        if isKeptOffline {
-          Label(
-            String(localized: .app(.stopKeepingOffline)), systemImage: "arrow.down.circle.fill")
-        } else {
-          Label(String(localized: .app(.keepOffline)), systemImage: "arrow.down.circle")
         }
       }
     }
@@ -175,7 +160,7 @@ struct DocumentList: View {
 
     var body: some View {
       DocumentCell(
-        document: document, store: store, isKeptOffline: isKeptOffline,
+        document: document, store: store, showsKeptOfflineBadge: true,
         isRemovingInboxTags: isRemovingInboxTags)
         .contentShape(Rectangle())
 
@@ -235,7 +220,9 @@ struct DocumentList: View {
             Label(String(localized: .app(.edit)), systemImage: "pencil")
           }
 
-          keepOfflineButton
+          KeepOfflineMenuButton(store: store, documentID: document.id) {
+            toggleKeptOffline()
+          }
 
           if canRemoveInboxTags {
             Button {
@@ -519,6 +506,25 @@ struct DocumentList: View {
         let document = item
         Text(.app(.deleteDocumentName(document.title)))
       })
+  }
+}
+
+/// "Keep offline" or "Stop keeping offline", reading the state itself so
+/// the row it sits in does not depend on it.
+private struct KeepOfflineMenuButton: View {
+  let store: DocumentStore
+  let documentID: UInt
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      if store.isKeptOffline(documentID) {
+        Label(
+          String(localized: .app(.stopKeepingOffline)), systemImage: "arrow.down.circle.fill")
+      } else {
+        Label(String(localized: .app(.keepOffline)), systemImage: "arrow.down.circle")
+      }
+    }
   }
 }
 
