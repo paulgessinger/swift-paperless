@@ -21,6 +21,19 @@ struct OIDCClientTest {
     )
   }
 
+  private static let extraHeaders = [
+    Connection.HeaderValue(key: "X-Proxy-Secret", value: "s3cr3t")
+  ]
+
+  private func makeClientWithHeaders() throws -> OIDCClient {
+    try OIDCClient(
+      baseURL: Self.baseURL,
+      redirectURI: Self.redirectURI,
+      extraHeaders: Self.extraHeaders,
+      session: MockURLProtocol.makeSession()
+    )
+  }
+
   private func httpResponse(url: URL, status: Int) -> HTTPURLResponse {
     HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
   }
@@ -162,6 +175,117 @@ struct OIDCClientTest {
     let scope = try await client.fetchScope(providerId: "authentik", csrf: "csrf-value")
 
     #expect(scope == "openid")
+  }
+
+  // MARK: - extra headers
+
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/845", id: 845))
+  func fetchProviders_sendsExtraHeaders() async throws {
+    let body = #"""
+      {"data":{"socialaccount":{"providers":[{"id":"kc","name":"Keycloak","flows":["provider_redirect","provider_token"],"client_id":"app","openid_configuration_url":"https://idp.example.com/.well-known/openid-configuration"}]}}}
+      """#
+    MockURLProtocol.responder = { request in
+      #expect(request.value(forHTTPHeaderField: "X-Proxy-Secret") == "s3cr3t")
+      return (
+        HTTPURLResponse(
+          url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!,
+        Data(body.utf8)
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClientWithHeaders()
+    try await client.fetchProviders()
+
+    #expect(client.providers.map(\.id) == ["kc"])
+  }
+
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/845", id: 845))
+  func fetchScope_sendsExtraHeaders() async throws {
+    MockURLProtocol.responder = { request in
+      #expect(request.value(forHTTPHeaderField: "X-Proxy-Secret") == "s3cr3t")
+      return (
+        HTTPURLResponse(
+          url: request.url!, statusCode: 302, httpVersion: "HTTP/1.1",
+          headerFields: ["Location": "https://idp.example.com/authorize?scope=openid"])!,
+        Data()
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClientWithHeaders()
+    _ = try await client.fetchScope(providerId: "kc", csrf: "csrf-value")
+  }
+
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/845", id: 845))
+  func exchangeIdTokenWithPaperless_sendsExtraHeaders() async throws {
+    MockURLProtocol.responder = { request in
+      #expect(request.value(forHTTPHeaderField: "X-Proxy-Secret") == "s3cr3t")
+      return (
+        HTTPURLResponse(
+          url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!,
+        Data(#"{"meta":{"access_token":"api-token"}}"#.utf8)
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClientWithHeaders()
+    let result = try await client.exchangeIdTokenWithPaperless(
+      providerId: "kc", clientId: "app", idToken: "id-token", csrf: "csrf-value")
+
+    #expect(result == .success(token: "api-token"))
+  }
+
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/845", id: 845))
+  func confirmMFA_sendsExtraHeaders() async throws {
+    MockURLProtocol.responder = { request in
+      #expect(request.value(forHTTPHeaderField: "X-Proxy-Secret") == "s3cr3t")
+      return (
+        HTTPURLResponse(
+          url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!,
+        Data(#"{"meta":{"access_token":"api-token"}}"#.utf8)
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClientWithHeaders()
+    client.pendingMFASessionToken = "pending-session-token"
+    let token = try await client.confirmMFA(code: "123456")
+
+    #expect(token == "api-token")
+  }
+
+  @Test(.bug("https://github.com/paulgessinger/swift-paperless/issues/845", id: 845))
+  func exchangeCode_doesNotSendExtraHeadersToIdentityProvider() async throws {
+    MockURLProtocol.responder = { request in
+      #expect(request.value(forHTTPHeaderField: "X-Proxy-Secret") == nil)
+      return (
+        HTTPURLResponse(
+          url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!,
+        Data(#"{"id_token":"the-id-token"}"#.utf8)
+      )
+    }
+    defer { MockURLProtocol.reset() }
+
+    let client = try makeClientWithHeaders()
+    _ = try await client.exchangeCode(
+      tokenEndpoint: Self.tokenEndpoint, clientId: "app", code: "auth-code", pkce: PKCE())
+  }
+
+  @Test func makeRequest_appliesHeadersOnlyToPaperlessOrigin() throws {
+    let client = try makeClientWithHeaders()
+
+    let paperless = client.makeRequest(url: URL(string: "https://PAPERLESS.example.com/x")!)
+    #expect(paperless.value(forHTTPHeaderField: "X-Proxy-Secret") == "s3cr3t")
+
+    for other in [
+      "http://paperless.example.com/x",
+      "https://paperless.example.com:8443/x",
+      "https://idp.example.com/x",
+    ] {
+      let request = client.makeRequest(url: URL(string: other)!)
+      #expect(request.value(forHTTPHeaderField: "X-Proxy-Secret") == nil, "\(other)")
+    }
   }
 
   // MARK: - exchangeIdTokenWithPaperless

@@ -105,6 +105,8 @@ struct ConnectionStageView: View {
 
     .onChange(of: viewModel.url) { viewModel.onChangeUrl() }
     .onChange(of: viewModel.selectedIdentity) { viewModel.onChangeUrl(immediate: true) }
+    // The probe and the OIDC client both carry the extra headers, so re-run them.
+    .onChange(of: viewModel.extraHeaders) { viewModel.onChangeUrl() }
 
     .onChange(of: viewModel.scheme) {
       Haptics.shared.impact(style: .soft)

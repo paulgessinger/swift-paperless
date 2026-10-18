@@ -368,7 +368,8 @@ class LoginViewModel {
     let client: OIDCClient
     do {
       let redirectURI = #URL("x-paperless://oidc-callback")
-      client = try OIDCClient(baseURL: baseUrl, redirectURI: redirectURI)
+      client = try OIDCClient(
+        baseURL: baseUrl, redirectURI: redirectURI, extraHeaders: extraHeaders)
     } catch {
       Logger.shared.error("Failed to build OIDC client: \(error, privacy: .public)")
       return
