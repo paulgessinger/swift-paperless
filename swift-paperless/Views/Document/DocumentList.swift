@@ -411,6 +411,10 @@ struct DocumentList: View {
               .listSectionSeparator(.hidden)
             }
             .listStyle(.plain)
+            .id(viewModel.documentsLocalView)
+            // Swapped in place: the list's animation otherwise crossfades the
+            // old rows into the new ones.
+            .transition(.identity)
             // Pinned below the filter bar: the rows scroll under it, so the
             // notice stays in view however far down the truncated list goes.
             .safeAreaInset(edge: .top, spacing: 0) {

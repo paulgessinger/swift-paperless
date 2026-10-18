@@ -38,6 +38,11 @@ class DocumentListViewModel {
   /// `.loaded` documents or `.skeleton(id:)` placeholders for members whose
   /// object isn't cached yet.
   var documents: [DocumentEntry] = []
+
+  /// The local view ``documents`` belong to, set with them. The list takes a
+  /// fresh identity when it changes, so switching to or from one starts at
+  /// the top instead of keeping the other list's scroll offset.
+  private(set) var documentsLocalView: FilterState.LocalView?
   var ready = false
   var noPermissions = false
 
@@ -526,9 +531,13 @@ class DocumentListViewModel {
       // here stays strong across every suspension, and this task is stored on
       // the view model — so neither would ever deallocate.
       guard let store = self?.store else { return }
+      let localView = self?.filterState.localView
       do {
         for try await docs in store.observeDocumentPrefix(queryKey: key, limit: limit) {
           guard let self else { break }
+          if documentsLocalView != localView {
+            documentsLocalView = localView
+          }
           documents = docs
           settleInboxTagRemovals(in: docs)
           prefetchThumbnails(for: docs)
