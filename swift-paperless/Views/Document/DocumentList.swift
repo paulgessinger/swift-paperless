@@ -188,9 +188,9 @@ struct DocumentList: View {
           onSelect(document)
         }
 
-        .swipeActions(edge: .leading) {
-          keepOfflineButton
-            .tint(.indigo)
+        // The full swipe runs the first button, and that is the inbox
+        // removal; with nothing to remove, it runs nothing.
+        .swipeActions(edge: .leading, allowsFullSwipe: canRemoveInboxTags) {
           if canRemoveInboxTags {
             Button {
               Task { await viewModel.removeInboxTags(document: document) }
@@ -199,6 +199,8 @@ struct DocumentList: View {
             }
             .tint(.accentColor)
           }
+          keepOfflineButton
+            .tint(.indigo)
         }
 
         .swipeActions(edge: .trailing) {
