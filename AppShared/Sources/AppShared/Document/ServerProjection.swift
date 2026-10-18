@@ -133,8 +133,10 @@ public final class ServerProjection {
         database.observeLastRefreshedAt(serverID: serverID), into: \.lastRefreshedAt),
       observeValue(database.observeQuerySyncErrors(serverID: serverID), into: \.syncErrors),
       observeValue(database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount),
+      // Throttled: every finished library download changes it.
       observeValue(
-        database.observeLibraryFileProgress(serverID: serverID), into: \.libraryFileProgress),
+        database.observeLibraryFileProgress(serverID: serverID), into: \.libraryFileProgress,
+        throttle: UpdateThrottle()),
     ])
   }
 
@@ -175,17 +177,23 @@ public final class ServerProjection {
     }
   }
 
-  /// Whatever the stream carries, assigned as it arrives: a singleton, a
-  /// timestamp, a count, a list that isn't keyed by id.
+  /// Whatever the stream carries, assigned as it arrives, or through
+  /// `throttle`: a singleton, a timestamp, a count, a list that isn't keyed
+  /// by id.
   private func observeValue<V: Sendable>(
     _ stream: AsyncThrowingStream<V, Error>,
-    into keyPath: ReferenceWritableKeyPath<ServerProjection, V>
+    into keyPath: ReferenceWritableKeyPath<ServerProjection, V>,
+    throttle: UpdateThrottle? = nil
   ) -> Task<Void, Never> {
     Task { @MainActor [weak self] in
       do {
         for try await value in stream {
           guard let self else { break }
-          self[keyPath: keyPath] = value
+          guard let throttle else {
+            self[keyPath: keyPath] = value
+            continue
+          }
+          throttle.run { [weak self] in self?[keyPath: keyPath] = value }
         }
       } catch is CancellationError {
       } catch {

@@ -53,11 +53,22 @@ public final class LibraryFileDownloader {
     case pausedLowStorage
   }
 
-  /// Tasks in flight per server, from the session's own list.
+  /// Tasks in flight per server, from the session's own list. Throttled for
+  /// display: eight fast downloads change it many times a second.
   public private(set) var inFlight: [UUID: Int] = [:]
   public private(set) var pausedLowStorage = false
-  /// The download row per server while its tasks run.
+  /// The download row per server while its tasks run, throttled with
+  /// ``inFlight``.
   public private(set) var activities: [UUID: SyncActivity] = [:]
+
+  /// What ``inFlight`` and ``activities`` show, as the downloader tracks it.
+  @ObservationIgnored private var running: [UUID: Int] = [:] {
+    didSet { publish() }
+  }
+  @ObservationIgnored private var rows: [UUID: SyncActivity] = [:] {
+    didSet { publish() }
+  }
+  @ObservationIgnored private let display: UpdateThrottle
   /// A download that failed, for the server's failure ledger.
   public var onFailure: (@MainActor (UUID, any Error) -> Void)?
   /// Set by `AppDelegate` when iOS relaunched the app for the session's
@@ -94,6 +105,7 @@ public final class LibraryFileDownloader {
     identityName: @escaping @Sendable (UUID) -> String?,
     availableCapacity: @escaping @Sendable (URL) -> Int64? = LibraryFileDownloader.volumeCapacity,
     window: Int = StoragePolicy.libraryDownloadWindow,
+    displayInterval: Duration = UpdateThrottle.displayInterval,
     makeSession: (URLSessionDownloadDelegate) -> URLSession = LibraryFileDownloader
       .makeBackgroundSession
   ) {
@@ -105,6 +117,7 @@ public final class LibraryFileDownloader {
     self.allServerIDs = allServerIDs
     self.availableCapacity = availableCapacity
     self.window = window
+    self.display = UpdateThrottle(interval: displayInterval)
     let delegate = Delegate(store: store, identityName: identityName)
     self.delegate = delegate
     self.session = makeSession(delegate)
@@ -136,7 +149,7 @@ public final class LibraryFileDownloader {
   @discardableResult
   public func refill(serverID: UUID) async throws -> RefillOutcome {
     guard !isInvalidated, let server = try await servers(serverID), server.isEntireLibrary else {
-      activities[serverID] = nil
+      rows[serverID] = nil
       return .complete
     }
     let inFlightDocuments = await refreshInFlight()[serverID] ?? []
@@ -145,10 +158,10 @@ public final class LibraryFileDownloader {
     if let free = availableCapacity(store.root),
       free < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
     {
-      pausedLowStorage = true
+      if !pausedLowStorage { pausedLowStorage = true }
       return .pausedLowStorage
     }
-    pausedLowStorage = false
+    if pausedLowStorage { pausedLowStorage = false }
 
     let room = window - inFlightDocuments.count
     guard room > 0 else { return .queued(0) }
@@ -172,7 +185,7 @@ public final class LibraryFileDownloader {
       task.resume()
       queued += 1
     }
-    inFlight[serverID, default: 0] += queued
+    running[serverID, default: 0] += queued
     return queued > 0 ? .queued(queued) : .complete
   }
 
@@ -193,16 +206,16 @@ public final class LibraryFileDownloader {
     for (task, id) in await describedTasks() where id.key.serverID == serverID {
       task.cancel()
     }
-    inFlight[serverID] = nil
-    activities[serverID] = nil
+    running[serverID] = nil
+    rows[serverID] = nil
   }
 
   public func cancelAll() async {
     for (task, _) in await describedTasks() {
       task.cancel()
     }
-    inFlight = [:]
-    activities = [:]
+    running = [:]
+    rows = [:]
   }
 
   /// Shut the session down, cancelling its tasks, and wait until it lists
@@ -240,18 +253,26 @@ public final class LibraryFileDownloader {
     for (_, id) in await describedTasks() {
       documents[id.key.serverID, default: []].insert(id.documentID)
     }
-    inFlight = documents.mapValues(\.count)
+    running = documents.mapValues(\.count)
     return documents
   }
 
+  private func publish() {
+    display.run { [weak self] in
+      guard let self else { return }
+      if inFlight != running { inFlight = running }
+      if activities != rows { activities = rows }
+    }
+  }
+
   private func publishActivity(_ serverID: UUID) async {
-    guard (inFlight[serverID] ?? 0) > 0,
+    guard (running[serverID] ?? 0) > 0,
       let progress = try? await database.libraryFileProgress(serverID: serverID)
     else {
-      activities[serverID] = nil
+      rows[serverID] = nil
       return
     }
-    activities[serverID] = SyncActivity(
+    rows[serverID] = SyncActivity(
       stage: .fileDownload, completed: progress.downloadedFiles, total: progress.totalDocuments)
   }
 
@@ -281,7 +302,7 @@ public final class LibraryFileDownloader {
 
   private func didFinish(_ id: LibraryFileTaskID.Parsed) {
     let serverID = id.key.serverID
-    inFlight[serverID] = max(0, (inFlight[serverID] ?? 1) - 1)
+    running[serverID] = max(0, (running[serverID] ?? 1) - 1)
     let slot = refills[serverID] ?? TaskSlot()
     refills[serverID] = slot
     Task { @MainActor in

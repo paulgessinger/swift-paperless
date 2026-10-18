@@ -59,7 +59,7 @@ struct LibraryFileDownloaderTests {
       allServerIDs: { [serverID] },
       identityName: { _ in nil },
       availableCapacity: { _ in freeSpace },
-      window: window,
+      window: window, displayInterval: .zero,
       makeSession: StubDownloadURLProtocol.makeSession)
     downloader.onFailure = { id, error in failures.errors.append((id, error)) }
     return Fixture(
