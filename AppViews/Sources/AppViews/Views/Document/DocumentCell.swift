@@ -147,8 +147,8 @@ public struct DocumentCell: View {
             .stroke(.gray, lineWidth: 0.33)
         )
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .frame(width: 130, height: 170, alignment: .topLeading)
-        .shadow(color: Color("ImageShadow"), radius: 5)
+        // On the image, not the frame: a page narrower than the frame left
+        // the badge hanging off its edge.
         .overlay(alignment: .topTrailing) {
           if isKeptOffline {
             Image(systemName: "arrow.down.circle.fill")
@@ -159,6 +159,8 @@ public struct DocumentCell: View {
               .accessibilityLabel(Text(.app(.keptOffline)))
           }
         }
+        .frame(width: 130, height: 170, alignment: .topLeading)
+        .shadow(color: Color("ImageShadow"), radius: 5)
         .transaction { tx in
           tx.animation = nil
         }
