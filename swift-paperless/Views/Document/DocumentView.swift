@@ -483,8 +483,9 @@ struct DocumentView: View {
 
   // MARK: Filter assembly (shared compact + regular)
 
-  /// Nothing for a local view: its membership is not a server query, so there
-  /// is nothing to search, filter or sort.
+  /// Only the backdrop for a local view: its membership is not a server
+  /// query, so there is nothing to search, filter or sort, but the list still
+  /// scrolls under the title.
   @ViewBuilder
   private func filterAssemblyView(showsBackdrop: Bool) -> some View {
     if filterModel.filterState.localView == nil {
@@ -493,6 +494,16 @@ struct DocumentView: View {
       } else {
         FilterAssemblyiOS18(filterModel: filterModel, showsBackdrop: showsBackdrop)
       }
+    } else if showsBackdrop {
+      Color.clear
+        .frame(height: 0)
+        .background {
+          if #available(iOS 26.0, *) {
+            FilterAssemblyBackdrop()
+          } else {
+            FilterAssemblyiOS18Backdrop()
+          }
+        }
     }
   }
 

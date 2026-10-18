@@ -80,11 +80,7 @@ struct FilterAssemblyiOS18: View {
 
     .background {
       if showsBackdrop {
-        Rectangle()
-          .fill(
-            Material.bar
-          )
-          .ignoresSafeArea(.container, edges: [.top, .horizontal])
+        FilterAssemblyiOS18Backdrop()
       }
     }
 
@@ -135,5 +131,16 @@ struct FilterAssemblyiOS18: View {
 
     .navigationTitle("Documents")
     .navigationBarTitleDisplayMode(.inline)
+  }
+}
+
+/// The bar material behind the bar, up through the navigation bar.
+struct FilterAssemblyiOS18Backdrop: View {
+  var body: some View {
+    Rectangle()
+      .fill(
+        Material.bar
+      )
+      .ignoresSafeArea(.container, edges: [.top, .horizontal])
   }
 }
