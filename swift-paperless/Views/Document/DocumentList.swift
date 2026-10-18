@@ -120,10 +120,12 @@ struct DocumentList: View {
 
     private var isKeptOffline: Bool { store.isKeptOffline(document.id) }
 
+    /// Reads the state when it runs, not when the row was drawn, so the
+    /// swipe action below can stay the same in both states.
     private func toggleKeptOffline() {
-      Task { [store, document, isKeptOffline] in
+      Task { [store, document] in
         do {
-          try await store.setKeptOffline(document.id, !isKeptOffline)
+          try await store.setKeptOffline(document.id, !store.isKeptOffline(document.id))
         } catch {
           Logger.shared.error("Keeping a document offline failed: \(error)")
           errorController.push(error: error)
@@ -142,6 +144,17 @@ struct DocumentList: View {
         } else {
           Label(String(localized: .app(.keepOffline)), systemImage: "arrow.down.circle")
         }
+      }
+    }
+
+    /// One label and icon in both states: a swipe action whose content
+    /// changes with the state redraws its row out of place when it flips. The
+    /// thumbnail's badge shows which state the document is in.
+    private var keepOfflineSwipeButton: some View {
+      Button {
+        toggleKeptOffline()
+      } label: {
+        Label(String(localized: .app(.toggleOffline)), systemImage: "arrow.down.circle")
       }
     }
 
@@ -199,7 +212,7 @@ struct DocumentList: View {
             }
             .tint(.accentColor)
           }
-          keepOfflineButton
+          keepOfflineSwipeButton
             .tint(.indigo)
         }
 
