@@ -38,8 +38,16 @@ public final class UpdateThrottle {
     pending = update
     trailing = Task { [weak self, interval] in
       try? await Task.sleep(until: lastRun + interval)
+      guard !Task.isCancelled else { return }
       self?.runPending()
     }
+  }
+
+  /// Drop the update waiting for the interval to end, if any.
+  func cancel() {
+    trailing?.cancel()
+    trailing = nil
+    pending = nil
   }
 
   private func runPending() {

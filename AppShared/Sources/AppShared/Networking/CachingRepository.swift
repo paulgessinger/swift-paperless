@@ -767,7 +767,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     var fetchedNotes = 0
     var failure: (any Error)?
     var failed = 0
-    defer { progress?(nil) }
+    // Coalesced to the screen's cadence: a per-document report repaints the
+    // Offline & Sync screen dozens of times a second on a fast link. Dropped
+    // before the stage retires, so a trailing report can't bring it back.
+    let reports = UpdateThrottle()
+    defer {
+      reports.cancel()
+      progress?(nil)
+    }
 
     // Notes are a separate resource with their own permission. Without this the
     // fill asks for every noted document's `/notes/` and takes a 403 each time —
@@ -793,19 +800,16 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       var done = 0
       progress?(SyncActivity(stage: .detailFill, completed: 0, total: total))
 
-      // A per-document report is a main-actor `@Observable` write that
-      // repaints the whole Offline & Sync screen; on a fast link that's
-      // dozens a second for as long as the pass runs. Coalesce to the
-      // screen's cadence, which animates the bar between reports, but always
-      // report the final count so the screen doesn't sit one document short
-      // of "done".
-      let interval = UpdateThrottle.displayInterval / .seconds(1)
-      var lastReportedAt = Date.distantPast
+      // The final count goes out at once, so the screen doesn't sit one
+      // document short of "done".
       @MainActor func reportThrottled() {
-        let now = Date()
-        guard done == total || now.timeIntervalSince(lastReportedAt) >= interval else { return }
-        lastReportedAt = now
-        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
+        let activity = SyncActivity(stage: .detailFill, completed: done, total: total)
+        guard done < total else {
+          reports.cancel()
+          progress?(activity)
+          return
+        }
+        reports.run { progress?(activity) }
       }
 
       // A downgrade mid-pass means the rest is no longer wanted, and

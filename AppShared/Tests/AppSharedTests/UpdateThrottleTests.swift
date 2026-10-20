@@ -45,4 +45,19 @@ struct UpdateThrottleTests {
     }
     #expect(applied == [1, 2, 3])
   }
+
+  @Test("A cancelled update never runs")
+  func cancelDropsThePendingUpdate() async throws {
+    let throttle = UpdateThrottle(interval: .milliseconds(50))
+    var applied: [Int] = []
+
+    throttle.run { applied.append(1) }
+    throttle.run { applied.append(2) }
+    throttle.cancel()
+    try await Task.sleep(for: .milliseconds(100))
+    #expect(applied == [1])
+
+    throttle.run { applied.append(3) }
+    #expect(applied == [1, 3])
+  }
 }
