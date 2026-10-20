@@ -11,6 +11,7 @@
 import AppShared
 import DataModel
 import Networking
+import Persistence
 import SwiftUI
 
 public struct OfflineSyncView: View {
@@ -32,6 +33,12 @@ public struct OfflineSyncView: View {
   /// phases this action drives where no slot is occupied; without this the
   /// button would blink back to enabled part-way through its own run.
   @State private var syncNowRunning = false
+
+  /// The active server's figures, observed while this screen is up.
+  @State private var status: OfflineStatus?
+
+  private var libraryFileProgress: LibraryFileProgress { status?.libraryFileProgress ?? .zero }
+  private var syncErrors: [QuerySyncError] { status?.syncErrors ?? [] }
 
   public init() {}
 
@@ -178,7 +185,7 @@ public struct OfflineSyncView: View {
         }
         if mode == .entireLibrary {
           dateStatusRow(
-            String(localized: .settings(.offlineSyncLastFullFill)), date: store.libraryCoverageAt)
+            String(localized: .settings(.offlineSyncLastFullFill)), date: status?.libraryCoverageAt)
           // From the file index, so it reads right after a relaunch, while
           // the download row above only shows while tasks are in flight.
           statusRow(
@@ -186,15 +193,15 @@ public struct OfflineSyncView: View {
             value: String(
               localized: .settings(
                 .offlineSyncFilesDownloadedValue(
-                  store.libraryFileProgress.downloadedFiles,
-                  store.libraryFileProgress.totalDocuments,
-                  store.libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file))))))
+                  libraryFileProgress.downloadedFiles,
+                  libraryFileProgress.totalDocuments,
+                  libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file))))))
         }
         dateStatusRow(
-          String(localized: .settings(.offlineSyncLastRefresh)), date: store.lastRefreshedAt)
+          String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
         statusRow(
           String(localized: .settings(.offlineSyncCachedDocuments)),
-          value: store.cachedDocumentCount.formatted())
+          value: (status?.cachedDocumentCount ?? 0).formatted())
 
         Button {
           Task {
@@ -242,9 +249,9 @@ public struct OfflineSyncView: View {
           mode == .entireLibrary || !$0.site.isEntireLibraryOnly
         })
 
-      if mode == .entireLibrary, !store.syncErrors.isEmpty {
+      if mode == .entireLibrary, !syncErrors.isEmpty {
         Section {
-          ForEach(store.syncErrors) { error in
+          ForEach(syncErrors) { error in
             VStack(alignment: .leading, spacing: 2) {
               Text(error.savedViewName ?? String(localized: .settings(.offlineSyncDefaultView)))
               Text(error.message)
@@ -292,6 +299,7 @@ public struct OfflineSyncView: View {
       OfflineStorageSection()
     }
     .task { libraryTotal = await store.libraryDocumentCount() }
+    .task(id: store.activeServerID) { status = store.makeOfflineStatus() }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))
     .navigationBarTitleDisplayMode(.inline)
   }
@@ -347,8 +355,8 @@ public struct OfflineSyncView: View {
   private func displayed(_ activity: SyncActivity) -> SyncActivity {
     guard activity.stage == .fileDownload else { return activity }
     var activity = activity
-    activity.completed = store.libraryFileProgress.downloadedFiles
-    activity.total = store.libraryFileProgress.totalDocuments
+    activity.completed = libraryFileProgress.downloadedFiles
+    activity.total = libraryFileProgress.totalDocuments
     return activity
   }
 
@@ -375,7 +383,7 @@ public struct OfflineSyncView: View {
     return String(
       localized: .settings(
         .offlineSyncFileDownloadDetail(
-          store.libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file)),
+          libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file)),
           store.libraryFilesInFlight)))
   }
 

@@ -117,35 +117,12 @@ public final class DocumentStore: Sendable {
     return isSyncing
   }
 
-  /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**,
-  /// observed from `server_sync_state.last_refreshed_at`: it repaints when a
-  /// sweep lands — including one the *scheduler* ran — and survives a relaunch.
-  public var lastRefreshedAt: Date? { projection?.lastRefreshedAt }
-
-  /// When the active server's library was last fully filled (`nil` if never),
-  /// observed from `server_sync_state.library_coverage_at` so the Offline & Sync
-  /// screen tracks fills *and* a cache wipe (which clears it) instead of staying
-  /// on "Never".
-  ///
-  /// The one that made this bug visible: it may not emit again for hours, so a
-  /// value the previous server's observation slipped in after a switch used to
-  /// stay on screen until the next fill.
-  public var libraryCoverageAt: Date? { projection?.libraryCoverageAt }
-
-  /// Views (saved or default) whose proactive offline fill the server most
-  /// recently rejected — observed from `query_sync_error` for the active server
-  /// so the Offline & Sync screen can warn that they aren't fully cached.
-  public var syncErrors: [QuerySyncError] { projection?.syncErrors ?? [] }
-
-  /// Live count of `document` rows cached for the active server — lets the
-  /// Offline & Sync screen show the effect of the proactive fill and the
-  /// downgrade GC (switching *Entire library* → *Recently browsed*) without a
-  /// debugger.
-  public var cachedDocumentCount: Int { projection?.cachedDocumentCount ?? 0 }
-
-  /// How many of the active server's documents have their archive on the
-  /// device, observed from the file index.
-  public var libraryFileProgress: LibraryFileProgress { projection?.libraryFileProgress ?? .zero }
+  /// The Offline & Sync figures for the active server, observed for as long
+  /// as the caller holds the result; `nil` without a server.
+  public func makeOfflineStatus() -> OfflineStatus? {
+    guard let backend = session?.backend else { return nil }
+    return OfflineStatus(database: backend.database, serverID: backend.serverID)
+  }
 
   /// The active server's archive downloads in flight on the background session.
   public var libraryFilesInFlight: Int {
