@@ -602,6 +602,9 @@ class DocumentListViewModel {
     fill = nil
     queryKey = nil
     fillGeneration += 1
+    inboxRemovalGeneration += 1
+    removingInboxTags = []
+    confirmedInboxTagRemovals = [:]
     fillError = nil
     isFollowingReplacement = false
     replacementStoppedShort = false
@@ -619,10 +622,14 @@ class DocumentListViewModel {
   /// cache only changes once the server confirms, so this covers the wait.
   private(set) var removingInboxTags: Set<UInt> = []
 
-  /// Confirmed removals, by the tags the server returned. They stay in
-  /// `removingInboxTags` until the list shows those tags, which can arrive
-  /// after the reply; clearing on the reply flashes the old tags.
-  private var confirmedInboxTagRemovals: [UInt: [UInt]] = [:]
+  /// Confirmed removals, by the inbox tags removed. They stay in
+  /// `removingInboxTags` until the list shows the document without them, which
+  /// can arrive after the reply; clearing on the reply flashes the old tags.
+  private var confirmedInboxTagRemovals: [UInt: Set<UInt>] = [:]
+
+  /// Bumped by `teardown`, so a reply from before a server switch doesn't touch
+  /// the state of a same-ID document on the new server.
+  @ObservationIgnored private var inboxRemovalGeneration = 0
 
   func hasInboxTags(document: Document) -> Bool {
     document.tags.contains { store.tags[$0]?.isInboxTag == true }
@@ -634,6 +641,7 @@ class DocumentListViewModel {
   func removeInboxTags(document: Document) async {
     guard hasInboxTags(document: document), !removingInboxTags.contains(document.id)
     else { return }
+    let generation = inboxRemovalGeneration
     withAnimation { _ = removingInboxTags.insert(document.id) }
     var document = document
     let inboxTagIDs = Set(store.tags.values.filter(\.isInboxTag).map(\.id))
@@ -642,10 +650,12 @@ class DocumentListViewModel {
     // indistinguishable from the swipe having been ignored. Report it like the
     // other user-initiated writes on this list do.
     do {
-      let updated = try await store.updateDocument(document)
-      confirmedInboxTagRemovals[updated.id] = updated.tags
+      _ = try await store.updateDocument(document)
+      guard generation == inboxRemovalGeneration else { return }
+      confirmedInboxTagRemovals[document.id] = inboxTagIDs
       settleInboxTagRemovals(in: documents)
     } catch {
+      guard generation == inboxRemovalGeneration else { return }
       withAnimation { _ = removingInboxTags.remove(document.id) }
       guard !error.isCancellationError else { return }
       Logger.shared.error("Removing inbox tags failed: \(error)")
@@ -657,8 +667,8 @@ class DocumentListViewModel {
     guard !confirmedInboxTagRemovals.isEmpty else { return }
     let shown = Dictionary(
       entries.compactMap(\.document).map { ($0.id, $0.tags) }, uniquingKeysWith: { a, _ in a })
-    let settled = confirmedInboxTagRemovals.filter { id, tags in
-      shown[id].map { $0 == tags } ?? true
+    let settled = confirmedInboxTagRemovals.filter { id, removed in
+      shown[id].map { removed.isDisjoint(with: $0) } ?? true
     }
     guard !settled.isEmpty else { return }
     for id in settled.keys {
