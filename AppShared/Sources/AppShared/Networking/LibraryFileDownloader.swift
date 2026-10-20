@@ -87,7 +87,10 @@ public final class LibraryFileDownloader {
   private let delegate: Delegate
   /// Documents whose download failed, left alone for an hour.
   private var recentlyFailed: [ContentStore.Key: Date] = [:]
-  private var refills: [UUID: TaskSlot<Void, any Error>] = [:]
+  /// One refill at a time per server, whoever asks: two refills reading the
+  /// same in-flight tasks would both queue the same documents.
+  private var refills: [UUID: TaskSlot<RefillOutcome, any Error>] = [:]
+  /// Servers whose refill was asked for while one was running; it runs again.
   private var refillRequested: Set<UUID> = []
   private var isInvalidated = false
 
@@ -144,10 +147,34 @@ public final class LibraryFileDownloader {
 
   // MARK: - Queueing
 
-  /// Top the server's window up. Returns at once; the downloads run on the
-  /// session.
+  /// Top the server's window up. Returns once the tasks are queued; the
+  /// downloads run on the session. A refill asked for while one runs joins
+  /// it, and that one runs once more, so it sees the tasks the first queued.
   @discardableResult
   public func refill(serverID: UUID) async throws -> RefillOutcome {
+    let slot = refills[serverID] ?? TaskSlot()
+    refills[serverID] = slot
+    if slot.isOccupied {
+      refillRequested.insert(serverID)
+    }
+    let operation: @MainActor () async throws -> RefillOutcome = {
+      var outcome: RefillOutcome
+      repeat {
+        self.refillRequested.remove(serverID)
+        outcome = try await self.performRefill(serverID: serverID)
+      } while self.refillRequested.contains(serverID)
+      return outcome
+    }
+    var outcome = try await slot.joinOrStart(operation)
+    // Joined a refill that had already finished: the request is still
+    // standing, and the slot is free now.
+    while refillRequested.contains(serverID) {
+      outcome = try await slot.joinOrStart(operation)
+    }
+    return outcome
+  }
+
+  private func performRefill(serverID: UUID) async throws -> RefillOutcome {
     guard !isInvalidated, let server = try await servers(serverID), server.isEntireLibrary else {
       rows[serverID] = nil
       return .complete
@@ -202,9 +229,15 @@ public final class LibraryFileDownloader {
   }
 
   /// Call off a server's downloads: it was removed, or left *Entire library*.
+  /// Returns once the completions already handed over are filed, so a caller
+  /// reclaiming the server's files runs after them; a completion handed over
+  /// later finds the server no longer wants the file and drops it.
   public func cancel(serverID: UUID) async {
     for (task, id) in await describedTasks() where id.key.serverID == serverID {
       task.cancel()
+    }
+    for handoff in delegate.pendingHandoffs(serverID: serverID) {
+      await handoff.value
     }
     running[serverID] = nil
     rows[serverID] = nil
@@ -213,6 +246,9 @@ public final class LibraryFileDownloader {
   public func cancelAll() async {
     for (task, _) in await describedTasks() {
       task.cancel()
+    }
+    for handoff in delegate.pendingHandoffs() {
+      await handoff.value
     }
     running = [:]
     rows = [:]
@@ -276,9 +312,20 @@ public final class LibraryFileDownloader {
       stage: .fileDownload, completed: progress.downloadedFiles, total: progress.totalDocuments)
   }
 
-  /// A task's file is in the store; record it, then refill.
+  /// A task's file is in the store; record it, then refill. A server that
+  /// no longer wants it, having left *Entire library* or gone, gets the file
+  /// dropped instead: its reclaim may already have run.
   fileprivate func didStore(_ id: LibraryFileTaskID.Parsed, size: Int64) async {
     await suspension.performBackgroundWork {
+      guard let server = try? await servers(id.key.serverID), server.isEntireLibrary else {
+        do {
+          try store.delete(id.key)
+        } catch {
+          // Unindexed: the repair walk removes it after an hour.
+          Logger.sync.error("Dropping an unwanted library file failed: \(error)")
+        }
+        return
+      }
       do {
         try await index.recordStore(
           id.key, documentID: id.documentID, size: size, modified: id.modified, checksum: nil,
@@ -289,45 +336,38 @@ public final class LibraryFileDownloader {
         Logger.sync.error("Recording a library file failed: \(error)")
       }
     }
-    didFinish(id)
+    await didFinish(id)
   }
 
-  fileprivate func didFail(_ id: LibraryFileTaskID.Parsed, error: any Error) {
+  fileprivate func didFail(_ id: LibraryFileTaskID.Parsed, error: any Error) async {
     if !(error is CancellationError), (error as? URLError)?.code != .cancelled {
       recentlyFailed[id.key] = Date()
       onFailure?(id.key.serverID, error)
     }
-    didFinish(id)
+    await didFinish(id)
   }
 
-  private func didFinish(_ id: LibraryFileTaskID.Parsed) {
+  /// The task's slot is free: refill, and return once the refill ran.
+  private func didFinish(_ id: LibraryFileTaskID.Parsed) async {
     let serverID = id.key.serverID
     running[serverID] = max(0, (running[serverID] ?? 1) - 1)
-    let slot = refills[serverID] ?? TaskSlot()
-    refills[serverID] = slot
-    Task { @MainActor in
-      if slot.isOccupied {
-        refillRequested.insert(serverID)
-        return
-      }
-      try? await slot.joinOrStart {
-        repeat {
-          self.refillRequested.remove(serverID)
-          await self.suspension.performBackgroundWork {
-            do {
-              try await self.refill(serverID: serverID)
-            } catch {
-              Logger.sync.error("Library file refill failed: \(error)")
-            }
-          }
-        } while self.refillRequested.contains(serverID)
+    await suspension.performBackgroundWork {
+      do {
+        try await refill(serverID: serverID)
+      } catch {
+        Logger.sync.error("Library file refill failed: \(error)")
       }
     }
   }
 
   /// Every event iOS relaunched the app for is handled; let it suspend the
-  /// app again, after the refills the completions started.
+  /// app again once the completions are filed and their refills ran. The
+  /// session reports this after every task event, so each completion has
+  /// been handed over by now.
   func backgroundEventsDidFinish() async {
+    for handoff in delegate.pendingHandoffs() {
+      await handoff.value
+    }
     for slot in refills.values {
       await slot.waitUntilIdle()
     }
@@ -350,6 +390,31 @@ public final class LibraryFileDownloader {
     private var stored: [Int: Int64] = [:]
     /// Tasks that completed, until the session stops listing them.
     private var finished: Set<Int> = []
+    /// The work each completion handed to the downloader, by task, until it
+    /// is done: what the background events completion and a cancel wait on.
+    private var handoffs: [Int: (serverID: UUID, task: Task<Void, Never>)] = [:]
+
+    /// The completions handed over and not yet filed, of one server or all.
+    func pendingHandoffs(serverID: UUID? = nil) -> [Task<Void, Never>] {
+      lock.withLock {
+        handoffs.values.filter { serverID == nil || $0.serverID == serverID }.map(\.task)
+      }
+    }
+
+    /// Hand a completion to the downloader, registered before this callback
+    /// returns.
+    private func handOff(
+      _ task: URLSessionTask, serverID: UUID, _ work: @escaping @MainActor () async -> Void
+    ) {
+      let identifier = task.taskIdentifier
+      lock.withLock {
+        let handoff = Task { @MainActor in
+          await work()
+          self.lock.withLock { _ = self.handoffs.removeValue(forKey: identifier) }
+        }
+        handoffs[identifier] = (serverID, handoff)
+      }
+    }
 
     /// Forget the finished tasks the session no longer lists; returns the rest.
     func pruneFinished(keeping listed: Set<Int>) -> Set<Int> {
@@ -391,11 +456,11 @@ public final class LibraryFileDownloader {
       }
       let owner = owner
       if let size {
-        Task { @MainActor in await owner?.didStore(id, size: size) }
+        handOff(task, serverID: id.key.serverID) { await owner?.didStore(id, size: size) }
         return
       }
       let failure = error ?? Self.failure(for: task.response)
-      Task { @MainActor in owner?.didFail(id, error: failure) }
+      handOff(task, serverID: id.key.serverID) { await owner?.didFail(id, error: failure) }
     }
 
     func urlSession(
