@@ -604,6 +604,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .editPopover(
         forFieldEdit: .title,
         active: $activeFieldEdit,
+        // The text field takes focus on appear, which forces the sheet to full height anyway.
+        detents: [.large],
         popoverSize: CGSize(width: 480, height: 240),
         transitionNamespace: namespace
       ) {

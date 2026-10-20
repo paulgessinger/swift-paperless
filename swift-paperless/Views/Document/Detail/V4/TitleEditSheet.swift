@@ -50,7 +50,9 @@ struct TitleEditSheet: View {
         CustomSection {
           CustomSectionRow {
             VStack(alignment: .leading, spacing: 6) {
-              HStack(alignment: .firstTextBaseline) {
+              // `.top`, not `.firstTextBaseline`: an empty vertical-axis TextField
+              // reports a bogus baseline, which pushes it down below the button.
+              HStack(alignment: .top) {
                 TextField(
                   String(localized: .app(.documentEditTitleLabel)),
                   text: $title,
