@@ -114,6 +114,10 @@ struct DocumentList: View {
       userCanChange && viewModel.hasInboxTags(document: document)
     }
 
+    private var isRemovingInboxTags: Bool {
+      viewModel.removingInboxTags.contains(document.id)
+    }
+
     private func onDeleteButtonPressed() {
       if documentDeleteConfirmation {
         documentToDelete = document
@@ -130,7 +134,7 @@ struct DocumentList: View {
     }
 
     var body: some View {
-      DocumentCell(document: document, store: store)
+      DocumentCell(document: document, store: store, isRemovingInboxTags: isRemovingInboxTags)
         .contentShape(Rectangle())
 
         .padding(.horizontal)

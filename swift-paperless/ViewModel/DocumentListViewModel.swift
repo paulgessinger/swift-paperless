@@ -614,12 +614,20 @@ class DocumentListViewModel {
     store.permissions.test(.view, for: .document)
   }
 
+  /// Documents whose inbox-tag removal is waiting on the server. The cache only
+  /// changes once the server confirms, so the cell uses this to show the
+  /// removal as in progress.
+  private(set) var removingInboxTags: Set<UInt> = []
+
   func hasInboxTags(document: Document) -> Bool {
-    document.tags.contains { store.tags[$0]?.isInboxTag == true }
+    !removingInboxTags.contains(document.id)
+      && document.tags.contains { store.tags[$0]?.isInboxTag == true }
   }
 
   func removeInboxTags(document: Document) async {
     guard hasInboxTags(document: document) else { return }
+    removingInboxTags.insert(document.id)
+    defer { removingInboxTags.remove(document.id) }
     var document = document
     let inboxTagIDs = Set(store.tags.values.filter(\.isInboxTag).map(\.id))
     document.tags.removeAll { inboxTagIDs.contains($0) }
