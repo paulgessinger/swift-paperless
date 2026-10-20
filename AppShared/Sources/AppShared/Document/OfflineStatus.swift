@@ -37,6 +37,10 @@ public final class OfflineStatus {
   /// index. Throttled: every finished download changes it.
   public private(set) var libraryFileProgress: LibraryFileProgress = .zero
 
+  /// How many of the kept documents have their archive on the device.
+  /// Throttled, like the library's.
+  public private(set) var keptOfflineFileProgress: LibraryFileProgress = .zero
+
   public let serverID: UUID
 
   @ObservationIgnored private let observationTasks = TaskBox()
@@ -57,6 +61,9 @@ public final class OfflineStatus {
       observationLoop(
         database.observeLibraryFileProgress(serverID: serverID), into: \.libraryFileProgress,
         of: self, throttle: UpdateThrottle()),
+      observationLoop(
+        database.observeLibraryFileProgress(serverID: serverID, scope: .keptOffline),
+        into: \.keptOfflineFileProgress, of: self, throttle: UpdateThrottle()),
     ])
   }
 

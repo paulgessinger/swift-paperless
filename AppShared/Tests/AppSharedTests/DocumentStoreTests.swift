@@ -52,7 +52,9 @@ struct DocumentStoreTests {
     try await waitUntil({ harness.store.isKeptOffline(1) }, "the projection never saw the pin")
     try await waitUntil(
       { StubDownloadURLProtocol.requests.count == 1 }, "the archive was never requested")
-    #expect(harness.store.keptOfflineFileProgress.totalDocuments == 1)
+    let status = try #require(harness.store.makeOfflineStatus())
+    try await waitUntil(
+      { status.keptOfflineFileProgress.totalDocuments == 1 }, "the status never saw the pin")
 
     try await harness.store.setKeptOffline(1, false)
     try await waitUntil({ !harness.store.isKeptOffline(1) }, "the projection kept the pin")

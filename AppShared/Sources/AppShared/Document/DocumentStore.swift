@@ -147,12 +147,6 @@ public final class DocumentStore: Sendable {
     keptOfflineDocumentIDs.contains(documentID)
   }
 
-  /// How many of the active server's kept documents have their archive on the
-  /// device.
-  public var keptOfflineFileProgress: LibraryFileProgress {
-    projection?.keptOfflineFileProgress ?? .zero
-  }
-
   /// Keep a document on the device, or stop keeping it. Keeping queues its
   /// archive at once; stopping leaves the file to the budget.
   public func setKeptOffline(_ documentID: UInt, _ kept: Bool) async throws {

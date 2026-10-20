@@ -60,9 +60,6 @@ public final class ServerProjection {
   /// toggle.
   public private(set) var keptOfflineDocumentIDs: Set<UInt> = []
 
-  /// How many of the kept documents have their archive on the device.
-  public private(set) var keptOfflineFileProgress: LibraryFileProgress = .zero
-
   // MARK: Members
 
   @ObservationIgnored
@@ -111,9 +108,6 @@ public final class ServerProjection {
         database.observeServerConfiguration(serverID: serverID), into: \.serverConfiguration),
       observeValue(
         database.observeKeptOfflineIDs(serverID: serverID), into: \.keptOfflineDocumentIDs),
-      observeValue(
-        database.observeLibraryFileProgress(serverID: serverID, scope: .keptOffline),
-        into: \.keptOfflineFileProgress),
     ])
   }
 
