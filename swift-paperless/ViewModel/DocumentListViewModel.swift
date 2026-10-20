@@ -514,6 +514,7 @@ class DocumentListViewModel {
         for try await docs in store.observeDocumentPrefix(queryKey: key, limit: limit) {
           guard let self else { break }
           documents = docs
+          settleInboxTagRemovals(in: docs)
           prefetchThumbnails(for: docs)
         }
       } catch is CancellationError {
@@ -614,20 +615,26 @@ class DocumentListViewModel {
     store.permissions.test(.view, for: .document)
   }
 
-  /// Documents whose inbox-tag removal is waiting on the server. The cache only
-  /// changes once the server confirms, so the cell uses this to show the
-  /// removal as in progress.
+  /// Documents whose inbox-tag removal the cell shows as in progress. The
+  /// cache only changes once the server confirms, so this covers the wait.
   private(set) var removingInboxTags: Set<UInt> = []
 
+  /// Confirmed removals, by the tags the server returned. They stay in
+  /// `removingInboxTags` until the list shows those tags, which can arrive
+  /// after the reply; clearing on the reply flashes the old tags.
+  private var confirmedInboxTagRemovals: [UInt: [UInt]] = [:]
+
   func hasInboxTags(document: Document) -> Bool {
-    !removingInboxTags.contains(document.id)
-      && document.tags.contains { store.tags[$0]?.isInboxTag == true }
+    document.tags.contains { store.tags[$0]?.isInboxTag == true }
   }
 
+  // The swipe action stays available while pending, and the guard here
+  // drops a second request: a swipe action whose content changes as the swipe
+  // closes redraws its row out of place.
   func removeInboxTags(document: Document) async {
-    guard hasInboxTags(document: document) else { return }
-    removingInboxTags.insert(document.id)
-    defer { removingInboxTags.remove(document.id) }
+    guard hasInboxTags(document: document), !removingInboxTags.contains(document.id)
+    else { return }
+    withAnimation { _ = removingInboxTags.insert(document.id) }
     var document = document
     let inboxTagIDs = Set(store.tags.values.filter(\.isInboxTag).map(\.id))
     document.tags.removeAll { inboxTagIDs.contains($0) }
@@ -635,11 +642,29 @@ class DocumentListViewModel {
     // indistinguishable from the swipe having been ignored. Report it like the
     // other user-initiated writes on this list do.
     do {
-      _ = try await store.updateDocument(document)
-    } catch let error where !error.isCancellationError {
+      let updated = try await store.updateDocument(document)
+      confirmedInboxTagRemovals[updated.id] = updated.tags
+      settleInboxTagRemovals(in: documents)
+    } catch {
+      withAnimation { _ = removingInboxTags.remove(document.id) }
+      guard !error.isCancellationError else { return }
       Logger.shared.error("Removing inbox tags failed: \(error)")
       errorController.push(mutationError: error)
-    } catch {}
+    }
+  }
+
+  private func settleInboxTagRemovals(in entries: [DocumentEntry]) {
+    guard !confirmedInboxTagRemovals.isEmpty else { return }
+    let shown = Dictionary(
+      entries.compactMap(\.document).map { ($0.id, $0.tags) }, uniquingKeysWith: { a, _ in a })
+    let settled = confirmedInboxTagRemovals.filter { id, tags in
+      shown[id].map { $0 == tags } ?? true
+    }
+    guard !settled.isEmpty else { return }
+    for id in settled.keys {
+      confirmedInboxTagRemovals[id] = nil
+    }
+    withAnimation { removingInboxTags.subtract(settled.keys) }
   }
 
   // MARK: - Thumbnail prefetch

@@ -208,6 +208,7 @@ public struct DocumentCell: View {
           if isRemovingInboxTags {
             ProgressView()
               .controlSize(.small)
+              .transition(.opacity)
           }
         }
       }

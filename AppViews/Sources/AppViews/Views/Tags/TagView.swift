@@ -114,7 +114,10 @@ public struct TagsView<Content: View>: View {
             TagView(tag: Tag.placeholder(v))
           }
         } else {
-          ForEach(Array(zip(tags.indices, tags)), id: \.0) { _, tag in
+          // Keyed by tag, so a removed tag animates out rather than the
+          // following ones shifting into its slot.
+          ForEach(zip(tags.indices, tags).map { (TagSlot(index: $0, tag: $1), $1) }, id: \.0) {
+            _, tag in
             if let action, let tag {
               TagView(tag: tag)
                 .onTapGesture {
@@ -130,6 +133,16 @@ public struct TagsView<Content: View>: View {
       }
 
     }
+  }
+}
+
+/// A tag's identity in `TagsView`; tags that aren't loaded fall back to position.
+private enum TagSlot: Hashable {
+  case tag(UInt)
+  case missing(Int)
+
+  init(index: Int, tag: Tag?) {
+    self = tag.map { .tag($0.id) } ?? .missing(index)
   }
 }
 
