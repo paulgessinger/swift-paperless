@@ -350,7 +350,7 @@ public struct OfflineSyncView: View {
   }
 
   private func formattedDate(_ date: Date) -> String {
-    date.formatted(date: .abbreviated, time: .shortened)
+    date.formatted(date: .numeric, time: .shortened)
   }
 
   private func byteText(_ bytes: Int64) -> String {

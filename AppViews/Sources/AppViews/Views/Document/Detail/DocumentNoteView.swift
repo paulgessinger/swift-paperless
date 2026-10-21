@@ -159,7 +159,7 @@ public struct DocumentNoteView: View {
               ForEach(notes) { note in
                 VStack(alignment: .leading) {
                   HStack {
-                    Text(note.created, style: .date)
+                    Text(note.created.formatted(date: .numeric, time: .omitted))
                     if let user = note.user, !user.username.isEmpty {
                       Spacer()
                       Text(user.username)
