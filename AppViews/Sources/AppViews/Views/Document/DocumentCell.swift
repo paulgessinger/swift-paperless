@@ -86,9 +86,20 @@ public struct DocumentCell: View {
 
   public var document: Document
 
-  public init(document: Document, store: DocumentStore) {
+  /// Hides the inbox tags and shows a spinner in their place while their
+  /// removal is in flight.
+  public var isRemovingInboxTags: Bool
+
+  public init(document: Document, store: DocumentStore, isRemovingInboxTags: Bool = false) {
     self.document = document
     self.store = store
+    self.isRemovingInboxTags = isRemovingInboxTags
+  }
+
+  private var displayedTags: [Tag?] {
+    let tags = document.tags.map { store.tags[$0] }
+    guard isRemovingInboxTags else { return tags }
+    return tags.filter { $0?.isInboxTag != true }
   }
 
   // Built once: a computed property here allocated a fresh DateFormatter on
@@ -193,7 +204,13 @@ public struct DocumentCell: View {
 
         Aspect(DocumentCell.dateFormatter.string(from: document.created), systemImage: "calendar")
 
-        TagsView(tags: document.tags.map { store.tags[$0] })
+        TagsView(tags: displayedTags, action: nil) {
+          if isRemovingInboxTags {
+            ProgressView()
+              .controlSize(.small)
+              .transition(.opacity)
+          }
+        }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.horizontal, 5)
