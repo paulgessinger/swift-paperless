@@ -62,8 +62,10 @@ public final class AppStack {
     self.connectionManager = connectionManager
     let contentReclaimer = ContentReclaimer(database: database, store: contentStore)
     self.contentReclaimer = contentReclaimer
-    // The downloader asks the registry for a server's repository, and the
-    // registry hands the downloader to every session; the box breaks the loop.
+    // The downloader needs the registry, for a server's repository, and the
+    // registry is built with the downloader, to hand it to every session. So
+    // the downloader's lookup reads the registry from a box filled once the
+    // registry exists.
     let registryBox = RegistryBox()
     let fileDownloader: LibraryFileDownloader? =
       if buildsFileDownloader, let contentStore {
@@ -154,8 +156,10 @@ public final class AppStack {
   }
 }
 
-/// Holds the registry for a closure made before it exists.
-private final class RegistryBox: @unchecked Sendable {
+/// The registry, for a closure made before it exists. Weak: the stack owns
+/// the registry, and a lookup without one finds no server.
+@MainActor
+private final class RegistryBox {
   weak var registry: ServerSessionRegistry?
 }
 
