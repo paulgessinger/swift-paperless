@@ -56,27 +56,6 @@ public final class ServerProjection {
   /// cold-cache default. Lets the UI distinguish "loading" from "denied".
   public private(set) var isHydrated = false
 
-  /// When this server's library was last fully filled (`nil` if never): an
-  /// observed mirror of `server_sync_state.library_coverage_at`, so the Offline
-  /// & Sync screen tracks fills *and* a cache wipe (which clears it) instead of
-  /// staying on "Never". A bare DB read wouldn't be tracked by the observation.
-  public private(set) var libraryCoverageAt: Date?
-
-  /// When the reconcile last refreshed something for this server (`nil` if
-  /// never): an observed mirror of `server_sync_state.last_refreshed_at`, so it
-  /// tracks passes the scheduler runs, relaunches, and a cache wipe.
-  public private(set) var lastRefreshedAt: Date?
-
-  /// Views (saved or default) whose proactive offline fill the server most
-  /// recently rejected, from `query_sync_error`, so the Offline & Sync screen
-  /// can warn that they aren't fully cached.
-  public private(set) var syncErrors: [QuerySyncError] = []
-
-  /// Live count of cached `document` rows — lets the Offline & Sync screen show
-  /// the effect of the proactive fill and the downgrade GC (switching *Entire
-  /// library* → *Recently browsed*) without a debugger.
-  public private(set) var cachedDocumentCount: Int = 0
-
   // MARK: Members
 
   @ObservationIgnored
@@ -123,12 +102,6 @@ public final class ServerProjection {
       observeUISettings(database.observeUISettings(serverID: serverID)),
       observeValue(
         database.observeServerConfiguration(serverID: serverID), into: \.serverConfiguration),
-      observeValue(
-        database.observeLibraryCoverageAt(serverID: serverID), into: \.libraryCoverageAt),
-      observeValue(
-        database.observeLastRefreshedAt(serverID: serverID), into: \.lastRefreshedAt),
-      observeValue(database.observeQuerySyncErrors(serverID: serverID), into: \.syncErrors),
-      observeValue(database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount),
     ])
   }
 
@@ -170,22 +143,12 @@ public final class ServerProjection {
   }
 
   /// Whatever the stream carries, assigned as it arrives: a singleton, a
-  /// timestamp, a count, a list that isn't keyed by id.
+  /// list that isn't keyed by id.
   private func observeValue<V: Sendable>(
     _ stream: AsyncThrowingStream<V, Error>,
     into keyPath: ReferenceWritableKeyPath<ServerProjection, V>
   ) -> Task<Void, Never> {
-    Task { @MainActor [weak self] in
-      do {
-        for try await value in stream {
-          guard let self else { break }
-          self[keyPath: keyPath] = value
-        }
-      } catch is CancellationError {
-      } catch {
-        Logger.shared.error("\(V.self) observation terminated: \(error)")
-      }
-    }
+    observationLoop(stream, into: keyPath, of: self)
   }
 
   private func observeUISettings(

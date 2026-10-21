@@ -117,31 +117,33 @@ public final class DocumentStore: Sendable {
     return isSyncing
   }
 
-  /// When the document reconcile sweep (R2/R3δ/membership) last **succeeded**,
-  /// observed from `server_sync_state.last_refreshed_at`: it repaints when a
-  /// sweep lands — including one the *scheduler* ran — and survives a relaunch.
-  public var lastRefreshedAt: Date? { projection?.lastRefreshedAt }
+  /// The Offline & Sync figures for the active server, observed for as long
+  /// as the caller holds the result; `nil` without a server.
+  public func makeOfflineStatus() -> OfflineStatus? {
+    guard let backend = session?.backend else { return nil }
+    return OfflineStatus(database: backend.database, serverID: backend.serverID)
+  }
 
-  /// When the active server's library was last fully filled (`nil` if never),
-  /// observed from `server_sync_state.library_coverage_at` so the Offline & Sync
-  /// screen tracks fills *and* a cache wipe (which clears it) instead of staying
-  /// on "Never".
-  ///
-  /// The one that made this bug visible: it may not emit again for hours, so a
-  /// value the previous server's observation slipped in after a switch used to
-  /// stay on screen until the next fill.
-  public var libraryCoverageAt: Date? { projection?.libraryCoverageAt }
+  /// The active server's archive downloads in flight on the background session.
+  public var libraryFilesInFlight: Int {
+    guard let session, let downloader = registry?.fileDownloader else { return 0 }
+    return downloader.inFlight[session.serverID] ?? 0
+  }
 
-  /// Views (saved or default) whose proactive offline fill the server most
-  /// recently rejected — observed from `query_sync_error` for the active server
-  /// so the Offline & Sync screen can warn that they aren't fully cached.
-  public var syncErrors: [QuerySyncError] { projection?.syncErrors ?? [] }
+  /// Whether the library's file downloads stopped for want of free space.
+  public var libraryFilesPausedLowStorage: Bool {
+    registry?.fileDownloader?.pausedLowStorage ?? false
+  }
 
-  /// Live count of `document` rows cached for the active server — lets the
-  /// Offline & Sync screen show the effect of the proactive fill and the
-  /// downgrade GC (switching *Entire library* → *Recently browsed*) without a
-  /// debugger.
-  public var cachedDocumentCount: Int { projection?.cachedDocumentCount ?? 0 }
+  /// Debug: top the active server's download window up now.
+  public func refillLibraryFiles() async {
+    await session?.fillFiles()
+  }
+
+  /// Debug: call off every library download.
+  public func cancelLibraryDownloads() async {
+    await registry?.fileDownloader?.cancelAll()
+  }
 
   public var activeTasks: [PaperlessTask] {
     tasks.filter(\.isActive)
@@ -938,13 +940,18 @@ extension DocumentStore {
   /// on disk. Every caller already paired them — except the one that forgot,
   /// leaving notes and file metadata to wait for the next launch.
   public func fillIfEnabled(phases: SyncPhases, force: Bool = false) async {
-    guard phases.contains(.fill) else { return }
-    // One session for both halves: re-reading it between them would page one
+    guard phases.contains(.fill) || phases.contains(.files) else { return }
+    // One session for every part: re-reading it between them would page one
     // server's library and then walk a different server's details.
     guard let session else { return }
     await SyncRunContext.$current.withValue(.child(.foreground)) {
-      await session.fillLibrary(force: force)
-      await session.fillDocumentDetails()
+      if phases.contains(.fill) {
+        await session.fillLibrary(force: force)
+        await session.fillDocumentDetails()
+      }
+      if phases.contains(.files) {
+        await session.fillFiles()
+      }
     }
   }
 
@@ -990,6 +997,9 @@ extension DocumentStore {
   /// every cache table is exactly the kind of transaction that must not sit on
   /// the main thread.
   public func wipeLocalCache() async throws {
+    // The downloads first: a file landing after the purge would be a row's
+    // worth of work for the repair walk.
+    await registry?.fileDownloader?.cancelAll()
     if let backend = session?.backend {
       try await backend.database.clearCache()
     }

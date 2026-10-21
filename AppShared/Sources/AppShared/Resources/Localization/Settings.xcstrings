@@ -2782,7 +2782,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documents downloaded for offline use on this server will be removed, apart from the most recent ones in your document list. Saved views download again if you open them."
+            "value" : "Documents and PDF files downloaded for offline use on this server will be removed, apart from the most recent documents in your document list. Files download again when you open a document."
           }
         },
         "fr" : {
@@ -2872,7 +2872,7 @@
       }
     },
     "offlineBrowsingModeDescription" : {
-      "comment" : "Footer under the Offline browsing picker, explaining what Entire library downloads and that leaving it deletes the downloads",
+      "comment" : "Footer under the Offline browsing picker, explaining what Entire library downloads (lists, document records and every document's PDF) and that leaving it deletes the downloads",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -2890,7 +2890,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When set to Entire library, every saved view and your full document list are downloaded over Wi-Fi so they can be browsed offline. Document files are still downloaded only when you open them. Switching back to Recently browsed removes what was downloaded."
+            "value" : "When set to Entire library, every saved view, your full document list and the PDF of every document are downloaded over Wi-Fi so you can read them offline. Switching back to Recently browsed removes what was downloaded."
           }
         },
         "fr" : {

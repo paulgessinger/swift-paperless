@@ -37,6 +37,16 @@ enum DetailFillPolicy {
   /// document: the `server` row's accessors block, and this loop runs over the
   /// whole library.
   static let downgradeCheckStride = 32
+
+  /// How many detail requests the fill keeps in flight, as many as the
+  /// library file downloads.
+  static let concurrency = 8
+}
+
+/// One request of the detail fill.
+enum DetailFetch: Sendable {
+  case metadata(UInt)
+  case notes(UInt)
 }
 
 /// Freshness policy for the per-server proactive full-library fill.
@@ -757,7 +767,14 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     var fetchedNotes = 0
     var failure: (any Error)?
     var failed = 0
-    defer { progress?(nil) }
+    // Coalesced to the screen's cadence: a per-document report repaints the
+    // Offline & Sync screen dozens of times a second on a fast link. Dropped
+    // before the stage retires, so a trailing report can't bring it back.
+    let reports = UpdateThrottle()
+    defer {
+      reports.cancel()
+      progress?(nil)
+    }
 
     // Notes are a separate resource with their own permission. Without this the
     // fill asks for every noted document's `/notes/` and takes a 403 each time —
@@ -783,17 +800,16 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       var done = 0
       progress?(SyncActivity(stage: .detailFill, completed: 0, total: total))
 
-      // A per-document report is a main-actor `@Observable` write that
-      // repaints the whole Offline & Sync screen; on a fast link that's
-      // dozens a second for as long as the pass runs. Coalesce to a cadence
-      // no one can perceive as choppy, but always report the final count so
-      // the screen doesn't sit one document short of "done".
-      var lastReportedAt = Date.distantPast
+      // The final count goes out at once, so the screen doesn't sit one
+      // document short of "done".
       @MainActor func reportThrottled() {
-        let now = Date()
-        guard done == total || now.timeIntervalSince(lastReportedAt) >= 0.1 else { return }
-        lastReportedAt = now
-        progress?(SyncActivity(stage: .detailFill, completed: done, total: total))
+        let activity = SyncActivity(stage: .detailFill, completed: done, total: total)
+        guard done < total else {
+          reports.cancel()
+          progress?(activity)
+          return
+        }
+        reports.run { progress?(activity) }
       }
 
       // A downgrade mid-pass means the rest is no longer wanted, and
@@ -808,34 +824,32 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         failure = SyncFailureClass.firstSurfaced(failure, error)
       }
 
-      for id in missingMetadata {
-        try Task.checkCancellation()
-        if leftEntireLibrary() { return true }
-        do {
-          // Not `metadata(documentId:)`: its fallback would serve the outdated
-          // row this is replacing and count a failed request as fetched.
-          _ = try await refreshMetadata(documentId: id)
-          fetchedMetadata += 1
-        } catch {
-          absorb(error)
+      let work = missingMetadata.map(DetailFetch.metadata) + needsNotes.map(DetailFetch.notes)
+      return try await withThrowingTaskGroup(of: (DetailFetch, (any Error)?).self) { group in
+        var queued = 0
+        while true {
+          try Task.checkCancellation()
+          while queued < work.count, queued - done < DetailFillPolicy.concurrency {
+            let fetch = work[queued]
+            queued += 1
+            group.addTask { (fetch, await self.fetchDetail(fetch)) }
+          }
+          guard let (fetch, error) = try await group.next() else { return false }
+          if let error {
+            absorb(error)
+          } else if case .metadata = fetch {
+            fetchedMetadata += 1
+          } else {
+            fetchedNotes += 1
+          }
+          done += 1
+          reportThrottled()
+          if leftEntireLibrary() {
+            group.cancelAll()
+            return true
+          }
         }
-        done += 1
-        reportThrottled()
       }
-
-      for id in needsNotes {
-        try Task.checkCancellation()
-        if leftEntireLibrary() { return true }
-        do {
-          _ = try await notes(documentId: id)
-          fetchedNotes += 1
-        } catch {
-          absorb(error)
-        }
-        done += 1
-        reportThrottled()
-      }
-      return false
     }
 
     Logger.sync.info(
@@ -1751,6 +1765,23 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private func refreshMetadata(documentId: UInt) async throws -> Metadata {
     try await database.refreshFileMetadata(serverID: serverID, documentID: documentId) {
       [wrapped] in try await wrapped.metadata(documentId: documentId)
+    }
+  }
+
+  /// One request of the detail fill, written through; the error if it failed.
+  private func fetchDetail(_ fetch: DetailFetch) async -> (any Error)? {
+    do {
+      switch fetch {
+      case .metadata(let id):
+        // Not `metadata(documentId:)`: its fallback would serve the outdated
+        // row this is replacing and count a failed request as fetched.
+        _ = try await refreshMetadata(documentId: id)
+      case .notes(let id):
+        _ = try await notes(documentId: id)
+      }
+      return nil
+    } catch {
+      return error
     }
   }
 

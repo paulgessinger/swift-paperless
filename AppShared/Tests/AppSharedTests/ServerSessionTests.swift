@@ -22,6 +22,7 @@ struct ServerSessionTests {
     let tags = try await harness.database.elements(TagRecord.self, serverID: harness.serverID)
     #expect(tags.map(\.id) == [created.id])
     #expect(harness.session.syncFailures.isEmpty)
+    await harness.fileDownloader?.invalidate()
   }
 
   @Test("A ui_settings failure is recorded on its own site and does not fail the element sync")
@@ -39,17 +40,19 @@ struct ServerSessionTests {
 
   // Driven through the database rather than `reconcileDocuments()`, so the
   // stamp is a known value.
-  @Test("The store shows the persisted last-refreshed stamp, and follows it when it changes")
+  @Test(
+    "The offline status shows the persisted last-refreshed stamp, and follows it when it changes")
   func storeShowsPersistedLastRefreshed() async throws {
     let harness = try await StoreHarness.make()
-    #expect(harness.store.lastRefreshedAt == nil)
+    let status = try #require(harness.store.makeOfflineStatus())
+    #expect(status.lastRefreshedAt == nil)
 
     let first = Date(timeIntervalSince1970: 1_700_000_000)
     try await harness.database.setLastRefreshedAt(first, serverID: harness.serverID)
-    try await waitUntil({ harness.store.lastRefreshedAt == first }, "store never saw the stamp")
+    try await waitUntil({ status.lastRefreshedAt == first }, "status never saw the stamp")
 
     try await harness.database.clearCache()
-    try await waitUntil({ harness.store.lastRefreshedAt == nil }, "store never saw the reset")
+    try await waitUntil({ status.lastRefreshedAt == nil }, "status never saw the reset")
   }
 
   // MARK: - Background work
@@ -153,10 +156,16 @@ struct ServerSessionTests {
   /// A harness whose server fills its entire library, with one document whose
   /// details are still missing, so a completed library fill is followed by a
   /// detail fill.
-  private func fillingHarness(_ traffic: Traffic) async throws -> (
+  private func fillingHarness(
+    _ traffic: Traffic,
+    fileDownloader: ((Database, UUID, any Repository) -> LibraryFileDownloader)? = nil
+  ) async throws -> (
     StoreHarness, StoredConnection
   ) {
-    let harness = try await StoreHarness.make(documents: [document(1)])
+    var document = document(1)
+    document.modified = Date(timeIntervalSince1970: 500)
+    let harness = try await StoreHarness.make(
+      documents: [document], fileDownloader: fileDownloader)
     try harness.database.upsertConnection(
       ConnectionRecord(
         id: harness.serverID,
@@ -180,6 +189,52 @@ struct ServerSessionTests {
 
     #expect(traffic.calls.contains("fetch"))
     #expect(traffic.calls.contains("notes") || traffic.calls.contains("metadata"))
+  }
+
+  @Test("A full pass queues the files after the detail fill and records the step")
+  func passQueuesTheFilesAfterTheDetailFill() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let traffic = Traffic()
+    let (harness, stored) = try await fillingHarness(
+      traffic, fileDownloader: StoreHarness.stubbedDownloader)
+    traffic.released = true
+
+    await SyncRunContext.$current.withValue(SyncRunContext(trigger: .sweep)) {
+      await harness.session.sync(stored: stored, phases: [.fill, .files])
+    }
+
+    let rows = try await closedRows(harness.database, count: 4)
+    #expect(rows.map(\.step) == ["fileFill", "detailFill", "libraryFill", "connection"])
+    #expect(rows.first?.outcome == "ok")
+    #expect(rows.first?.succeeded == 1)
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 1 }, "the file was never requested")
+    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/1/download")
+    #expect(harness.session.syncActivities.map(\.stage) == [.fileDownload])
+    #expect(harness.session.syncFailures.isEmpty)
+    await harness.fileDownloader?.invalidate()
+  }
+
+  @Test("A session without a downloader, or a Recently browsed server, skips the files")
+  func filesStepSkipsWithoutADownloaderOrTheMode() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let traffic = Traffic()
+    let (harness, stored) = try await fillingHarness(traffic)
+    traffic.released = true
+    await harness.session.sync(stored: stored, phases: [.files])
+    let rows = try await closedRows(harness.database, count: 1)
+    #expect(rows.map(\.step) == ["connection"])
+
+    let browsing = try await StoreHarness.make(
+      documents: [document(1)], fileDownloader: StoreHarness.stubbedDownloader)
+    #expect(await browsing.session.fillFiles())
+    #expect(StubDownloadURLProtocol.requests.isEmpty)
+    #expect(browsing.session.syncActivities.isEmpty)
+    await browsing.fileDownloader?.invalidate()
   }
 
   @Test("A pass called off during the library fill never starts the detail fill")

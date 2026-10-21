@@ -191,6 +191,34 @@ struct DebugMenuView: View {
           }
         }
         .disabled(isReclaiming)
+
+        LabeledContent {
+          Text(
+            verbatim: store.libraryFilesPausedLowStorage
+              ? "paused: low storage" : "\(store.libraryFilesInFlight)"
+          )
+          .monospacedDigit()
+        } label: {
+          Text(verbatim: "Library downloads in flight")
+        }
+        Button {
+          Task { await store.refillLibraryFiles() }
+        } label: {
+          Label {
+            Text(verbatim: "Refill library downloads")
+          } icon: {
+            Image(systemName: "arrow.down.doc")
+          }
+        }
+        Button(role: .destructive) {
+          Task { await store.cancelLibraryDownloads() }
+        } label: {
+          Label {
+            Text(verbatim: "Cancel library downloads")
+          } icon: {
+            Image(systemName: "xmark.circle")
+          }
+        }
       } header: {
         Text(.settings(.localStorage))
       } footer: {

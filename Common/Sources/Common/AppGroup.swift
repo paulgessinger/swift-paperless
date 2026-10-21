@@ -36,8 +36,17 @@ public enum AppGroup {
     }
 
     /// Downloaded document files and thumbnails, by server and version: the
-    /// ``ContentStore``.
+    /// ``ContentStore``. Under Application Support, not Caches: iOS purges
+    /// Caches under storage pressure, and the library's files must stay.
     public static func contentStore(in root: URL) -> URL {
+      root
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Application Support", isDirectory: true)
+        .appendingPathComponent("ContentStore", isDirectory: true)
+    }
+
+    /// Where builds before the library download kept the store; moved once.
+    public static func legacyContentStore(in root: URL) -> URL {
       root.appendingPathComponent("Caches/ContentStore", isDirectory: true)
     }
 

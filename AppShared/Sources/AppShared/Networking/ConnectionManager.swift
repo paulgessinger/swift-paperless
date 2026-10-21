@@ -570,6 +570,10 @@ public final class ConnectionManager {
     }
   }
 
+  /// Called after a downgrade's reclaim landed, with the server, for what
+  /// lives outside the database: its downloads and files.
+  public var onDowngrade: (@MainActor (UUID) async -> Void)?
+
   public func setOfflineBrowsingMode(_ mode: OfflineBrowsingMode) {
     guard let activeConnectionId, var stored = connections[activeConnectionId] else {
       Logger.api.warning("Tried to set offline browsing mode but have no active connection")
@@ -614,6 +618,7 @@ public final class ConnectionManager {
   /// `Database` is `Sendable`, so a detached task is enough.
   private func runDowngradeGC(serverID: UUID) {
     let database = database
+    let onDowngrade = onDowngrade
     Task.detached(priority: .utility) {
       do {
         let removed = try await database.reclaimAfterDowngrade(
@@ -621,6 +626,7 @@ public final class ConnectionManager {
           defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
           keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
         Logger.api.info("Downgrade GC removed \(removed) unreferenced documents")
+        await onDowngrade?(serverID)
       } catch {
         Logger.api.error("Downgrade GC failed: \(error)")
       }

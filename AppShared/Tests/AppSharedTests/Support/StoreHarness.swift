@@ -27,18 +27,42 @@ typealias Document = DataModel.Document
 struct StoreHarness {
   nonisolated static let user = User(id: 1, isSuperUser: false, username: "tester")
 
+  /// A downloader over a stubbed session, for an *Entire library* server with
+  /// a store in a temporary directory. The caller sets the stub's responder.
+  static func stubbedDownloader(
+    database: Database, serverID: UUID, repository: any Repository
+  ) -> LibraryFileDownloader {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("StoreHarness-files-\(UUID().uuidString)")
+    try! FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let store = try! ContentStore(root: root)
+    return LibraryFileDownloader(
+      database: database, store: store, index: ContentReclaimer(database: database, store: store),
+      suspension: DatabaseSuspensionController(),
+      servers: { id in
+        id == serverID
+          ? LibraryDownloadServer(
+            syncOverCellular: false, isEntireLibrary: true, repository: { repository }) : nil
+      },
+      allServerIDs: { [serverID] }, identityName: { _ in nil },
+      availableCapacity: { _ in 10_000_000_000 }, window: 4, displayInterval: .zero,
+      makeSession: StubDownloadURLProtocol.makeSession)
+  }
+
   let serverID: UUID
   let database: Database
   let transient: TransientRepository
   let session: ServerSession
   let store: DocumentStore
+  let fileDownloader: LibraryFileDownloader?
 
   static func make(
     tags: [Tag] = [],
     documents: [Document] = [],
     permissions: UserPermissions = .full,
     settings: UISettingsSettings = UISettingsSettings(),
-    suspension: DatabaseSuspensionController? = nil
+    suspension: DatabaseSuspensionController? = nil,
+    fileDownloader: ((Database, UUID, any Repository) -> LibraryFileDownloader)? = nil
   ) async throws -> StoreHarness {
     let serverID = UUID()
     let database = try Database.seeded(
@@ -48,7 +72,10 @@ struct StoreHarness {
       uiSettings: UISettings(user: user, settings: settings, permissions: permissions))
     let transient = TransientRepository()
     let caching = CachingRepository(wrapping: transient, database: database, serverID: serverID)
-    let session = ServerSession(serverID: serverID, repository: caching, suspension: suspension)
+    let downloader = fileDownloader?(database, serverID, caching)
+    let session = ServerSession(
+      serverID: serverID, repository: caching, suspension: suspension,
+      fileDownloader: downloader)
     let store = DocumentStore(session: session)
     try await waitUntil({ store.permissionsKnown }, "projection never hydrated")
     if !tags.isEmpty {
@@ -56,7 +83,7 @@ struct StoreHarness {
     }
     return StoreHarness(
       serverID: serverID, database: database, transient: transient, session: session,
-      store: store)
+      store: store, fileDownloader: downloader)
   }
 }
 
