@@ -64,8 +64,7 @@ struct DateEditSheet: View {
             if !suggestedDates.isEmpty {
               SuggestionsRow {
                 ForEach(suggestedDates, id: \.self) { suggestedDate in
-                  SuggestionPill(text: suggestedDate.formatted(date: .abbreviated, time: .omitted))
-                  {
+                  SuggestionPill(text: suggestedDate.formatted(date: .numeric, time: .omitted)) {
                     date = suggestedDate
                   }
                 }

@@ -53,7 +53,7 @@ struct DocumentMetadataView: View {
         Section {
           LabeledContent(.documentMetadata(.modifiedDate)) {
             if let modified = document.modified {
-              Text(modified, style: .date)
+              Text(modified.formatted(date: .numeric, time: .omitted))
             } else {
               Text(.app(.none))
             }
@@ -61,7 +61,7 @@ struct DocumentMetadataView: View {
 
           LabeledContent(.documentMetadata(.addedDate)) {
             if let added = document.added {
-              Text(added, style: .date)
+              Text(added.formatted(date: .numeric, time: .omitted))
             } else {
               Text(.app(.none))
             }

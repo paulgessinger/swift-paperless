@@ -111,7 +111,7 @@ public struct DocumentCell: View {
     let formatter = DateFormatter()
     formatter.locale = Locale.autoupdatingCurrent
     formatter.doesRelativeDateFormatting = false
-    formatter.dateStyle = .medium
+    formatter.dateStyle = .short
     formatter.timeStyle = .none
     return formatter
   }()
