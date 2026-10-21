@@ -16,7 +16,10 @@ import os
 
 /// What the downloader needs to know about a server to queue its files.
 public struct LibraryDownloadServer: Sendable {
+  /// Whether its downloads may use cellular data; Low Data Mode always stops
+  /// them.
   public let syncOverCellular: Bool
+  /// Whether its whole library is downloaded.
   public let isEntireLibrary: Bool
   /// Builds the authenticated requests. Only a refill with something to
   /// queue asks for it: preparing it can build the server's stack.
@@ -74,6 +77,7 @@ public final class LibraryFileDownloader {
   /// Tasks in flight per server. Throttled for display: eight fast downloads
   /// change it many times a second.
   public private(set) var inFlight: [UUID: Int] = [:]
+  /// Whether the last refill stopped because free space is below the floor.
   public private(set) var pausedLowStorage = false
 
   /// A download that failed, for the server's failure ledger.
@@ -86,19 +90,34 @@ public final class LibraryFileDownloader {
     set { completion.handler = newValue }
   }
 
+  /// What is missing: the candidates a refill queues.
   private let database: Database
+  /// Where finished files go, moved in by the delegate.
   private let store: ContentStore
+  /// Where a finished file is recorded.
   private let index: any FileIndex
+  /// Keeps the database open while an event is handled in the background.
   private let suspension: DatabaseSuspensionController
+  /// A server's mode, cellular policy and repository, `nil` once it is gone.
   private let servers: ServerLookup
+  /// The servers the launch refill covers.
   private let allServerIDs: @MainActor () -> [UUID]
+  /// Free space on the store's volume, checked against the floor.
   private let availableCapacity: @Sendable (URL) -> Int64?
+  /// How many downloads a server keeps in flight.
   private let window: Int
+  /// How long a refill waits for a server's repository.
   private let repositoryTimeout: Duration
+  /// Coalesces ``inFlight`` updates to the screen's cadence.
   private let display: UpdateThrottle
+  /// iOS's handler for a background launch's events, shared with the
+  /// delegate's deadline.
   private let completion: BackgroundEventsCompletion
+  /// Feeds the loop: the delegate's completions and the callers' requests.
   private let events: AsyncStream<Event>.Continuation
+  /// The session's delegate, which passes its events to ``events``.
   private let delegate: Delegate
+  /// The background session the downloads run on.
   private let session: URLSession
 
   /// The tasks in flight: taken from the session when the loop starts, then
@@ -109,6 +128,7 @@ public final class LibraryFileDownloader {
   /// Servers with a task filed since their last refill. Refilled together
   /// once the events queued behind the first are handled.
   @ObservationIgnored private var needsRefill: Set<UUID> = []
+  /// Set once a test shut the session down: refills then queue nothing.
   @ObservationIgnored private var isInvalidated = false
 
   /// - Parameters:
@@ -410,10 +430,15 @@ public final class LibraryFileDownloader {
   /// file into the store at once, since iOS deletes it when the callback
   /// returns, and passes every event on to the loop in order.
   private final class Delegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+    /// Where a finished file is moved, inside its callback.
     private let store: ContentStore
+    /// The loop's events, yielded in the order the session delivers them.
     private let events: AsyncStream<Event>.Continuation
+    /// iOS's handler, for the deadline to call.
     private let completion: BackgroundEventsCompletion
+    /// How long after the last event the deadline calls the handler.
     private let eventsDeadline: Duration
+    /// A server's client-certificate identity, for its challenges.
     private let identityName: @Sendable (UUID) -> String?
     /// Files moved into the store, by task, until the task completes. Only
     /// touched on the delegate queue.
