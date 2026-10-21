@@ -16,24 +16,34 @@ import os
 
 /// What the downloader needs to know about a server to queue its files.
 public struct LibraryDownloadServer: Sendable {
-  /// Builds the authenticated requests.
-  public let repository: any Repository
   public let syncOverCellular: Bool
   public let isEntireLibrary: Bool
+  /// Builds the authenticated requests. Only a refill with something to
+  /// queue asks for it: preparing it can build the server's stack.
+  public let repository: @MainActor @Sendable () async throws -> any Repository
 
-  public init(repository: any Repository, syncOverCellular: Bool, isEntireLibrary: Bool) {
-    self.repository = repository
+  public init(
+    syncOverCellular: Bool, isEntireLibrary: Bool,
+    repository: @escaping @MainActor @Sendable () async throws -> any Repository
+  ) {
     self.syncOverCellular = syncOverCellular
     self.isEntireLibrary = isEntireLibrary
+    self.repository = repository
   }
 }
 
 /// Keeps a window of archive downloads in flight for every *Entire library*
-/// server. The index is the source of truth: a refill asks the database for
-/// the newest documents whose archive is missing or outdated, skips the ones
-/// the session already holds, and hands iOS the rest, up to the window. A
-/// finished task's file is moved into the store inside the callback, its row
-/// is recorded, and the window is refilled.
+/// server. The index is the source of truth for what is missing: a refill
+/// asks the database for the newest documents whose archive is missing or
+/// outdated, leaves out the ones in flight, and hands iOS the rest, up to the
+/// window.
+///
+/// Everything happens as events through one loop on the main actor, in the
+/// order they arrive: the session's completions, from its serial delegate
+/// queue, and the refills and cancels callers ask for. So no refill overlaps
+/// another or a completion, a cancel returns after the completions before
+/// it, and the end of a background launch's events is handled after all of
+/// them.
 ///
 /// One instance per app process; the Share Extension never builds one, so
 /// only the app owns the session's identifier.
@@ -41,6 +51,14 @@ public struct LibraryDownloadServer: Sendable {
 @Observable
 public final class LibraryFileDownloader {
   public nonisolated static let sessionIdentifier = "com.paulgessinger.swift-paperless.files"
+
+  /// How long a refill waits for a server's repository. Past it, the refill
+  /// gives up, so the events behind it are not held up.
+  public static let repositoryTimeout = Duration.seconds(10)
+
+  /// How long after the session's last event iOS's handler is called, even
+  /// if the loop has not got to it: iOS allows about 30 seconds.
+  public static let backgroundEventsDeadline = Duration.seconds(20)
 
   public typealias ServerLookup = @MainActor (UUID) async throws -> LibraryDownloadServer?
 
@@ -53,27 +71,20 @@ public final class LibraryFileDownloader {
     case pausedLowStorage
   }
 
-  /// Tasks in flight per server, from the session's own list. Throttled for
-  /// display: eight fast downloads change it many times a second.
+  /// Tasks in flight per server. Throttled for display: eight fast downloads
+  /// change it many times a second.
   public private(set) var inFlight: [UUID: Int] = [:]
   public private(set) var pausedLowStorage = false
-  /// The download row per server while its tasks run, throttled with
-  /// ``inFlight``.
-  public private(set) var activities: [UUID: SyncActivity] = [:]
 
-  /// What ``inFlight`` and ``activities`` show, as the downloader tracks it.
-  @ObservationIgnored private var running: [UUID: Int] = [:] {
-    didSet { publish() }
-  }
-  @ObservationIgnored private var rows: [UUID: SyncActivity] = [:] {
-    didSet { publish() }
-  }
-  @ObservationIgnored private let display: UpdateThrottle
   /// A download that failed, for the server's failure ledger.
-  public var onFailure: (@MainActor (UUID, any Error) -> Void)?
+  @ObservationIgnored public var onFailure: (@MainActor (UUID, any Error) -> Void)?
+
   /// Set by `AppDelegate` when iOS relaunched the app for the session's
-  /// events; called once they are handled.
-  public var backgroundEventsCompletion: (() -> Void)?
+  /// events; called once, when they are handled or their time runs short.
+  public var backgroundEventsCompletion: (() -> Void)? {
+    get { completion.handler }
+    set { completion.handler = newValue }
+  }
 
   private let database: Database
   private let store: ContentStore
@@ -83,16 +94,22 @@ public final class LibraryFileDownloader {
   private let allServerIDs: @MainActor () -> [UUID]
   private let availableCapacity: @Sendable (URL) -> Int64?
   private let window: Int
-  private let session: URLSession
+  private let repositoryTimeout: Duration
+  private let display: UpdateThrottle
+  private let completion: BackgroundEventsCompletion
+  private let events: AsyncStream<Event>.Continuation
   private let delegate: Delegate
+  private let session: URLSession
+
+  /// The tasks in flight: taken from the session when the loop starts, then
+  /// kept by the loop as it queues and files them.
+  @ObservationIgnored private var tasks: [Int: (task: URLSessionTask, id: TaskID)] = [:]
   /// Documents whose download failed, left alone for an hour.
-  private var recentlyFailed: [ContentStore.Key: Date] = [:]
-  /// One refill at a time per server, whoever asks: two refills reading the
-  /// same in-flight tasks would both queue the same documents.
-  private var refills: [UUID: TaskSlot<RefillOutcome, any Error>] = [:]
-  /// Servers whose refill was asked for while one was running; it runs again.
-  private var refillRequested: Set<UUID> = []
-  private var isInvalidated = false
+  @ObservationIgnored private var recentlyFailed: [ContentStore.Key: Date] = [:]
+  /// Servers with a task filed since their last refill. Refilled together
+  /// once the events queued behind the first are handled.
+  @ObservationIgnored private var needsRefill: Set<UUID> = []
+  @ObservationIgnored private var isInvalidated = false
 
   /// - Parameters:
   ///   - servers: the server to queue for, `nil` for one that is gone.
@@ -109,6 +126,8 @@ public final class LibraryFileDownloader {
     availableCapacity: @escaping @Sendable (URL) -> Int64? = LibraryFileDownloader.volumeCapacity,
     window: Int = StoragePolicy.libraryDownloadWindow,
     displayInterval: Duration = UpdateThrottle.displayInterval,
+    repositoryTimeout: Duration = LibraryFileDownloader.repositoryTimeout,
+    backgroundEventsDeadline: Duration = LibraryFileDownloader.backgroundEventsDeadline,
     makeSession: (URLSessionDownloadDelegate) -> URLSession = LibraryFileDownloader
       .makeBackgroundSession
   ) {
@@ -120,11 +139,25 @@ public final class LibraryFileDownloader {
     self.allServerIDs = allServerIDs
     self.availableCapacity = availableCapacity
     self.window = window
+    self.repositoryTimeout = repositoryTimeout
     self.display = UpdateThrottle(interval: displayInterval)
-    let delegate = Delegate(store: store, identityName: identityName)
+    let completion = BackgroundEventsCompletion()
+    self.completion = completion
+    let (stream, events) = AsyncStream.makeStream(of: Event.self)
+    self.events = events
+    // Before the session exists, so it comes before any of its events.
+    events.yield(.start)
+    let delegate = Delegate(
+      store: store, events: events, completion: completion,
+      eventsDeadline: backgroundEventsDeadline, identityName: identityName)
     self.delegate = delegate
     self.session = makeSession(delegate)
-    delegate.owner = self
+    Task { @MainActor [weak self] in
+      for await event in stream {
+        guard let self else { break }
+        await self.handle(event)
+      }
+    }
   }
 
   /// `URLSessionConfiguration.background`: the system runs the tasks while
@@ -145,75 +178,14 @@ public final class LibraryFileDownloader {
       .volumeAvailableCapacityForImportantUsage
   }
 
-  // MARK: - Queueing
+  // MARK: - Requests
 
   /// Top the server's window up. Returns once the tasks are queued; the
-  /// downloads run on the session. A refill asked for while one runs joins
-  /// it, and that one runs once more, so it sees the tasks the first queued.
+  /// downloads run on the session.
   @discardableResult
   public func refill(serverID: UUID) async throws -> RefillOutcome {
-    let slot = refills[serverID] ?? TaskSlot()
-    refills[serverID] = slot
-    if slot.isOccupied {
-      refillRequested.insert(serverID)
-    }
-    let operation: @MainActor () async throws -> RefillOutcome = {
-      var outcome: RefillOutcome
-      repeat {
-        self.refillRequested.remove(serverID)
-        outcome = try await self.performRefill(serverID: serverID)
-      } while self.refillRequested.contains(serverID)
-      return outcome
-    }
-    var outcome = try await slot.joinOrStart(operation)
-    // Joined a refill that had already finished: the request is still
-    // standing, and the slot is free now.
-    while refillRequested.contains(serverID) {
-      outcome = try await slot.joinOrStart(operation)
-    }
-    return outcome
-  }
-
-  private func performRefill(serverID: UUID) async throws -> RefillOutcome {
-    guard !isInvalidated, let server = try await servers(serverID), server.isEntireLibrary else {
-      rows[serverID] = nil
-      return .complete
-    }
-    let inFlightDocuments = await refreshInFlight()[serverID] ?? []
-    defer { Task { await publishActivity(serverID) } }
-
-    if let free = availableCapacity(store.root),
-      free < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
-    {
-      if !pausedLowStorage { pausedLowStorage = true }
-      return .pausedLowStorage
-    }
-    if pausedLowStorage { pausedLowStorage = false }
-
-    let room = window - inFlightDocuments.count
-    guard room > 0 else { return .queued(0) }
-    let now = Date()
-    recentlyFailed = recentlyFailed.filter { now.timeIntervalSince($0.value) < 3600 }
-    let backedOff = Set(recentlyFailed.keys.filter { $0.serverID == serverID }.map(\.versionID))
-    let candidates = try await database.documentsNeedingArchive(
-      serverID: serverID, excluding: inFlightDocuments, limit: room + backedOff.count)
-    var queued = 0
-    for candidate in candidates where queued < room {
-      let key = ContentStore.Key(
-        serverID: serverID, versionID: candidate.versionID, kind: .archive)
-      guard !backedOff.contains(key.versionID) else { continue }
-      var request = try server.repository.downloadRequest(
-        documentID: candidate.documentID, version: candidate.versionQueryID)
-      request.allowsExpensiveNetworkAccess = server.syncOverCellular
-      request.allowsConstrainedNetworkAccess = false
-      let task = session.downloadTask(with: request)
-      task.taskDescription = LibraryFileTaskID.make(
-        key: key, documentID: candidate.documentID, modified: candidate.modified)
-      task.resume()
-      queued += 1
-    }
-    running[serverID, default: 0] += queued
-    return queued > 0 ? .queued(queued) : .complete
+    guard !isInvalidated else { return .complete }
+    return try await withCheckedThrowingContinuation { events.yield(.refill(serverID, $0)) }
   }
 
   /// Top every server's window up, after iOS relaunched the app for the
@@ -229,29 +201,27 @@ public final class LibraryFileDownloader {
   }
 
   /// Call off a server's downloads: it was removed, or left *Entire library*.
-  /// Returns once the completions already handed over are filed, so a caller
-  /// reclaiming the server's files runs after them; a completion handed over
-  /// later finds the server no longer wants the file and drops it.
+  /// Returns once the completions that arrived before it are filed, so a
+  /// caller reclaiming the server's files runs after them; a completion that
+  /// arrives later finds the server no longer wants the file and drops it.
   public func cancel(serverID: UUID) async {
-    for (task, id) in await describedTasks() where id.key.serverID == serverID {
-      task.cancel()
-    }
-    for handoff in delegate.pendingHandoffs(serverID: serverID) {
-      await handoff.value
-    }
-    running[serverID] = nil
-    rows[serverID] = nil
+    await withCheckedContinuation { events.yield(.cancel(serverID, $0)) }
   }
 
   public func cancelAll() async {
-    for (task, _) in await describedTasks() {
-      task.cancel()
-    }
-    for handoff in delegate.pendingHandoffs() {
-      await handoff.value
-    }
-    running = [:]
-    rows = [:]
+    await withCheckedContinuation { events.yield(.cancel(nil, $0)) }
+  }
+
+  /// Call iOS's handler now: its background time is running out.
+  public func finishBackgroundEvents() {
+    completion.finish()
+  }
+
+  /// What the delegate does when the session's events are all delivered,
+  /// waiting until the loop has handled them. For tests.
+  func backgroundEventsDidFinish() async {
+    delegate.startEventsDeadline()
+    await withCheckedContinuation { events.yield(.eventsDone($0)) }
   }
 
   /// Shut the session down, cancelling its tasks, and wait until it lists
@@ -266,167 +236,211 @@ public final class LibraryFileDownloader {
     try? await Task.sleep(for: .milliseconds(20))
   }
 
-  // MARK: - Completions
+  // MARK: - The loop
 
-  /// The session's tasks that are this downloader's, with their ids. A task
-  /// the delegate saw complete can still be listed as running for a moment;
-  /// it is left out so the window it held is refilled.
-  private func describedTasks() async -> [(URLSessionTask, LibraryFileTaskID.Parsed)] {
-    let tasks = await session.allTasks
-    let finished = delegate.pruneFinished(keeping: Set(tasks.map(\.taskIdentifier)))
-    return tasks.compactMap { task in
-      guard task.state != .canceling, task.state != .completed,
-        !finished.contains(task.taskIdentifier),
-        let id = task.taskDescription.flatMap(LibraryFileTaskID.parse)
-      else { return nil }
-      return (task, id)
+  fileprivate typealias TaskID = (key: ContentStore.Key, documentID: UInt, modified: Date)
+
+  fileprivate enum Event: Sendable {
+    /// First, once: the tasks the session already holds.
+    case start
+    /// A task ended: `size` when its file is in the store, else `error`.
+    case finished(task: Int, id: TaskID, size: Int64?, error: (any Error)?)
+    case refill(UUID, CheckedContinuation<RefillOutcome, any Error>)
+    /// `nil` calls off every server's.
+    case cancel(UUID?, CheckedContinuation<Void, Never>)
+    /// Refill the servers in ``needsRefill``.
+    case refillFiled
+    /// iOS delivered every event it relaunched the app for.
+    case eventsDone(CheckedContinuation<Void, Never>?)
+  }
+
+  private func handle(_ event: Event) async {
+    switch event {
+    case .start:
+      for task in await session.allTasks
+      where task.state == .running || task.state == .suspended {
+        if let id = task.taskDescription.flatMap(LibraryFileTaskID.parse) {
+          tasks[task.taskIdentifier] = (task, id)
+        }
+      }
+      publish()
+    case .finished(let task, let id, let size, let error):
+      await suspension.performBackgroundWork {
+        await file(task: task, id: id, size: size, error: error)
+      }
+    case .refill(let serverID, let reply):
+      do {
+        let outcome = try await suspension.performBackgroundWork {
+          try await performRefill(serverID: serverID)
+        }
+        reply.resume(returning: outcome)
+      } catch {
+        reply.resume(throwing: error)
+      }
+    case .cancel(let serverID, let reply):
+      for (identifier, entry) in tasks where serverID == nil || entry.id.key.serverID == serverID {
+        entry.task.cancel()
+        tasks[identifier] = nil
+      }
+      publish()
+      reply.resume()
+    case .refillFiled:
+      await refillFiled()
+    case .eventsDone(let reply):
+      // Queued before iOS suspends the app again, so the window keeps going.
+      await refillFiled()
+      completion.finish()
+      reply?.resume()
     }
   }
 
-  /// Re-read the in-flight documents per server from the session.
-  private func refreshInFlight() async -> [UUID: Set<UInt>] {
-    var documents: [UUID: Set<UInt>] = [:]
-    for (_, id) in await describedTasks() {
-      documents[id.key.serverID, default: []].insert(id.documentID)
-    }
-    running = documents.mapValues(\.count)
-    return documents
-  }
-
-  private func publish() {
-    display.run { [weak self] in
-      guard let self else { return }
-      if inFlight != running { inFlight = running }
-      if activities != rows { activities = rows }
-    }
-  }
-
-  private func publishActivity(_ serverID: UUID) async {
-    guard (running[serverID] ?? 0) > 0,
-      let progress = try? await database.libraryFileProgress(serverID: serverID)
-    else {
-      rows[serverID] = nil
-      return
-    }
-    rows[serverID] = SyncActivity(
-      stage: .fileDownload, completed: progress.downloadedFiles, total: progress.totalDocuments)
-  }
-
-  /// A task's file is in the store; record it, then refill. A server that
-  /// no longer wants it, having left *Entire library* or gone, gets the file
-  /// dropped instead: its reclaim may already have run.
-  fileprivate func didStore(_ id: LibraryFileTaskID.Parsed, size: Int64) async {
-    await suspension.performBackgroundWork {
-      guard let server = try? await servers(id.key.serverID), server.isEntireLibrary else {
+  /// File a finished task: record its file, or drop one its server no longer
+  /// wants (the server left *Entire library*, or is gone, and its reclaim
+  /// may already have run), or note the failure. Its server is refilled once
+  /// the events already queued are handled.
+  private func file(task: Int, id: TaskID, size: Int64?, error: (any Error)?) async {
+    tasks[task] = nil
+    publish()
+    let serverID = id.key.serverID
+    if let size {
+      if await isWanted(id) {
+        do {
+          try await index.recordStore(
+            id.key, documentID: id.documentID, size: size, modified: id.modified,
+            checksum: nil, storedAt: Date())
+        } catch {
+          // The repair walk removes a rowless file after an hour and the
+          // next pass downloads it again.
+          Logger.sync.error("Recording a library file failed: \(error)")
+        }
+      } else {
         do {
           try store.delete(id.key)
         } catch {
           // Unindexed: the repair walk removes it after an hour.
           Logger.sync.error("Dropping an unwanted library file failed: \(error)")
         }
-        return
       }
-      do {
-        try await index.recordStore(
-          id.key, documentID: id.documentID, size: size, modified: id.modified, checksum: nil,
-          storedAt: Date())
-      } catch {
-        // The repair walk removes a rowless file after an hour and the next
-        // pass downloads it again.
-        Logger.sync.error("Recording a library file failed: \(error)")
-      }
-    }
-    await didFinish(id)
-  }
-
-  fileprivate func didFail(_ id: LibraryFileTaskID.Parsed, error: any Error) async {
-    if !(error is CancellationError), (error as? URLError)?.code != .cancelled {
+    } else if let error, (error as? URLError)?.code != .cancelled {
       recentlyFailed[id.key] = Date()
-      onFailure?(id.key.serverID, error)
+      onFailure?(serverID, error)
     }
-    await didFinish(id)
+    if needsRefill.isEmpty {
+      events.yield(.refillFiled)
+    }
+    needsRefill.insert(serverID)
   }
 
-  /// The task's slot is free: refill, and return once the refill ran.
-  private func didFinish(_ id: LibraryFileTaskID.Parsed) async {
-    let serverID = id.key.serverID
-    running[serverID] = max(0, (running[serverID] ?? 1) - 1)
-    await suspension.performBackgroundWork {
+  /// Whether the file is still in its server's scope.
+  private func isWanted(_ id: TaskID) async -> Bool {
+    guard let server = try? await servers(id.key.serverID) else { return false }
+    return server.isEntireLibrary
+  }
+
+  private func refillFiled() async {
+    let serverIDs = needsRefill
+    needsRefill = []
+    for serverID in serverIDs {
       do {
-        try await refill(serverID: serverID)
+        try await suspension.performBackgroundWork {
+          _ = try await performRefill(serverID: serverID)
+        }
       } catch {
         Logger.sync.error("Library file refill failed: \(error)")
       }
     }
   }
 
-  /// Every event iOS relaunched the app for is handled; let it suspend the
-  /// app again once the completions are filed and their refills ran. The
-  /// session reports this after every task event, so each completion has
-  /// been handed over by now.
-  func backgroundEventsDidFinish() async {
-    for handoff in delegate.pendingHandoffs() {
-      await handoff.value
+  private func performRefill(serverID: UUID) async throws -> RefillOutcome {
+    guard !isInvalidated, let server = try await servers(serverID), server.isEntireLibrary else {
+      return .complete
     }
-    for slot in refills.values {
-      await slot.waitUntilIdle()
+    if let free = availableCapacity(store.root),
+      free < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
+    {
+      if !pausedLowStorage { pausedLowStorage = true }
+      return .pausedLowStorage
     }
-    let completion = backgroundEventsCompletion
-    backgroundEventsCompletion = nil
-    completion?()
+    if pausedLowStorage { pausedLowStorage = false }
+
+    let inFlightDocuments = Set(
+      tasks.values.filter { $0.id.key.serverID == serverID }.map(\.id.documentID))
+    let room = window - inFlightDocuments.count
+    guard room > 0 else { return .queued(0) }
+    let now = Date()
+    recentlyFailed = recentlyFailed.filter { now.timeIntervalSince($0.value) < 3600 }
+    let backedOff = Set(recentlyFailed.keys.filter { $0.serverID == serverID }.map(\.versionID))
+    let candidates = try await database.documentsNeedingArchive(
+      serverID: serverID, excluding: inFlightDocuments, limit: room + backedOff.count
+    ).filter { !backedOff.contains($0.versionID) }.prefix(room)
+    guard !candidates.isEmpty else { return .complete }
+
+    let repository = try await withTimeout(repositoryTimeout) { try await server.repository() }
+    for candidate in candidates {
+      let key = ContentStore.Key(
+        serverID: serverID, versionID: candidate.versionID, kind: .archive)
+      var request = try repository.downloadRequest(
+        documentID: candidate.documentID, version: candidate.versionQueryID)
+      request.allowsExpensiveNetworkAccess = server.syncOverCellular
+      request.allowsConstrainedNetworkAccess = false
+      let task = session.downloadTask(with: request)
+      task.taskDescription = LibraryFileTaskID.make(
+        key: key, documentID: candidate.documentID, modified: candidate.modified)
+      tasks[task.taskIdentifier] = (task, (key, candidate.documentID, candidate.modified))
+      task.resume()
+    }
+    publish()
+    return .queued(candidates.count)
+  }
+
+  private func publish() {
+    display.run { [weak self] in
+      guard let self else { return }
+      var counts: [UUID: Int] = [:]
+      for entry in tasks.values {
+        counts[entry.id.key.serverID, default: 0] += 1
+      }
+      if inFlight != counts { inFlight = counts }
+    }
   }
 
   // MARK: - Delegate
 
-  /// Runs on the session's queue. Moves a finished file into the store at
-  /// once, since iOS deletes it when the callback returns, and hands the
-  /// rest to the downloader on the main actor.
+  /// Runs on the session's delegate queue, which is serial. Moves a finished
+  /// file into the store at once, since iOS deletes it when the callback
+  /// returns, and passes every event on to the loop in order.
   private final class Delegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
-    weak var owner: LibraryFileDownloader?
     private let store: ContentStore
+    private let events: AsyncStream<Event>.Continuation
+    private let completion: BackgroundEventsCompletion
+    private let eventsDeadline: Duration
     private let identityName: @Sendable (UUID) -> String?
-    private let lock = NSLock()
-    /// Files moved into the store, by task, until the task completes.
+    /// Files moved into the store, by task, until the task completes. Only
+    /// touched on the delegate queue.
     private var stored: [Int: Int64] = [:]
-    /// Tasks that completed, until the session stops listing them.
-    private var finished: Set<Int> = []
-    /// The work each completion handed to the downloader, by task, until it
-    /// is done: what the background events completion and a cancel wait on.
-    private var handoffs: [Int: (serverID: UUID, task: Task<Void, Never>)] = [:]
 
-    /// The completions handed over and not yet filed, of one server or all.
-    func pendingHandoffs(serverID: UUID? = nil) -> [Task<Void, Never>] {
-      lock.withLock {
-        handoffs.values.filter { serverID == nil || $0.serverID == serverID }.map(\.task)
-      }
-    }
-
-    /// Hand a completion to the downloader, registered before this callback
-    /// returns.
-    private func handOff(
-      _ task: URLSessionTask, serverID: UUID, _ work: @escaping @MainActor () async -> Void
+    init(
+      store: ContentStore, events: AsyncStream<Event>.Continuation,
+      completion: BackgroundEventsCompletion, eventsDeadline: Duration,
+      identityName: @escaping @Sendable (UUID) -> String?
     ) {
-      let identifier = task.taskIdentifier
-      lock.withLock {
-        let handoff = Task { @MainActor in
-          await work()
-          self.lock.withLock { _ = self.handoffs.removeValue(forKey: identifier) }
-        }
-        handoffs[identifier] = (serverID, handoff)
-      }
-    }
-
-    /// Forget the finished tasks the session no longer lists; returns the rest.
-    func pruneFinished(keeping listed: Set<Int>) -> Set<Int> {
-      lock.withLock {
-        finished.formIntersection(listed)
-        return finished
-      }
-    }
-
-    init(store: ContentStore, identityName: @escaping @Sendable (UUID) -> String?) {
       self.store = store
+      self.events = events
+      self.completion = completion
+      self.eventsDeadline = eventsDeadline
       self.identityName = identityName
+    }
+
+    /// Call iOS's handler at the deadline, whether or not the loop got to
+    /// the end of the events by then.
+    func startEventsDeadline() {
+      let completion = completion
+      let deadline = eventsDeadline
+      Task { @MainActor in
+        let generation = completion.generation
+        try? await Task.sleep(for: deadline)
+        completion.finish(ifGeneration: generation)
+      }
     }
 
     func urlSession(
@@ -438,8 +452,8 @@ public final class LibraryFileDownloader {
       else { return }
       do {
         try store.store(id.key, movingFrom: location)
-        let size = store.size(of: id.key) ?? downloadTask.countOfBytesReceived
-        lock.withLock { stored[downloadTask.taskIdentifier] = size }
+        stored[downloadTask.taskIdentifier] =
+          store.size(of: id.key) ?? downloadTask.countOfBytesReceived
       } catch {
         Logger.sync.error("Storing a library file failed: \(error)")
       }
@@ -450,17 +464,9 @@ public final class LibraryFileDownloader {
     ) {
       guard let id = task.taskDescription.flatMap(LibraryFileTaskID.parse) else { return }
       NetworkTransfer.record(bytes: Int(task.countOfBytesReceived), category: .libraryFiles)
-      let size = lock.withLock {
-        finished.insert(task.taskIdentifier)
-        return stored.removeValue(forKey: task.taskIdentifier)
-      }
-      let owner = owner
-      if let size {
-        handOff(task, serverID: id.key.serverID) { await owner?.didStore(id, size: size) }
-        return
-      }
-      let failure = error ?? Self.failure(for: task.response)
-      handOff(task, serverID: id.key.serverID) { await owner?.didFail(id, error: failure) }
+      let size = stored.removeValue(forKey: task.taskIdentifier)
+      let failure = size == nil ? error ?? Self.failure(for: task.response) : nil
+      events.yield(.finished(task: task.taskIdentifier, id: id, size: size, error: failure))
     }
 
     func urlSession(
@@ -477,8 +483,8 @@ public final class LibraryFileDownloader {
     }
 
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-      let owner = owner
-      Task { @MainActor in await owner?.backgroundEventsDidFinish() }
+      startEventsDeadline()
+      events.yield(.eventsDone(nil))
     }
 
     /// The same reading of a response as the on-demand download's.
@@ -496,6 +502,68 @@ public final class LibraryFileDownloader {
   }
 }
 
-extension LibraryFileTaskID {
-  typealias Parsed = (key: ContentStore.Key, documentID: UInt, modified: Date)
+/// iOS's handler for a background launch's events, called once: by the loop
+/// once it has handled them, by the delegate's deadline, or when the
+/// background time runs out, whichever comes first.
+@MainActor
+final class BackgroundEventsCompletion {
+  /// Bumped with every new handler, so a deadline started for an earlier
+  /// launch's events leaves a later handler alone.
+  private(set) var generation = 0
+
+  var handler: (() -> Void)? {
+    didSet { generation += 1 }
+  }
+
+  func finish() {
+    let handler = handler
+    self.handler = nil
+    handler?()
+  }
+
+  func finish(ifGeneration generation: Int) {
+    guard generation == self.generation else { return }
+    finish()
+  }
+}
+
+/// Run `body`, giving up with ``TimeoutError`` after `limit`. The work is
+/// cancelled but not waited for, so a body that ignores cancellation cannot
+/// hold the caller.
+@MainActor
+private func withTimeout<T: Sendable>(
+  _ limit: Duration, _ body: @escaping @MainActor @Sendable () async throws -> T
+) async throws -> T {
+  let gate = OnceGate()
+  return try await withCheckedThrowingContinuation { continuation in
+    let work = Task { @MainActor in try await body() }
+    let timer = Task { @MainActor in
+      try await Task.sleep(for: limit)
+      if gate.open() {
+        work.cancel()
+        continuation.resume(throwing: TimeoutError())
+      }
+    }
+    Task { @MainActor in
+      let result = await work.result
+      if gate.open() {
+        timer.cancel()
+        continuation.resume(with: result)
+      }
+    }
+  }
+}
+
+struct TimeoutError: Error {}
+
+@MainActor
+private final class OnceGate {
+  private var isOpen = false
+
+  /// True the first time only.
+  func open() -> Bool {
+    guard !isOpen else { return false }
+    isOpen = true
+    return true
+  }
 }

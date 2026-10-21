@@ -87,7 +87,10 @@ struct LibraryFileDownloaderTests {
   private func makeFixture(
     documents: [UInt], isEntireLibrary: Bool = true, syncOverCellular: Bool = false,
     freeSpace: Int64 = 10_000_000_000, window: Int = 3, mode: Mode? = nil,
-    index: ((ContentReclaimer) -> any FileIndex)? = nil
+    index: ((ContentReclaimer) -> any FileIndex)? = nil,
+    repositoryLookup: (@MainActor @Sendable () async throws -> any Repository)? = nil,
+    repositoryTimeout: Duration = .seconds(10),
+    backgroundEventsDeadline: Duration = .seconds(20)
   ) throws -> Fixture {
     let database = try Database.seeded(serverID: server, documents: documents.map(doc))
     let root = FileManager.default.temporaryDirectory
@@ -104,14 +107,16 @@ struct LibraryFileDownloaderTests {
       servers: { id in
         id == serverID
           ? LibraryDownloadServer(
-            repository: repository, syncOverCellular: syncOverCellular,
-            isEntireLibrary: mode?.isEntireLibrary ?? isEntireLibrary)
+            syncOverCellular: syncOverCellular,
+            isEntireLibrary: mode?.isEntireLibrary ?? isEntireLibrary,
+            repository: { try await repositoryLookup?() ?? repository })
           : nil
       },
       allServerIDs: { [serverID] },
       identityName: { _ in nil },
       availableCapacity: { _ in freeSpace },
-      window: window, displayInterval: .zero,
+      window: window, displayInterval: .zero, repositoryTimeout: repositoryTimeout,
+      backgroundEventsDeadline: backgroundEventsDeadline,
       makeSession: StubDownloadURLProtocol.makeSession)
     downloader.onFailure = { id, error in failures.errors.append((id, error)) }
     return Fixture(
@@ -184,9 +189,6 @@ struct LibraryFileDownloaderTests {
     try await waitUntil { StubDownloadURLProtocol.requests.count == 2 }
     #expect(StubDownloadURLProtocol.requests.last?.url?.path == "/documents/2/download")
     try await waitUntil { fixture.downloader.inFlight[self.server] == 1 }
-    #expect(fixture.downloader.activities[server]?.stage == .fileDownload)
-    #expect(fixture.downloader.activities[server]?.completed == 1)
-    #expect(fixture.downloader.activities[server]?.total == 3)
     #expect(fixture.failures.errors.isEmpty)
     await fixture.downloader.invalidate()
   }
@@ -204,11 +206,10 @@ struct LibraryFileDownloaderTests {
     #expect(fixture.failures.errors.first?.0 == server)
     #expect(fixture.failures.errors.first?.1 is RequestError)
     #expect(!fixture.store.exists(key(1)))
-    try await waitUntil { fixture.downloader.inFlight[self.server] == 0 }
+    try await waitUntil { (fixture.downloader.inFlight[self.server] ?? 0) == 0 }
     // The refill after the failure does not queue it again.
     #expect(StubDownloadURLProtocol.requests.count == 1)
     #expect(try await fixture.downloader.refill(serverID: server) == .complete)
-    #expect(fixture.downloader.activities[server] == nil)
     await fixture.downloader.invalidate()
   }
 
@@ -379,9 +380,63 @@ struct LibraryFileDownloaderTests {
     mode.isEntireLibrary = false
     respond.signal()
 
-    try await waitUntil { fixture.downloader.inFlight[self.server] == 0 }
+    try await waitUntil { (fixture.downloader.inFlight[self.server] ?? 0) == 0 }
     #expect(!fixture.store.exists(key(1)))
     #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 0)
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("A background launch's handler is called at the deadline if the filing is stuck")
+  func backgroundEventsDeadline() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in (200, Data("PDF".utf8)) }
+    var holding: HoldingIndex?
+    let fixture = try makeFixture(
+      documents: [1],
+      index: { base in
+        let index = HoldingIndex(base: base)
+        holding = index
+        return index
+      },
+      backgroundEventsDeadline: .milliseconds(100))
+    let index = try #require(holding)
+    await index.hold()
+    let called = Failures()
+    fixture.downloader.backgroundEventsCompletion = {
+      called.errors.append((UUID(), CancellationError()))
+    }
+
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+    try await waitUntil { await index.isHolding }
+    let events = Task { await fixture.downloader.backgroundEventsDidFinish() }
+
+    try await waitUntil { called.errors.count == 1 }
+    await index.open()
+    await events.value
+    // Once only, though the loop got there too.
+    #expect(called.errors.count == 1)
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("A refill whose repository never comes gives up, and the events behind it go on")
+  func repositoryTimeout() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let fixture = try makeFixture(
+      documents: [1],
+      repositoryLookup: {
+        try await Task.sleep(for: .seconds(60))
+        return TransientRepository()
+      },
+      repositoryTimeout: .milliseconds(50))
+
+    await #expect(throws: TimeoutError.self) {
+      try await fixture.downloader.refill(serverID: self.server)
+    }
+    await fixture.downloader.cancel(serverID: server)
+    #expect(StubDownloadURLProtocol.requests.isEmpty)
     await fixture.downloader.invalidate()
   }
 }

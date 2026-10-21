@@ -42,7 +42,7 @@ struct StoreHarness {
       servers: { id in
         id == serverID
           ? LibraryDownloadServer(
-            repository: repository, syncOverCellular: false, isEntireLibrary: true) : nil
+            syncOverCellular: false, isEntireLibrary: true, repository: { repository }) : nil
       },
       allServerIDs: { [serverID] }, identityName: { _ in nil },
       availableCapacity: { _ in 10_000_000_000 }, window: 4, displayInterval: .zero,

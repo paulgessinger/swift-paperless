@@ -206,9 +206,11 @@ public final class ServerSession {
   /// server's progress observable at all: the engine's sweeps used to report
   /// nowhere, because the only reporter belonged to the active server's store.
   public var syncActivities: [SyncActivity] {
-    // The downloads outlive the step that queued them, so their row is the
-    // downloader's, shown for as long as its tasks run.
-    (Array(activeStages.values) + (fileDownloader?.activities[serverID].map { [$0] } ?? []))
+    // The downloads outlive the step that queued them, so their row shows
+    // for as long as the downloader has tasks in flight. The screen counts
+    // them from the file index.
+    let downloading = (fileDownloader?.inFlight[serverID] ?? 0) > 0
+    return (Array(activeStages.values) + (downloading ? [SyncActivity(stage: .fileDownload)] : []))
       .sortedForDisplay
   }
 

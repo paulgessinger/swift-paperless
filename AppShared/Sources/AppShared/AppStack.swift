@@ -74,10 +74,10 @@ public final class AppStack {
             guard let stored = connectionManager.connections[id],
               let registry = registryBox.registry
             else { return nil }
-            let repository = try await registry.session(for: id).prepareRepository(for: stored)
             return LibraryDownloadServer(
-              repository: repository, syncOverCellular: stored.syncOverCellular,
-              isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary)
+              syncOverCellular: stored.syncOverCellular,
+              isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary,
+              repository: { try await registry.session(for: id).prepareRepository(for: stored) })
           },
           allServerIDs: { [connectionManager] in
             connectionManager.connections.values
@@ -94,7 +94,12 @@ public final class AppStack {
       contentReclaimer: contentReclaimer, fileDownloader: fileDownloader)
     self.sessionRegistry = sessionRegistry
     registryBox.registry = sessionRegistry
-    suspension.onExpire = { [weak sessionRegistry] in sessionRegistry?.cancelAllWork() }
+    // Out of background time: stop the work, and let iOS have the app back
+    // even if a background launch's events are not all filed.
+    suspension.onExpire = { [weak sessionRegistry, weak fileDownloader] in
+      sessionRegistry?.cancelAllWork()
+      fileDownloader?.finishBackgroundEvents()
+    }
     // The rows went with the server; its files are only found by the walk,
     // and its downloads are called off.
     sessionRegistry.onServersRemoved = { removed in
