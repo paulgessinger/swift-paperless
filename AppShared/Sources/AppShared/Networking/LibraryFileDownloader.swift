@@ -59,8 +59,9 @@ public final class LibraryFileDownloader {
   /// gives up, so the events behind it are not held up.
   public static let repositoryTimeout = Duration.seconds(10)
 
-  /// How long after the session's last event iOS's handler is called, even
-  /// if the loop has not got to it: iOS allows about 30 seconds.
+  /// How long after iOS relaunched the app for the session's events its
+  /// handler is called, even if the loop has not handled them all: iOS
+  /// allows about 30 seconds.
   public static let backgroundEventsDeadline = Duration.seconds(20)
 
   public typealias ServerLookup = @MainActor (UUID) async throws -> LibraryDownloadServer?
@@ -84,10 +85,10 @@ public final class LibraryFileDownloader {
   @ObservationIgnored public var onFailure: (@MainActor (UUID, any Error) -> Void)?
 
   /// Set by `AppDelegate` when iOS relaunched the app for the session's
-  /// events; called once, when they are handled or their time runs short.
-  public var backgroundEventsCompletion: (() -> Void)? {
-    get { completion.handler }
-    set { completion.handler = newValue }
+  /// events. Called once: when the loop has handled them, at the deadline,
+  /// or when the background time runs out, whichever comes first.
+  @ObservationIgnored public var backgroundEventsCompletion: (() -> Void)? {
+    didSet { startEventsDeadline() }
   }
 
   /// What is missing: the candidates a refill queues.
@@ -110,9 +111,8 @@ public final class LibraryFileDownloader {
   private let repositoryTimeout: Duration
   /// Coalesces ``inFlight`` updates to the screen's cadence.
   private let display: UpdateThrottle
-  /// iOS's handler for a background launch's events, shared with the
-  /// delegate's deadline.
-  private let completion: BackgroundEventsCompletion
+  /// How long after a handler is set it is called regardless.
+  private let backgroundEventsDeadline: Duration
   /// Feeds the loop: the delegate's completions and the callers' requests.
   private let events: AsyncStream<Event>.Continuation
   /// The session's delegate, which passes its events to ``events``.
@@ -161,15 +161,12 @@ public final class LibraryFileDownloader {
     self.window = window
     self.repositoryTimeout = repositoryTimeout
     self.display = UpdateThrottle(interval: displayInterval)
-    let completion = BackgroundEventsCompletion()
-    self.completion = completion
+    self.backgroundEventsDeadline = backgroundEventsDeadline
     let (stream, events) = AsyncStream.makeStream(of: Event.self)
     self.events = events
     // Before the session exists, so it comes before any of its events.
     events.yield(.start)
-    let delegate = Delegate(
-      store: store, events: events, completion: completion,
-      eventsDeadline: backgroundEventsDeadline, identityName: identityName)
+    let delegate = Delegate(store: store, events: events, identityName: identityName)
     self.delegate = delegate
     self.session = makeSession(delegate)
     Task { @MainActor [weak self] in
@@ -232,16 +229,32 @@ public final class LibraryFileDownloader {
     await withCheckedContinuation { events.yield(.cancel(nil, $0)) }
   }
 
-  /// Call iOS's handler now: its background time is running out.
+  /// Call iOS's handler now, if there is one.
   public func finishBackgroundEvents() {
-    completion.finish()
+    let handler = backgroundEventsCompletion
+    backgroundEventsCompletion = nil
+    handler?()
   }
 
   /// What the delegate does when the session's events are all delivered,
   /// waiting until the loop has handled them. For tests.
   func backgroundEventsDidFinish() async {
-    delegate.startEventsDeadline()
     await withCheckedContinuation { events.yield(.eventsDone($0)) }
+  }
+
+  /// Replaces the deadline of the handler before, so a later launch's
+  /// handler is not called on an earlier launch's clock.
+  @ObservationIgnored private var eventsDeadline: Task<Void, Never>?
+
+  private func startEventsDeadline() {
+    eventsDeadline?.cancel()
+    eventsDeadline = nil
+    guard backgroundEventsCompletion != nil else { return }
+    eventsDeadline = Task { [weak self, backgroundEventsDeadline] in
+      try? await Task.sleep(for: backgroundEventsDeadline)
+      guard !Task.isCancelled else { return }
+      self?.finishBackgroundEvents()
+    }
   }
 
   /// Shut the session down, cancelling its tasks, and wait until it lists
@@ -309,7 +322,7 @@ public final class LibraryFileDownloader {
     case .eventsDone(let reply):
       // Queued before iOS suspends the app again, so the window keeps going.
       await refillFiled()
-      completion.finish()
+      finishBackgroundEvents()
       reply?.resume()
     }
   }
@@ -434,10 +447,6 @@ public final class LibraryFileDownloader {
     private let store: ContentStore
     /// The loop's events, yielded in the order the session delivers them.
     private let events: AsyncStream<Event>.Continuation
-    /// iOS's handler, for the deadline to call.
-    private let completion: BackgroundEventsCompletion
-    /// How long after the last event the deadline calls the handler.
-    private let eventsDeadline: Duration
     /// A server's client-certificate identity, for its challenges.
     private let identityName: @Sendable (UUID) -> String?
     /// Files moved into the store, by task, until the task completes. Only
@@ -446,26 +455,11 @@ public final class LibraryFileDownloader {
 
     init(
       store: ContentStore, events: AsyncStream<Event>.Continuation,
-      completion: BackgroundEventsCompletion, eventsDeadline: Duration,
       identityName: @escaping @Sendable (UUID) -> String?
     ) {
       self.store = store
       self.events = events
-      self.completion = completion
-      self.eventsDeadline = eventsDeadline
       self.identityName = identityName
-    }
-
-    /// Call iOS's handler at the deadline, whether or not the loop got to
-    /// the end of the events by then.
-    func startEventsDeadline() {
-      let completion = completion
-      let deadline = eventsDeadline
-      Task { @MainActor in
-        let generation = completion.generation
-        try? await Task.sleep(for: deadline)
-        completion.finish(ifGeneration: generation)
-      }
     }
 
     func urlSession(
@@ -508,7 +502,6 @@ public final class LibraryFileDownloader {
     }
 
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-      startEventsDeadline()
       events.yield(.eventsDone(nil))
     }
 
@@ -524,31 +517,6 @@ public final class LibraryFileDownloader {
       default: return RequestError.unexpectedStatusCode(code: status, detail: nil)
       }
     }
-  }
-}
-
-/// iOS's handler for a background launch's events, called once: by the loop
-/// once it has handled them, by the delegate's deadline, or when the
-/// background time runs out, whichever comes first.
-@MainActor
-final class BackgroundEventsCompletion {
-  /// Bumped with every new handler, so a deadline started for an earlier
-  /// launch's events leaves a later handler alone.
-  private(set) var generation = 0
-
-  var handler: (() -> Void)? {
-    didSet { generation += 1 }
-  }
-
-  func finish() {
-    let handler = handler
-    self.handler = nil
-    handler?()
-  }
-
-  func finish(ifGeneration generation: Int) {
-    guard generation == self.generation else { return }
-    finish()
   }
 }
 
