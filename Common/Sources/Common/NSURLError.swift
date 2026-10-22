@@ -106,6 +106,22 @@ public enum NSURLError: Int, Sendable {
     }
   }
 
+  /// The TLS handshake failed on the server's side of trust: the certificate
+  /// presented wasn't accepted. Not the client-certificate codes, which point
+  /// at this app's own configuration.
+  public var isServerTrustFailure: Bool {
+    switch self {
+    case .secureConnectionFailed,
+      .serverCertificateHasBadDate,
+      .serverCertificateUntrusted,
+      .serverCertificateHasUnknownRoot,
+      .serverCertificateNotYetValid:
+      true
+    default:
+      false
+    }
+  }
+
   public static func value(_ value: Int, inCategory category: Category) -> Bool {
     guard let value = NSURLError(rawValue: value) else { return false }
     return value.category == category

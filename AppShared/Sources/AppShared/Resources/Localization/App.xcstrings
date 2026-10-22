@@ -11300,6 +11300,19 @@
         }
       }
     },
+    "requestErrorServerNotTrustedHint" : {
+      "comment" : "Shown on the Offline & Sync screen when an automatic sync failed because the server's TLS certificate wasn't trusted, typically because the device is on a network where the server's address leads somewhere else.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+          }
+        }
+      }
+    },
+
     "requestErrorServerNotRespondingTitle" : {
       "comment" : "Title of the error shown when the device is online and the server's address is known, but the Paperless server did not answer (connection refused or timed out).",
       "extractionState" : "manual",

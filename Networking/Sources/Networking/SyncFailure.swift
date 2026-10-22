@@ -7,16 +7,22 @@
 //
 //  The rule, applied everywhere a sync/fill/reconcile failure is caught:
 //
-//  | class         | what it is                                 | log (sync)                  | surfaced |
-//  |---------------|--------------------------------------------|-----------------------------|----------|
-//  | `cancelled`   | the caller went away; nothing failed       | `.debug`                    | no       |
-//  | `routine`     | 401/403 (401 already flips needs-auth)     | `.info`                     | no       |
-//  | `offline`     | the device has no network                  | `.info`                     | no       |
-//  | `unreachable` | device online, server didn't answer        | `.notice`; `.error` if 3+   | yes      |
-//  | `degraded`    | 5xx, bad payload, TLS, version, local I/O  | `.error`                    | yes      |
+//  | class         | what it is                                   | log (sync)                | surfaced |
+//  |---------------|----------------------------------------------|---------------------------|----------|
+//  | `cancelled`   | the caller went away; nothing failed         | `.debug`                  | no       |
+//  | `routine`     | 401/403 (401 already flips needs-auth)       | `.info`                   | no       |
+//  | `offline`     | the device has no network                    | `.info`                   | no       |
+//  | `unreachable` | device online, server didn't answer, or its  | `.notice`; `.error` if 3+ | yes      |
+//  |               | certificate wasn't trusted                   |                           |          |
+//  | `degraded`    | 5xx, bad payload, client certificate,        | `.error`                  | yes      |
+//  |               | version, local I/O                           |                           |          |
 //
 //  Offline is what the offline cache is for, so it never reads as an error.
 //  An unreachable server may be a blip, so only a run of them escalates.
+//  An untrusted server certificate is usually the server's address leading
+//  somewhere else on the current network (off the VPN, say). The request is
+//  refused before anything is sent, and a user-initiated sync still shows the
+//  system's full certificate error.
 //
 
 import Common
@@ -62,11 +68,15 @@ public enum SyncFailureClass: Sendable, Equatable {
     // normalization. No path status to consult here, so the code decides alone —
     // which still gets the device-side codes right.
     let nsError = error as NSError
-    if nsError.domain == NSURLErrorDomain, let code = NSURLError(rawValue: nsError.code),
-      let kind = TransportFailureKind(code: code, path: .unknown)
-    {
-      self = kind == .offline ? .offline : .unreachable
-      return
+    if nsError.domain == NSURLErrorDomain, let code = NSURLError(rawValue: nsError.code) {
+      if let kind = TransportFailureKind(code: code, path: .unknown) {
+        self = kind == .offline ? .offline : .unreachable
+        return
+      }
+      if code.isServerTrustFailure {
+        self = .unreachable
+        return
+      }
     }
     self = .degraded
   }

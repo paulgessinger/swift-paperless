@@ -66,6 +66,18 @@ import os
     #expect(SyncFailureClass(URLError(.badServerResponse)) == .degraded)
   }
 
+  @Test("An untrusted server certificate is unreachable; a client-certificate failure is not")
+  func serverTrust() {
+    for code: URLError.Code in [
+      .secureConnectionFailed, .serverCertificateUntrusted, .serverCertificateHasUnknownRoot,
+      .serverCertificateHasBadDate, .serverCertificateNotYetValid,
+    ] {
+      #expect(SyncFailureClass(URLError(code)) == .unreachable)
+    }
+    #expect(SyncFailureClass(URLError(.clientCertificateRejected)) == .degraded)
+    #expect(SyncFailureClass(URLError(.clientCertificateRequired)) == .degraded)
+  }
+
   @Test(
     "Server errors, TLS, version and local failures are degradations",
     .bug("https://github.com/paulgessinger/swift-paperless/issues/663", id: 663))
