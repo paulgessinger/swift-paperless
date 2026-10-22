@@ -29,6 +29,9 @@ public enum SyncTrigger: String, Sendable {
   case refreshTask
   /// The long background task (every phase).
   case processingTask
+  /// A Shortcuts / App Intents action, which can run with the app in the
+  /// background.
+  case intent
   /// A step started outside any run. Every caller sets a trigger, so this
   /// marks one that was missed.
   case unattributed
