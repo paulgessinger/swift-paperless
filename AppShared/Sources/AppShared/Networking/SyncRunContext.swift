@@ -29,6 +29,9 @@ public enum SyncTrigger: String, Sendable {
   case refreshTask
   /// The long background task (every phase).
   case processingTask
+  /// A step started outside any run. Every caller sets a trigger, so this
+  /// marks one that was missed.
+  case unattributed
 }
 
 /// One recorded step. Stored by raw value.
@@ -76,7 +79,7 @@ struct SyncRunRecorder: Sendable {
 
   /// Opens the row; `nil` when the write failed.
   func begin(_ step: SyncStep, at date: Date = Date()) async -> Int64? {
-    let context = SyncRunContext.current ?? SyncRunContext(trigger: .foreground)
+    let context = SyncRunContext.current ?? SyncRunContext(trigger: .unattributed)
     return await Task {
       do {
         return try await database.beginSyncStep(

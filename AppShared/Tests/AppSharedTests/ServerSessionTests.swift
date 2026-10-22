@@ -348,8 +348,8 @@ struct ServerSessionTests {
     let rows = try await closedRows(harness.database, count: 1)
     #expect(rows.first?.step == "elements")
     #expect(rows.first?.outcome == "partial")
-    // No context set by the caller: a plain foreground run.
-    #expect(rows.first?.trigger == "foreground")
+    // No context set by the caller.
+    #expect(rows.first?.trigger == "unattributed")
     #expect(rows.first?.message?.hasPrefix("uiSettings: ") == true)
   }
 

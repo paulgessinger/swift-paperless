@@ -936,7 +936,9 @@ extension DocumentStore {
   /// Soft-fail (background); kicked from `sync()`.
   /// `userInitiated` bypasses the throttle.
   public func reconcileDocuments(userInitiated: Bool = false) async {
-    await session?.reconcileDocuments(force: userInitiated)
+    await SyncRunContext.$current.withValue(.child(userInitiated ? .userInitiated : .foreground)) {
+      _ = await session?.reconcileDocuments(force: userInitiated)
+    }
   }
 
   /// Run the active server's proactive *Entire library* fill — every query's
