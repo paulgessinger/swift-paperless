@@ -28,24 +28,22 @@ extension Database {
     }
   }
 
-  /// Release several documents at once: the reconcile's answer to ids the
-  /// server no longer returns.
-  public func removeKeptOffline(serverID: UUID, documentIDs: [UInt]) async throws {
-    guard !documentIDs.isEmpty else { return }
-    try await wrappingAsync("removeKeptOffline") {
-      try await writer.write { db in
-        _ =
-          try KeptOfflineRecord
-          .filter(Column("server_id") == serverID && documentIDs.contains(Column("document_id")))
-          .deleteAll(db)
-      }
-    }
-  }
-
   /// The kept documents of a server.
   public func keptOfflineIDs(serverID: UUID) async throws -> Set<UInt> {
     try await wrappingAsync("keptOfflineIDs") {
       try await writer.read { db in try Self.keptOfflineIDs(db, serverID: serverID) }
+    }
+  }
+
+  /// Whether one document is kept.
+  public func isKeptOffline(serverID: UUID, documentID: UInt) async throws -> Bool {
+    try await wrappingAsync("isKeptOffline") {
+      try await writer.read { db in
+        try
+          !KeptOfflineRecord
+          .filter(Column("server_id") == serverID && Column("document_id") == documentID)
+          .isEmpty(db)
+      }
     }
   }
 
@@ -57,14 +55,6 @@ extension Database {
       .tracking { db in try Self.keptOfflineIDs(db, serverID: serverID) }
       .removeDuplicates()
     return stream(observation)
-  }
-
-  public func keptOfflineCount(serverID: UUID) async throws -> Int {
-    try await wrappingAsync("keptOfflineCount") {
-      try await writer.read { db in
-        try KeptOfflineRecord.filter(Column("server_id") == serverID).fetchCount(db)
-      }
-    }
   }
 
   /// Kept documents with no cached `document` row: what the reconcile fetches

@@ -177,9 +177,10 @@ struct LibraryFileDownloaderTests {
     // 3 finishes and is filed; the refill queues 2, which never finishes.
     try await waitUntil { fixture.store.exists(self.key(3)) }
     try await waitUntil {
-      try await fixture.database.libraryFileProgress(serverID: self.server).downloadedFiles == 1
+      try await fixture.database.libraryFileProgress(serverID: self.server, scope: .library)
+        .downloadedFiles == 1
     }
-    let progress = try await fixture.database.libraryFileProgress(serverID: server)
+    let progress = try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
     #expect(
       progress
         == LibraryFileProgress(
@@ -341,7 +342,9 @@ struct LibraryFileDownloaderTests {
     await index.open()
     await events.value
     #expect(called.errors.count == 1)
-    #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 1)
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
+        .downloadedFiles == 1)
     await fixture.downloader.invalidate()
   }
 
@@ -365,7 +368,9 @@ struct LibraryFileDownloaderTests {
     // Filed before cancel returns, so a reclaim behind it finds the row.
     await index.open()
     await cancel.value
-    #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 1)
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
+        .downloadedFiles == 1)
     await fixture.downloader.invalidate()
   }
 
@@ -388,7 +393,9 @@ struct LibraryFileDownloaderTests {
 
     try await waitUntil { (fixture.downloader.inFlight[self.server] ?? 0) == 0 }
     #expect(!fixture.store.exists(key(1)))
-    #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 0)
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
+        .downloadedFiles == 0)
     await fixture.downloader.invalidate()
   }
 

@@ -59,7 +59,7 @@ extension Database {
   /// them could never be validated. `excluding` holds the documents already
   /// downloading.
   public func documentsNeedingArchive(
-    serverID: UUID, scope: LibraryFileScope = .library, excluding: Set<UInt> = [], limit: Int
+    serverID: UUID, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int
   ) async throws -> [LibraryFileCandidate] {
     try await wrappingAsync("documentsNeedingArchive") {
       try await writer.read { db in
@@ -80,7 +80,7 @@ extension Database {
 
   /// The documents with a fresh archive, and their bytes, against all in the
   /// scope.
-  public func libraryFileProgress(serverID: UUID, scope: LibraryFileScope = .library)
+  public func libraryFileProgress(serverID: UUID, scope: LibraryFileScope)
     async throws -> LibraryFileProgress
   {
     try await wrappingAsync("libraryFileProgress") {
@@ -91,7 +91,7 @@ extension Database {
   }
 
   /// Live ``libraryFileProgress(serverID:scope:)`` for the Offline & Sync screen.
-  public func observeLibraryFileProgress(serverID: UUID, scope: LibraryFileScope = .library)
+  public func observeLibraryFileProgress(serverID: UUID, scope: LibraryFileScope)
     -> AsyncThrowingStream<LibraryFileProgress, Error>
   {
     let observation =
@@ -139,21 +139,12 @@ extension Database {
       arguments: [serverID, limit])
   }
 
-  /// The archive join shared by both progress queries, on a `document d`.
-  private static let freshArchiveJoin = """
-    LEFT JOIN file f
-      ON f.server_id = d.server_id
-      AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
-      AND f.kind = 'archive'
-      AND f.modified IS d.modified
-      AND d.modified IS NOT NULL
-    """
-
   private static func libraryFileProgress(
     serverID: UUID, scope: LibraryFileScope, _ db: GRDB.Database
   ) throws -> LibraryFileProgress {
-    // The kept scope starts from the membership so a member without a row
-    // counts as missing; the library from the rows that can be validated.
+    // The kept scope starts from the membership so a member without a row, or
+    // without a `modified`, counts as missing; the library from the rows that
+    // can be validated.
     let sql =
       switch scope {
       case .library:
@@ -162,7 +153,11 @@ extension Database {
           COUNT(f.version_id) AS downloaded,
           COALESCE(SUM(f.size), 0) AS bytes
         FROM document d
-        \(freshArchiveJoin)
+        LEFT JOIN file f
+          ON f.server_id = d.server_id
+          AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
+          AND f.kind = 'archive'
+          AND f.modified IS d.modified
         WHERE d.server_id = ? AND d.modified IS NOT NULL
         """
       case .keptOffline:
@@ -172,7 +167,12 @@ extension Database {
           COALESCE(SUM(f.size), 0) AS bytes
         FROM kept_offline k
         LEFT JOIN document d ON d.server_id = k.server_id AND d.id = k.document_id
-        \(freshArchiveJoin)
+        LEFT JOIN file f
+          ON f.server_id = d.server_id
+          AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
+          AND f.kind = 'archive'
+          AND f.modified IS d.modified
+          AND d.modified IS NOT NULL
         WHERE k.server_id = ?
         """
       }

@@ -22,14 +22,12 @@ struct KeptOfflineTests {
     try await database.setKeptOffline(serverID: server, documentID: 1, kept: true, at: date(2))
     try await database.setKeptOffline(serverID: server, documentID: 2, kept: true, at: date(3))
     #expect(try await database.keptOfflineIDs(serverID: server) == [1, 2])
-    #expect(try await database.keptOfflineCount(serverID: server) == 2)
+    #expect(try await database.isKeptOffline(serverID: server, documentID: 1))
 
     try await database.setKeptOffline(serverID: server, documentID: 1, kept: false)
     try await database.setKeptOffline(serverID: server, documentID: 1, kept: false)
     #expect(try await database.keptOfflineIDs(serverID: server) == [2])
-
-    try await database.removeKeptOffline(serverID: server, documentIDs: [2, 3])
-    #expect(try await database.keptOfflineIDs(serverID: server).isEmpty)
+    #expect(try await !database.isKeptOffline(serverID: server, documentID: 1))
   }
 
   @Test("The membership is configuration: a cache wipe keeps it, removing the server drops it")

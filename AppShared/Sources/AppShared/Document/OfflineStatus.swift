@@ -59,8 +59,8 @@ public final class OfflineStatus {
         database.observeDocumentCount(serverID: serverID), into: \.cachedDocumentCount,
         of: self, throttle: UpdateThrottle()),
       observationLoop(
-        database.observeLibraryFileProgress(serverID: serverID), into: \.libraryFileProgress,
-        of: self, throttle: UpdateThrottle()),
+        database.observeLibraryFileProgress(serverID: serverID, scope: .library),
+        into: \.libraryFileProgress, of: self, throttle: UpdateThrottle()),
       observationLoop(
         database.observeLibraryFileProgress(serverID: serverID, scope: .keptOffline),
         into: \.keptOfflineFileProgress, of: self, throttle: UpdateThrottle()),
