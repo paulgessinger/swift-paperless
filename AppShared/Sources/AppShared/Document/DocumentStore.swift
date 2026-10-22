@@ -135,7 +135,7 @@ public final class DocumentStore: Sendable {
     registry?.fileDownloader?.pausedLowStorage ?? false
   }
 
-  /// Top the active server's download window up now.
+  /// Debug: top the active server's download window up now.
   public func refillLibraryFiles() async {
     await session?.fillFiles()
   }
