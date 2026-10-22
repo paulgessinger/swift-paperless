@@ -166,7 +166,9 @@ public enum SyncPlan {
   /// copy that is unit-tested, and the executor's is a guard, not a decision.
   public static func phases(isEntireLibrary: Bool, condition: SyncCondition) -> SyncPhases {
     guard condition.allowsProactiveSync else { return .cheap }
-    return isEntireLibrary ? .full : .cheapWithFiles
+    // Outside *Entire library* there is no fill, but the kept documents'
+    // files still download.
+    return isEntireLibrary ? .full : [.elements, .reconcile, .files]
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an

@@ -211,7 +211,9 @@ struct SyncPlanTests {
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: unmetered) == .full)
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: metered) == .cheap)
     // The kept documents' files need the link, not the mode.
-    #expect(SyncPlan.phases(isEntireLibrary: false, condition: unmetered) == .cheapWithFiles)
+    #expect(
+      SyncPlan.phases(isEntireLibrary: false, condition: unmetered)
+        == [.elements, .reconcile, .files])
     #expect(SyncPlan.phases(isEntireLibrary: false, condition: metered) == .cheap)
   }
 
@@ -268,14 +270,12 @@ struct SyncPhasesTests {
     #expect(SyncPhases([.files, .elements]).ordered == [.elements, .files])
   }
 
-  @Test("cheap omits the fill and the files, cheapWithFiles adds the files, full both")
+  @Test("cheap omits the fill and the files, full includes both")
   func presets() {
     #expect(!SyncPhases.cheap.contains(.fill))
     #expect(!SyncPhases.cheap.contains(.files))
     #expect(SyncPhases.cheap.contains(.elements))
     #expect(SyncPhases.cheap.contains(.reconcile))
-    #expect(!SyncPhases.cheapWithFiles.contains(.fill))
-    #expect(SyncPhases.cheapWithFiles.contains(.files))
     #expect(SyncPhases.full.contains(.fill))
     #expect(SyncPhases.full.contains(.files))
     #expect(SyncPhases.nothing.isEmpty)
