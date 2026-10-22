@@ -78,7 +78,7 @@ public final class AppStack {
             else { return nil }
             return LibraryDownloadServer(
               syncOverCellular: stored.syncOverCellular,
-              isEntireLibrary: stored.offlineBrowsingMode == .entireLibrary,
+              scope: stored.offlineBrowsingMode == .entireLibrary ? .library : .keptOffline,
               repository: { try await registry.session(for: id).prepareRepository(for: stored) })
           },
           allServerIDs: { [connectionManager] in Array(connectionManager.connections.keys) },

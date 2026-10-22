@@ -44,7 +44,7 @@ struct StoreHarness {
         guard id == serverID else { return nil }
         let mode = (try? database.connection(id: serverID))?.offlineBrowsingMode
         return LibraryDownloadServer(
-          syncOverCellular: false, isEntireLibrary: mode == "entireLibrary",
+          syncOverCellular: false, scope: mode == "entireLibrary" ? .library : .keptOffline,
           repository: { repository })
       },
       allServerIDs: { [serverID] }, identityName: { _ in nil },

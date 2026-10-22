@@ -108,7 +108,7 @@ struct LibraryFileDownloaderTests {
         id == serverID
           ? LibraryDownloadServer(
             syncOverCellular: syncOverCellular,
-            isEntireLibrary: mode?.isEntireLibrary ?? isEntireLibrary,
+            scope: mode?.isEntireLibrary ?? isEntireLibrary ? .library : .keptOffline,
             repository: { try await repositoryLookup?() ?? repository })
           : nil
       },

@@ -19,22 +19,21 @@ public struct LibraryDownloadServer: Sendable {
   /// Whether its downloads may use cellular data; Low Data Mode always stops
   /// them.
   public let syncOverCellular: Bool
-  /// Whether every document is downloaded, or only the ones kept offline.
-  public let isEntireLibrary: Bool
+  /// Which documents it downloads: every one in *Entire library*, the kept
+  /// ones otherwise.
+  public let scope: LibraryFileScope
   /// Builds the authenticated requests. Only a refill with something to
   /// queue asks for it: preparing it can build the server's stack.
   public let repository: @MainActor @Sendable () async throws -> any Repository
 
   public init(
-    syncOverCellular: Bool, isEntireLibrary: Bool,
+    syncOverCellular: Bool, scope: LibraryFileScope,
     repository: @escaping @MainActor @Sendable () async throws -> any Repository
   ) {
     self.syncOverCellular = syncOverCellular
-    self.isEntireLibrary = isEntireLibrary
+    self.scope = scope
     self.repository = repository
   }
-
-  var scope: LibraryFileScope { isEntireLibrary ? .library : .keptOffline }
 }
 
 /// Keeps a window of archive downloads in flight per server: the whole
@@ -372,9 +371,14 @@ public final class LibraryFileDownloader {
   /// Whether the file is still in its server's scope.
   private func isWanted(_ id: TaskID) async -> Bool {
     guard let server = try? await servers(id.key.serverID) else { return false }
-    if server.isEntireLibrary { return true }
-    let kept = (try? await database.keptOfflineIDs(serverID: id.key.serverID)) ?? []
-    return kept.contains(id.documentID)
+    switch server.scope {
+    case .library:
+      return true
+    case .keptOffline:
+      return
+        (try? await database.isKeptOffline(
+          serverID: id.key.serverID, documentID: id.documentID)) ?? false
+    }
   }
 
   private func refillFiled() async {
