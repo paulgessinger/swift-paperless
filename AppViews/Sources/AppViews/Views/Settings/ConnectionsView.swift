@@ -253,6 +253,21 @@ public struct ConnectionsView: View {
       HStack {
         Text(.settings(.activeServer))
         Spacer()
+        // Escape hatch for features the app doesn't cover yet
+        if let url = connectionManager.storedConnection?.url {
+          Link(destination: url) {
+            HStack(spacing: 4) {
+              Image(systemName: "safari").resizable()
+                .frame(width: plusIconSize, height: plusIconSize)
+              Text(.app(.open))
+            }
+            .contentShape(.rect)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(.settings(.openServerInBrowser)))
+          }
+          .buttonStyle(BorderlessButtonStyle())
+          .padding(.trailing, 8)
+        }
         Button {
           showLoginSheet = true
         } label: {

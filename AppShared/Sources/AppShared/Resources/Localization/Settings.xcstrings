@@ -6165,6 +6165,18 @@
         }
       }
     },
+    "openServerInBrowser" : {
+      "comment" : "Settings row that opens the active server's web interface in the browser",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in browser"
+          }
+        }
+      }
+    },
     "organization" : {
       "extractionState" : "manual",
       "localizations" : {
