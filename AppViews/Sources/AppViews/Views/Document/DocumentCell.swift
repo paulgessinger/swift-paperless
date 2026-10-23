@@ -90,9 +90,16 @@ public struct DocumentCell: View {
   /// removal is in flight.
   public var isRemovingInboxTags: Bool
 
-  public init(document: Document, store: DocumentStore, isRemovingInboxTags: Bool = false) {
+  /// Draws the kept-offline badge on the thumbnail when the document is kept.
+  public var showsKeptOfflineBadge: Bool
+
+  public init(
+    document: Document, store: DocumentStore, showsKeptOfflineBadge: Bool = false,
+    isRemovingInboxTags: Bool = false
+  ) {
     self.document = document
     self.store = store
+    self.showsKeptOfflineBadge = showsKeptOfflineBadge
     self.isRemovingInboxTags = isRemovingInboxTags
   }
 
@@ -140,11 +147,19 @@ public struct DocumentCell: View {
             .stroke(.gray, lineWidth: 0.33)
         )
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .frame(width: 130, height: 170, alignment: .topLeading)
         .shadow(color: Color("ImageShadow"), radius: 5)
+        // On the image, not the frame: a page narrower than the frame left
+        // the badge hanging off its edge. The transaction below keeps it from
+        // riding along with the image's animations.
+        .overlay(alignment: .topTrailing) {
+          if showsKeptOfflineBadge {
+            KeptOfflineBadge(store: store, documentID: document.id)
+          }
+        }
         .transaction { tx in
           tx.animation = nil
         }
+        .frame(width: 130, height: 170, alignment: .topLeading)
       }
 
       VStack(alignment: .leading) {
@@ -265,5 +280,30 @@ public struct DocumentCell: View {
 
       try await store.sync()
     } catch { print(error) }
+  }
+}
+
+/// The kept-offline badge. It reads the kept state itself, so a toggle
+/// updates only the badge: re-running the row's body rebuilt its swipe and
+/// menu actions, and the row closing its swipe was drawn below its place.
+/// Always in the tree and only shown or hidden, for the same reason, with
+/// its spring scoped to the kept state.
+private struct KeptOfflineBadge: View {
+  let store: DocumentStore
+  let documentID: UInt
+
+  var body: some View {
+    let isKept = store.isKeptOffline(documentID)
+    Image(systemName: "arrow.down.circle.fill")
+      .symbolRenderingMode(.palette)
+      .foregroundStyle(.white, .indigo)
+      .font(.title2)
+      .shadow(color: Color("ImageShadow"), radius: 2)
+      .padding(5)
+      .scaleEffect(isKept ? 1 : 0.4)
+      .opacity(isKept ? 1 : 0)
+      .animation(.spring(duration: 0.35, bounce: 0.45), value: isKept)
+      .accessibilityHidden(!isKept)
+      .accessibilityLabel(Text(.app(.keptOffline)))
   }
 }

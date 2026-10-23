@@ -59,6 +59,13 @@ public struct QueryKey: Hashable, Sendable {
   /// Nothing fills it, so it never enters the reachability sweep's set.
   public static let keptOffline = QueryKey(sentinel: "local:kept-offline")
 
+  /// The key a local view is served under.
+  public init(localView: LocalView) {
+    switch localView {
+    case .keptOffline: self = .keptOffline
+    }
+  }
+
   /// Rehydrate a key already on disk (a `query_meta` / `query_order` row's
   /// `query_key`). Package-internal: outside `Persistence` a key is only ever
   /// *derived* — from a filter or as a sentinel — and reading one back is the

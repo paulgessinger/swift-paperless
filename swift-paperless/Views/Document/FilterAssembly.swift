@@ -93,24 +93,32 @@ struct FilterAssembly: View {
 
     .background {
       if showsBackdrop {
-        Rectangle()
-          .fill(
-            Material.ultraThinMaterial
-          )
-          .mask {
-            LinearGradient(
-              colors: [
-                Color.black,
-                Color.black,
-                Color.black.opacity(0.4),
-                Color.black.opacity(0),
-              ], startPoint: .top, endPoint: .bottom)
-
-          }
-
-          .ignoresSafeArea(.container, edges: [.top, .horizontal])
+        FilterAssemblyBackdrop()
       }
     }
+  }
+}
+
+/// The material that fades out under the bar, up through the navigation
+/// bar; the list scrolls beneath it.
+struct FilterAssemblyBackdrop: View {
+  var body: some View {
+    Rectangle()
+      .fill(
+        Material.ultraThinMaterial
+      )
+      .mask {
+        LinearGradient(
+          colors: [
+            Color.black,
+            Color.black,
+            Color.black.opacity(0.4),
+            Color.black.opacity(0),
+          ], startPoint: .top, endPoint: .bottom)
+
+      }
+
+      .ignoresSafeArea(.container, edges: [.top, .horizontal])
   }
 }
 

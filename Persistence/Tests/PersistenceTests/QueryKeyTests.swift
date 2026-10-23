@@ -64,4 +64,10 @@ struct QueryKeyTests {
   func sentinel() {
     #expect(QueryKey(sentinel: "local:downloaded").rawValue == "local:downloaded")
   }
+
+  @Test("a local view maps to its sentinel, and no filter does")
+  func localViewIsTheSentinel() {
+    #expect(QueryKey(localView: .keptOffline) == .keptOffline)
+    #expect(QueryKey(serverID: server, filter: .empty) != .keptOffline)
+  }
 }

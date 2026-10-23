@@ -86,7 +86,7 @@ struct DocumentList: View {
     _viewModel = State(
       initialValue: DocumentListViewModel(
         store: store,
-        filterState: filterModel.resolvedFilterState,
+        source: filterModel.listSource,
         errorController: errorController))
   }
 
@@ -118,6 +118,31 @@ struct DocumentList: View {
       viewModel.removingInboxTags.contains(document.id)
     }
 
+    /// Reads the state when it runs: nothing in the row's own body reads it,
+    /// so a toggle does not re-run that body and rebuild the row's swipe and
+    /// menu actions, which drew a row closing its swipe below its place.
+    private func toggleKeptOffline() {
+      Task { [store, document] in
+        do {
+          try await store.setKeptOffline(document.id, !store.isKeptOffline(document.id))
+        } catch {
+          Logger.shared.error("Keeping a document offline failed: \(error)")
+          errorController.push(error: error)
+        }
+      }
+    }
+
+    /// One label and icon in both states: a swipe action whose content
+    /// changes with the state redraws its row out of place when it flips. The
+    /// thumbnail's badge shows which state the document is in.
+    private var keepOfflineSwipeButton: some View {
+      Button {
+        toggleKeptOffline()
+      } label: {
+        Label(String(localized: .app(.toggleOffline)), systemImage: "arrow.down.circle")
+      }
+    }
+
     private func onDeleteButtonPressed() {
       if documentDeleteConfirmation {
         documentToDelete = document
@@ -134,83 +159,94 @@ struct DocumentList: View {
     }
 
     var body: some View {
-      DocumentCell(document: document, store: store, isRemovingInboxTags: isRemovingInboxTags)
-        .contentShape(Rectangle())
+      DocumentCell(
+        document: document, store: store, showsKeptOfflineBadge: true,
+        isRemovingInboxTags: isRemovingInboxTags
+      )
+      .contentShape(Rectangle())
 
-        .padding(.horizontal)
-        .padding(.vertical)
-        .listRowBackground(
-          Group {
-            if isSelected {
-              // Bump opacity in dark mode so the accent tint stays
-              // visible against the darker chrome of the row backdrop.
-              // Rendered as the row background (not inside the cell)
-              // so it stays clipped to the row during swipe actions.
-              RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
-                .padding(.horizontal, 8)
-            } else {
-              Color.clear
-            }
+      .padding(.horizontal)
+      .padding(.vertical)
+      .listRowBackground(
+        Group {
+          if isSelected {
+            // Bump opacity in dark mode so the accent tint stays
+            // visible against the darker chrome of the row backdrop.
+            // Rendered as the row background (not inside the cell)
+            // so it stays clipped to the row during swipe actions.
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+              .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
+              .padding(.horizontal, 8)
+          } else {
+            Color.clear
           }
-        )
-        .onTapGesture {
+        }
+      )
+      .onTapGesture {
+        store.preloadThumbnail(for: document)
+        onSelect(document)
+      }
+
+      // The full swipe runs the first button, and that is the inbox
+      // removal; with nothing to remove, it runs nothing.
+      .swipeActions(edge: .leading, allowsFullSwipe: canRemoveInboxTags) {
+        if canRemoveInboxTags {
+          Button {
+            Task { await viewModel.removeInboxTags(document: document) }
+          } label: {
+            Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
+          }
+          .tint(.accentColor)
+        }
+        keepOfflineSwipeButton
+          .tint(.indigo)
+      }
+
+      .swipeActions(edge: .trailing) {
+        if userCanDelete {
+          Button(role: documentDeleteConfirmation ? .none : .destructive) {
+            onDeleteButtonPressed()
+          } label: {
+            Label(String(localized: .app(.delete)), systemImage: "trash")
+          }
+          .tint(.red)
+        }
+      }
+
+      .contextMenu {
+        Button {
           store.preloadThumbnail(for: document)
           onSelect(document)
+        } label: {
+          Label(String(localized: .app(.edit)), systemImage: "pencil")
         }
 
-        .swipeActions(edge: .leading) {
-          if canRemoveInboxTags {
-            Button {
-              Task { await viewModel.removeInboxTags(document: document) }
-            } label: {
-              Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
-            }
-            .tint(.accentColor)
-          }
+        KeepOfflineMenuButton(store: store, documentID: document.id) {
+          toggleKeptOffline()
         }
 
-        .swipeActions(edge: .trailing) {
-          if userCanDelete {
-            Button(role: documentDeleteConfirmation ? .none : .destructive) {
-              onDeleteButtonPressed()
-            } label: {
-              Label(String(localized: .app(.delete)), systemImage: "trash")
-            }
-            .tint(.red)
-          }
-        }
-
-        .contextMenu {
+        if canRemoveInboxTags {
           Button {
-            store.preloadThumbnail(for: document)
-            onSelect(document)
+            Task { await viewModel.removeInboxTags(document: document) }
           } label: {
-            Label(String(localized: .app(.edit)), systemImage: "pencil")
+            Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
           }
-
-          if canRemoveInboxTags {
-            Button {
-              Task { await viewModel.removeInboxTags(document: document) }
-            } label: {
-              Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
-            }
-          }
-
-          if userCanDelete {
-            Button(role: .destructive) {
-              onDeleteButtonPressed()
-            } label: {
-              Label(String(localized: .app(.delete)), systemImage: "trash")
-            }
-          }
-
-        } preview: {
-          PopupDocumentPreview(document: document)
-            .environment(store)
         }
 
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        if userCanDelete {
+          Button(role: .destructive) {
+            onDeleteButtonPressed()
+          } label: {
+            Label(String(localized: .app(.delete)), systemImage: "trash")
+          }
+        }
+
+      } preview: {
+        PopupDocumentPreview(document: document)
+          .environment(store)
+      }
+
+      .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
   }
 
@@ -229,7 +265,7 @@ struct DocumentList: View {
         await viewModel.reload()
       }
       Task {
-        filterModel.filterState.clear()
+        filterModel.clear()
         try? await Task.sleep(for: .seconds(0.5))
         filterModel.ready = true
       }
@@ -290,14 +326,20 @@ struct DocumentList: View {
           // a non-empty count): don't flash "No documents" during the fill.
           LoadingDocumentList()
         case .empty:
-          NoDocumentsView(filtering: filterModel.filterState.filtering)
-            .equatable()
-            .refreshable {
-              await Task {
-                await refresh()
-              }.value
+          Group {
+            if viewModel.scope == .keptOffline {
+              KeptOfflineEmptyView()
+            } else {
+              NoDocumentsView(filtering: filterModel.filterState.filtering)
+                .equatable()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+          }
+          .refreshable {
+            await Task {
+              await refresh()
+            }.value
+          }
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         case .unavailable:
           // The load failed and nothing is cached: say so rather than claim
           // the query matched no documents.
@@ -357,6 +399,14 @@ struct DocumentList: View {
               .listSectionSeparator(.hidden)
             }
             .listStyle(.plain)
+            // A switch to or from a local view keeps the other list's scroll
+            // offset otherwise.
+            .onChange(of: viewModel.documentsLocalView) {
+              guard let first = viewModel.documents.first else { return }
+              withAnimation {
+                proxy.scrollTo(first.id, anchor: .top)
+              }
+            }
             // Pinned below the filter bar: the rows scroll under it, so the
             // notice stays in view however far down the truncated list goes.
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -386,13 +436,20 @@ struct DocumentList: View {
         }
       }
     }
+    // The filter bar follows the rows on screen, not the filter: see
+    // `FilterModel.displayedLocalView`.
+    .onChange(of: viewModel.documentsLocalView) { _, localView in
+      withAnimation {
+        filterModel.displayedLocalView = localView
+      }
+    }
     .animation(.default, value: viewModel.ready)
     .animation(.default, value: viewModel.noPermissions)
     .animation(.default, value: viewModel.state)
 
-    .onChange(of: filterModel.resolvedFilterState) { _, filter in
+    .onChange(of: filterModel.listSource) { _, source in
       Task {
-        await viewModel.refresh(filter: filter)
+        await viewModel.refresh(source: source)
       }
     }
 
@@ -461,6 +518,39 @@ struct DocumentList: View {
         let document = item
         Text(.app(.deleteDocumentName(document.title)))
       })
+  }
+}
+
+/// "Keep offline" or "Stop keeping offline", reading the state itself so
+/// the row it sits in does not depend on it.
+private struct KeepOfflineMenuButton: View {
+  let store: DocumentStore
+  let documentID: UInt
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      if store.isKeptOffline(documentID) {
+        Label(
+          String(localized: .app(.stopKeepingOffline)), systemImage: "arrow.down.circle.fill")
+      } else {
+        Label(String(localized: .app(.keepOffline)), systemImage: "arrow.down.circle")
+      }
+    }
+  }
+}
+
+/// The *Kept offline* list with no members: says how to add one.
+private struct KeptOfflineEmptyView: View {
+  var body: some View {
+    ScrollView(.vertical) {
+      ContentUnavailableView {
+        Label(String(localized: .app(.keptOfflineEmptyTitle)), systemImage: "arrow.down.circle")
+      } description: {
+        Text(.app(.keptOfflineEmptyMessage))
+      }
+      .padding(.top, 40)
+    }
   }
 }
 

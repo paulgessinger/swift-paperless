@@ -17,13 +17,20 @@ public enum DocumentListScope: Equatable, Sendable {
   /// Anything else: an ad-hoc filter, or a saved view the user has since
   /// edited (its query is no longer the saved view's).
   case filtered
+  /// The local *Kept offline* list, which is never filled.
+  case keptOffline
 
   /// - Parameters:
+  ///   - localView: The app-kept list on screen, if any.
   ///   - savedView: The saved view the filter was built from, if any.
   ///   - modified: Whether the filter was edited after being built.
   ///   - filtering: Whether the filter narrows or re-sorts the default list.
-  public init(savedView: UInt?, modified: Bool, filtering: Bool) {
-    if let savedView, !modified {
+  public init(
+    localView: LocalView? = nil, savedView: UInt?, modified: Bool, filtering: Bool
+  ) {
+    if localView == .keptOffline {
+      self = .keptOffline
+    } else if let savedView, !modified {
       self = .savedView(id: savedView)
     } else if filtering {
       self = .filtered
