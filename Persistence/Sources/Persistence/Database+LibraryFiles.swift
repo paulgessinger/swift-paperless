@@ -3,21 +3,28 @@ import DataModel
 import Foundation
 import GRDB
 
-/// A cached document whose current version has no archive on the device
-/// fetched against its `modified`: what the library's file pass downloads.
+/// A cached document whose current version is missing an archive fetched
+/// against its `modified`, or a thumbnail: what the library's file pass
+/// downloads.
 public struct LibraryFileCandidate: Sendable, Equatable {
   public let documentID: UInt
-  /// The version the file is filed under in the content store.
+  /// The version the files are filed under in the content store.
   public let versionID: UInt
   /// The version to put in the request, `nil` when the server reports none.
   public let versionQueryID: UInt?
   public let modified: Date
+  /// The files to download, archive first.
+  public let kinds: [ContentStore.Kind]
 
-  public init(documentID: UInt, versionID: UInt, versionQueryID: UInt?, modified: Date) {
+  public init(
+    documentID: UInt, versionID: UInt, versionQueryID: UInt?, modified: Date,
+    kinds: [ContentStore.Kind]
+  ) {
     self.documentID = documentID
     self.versionID = versionID
     self.versionQueryID = versionQueryID
     self.modified = modified
+    self.kinds = kinds
   }
 }
 
@@ -48,31 +55,33 @@ public struct LibraryFileProgress: Sendable, Equatable {
   public static let zero = LibraryFileProgress()
 }
 
-/// The library's files: which documents still need their archive, and how far
-/// the pass has come. Async only, like every cache table.
+/// The library's files: which documents still need their archive or
+/// thumbnail, and how far the pass has come. Async only, like every cache
+/// table.
 extension Database {
-  /// The documents whose current version has no fresh archive, highest id
-  /// first: ingestion order, which is what the pass wants, and what paperless
+  /// The documents whose current version has no fresh archive or no
+  /// thumbnail, highest id first: ingestion order, which is what the pass wants, and what paperless
   /// itself orders by (`added` can disagree after an import that kept its
   /// timestamps, and only the order of a pass that downloads everything
   /// depends on it). Documents without `modified` are left out: a file for
   /// them could never be validated. `excluding` holds the documents already
   /// downloading.
-  public func documentsNeedingArchive(
+  public func documentsNeedingFiles(
     serverID: UUID, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int
   ) async throws -> [LibraryFileCandidate] {
-    try await wrappingAsync("documentsNeedingArchive") {
+    try await wrappingAsync("documentsNeedingFiles") {
       try await writer.read { db in
-        try Self.documentsNeedingArchive(
+        try Self.documentsNeedingFiles(
           serverID: serverID, scope: scope, limit: limit + excluding.count, db
         )
-        .filter { !excluding.contains($0.id) }
+        .filter { !excluding.contains($0.record.id) }
         .prefix(limit)
-        .map { record in
+        .map { record, kinds in
           let document = record.domain
           return LibraryFileCandidate(
             documentID: record.id, versionID: document.currentVersionID,
-            versionQueryID: document.versionQueryID, modified: record.modified ?? Date())
+            versionQueryID: document.versionQueryID, modified: record.modified ?? Date(),
+            kinds: kinds)
         }
       }
     }
@@ -114,6 +123,17 @@ extension Database {
     )
     """
 
+  /// A thumbnail for the document's current version, correlated on `d`. Any
+  /// row will do: the image cache records its own without a `modified`.
+  private static let thumbnailExists = """
+    EXISTS (
+      SELECT 1 FROM file f
+      WHERE f.server_id = d.server_id
+        AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
+        AND f.kind = 'thumbnail'
+    )
+    """
+
   /// The scope's restriction on `document d`; the library has none.
   private static func scopeClause(_ scope: LibraryFileScope) -> String {
     switch scope {
@@ -122,21 +142,32 @@ extension Database {
     }
   }
 
-  private static func documentsNeedingArchive(
+  private static func documentsNeedingFiles(
     serverID: UUID, scope: LibraryFileScope, limit: Int, _ db: GRDB.Database
-  ) throws -> [DocumentRecord] {
-    try DocumentRecord.fetchAll(
+  ) throws -> [(record: DocumentRecord, kinds: [ContentStore.Kind])] {
+    try Row.fetchAll(
       db,
       sql: """
-        SELECT d.* FROM document d
-        WHERE d.server_id = ?
-          AND d.modified IS NOT NULL
-          AND NOT \(freshArchiveExists)
-          \(scopeClause(scope))
-        ORDER BY d.id DESC
+        SELECT * FROM (
+          SELECT d.*,
+            NOT \(freshArchiveExists) AS needs_archive,
+            NOT \(thumbnailExists) AS needs_thumbnail
+          FROM document d
+          WHERE d.server_id = ?
+            AND d.modified IS NOT NULL
+            \(scopeClause(scope))
+        )
+        WHERE needs_archive OR needs_thumbnail
+        ORDER BY id DESC
         LIMIT ?
         """,
-      arguments: [serverID, limit])
+      arguments: [serverID, limit]
+    ).map { row in
+      var kinds: [ContentStore.Kind] = []
+      if row["needs_archive"] { kinds.append(.archive) }
+      if row["needs_thumbnail"] { kinds.append(.thumbnail) }
+      return (try DocumentRecord(row: row), kinds)
+    }
   }
 
   private static func libraryFileProgress(

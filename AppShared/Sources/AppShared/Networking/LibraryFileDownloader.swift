@@ -36,12 +36,13 @@ public struct LibraryDownloadServer: Sendable {
   }
 }
 
-/// Keeps a window of archive downloads in flight per server: the whole
-/// library of an *Entire library* server, the documents kept offline of any
-/// other. The index is the source of truth for what is missing: a refill
-/// asks the database for the newest documents in that scope whose archive is
-/// missing or outdated, leaves out the ones in flight, and hands iOS the
-/// rest, up to the window.
+/// Keeps a window of documents downloading per server: the whole library of
+/// an *Entire library* server, the documents kept offline of any other. A
+/// document's archive and thumbnail download together, so the list shows it
+/// offline too. The index is the source of truth for what is missing: a
+/// refill asks the database for the newest documents in that scope whose
+/// archive is missing or outdated or whose thumbnail is missing, leaves out
+/// the ones in flight, and hands iOS the rest, up to the window.
 ///
 /// Everything happens as events through one loop on the main actor, in the
 /// order they arrive: the session's completions, from its serial delegate
@@ -78,8 +79,8 @@ public final class LibraryFileDownloader {
     case pausedLowStorage
   }
 
-  /// Tasks in flight per server. Throttled for display: eight fast downloads
-  /// change it many times a second.
+  /// Documents downloading per server. Throttled for display: eight fast
+  /// downloads change it many times a second.
   public private(set) var inFlight: [UUID: Int] = [:]
   /// Whether a refill with something to queue stopped because free space is
   /// below the floor. Cleared by any refill that finds room: the flag is
@@ -128,7 +129,7 @@ public final class LibraryFileDownloader {
   /// The tasks in flight: taken from the session when the loop starts, then
   /// kept by the loop as it queues and files them.
   @ObservationIgnored private var tasks: [Int: (task: URLSessionTask, id: TaskID)] = [:]
-  /// Documents whose download failed, left alone for an hour.
+  /// Files whose download failed, left alone for an hour.
   @ObservationIgnored private var recentlyFailed: [ContentStore.Key: Date] = [:]
   /// Servers with a task filed since their last refill. Refilled together
   /// once the events queued behind the first are handled.
@@ -410,11 +411,16 @@ public final class LibraryFileDownloader {
     guard room > 0 else { return .queued(0) }
     let now = Date()
     recentlyFailed = recentlyFailed.filter { now.timeIntervalSince($0.value) < 3600 }
-    let backedOff = Set(recentlyFailed.keys.filter { $0.serverID == serverID }.map(\.versionID))
-    let candidates = try await database.documentsNeedingArchive(
+    let backedOff = Set(recentlyFailed.keys.filter { $0.serverID == serverID })
+    let candidates = try await database.documentsNeedingFiles(
       serverID: serverID, scope: server.scope, excluding: inFlightDocuments,
       limit: room + backedOff.count
-    ).filter { !backedOff.contains($0.versionID) }.prefix(room)
+    ).compactMap { candidate -> (LibraryFileCandidate, [ContentStore.Key])? in
+      let keys = candidate.kinds
+        .map { ContentStore.Key(serverID: serverID, versionID: candidate.versionID, kind: $0) }
+        .filter { !backedOff.contains($0) }
+      return keys.isEmpty ? nil : (candidate, keys)
+    }.prefix(room)
     guard !candidates.isEmpty else { return .complete }
     if lowStorage {
       if !pausedLowStorage { pausedLowStorage = true }
@@ -422,18 +428,25 @@ public final class LibraryFileDownloader {
     }
 
     let repository = try await withTimeout(repositoryTimeout) { try await server.repository() }
-    for candidate in candidates {
-      let key = ContentStore.Key(
-        serverID: serverID, versionID: candidate.versionID, kind: .archive)
-      var request = try repository.downloadRequest(
-        documentID: candidate.documentID, version: candidate.versionQueryID)
-      request.allowsExpensiveNetworkAccess = server.syncOverCellular
-      request.allowsConstrainedNetworkAccess = false
-      let task = session.downloadTask(with: request)
-      task.taskDescription = LibraryFileTaskID.make(
-        key: key, documentID: candidate.documentID, modified: candidate.modified)
-      tasks[task.taskIdentifier] = (task, (key, candidate.documentID, candidate.modified))
-      task.resume()
+    for (candidate, keys) in candidates {
+      for key in keys {
+        var request =
+          switch key.kind {
+          case .thumbnail:
+            try repository.thumbnailRequest(
+              documentID: candidate.documentID, version: candidate.versionQueryID)
+          default:
+            try repository.downloadRequest(
+              documentID: candidate.documentID, version: candidate.versionQueryID)
+          }
+        request.allowsExpensiveNetworkAccess = server.syncOverCellular
+        request.allowsConstrainedNetworkAccess = false
+        let task = session.downloadTask(with: request)
+        task.taskDescription = LibraryFileTaskID.make(
+          key: key, documentID: candidate.documentID, modified: candidate.modified)
+        tasks[task.taskIdentifier] = (task, (key, candidate.documentID, candidate.modified))
+        task.resume()
+      }
     }
     publish()
     return .queued(candidates.count)
@@ -442,10 +455,11 @@ public final class LibraryFileDownloader {
   private func publish() {
     display.run { [weak self] in
       guard let self else { return }
-      var counts: [UUID: Int] = [:]
+      var documents: [UUID: Set<UInt>] = [:]
       for entry in tasks.values {
-        counts[entry.id.key.serverID, default: 0] += 1
+        documents[entry.id.key.serverID, default: []].insert(entry.id.documentID)
       }
+      let counts = documents.mapValues(\.count)
       if inFlight != counts { inFlight = counts }
     }
   }

@@ -104,6 +104,10 @@ public class NullRepository: Repository {
     throw NotImplemented()
   }
 
+  public func thumbnailRequest(documentID _: UInt, version _: UInt?) throws -> URLRequest {
+    throw NotImplemented()
+  }
+
   public func savedViews() async -> [SavedView] { [] }
   public func create(savedView _: ProtoSavedView) async throws -> SavedView {
     throw NotImplemented()

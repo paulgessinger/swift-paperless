@@ -1242,8 +1242,13 @@ extension ApiRepository: Repository {
     func thumbnailRequest(document: Document) throws -> URLRequest
   {
     Logger.networking.debug("Get thumbnail for document \(document.id, privacy: .public)")
-    let url = try url(
-      Endpoint.thumbnail(documentId: document.id, version: document.versionQueryID))
+    return try thumbnailRequest(documentID: document.id, version: document.versionQueryID)
+  }
+
+  public nonisolated
+    func thumbnailRequest(documentID: UInt, version: UInt?) throws -> URLRequest
+  {
+    let url = try url(Endpoint.thumbnail(documentId: documentID, version: version))
 
     var request = URLRequest(url: url)
     addTokenTo(request: &request)
