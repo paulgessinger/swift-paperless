@@ -285,6 +285,15 @@ public final class ServerSession {
   /// else the headline is a generic "an error occurred" and the details carry
   /// the status code and the server's own message.
   private static func failureMessage(_ error: any Error) -> String {
+    // The system's wording for this warns of an impostor server, which reads
+    // as an attack when it is usually just the wrong network. See
+    // `SyncFailureClass`.
+    let nsError = error as NSError
+    if nsError.domain == NSURLErrorDomain,
+      NSURLError(rawValue: nsError.code)?.isServerTrustFailure == true
+    {
+      return String(localized: .app(.requestErrorServerNotTrustedHint))
+    }
     if let displayable = error as? any DisplayableError {
       if let request = error as? RequestError, request.isConnectivity {
         return displayable.message

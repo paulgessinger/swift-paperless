@@ -161,6 +161,14 @@ struct MainView: View {
         cost: networkMonitor.cost, syncOverCellular: manager.activeSyncOverCellular))
   }
 
+  /// Whether iOS launched the process for a background task, with no scene on
+  /// screen. That task syncs every server itself, and the first `.active`
+  /// runs the foreground pass, so the launch path leaves its network work to
+  /// those.
+  private var isInBackground: Bool {
+    UIApplication.shared.applicationState == .background
+  }
+
   /// Fire-and-forget the proactive *Entire library* fill (no-op when disabled,
   /// metered, or already covered). Used after the initial-launch sync; the
   /// scenePhase path chains it after `sync()` directly.
@@ -218,6 +226,10 @@ struct MainView: View {
     storeReady = true
     showLoginScreen = false
 
+    guard !isInBackground else {
+      Logger.sync.info("Launched in the background: launch sync left to the first activation")
+      return
+    }
     Task {
       try? await target.sync()
       target.startTaskPolling()
@@ -369,8 +381,10 @@ struct MainView: View {
           await stack.fileDownloader?.refillAllServers()
         }
       }
-      Task {
-        await syncEngine.syncInactiveServers()
+      if !isInBackground {
+        Task {
+          await syncEngine.syncInactiveServers()
+        }
       }
     }
 

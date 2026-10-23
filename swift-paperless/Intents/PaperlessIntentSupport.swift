@@ -43,10 +43,13 @@ enum PaperlessIntentStore {
 
   /// Runs an intent as background work. An intent can run while the app stays
   /// in the background, where the database writer is otherwise suspended.
+  /// Syncs it starts are recorded under the `intent` trigger.
   static func run<T>(_ body: (PaperlessIntentContext) async throws -> T) async rethrows -> T {
     let stack = AppStackHolder.sharedWithInMemoryFallback(context: "Intents")
-    return try await stack.suspension.performBackgroundWork {
-      try await body(PaperlessIntentContext(stack: stack))
+    return try await SyncRunContext.$current.withValue(SyncRunContext(trigger: .intent)) {
+      try await stack.suspension.performBackgroundWork {
+        try await body(PaperlessIntentContext(stack: stack))
+      }
     }
   }
 }

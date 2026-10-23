@@ -106,6 +106,21 @@ public enum NSURLError: Int, Sendable {
     }
   }
 
+  /// The server's certificate wasn't accepted. Not `secureConnectionFailed`,
+  /// which covers any TLS failure, nor the client-certificate codes, which
+  /// point at this app's own configuration.
+  public var isServerTrustFailure: Bool {
+    switch self {
+    case .serverCertificateHasBadDate,
+      .serverCertificateUntrusted,
+      .serverCertificateHasUnknownRoot,
+      .serverCertificateNotYetValid:
+      true
+    default:
+      false
+    }
+  }
+
   public static func value(_ value: Int, inCategory category: Category) -> Bool {
     guard let value = NSURLError(rawValue: value) else { return false }
     return value.category == category
