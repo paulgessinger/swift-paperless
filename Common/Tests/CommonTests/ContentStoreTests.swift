@@ -89,7 +89,102 @@ struct ContentStoreTests {
     let url = store.url(for: Self.key(version: 35, kind: .archive))
     #expect(url.pathComponents.contains("35"))
     #expect(url.pathComponents.contains(Self.serverA.uuidString))
-    #expect(url.lastPathComponent == "archive.pdf")
+    #expect(url.lastPathComponent == "archive")
+  }
+
+  /// A file at `name` in the version directory `key` lives in.
+  static func writeRaw(_ store: ContentStore, _ key: ContentStore.Key, name: String, _ text: String)
+    throws
+  {
+    let url = store.url(for: key).deletingLastPathComponent().appendingPathComponent(name)
+    try FileManager.default.createDirectory(
+      at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data(text.utf8).write(to: url)
+  }
+
+  static func removeMarker(_ root: URL) throws {
+    try FileManager.default.removeItem(
+      at: AppGroup.Layout.contentStore(in: root).appendingPathComponent(".extensionless"))
+  }
+
+  @Test("Document files named .pdf by an older build lose the extension")
+  func legacyExtensionsAreDropped() throws {
+    let (store, root) = try Self.makeStore()
+    let archive = Self.key(kind: .archive)
+    let original = Self.key(kind: .original)
+    try Self.writeRaw(store, archive, name: "archive.pdf", "A")
+    try Self.writeRaw(store, original, name: "original.pdf", "O")
+    try Self.removeMarker(root)
+
+    let reopened = try ContentStore(root: root)
+
+    #expect(try String(contentsOf: reopened.url(for: archive), encoding: .utf8) == "A")
+    #expect(try String(contentsOf: reopened.url(for: original), encoding: .utf8) == "O")
+    let directory = reopened.url(for: archive).deletingLastPathComponent()
+    #expect(
+      !FileManager.default.fileExists(atPath: directory.appendingPathComponent("archive.pdf").path))
+    #expect(
+      !FileManager.default.fileExists(atPath: directory.appendingPathComponent("original.pdf").path)
+    )
+  }
+
+  @Test("A file already under the new name wins over a leftover .pdf")
+  func currentFileWinsOverLegacyName() throws {
+    let (store, root) = try Self.makeStore()
+    let key = Self.key()
+    try Self.writeRaw(store, key, name: "archive", "new")
+    try Self.writeRaw(store, key, name: "archive.pdf", "old")
+    try Self.removeMarker(root)
+
+    let reopened = try ContentStore(root: root)
+
+    #expect(try String(contentsOf: reopened.url(for: key), encoding: .utf8) == "new")
+    #expect(
+      !FileManager.default.fileExists(
+        atPath: reopened.url(for: key).deletingLastPathComponent()
+          .appendingPathComponent("archive.pdf").path))
+  }
+
+  @Test("A failed rename keeps the file and retries on the next launch")
+  func failedRenameKeepsFileAndRetries() throws {
+    let (store, root) = try Self.makeStore()
+    let key = Self.key()
+    try Self.writeRaw(store, key, name: "archive.pdf", "kept")
+    try Self.removeMarker(root)
+    let directory = store.url(for: key).deletingLastPathComponent()
+    let legacy = directory.appendingPathComponent("archive.pdf")
+    let marker = AppGroup.Layout.contentStore(in: root).appendingPathComponent(".extensionless")
+
+    // Read-only, so the rename fails with nothing under the new name.
+    try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
+    defer {
+      try? FileManager.default.setAttributes(
+        [.posixPermissions: 0o755], ofItemAtPath: directory.path)
+    }
+    _ = try ContentStore(root: root)
+
+    #expect(FileManager.default.fileExists(atPath: legacy.path))
+    #expect(!FileManager.default.fileExists(atPath: marker.path))
+
+    try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
+    let reopened = try ContentStore(root: root)
+
+    #expect(try String(contentsOf: reopened.url(for: key), encoding: .utf8) == "kept")
+    #expect(!FileManager.default.fileExists(atPath: legacy.path))
+    #expect(FileManager.default.fileExists(atPath: marker.path))
+  }
+
+  @Test("The rename runs once per store")
+  func legacyRenameRunsOnce() throws {
+    let (store, root) = try Self.makeStore()
+    try Self.writeRaw(store, Self.key(), name: "archive.pdf", "late")
+
+    _ = try ContentStore(root: root)
+
+    #expect(
+      FileManager.default.fileExists(
+        atPath: store.url(for: Self.key()).deletingLastPathComponent()
+          .appendingPathComponent("archive.pdf").path))
   }
 
   @Test

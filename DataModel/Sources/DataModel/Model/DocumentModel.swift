@@ -173,14 +173,15 @@ extension Document: DocumentProtocol {}
 extension Document: PermissionsModel {}
 
 extension Document {
-  /// User-facing filename for exporting/sharing this document. Prefers the
-  /// server's stored filename for the requested version; falls back to the
-  /// title with a `.pdf` extension, or "document.pdf" if there is no title.
+  /// User-facing filename for exporting/sharing this document, whose
+  /// extension is what tells other apps the file's type. A document without
+  /// an archive version is served as its original for an archive request, so
+  /// it takes the original's name. With no server name the title stands in,
+  /// without an extension, since the type is then unknown.
   public func shareFilename(original: Bool) -> String {
-    let serverName = original ? originalFileName : archivedFileName
+    let serverName = original ? originalFileName : archivedFileName ?? originalFileName
     if let name = serverName, !name.isEmpty { return name }
-    let base = title.isEmpty ? "document" : title
-    return "\(base).pdf"
+    return title.isEmpty ? "document" : title
   }
 
   /// Id of the version the server returns when no `?version=` query is sent.

@@ -15,10 +15,20 @@ import PDFKit
 import SwiftUI
 import os
 
+/// What the preview shows for a downloaded file.
+enum DocumentContent {
+  case pdf(PDFDocument)
+  /// A file PDFKit can't open, such as the original of a document without an
+  /// archive version. QuickLook shows it from a link named after the server's
+  /// filename, since it goes by the extension.
+  case file(URL)
+}
+
 enum DocumentDownloadState: Equatable {
   case initial
   case loading
-  case loaded(url: URL, document: PDFDocument)
+  /// `url` is the canonical stored file, which the share menu hands out.
+  case loaded(url: URL, content: DocumentContent)
   case error
 
   // `.loaded` compares its payload, not just its case. SwiftUI uses the `==` of
@@ -39,8 +49,10 @@ enum DocumentDownloadState: Equatable {
     switch (lhs, rhs) {
     case (.initial, .initial), (.loading, .loading), (.error, .error):
       true
-    case (.loaded(let lURL, let lDocument), .loaded(let rURL, let rDocument)):
+    case (.loaded(let lURL, .pdf(let lDocument)), .loaded(let rURL, .pdf(let rDocument))):
       lURL == rURL && lDocument === rDocument
+    case (.loaded(let lURL, .file(let lLink)), .loaded(let rURL, .file(let rLink))):
+      lURL == rURL && lLink == rLink
     default:
       false
     }
@@ -310,6 +322,23 @@ class DocumentDetailModel {
     hasNoPreview || previewNeedsValidation
   }
 
+  /// PDFKit's document when it can open the file at `url`, otherwise a named
+  /// link for QuickLook; `nil` when neither works.
+  private static func loadContent(
+    url: URL, for document: Document, inMemory: Bool
+  ) async -> DocumentContent? {
+    let pdfDocument =
+      inMemory
+      ? await PDFDocument.loadBackgroundInMemory(url: url)
+      : await PDFDocument.loadBackground(url: url)
+    if let pdfDocument { return .pdf(pdfDocument) }
+    Logger.shared.info("Document \(document.id) is not a PDF, previewing with QuickLook")
+    // The link keeps the bytes it was made from if the store replaces the file.
+    return NamedFileLink.stage(url, as: document.shareFilename(original: false)).map {
+      .file($0)
+    }
+  }
+
   /// Show the stored PDF for `document`, if there is one, before any request
   /// is made. The server can take a long time to answer (e.g. disks spinning
   /// up), and the stored file is usually current.
@@ -319,10 +348,10 @@ class DocumentDetailModel {
     let stamp = FileStamp(url: url)
     // Read into memory: the download that validates it may replace the file
     // at this same path while it is on screen.
-    guard let pdfDocument = await PDFDocument.loadBackgroundInMemory(url: url),
+    guard let content = await Self.loadContent(url: url, for: document, inMemory: true),
       case .initial = download
     else { return }
-    download = .loaded(url: url, document: pdfDocument)
+    download = .loaded(url: url, content: content)
     previewFileStamp = stamp
     previewNeedsValidation = true
   }
@@ -435,12 +464,12 @@ class DocumentDetailModel {
         return
       }
 
-      guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
+      guard let content = await Self.loadContent(url: url, for: document, inMemory: false) else {
         if case .loaded = download {} else { download = .error }
         return
       }
 
-      download = .loaded(url: url, document: pdfDocument)
+      download = .loaded(url: url, content: content)
       previewFileStamp = stamp
       previewNeedsValidation = false
 

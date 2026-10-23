@@ -44,41 +44,12 @@ private struct NamedShareSheet: UIViewControllerRepresentable {
   let name: String
 
   func makeUIViewController(context _: Context) -> UIActivityViewController {
-    let item = stageForShare(canonical: url, name: name) ?? url
+    // "Save to Files", AirDrop and friends name the file after the URL;
+    // `NSItemProvider.suggestedName` is ignored by Files.
+    let item = NamedFileLink.stage(url, as: name) ?? url
     return UIActivityViewController(
       activityItems: [item], applicationActivities: nil)
   }
 
   func updateUIViewController(_: UIActivityViewController, context _: Context) {}
-
-  /// Stages a hardlink to `canonical` under a fresh UUID-d subdirectory of
-  /// `NSTemporaryDirectory()` whose filename matches `name`. The share sheet
-  /// then sees a URL whose `lastPathComponent` is the friendly name — which
-  /// "Save to Files", AirDrop, and friends all respect (unlike
-  /// `NSItemProvider.suggestedName`, which Files specifically ignores).
-  ///
-  /// Hardlink shares an inode with the canonical blob (no data copy); the
-  /// fresh subdirectory means no collision logic; the OS purges
-  /// `NSTemporaryDirectory()`, so no cleanup is needed.
-  private func stageForShare(canonical: URL, name: String) -> URL? {
-    do {
-      let subdir = FileManager.default.temporaryDirectory
-        .appendingPathComponent(
-          "Share-\(UUID().uuidString)", isDirectory: true)
-      try FileManager.default.createDirectory(
-        at: subdir, withIntermediateDirectories: true)
-      let dest = subdir.appendingPathComponent(sanitize(name))
-      try FileManager.default.linkItem(at: canonical, to: dest)
-      return dest
-    } catch {
-      return nil
-    }
-  }
-
-  private func sanitize(_ name: String) -> String {
-    let invalid = CharacterSet(charactersIn: "/\0").union(.controlCharacters)
-    let scrubbed = name.components(separatedBy: invalid).joined()
-      .trimmingCharacters(in: .whitespacesAndNewlines)
-    return scrubbed.isEmpty ? "document.pdf" : scrubbed
-  }
 }

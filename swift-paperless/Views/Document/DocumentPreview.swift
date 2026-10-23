@@ -18,11 +18,14 @@ private enum DownloadState: Equatable {
   case initial
   case loading
   case loaded(PDFDocument)
+  /// Downloaded, but not something PDFKit opens; the thumbnail stands in.
+  case notPDF
   case error
 
   static func == (lhs: DownloadState, rhs: DownloadState) -> Bool {
     switch (lhs, rhs) {
-    case (.initial, .initial), (.loading, .loading), (.loaded, .loaded), (.error, .error):
+    case (.initial, .initial), (.loading, .loading), (.loaded, .loaded), (.notPDF, .notPDF),
+      (.error, .error):
       true
     default:
       false
@@ -96,7 +99,7 @@ private final class IntegratedDocumentPreviewModel {
           })
 
         guard let pdfDocument = await PDFDocument.loadBackground(url: url) else {
-          download = .error
+          download = .notPDF
           return
         }
         download = .loaded(pdfDocument)
@@ -255,6 +258,30 @@ private struct IntegratedDocumentPreview: View {
   private static let loadingOverlayDelay: Duration = .seconds(0.5)
   private static let pdfFadeInDuration: TimeInterval = 0.35
 
+  /// The server's thumbnail, blurred while it stands in for a PDF still to
+  /// load. Without one, a file that isn't a PDF gets a generic symbol so
+  /// there is something to tap.
+  @ViewBuilder
+  private func thumbnail(blurred: Bool) -> some View {
+    if let thumbnail = image.image {
+      thumbnail
+        .resizable()
+        .scaledToFit()
+        .blur(radius: blurred ? 5 : 0, opaque: true)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+          RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / displayScale)
+        )
+        .padding(.horizontal, PDFPagingPreview.pageInset)
+    } else if !blurred {
+      Image(systemName: "doc")
+        .font(.system(size: 64))
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, minHeight: 200)
+    }
+  }
+
   var body: some View {
     ZStack {
       // Thumbnail acts as a stable underlay while the PDF fades in on top.
@@ -268,21 +295,29 @@ private struct IntegratedDocumentPreview: View {
       // It also stays put under an `.error`: offline (or any failed PDF
       // download) we keep the cached thumbnail rather than swapping in a
       // placeholder symbol.
-      if !thumbnailHidden {
-        image.image?
-          .resizable()
-          .scaledToFit()
-          .blur(radius: 5, opaque: true)
-          .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-          .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-              .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1 / displayScale)
-          )
-          .padding(.horizontal, PDFPagingPreview.pageInset)
+      if case .loaded(url: _, content: .file) = downloadState {
+        // QuickLook has no page view to scroll, so the sharp thumbnail is the
+        // preview, and tapping it opens the file.
+        Button {
+          onTap?()
+        } label: {
+          thumbnail(blurred: false)
+        }
+        .buttonStyle(.plain)
+        .disabled(onTap == nil)
+        .apply { view in
+          if let transitionID, let transitionNamespace {
+            view.backport.matchedTransitionSource(id: transitionID, in: transitionNamespace)
+          } else {
+            view
+          }
+        }
+      } else if !thumbnailHidden {
+        thumbnail(blurred: true)
           .transition(.identity)
       }
 
-      if case .loaded(url: _, document: let pdfDocument) = downloadState {
+      if case .loaded(url: _, content: .pdf(let pdfDocument)) = downloadState {
         PDFPagingPreview(
           document: pdfDocument,
           currentPage: $currentPage,
@@ -314,14 +349,20 @@ private struct IntegratedDocumentPreview: View {
       // view-tree transition — the latter forces the glass material to
       // re-sample its backdrop on insertion, which reads as a brief dark
       // flash before it stabilises.
-      if case .loaded(url: _, document: let pdfDocument) = downloadState {
+      if case .loaded(url: _, content: let content) = downloadState {
         HStack(spacing: 4) {
           if isRefreshing {
             ProgressView()
               .controlSize(.mini)
               .transition(.opacity)
           }
-          Text(.app(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
+          switch content {
+          case .pdf(let pdfDocument):
+            Text(.app(.pageIndicator(currentPage + 1, pdfDocument.pageCount)))
+          case .file(let url):
+            // The file type, as the page count would be meaningless.
+            Text(verbatim: url.pathExtension.uppercased())
+          }
         }
         .animation(.easeOut(duration: 0.2), value: isRefreshing)
         .font(.caption2)
@@ -335,7 +376,7 @@ private struct IntegratedDocumentPreview: View {
         .animation(.default, value: currentPage)
         .padding(.bottom, 24)
         .allowsHitTesting(false)
-        .opacity(thumbnailHidden ? 1 : 0)
+        .opacity(thumbnailHidden || content.isFile ? 1 : 0)
         .animation(.easeOut(duration: 0.2).delay(0.4), value: thumbnailHidden)
       }
     }
@@ -398,11 +439,11 @@ private struct IntegratedDocumentPreview: View {
           try await Task.sleep(for: Self.loadingOverlayDelay)
           try Task.checkCancellation()
           showLoadingOverlay = true
-        case .loaded:
+        case .loaded(url: _, content: .pdf):
           try await Task.sleep(for: .seconds(Self.pdfFadeInDuration))
           try Task.checkCancellation()
           thumbnailHidden = true
-        case .initial, .error:
+        case .loaded(url: _, content: .file), .initial, .error:
           break
         }
       } catch is CancellationError {
@@ -430,6 +471,18 @@ struct PopupDocumentPreview: View {
           .resizable()
           .scaledToFit()
           .blur(radius: 10)
+
+      case .notPDF:
+        if let thumbnail = image.image {
+          thumbnail
+            .resizable()
+            .scaledToFit()
+        } else if !image.isLoading {
+          Image(systemName: "doc")
+            .imageScale(.large)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
 
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
@@ -485,11 +538,17 @@ struct PopupDocumentPreview: View {
   VStack {
     DocumentPreview(
       document: document,
-      downloadState: .loaded(url: url, document: pdfDocument),
+      downloadState: .loaded(url: url, content: .pdf(pdfDocument)),
       isRefreshing: isRefreshing,
       currentPage: $currentPage)
     Toggle(isOn: $isRefreshing) { Text(verbatim: "Validating") }
       .padding(.horizontal)
   }
   .environment(store)
+}
+
+extension DocumentContent {
+  fileprivate var isFile: Bool {
+    if case .file = self { true } else { false }
+  }
 }
