@@ -7,14 +7,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Upload et dokument til ${applicationName}"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Lade ein Dokument in ${applicationName} hoch"
           }
         },
         "en" : {
@@ -25,32 +25,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Envoyer un document vers ${applicationName}"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Carica un documento su ${applicationName}"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Upload een document naar ${applicationName}"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Prześlij dokument do ${applicationName}"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload a document to ${applicationName}"
+            "state" : "translated",
+            "value" : "${applicationName} uygulamasına doküman yükle"
           }
         }
       }
@@ -61,14 +61,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Upload dokument"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Dokument hochladen"
           }
         },
         "en" : {
@@ -79,32 +79,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Envoyer un document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Carica documento"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Document uploaden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Prześlij dokument"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Doküman yükle"
           }
         }
       }
@@ -115,14 +115,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Upload dokument til ${applicationName}"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Dokument in ${applicationName} hochladen"
           }
         },
         "en" : {
@@ -133,32 +133,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Envoie un document vers ${applicationName}"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Carica documento su ${applicationName}"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Document uploaden naar ${applicationName}"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "Wyślij dokument do ${applicationName}"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload document to ${applicationName}"
+            "state" : "translated",
+            "value" : "${applicationName} ile doküman yükle"
           }
         }
       }
