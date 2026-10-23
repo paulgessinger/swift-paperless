@@ -140,6 +140,24 @@ public final class DocumentStore: Sendable {
     await session?.fillFiles()
   }
 
+  /// The active server's documents kept offline, observed from the membership.
+  public var keptOfflineDocumentIDs: Set<UInt> { projection?.keptOfflineDocumentIDs ?? [] }
+
+  public func isKeptOffline(_ documentID: UInt) -> Bool {
+    keptOfflineDocumentIDs.contains(documentID)
+  }
+
+  /// Keep a document on the device, or stop keeping it. Keeping queues its
+  /// archive at once; stopping leaves the file to the budget.
+  public func setKeptOffline(_ documentID: UInt, _ kept: Bool) async throws {
+    guard let session, let backend = session.backend else { return }
+    try await backend.database.setKeptOffline(
+      serverID: session.serverID, documentID: documentID, kept: kept)
+    if kept {
+      await session.fillFiles()
+    }
+  }
+
   /// Debug: call off every library download.
   public func cancelLibraryDownloads() async {
     await registry?.fileDownloader?.cancelAll()

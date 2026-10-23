@@ -36,6 +36,31 @@ struct DocumentStoreTests {
     await harness.fileDownloader?.invalidate()
   }
 
+  @Test("Keeping a document records it and queues its archive; the projection follows")
+  func keepOfflineQueuesTheArchive() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    var document = document(1)
+    document.modified = Date(timeIntervalSince1970: 500)
+    let harness = try await StoreHarness.make(
+      documents: [document], fileDownloader: StoreHarness.stubbedDownloader)
+
+    try await harness.store.setKeptOffline(1, true)
+
+    #expect(try await harness.database.keptOfflineIDs(serverID: harness.serverID) == [1])
+    try await waitUntil({ harness.store.isKeptOffline(1) }, "the projection never saw the pin")
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 1 }, "the archive was never requested")
+    let status = try #require(harness.store.makeOfflineStatus())
+    try await waitUntil(
+      { status.keptOfflineFileProgress.totalDocuments == 1 }, "the status never saw the pin")
+
+    try await harness.store.setKeptOffline(1, false)
+    try await waitUntil({ !harness.store.isKeptOffline(1) }, "the projection kept the pin")
+    await harness.fileDownloader?.invalidate()
+  }
+
   @Test("A thumbnail request is keyed by the session's server and the document's version")
   func thumbnailRequestCarriesTheImageID() async throws {
     let harness = try await StoreHarness.make()

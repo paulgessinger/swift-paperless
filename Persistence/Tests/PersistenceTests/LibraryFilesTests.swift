@@ -38,8 +38,10 @@ struct LibraryFilesTests {
     try await recordArchive(database, 1, modified: date(500))
     try await recordArchive(database, 2, modified: date(400))
 
-    let ids = try await database.documentsNeedingArchive(serverID: server, limit: 10)
-      .map(\.documentID)
+    let ids = try await database.documentsNeedingArchive(
+      serverID: server, scope: .library, limit: 10
+    )
+    .map(\.documentID)
     #expect(ids == [3, 2])
   }
 
@@ -48,8 +50,10 @@ struct LibraryFilesTests {
     let database = try Database.seeded(serverID: server, documents: [doc(1)])
     try await recordArchive(database, 1, modified: date(500), kind: .original)
 
-    let ids = try await database.documentsNeedingArchive(serverID: server, limit: 10)
-      .map(\.documentID)
+    let ids = try await database.documentsNeedingArchive(
+      serverID: server, scope: .library, limit: 10
+    )
+    .map(\.documentID)
     #expect(ids == [1])
   }
 
@@ -59,7 +63,7 @@ struct LibraryFilesTests {
       serverID: server, documents: [doc(1), doc(2), doc(3), doc(4), doc(5)])
 
     let candidates = try await database.documentsNeedingArchive(
-      serverID: server, excluding: [5, 3], limit: 2)
+      serverID: server, scope: .library, excluding: [5, 3], limit: 2)
     #expect(candidates.map(\.documentID) == [4, 2])
   }
 
@@ -72,7 +76,8 @@ struct LibraryFilesTests {
         doc(2),
       ])
 
-    let candidates = try await database.documentsNeedingArchive(serverID: server, limit: 10)
+    let candidates = try await database.documentsNeedingArchive(
+      serverID: server, scope: .library, limit: 10)
     let versioned = try #require(candidates.first { $0.documentID == 1 })
     #expect(versioned.versionID == 9)
     #expect(versioned.versionQueryID == 9)
@@ -83,7 +88,8 @@ struct LibraryFilesTests {
 
     // Filed under the current version: the archive of version 9 satisfies it.
     try await recordArchive(database, 1, version: 9, modified: date(500))
-    let after = try await database.documentsNeedingArchive(serverID: server, limit: 10)
+    let after = try await database.documentsNeedingArchive(
+      serverID: server, scope: .library, limit: 10)
     #expect(after.map(\.documentID) == [2])
   }
 
@@ -95,10 +101,12 @@ struct LibraryFilesTests {
     try FileFixtures.addServer(other, to: database)
     try await database.upsertDocuments([doc(3)], serverID: other)
 
-    let ids = try await database.documentsNeedingArchive(serverID: server, limit: 10)
-      .map(\.documentID)
+    let ids = try await database.documentsNeedingArchive(
+      serverID: server, scope: .library, limit: 10
+    )
+    .map(\.documentID)
     #expect(ids == [2])
-    let progress = try await database.libraryFileProgress(serverID: server)
+    let progress = try await database.libraryFileProgress(serverID: server, scope: .library)
     #expect(progress == LibraryFileProgress(totalDocuments: 1, downloadedFiles: 0))
   }
 
@@ -109,7 +117,7 @@ struct LibraryFilesTests {
     try await recordArchive(database, 2, modified: date(400), size: 50)
     try await recordArchive(database, 3, modified: date(500), size: 7, kind: .original)
 
-    let progress = try await database.libraryFileProgress(serverID: server)
+    let progress = try await database.libraryFileProgress(serverID: server, scope: .library)
     #expect(
       progress == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 100))
   }
@@ -117,7 +125,8 @@ struct LibraryFilesTests {
   @Test("The observation reports a recorded archive")
   func observation() async throws {
     let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
-    var iterator = database.observeLibraryFileProgress(serverID: server).makeAsyncIterator()
+    var iterator = database.observeLibraryFileProgress(serverID: server, scope: .library)
+      .makeAsyncIterator()
     let initial = try await iterator.next()
     #expect(initial == LibraryFileProgress(totalDocuments: 2))
 
@@ -125,5 +134,32 @@ struct LibraryFilesTests {
     let next = try await iterator.next()
     #expect(
       next == LibraryFileProgress(totalDocuments: 2, downloadedFiles: 1, downloadedBytes: 100))
+  }
+
+  @Test("The kept scope lists only members, cached or stale, and counts every member")
+  func keptScope() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    // 1: kept, stale archive. 2: kept, fresh. 3: not kept, missing. 9: kept, no row.
+    try await recordArchive(database, 1, modified: date(400))
+    try await recordArchive(database, 2, modified: date(500), size: 7)
+    for id: UInt in [1, 2, 9] {
+      try await database.setKeptOffline(serverID: server, documentID: id, kept: true)
+    }
+
+    let kept = try await database.documentsNeedingArchive(
+      serverID: server, scope: .keptOffline, limit: 10
+    ).map(\.documentID)
+    #expect(kept == [1])
+    let library = try await database.documentsNeedingArchive(
+      serverID: server, scope: .library, limit: 10
+    )
+    .map(\.documentID)
+    #expect(library == [3, 1])
+
+    let progress = try await database.libraryFileProgress(serverID: server, scope: .keptOffline)
+    #expect(
+      progress == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
+    let whole = try await database.libraryFileProgress(serverID: server, scope: .library)
+    #expect(whole == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
   }
 }

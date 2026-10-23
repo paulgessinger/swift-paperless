@@ -108,7 +108,7 @@ struct LibraryFileDownloaderTests {
         id == serverID
           ? LibraryDownloadServer(
             syncOverCellular: syncOverCellular,
-            isEntireLibrary: mode?.isEntireLibrary ?? isEntireLibrary,
+            scope: mode?.isEntireLibrary ?? isEntireLibrary ? .library : .keptOffline,
             repository: { try await repositoryLookup?() ?? repository })
           : nil
       },
@@ -177,9 +177,10 @@ struct LibraryFileDownloaderTests {
     // 3 finishes and is filed; the refill queues 2, which never finishes.
     try await waitUntil { fixture.store.exists(self.key(3)) }
     try await waitUntil {
-      try await fixture.database.libraryFileProgress(serverID: self.server).downloadedFiles == 1
+      try await fixture.database.libraryFileProgress(serverID: self.server, scope: .library)
+        .downloadedFiles == 1
     }
-    let progress = try await fixture.database.libraryFileProgress(serverID: server)
+    let progress = try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
     #expect(
       progress
         == LibraryFileProgress(
@@ -231,16 +232,36 @@ struct LibraryFileDownloaderTests {
     await roomy.downloader.invalidate()
   }
 
-  @Test("A server outside Entire library, or unknown, queues nothing")
-  func onlyLibraryServers() async throws {
+  @Test("Low free space does not pause a server with nothing to queue")
+  func lowStorageWithNothingToQueue() async throws {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1], isEntireLibrary: false)
+    // Recently browsed with nothing kept: the scope is empty.
+    let fixture = try makeFixture(documents: [1], isEntireLibrary: false, freeSpace: 1)
+
+    #expect(try await fixture.downloader.refill(serverID: server) == .complete)
+    #expect(!fixture.downloader.pausedLowStorage)
+    #expect(StubDownloadURLProtocol.requests.isEmpty)
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("A server outside Entire library queues only its kept documents; an unknown one nothing")
+  func keptDocumentsOutsideTheLibrary() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let fixture = try makeFixture(documents: [1, 2, 3], isEntireLibrary: false)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .complete)
     #expect(try await fixture.downloader.refill(serverID: UUID()) == .complete)
     #expect(StubDownloadURLProtocol.requests.isEmpty)
+
+    try await fixture.database.setKeptOffline(serverID: server, documentID: 2, kept: true)
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+    try await waitUntil { StubDownloadURLProtocol.requests.count == 1 }
+    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/2/download")
+    #expect(fixture.downloader.inFlight[server] == 1)
     await fixture.downloader.invalidate()
   }
 
@@ -335,7 +356,9 @@ struct LibraryFileDownloaderTests {
     await index.open()
     await events.value
     #expect(called.errors.count == 1)
-    #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 1)
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
+        .downloadedFiles == 1)
     await fixture.downloader.invalidate()
   }
 
@@ -359,7 +382,9 @@ struct LibraryFileDownloaderTests {
     // Filed before cancel returns, so a reclaim behind it finds the row.
     await index.open()
     await cancel.value
-    #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 1)
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
+        .downloadedFiles == 1)
     await fixture.downloader.invalidate()
   }
 
@@ -382,7 +407,9 @@ struct LibraryFileDownloaderTests {
 
     try await waitUntil { (fixture.downloader.inFlight[self.server] ?? 0) == 0 }
     #expect(!fixture.store.exists(key(1)))
-    #expect(try await fixture.database.libraryFileProgress(serverID: server).downloadedFiles == 0)
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
+        .downloadedFiles == 0)
     await fixture.downloader.invalidate()
   }
 

@@ -165,7 +165,10 @@ public enum SyncPlan {
   /// server's mode from the database before filling) on purpose: this is the
   /// copy that is unit-tested, and the executor's is a guard, not a decision.
   public static func phases(isEntireLibrary: Bool, condition: SyncCondition) -> SyncPhases {
-    condition.allowsProactiveSync && isEntireLibrary ? .full : .cheap
+    guard condition.allowsProactiveSync else { return .cheap }
+    // Outside *Entire library* there is no fill, but the kept documents'
+    // files still download.
+    return isEntireLibrary ? .full : [.elements, .reconcile, .files]
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an

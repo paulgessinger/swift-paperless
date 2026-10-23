@@ -19,27 +19,29 @@ public struct LibraryDownloadServer: Sendable {
   /// Whether its downloads may use cellular data; Low Data Mode always stops
   /// them.
   public let syncOverCellular: Bool
-  /// Whether its whole library is downloaded.
-  public let isEntireLibrary: Bool
+  /// Which documents it downloads: every one in *Entire library*, the kept
+  /// ones otherwise.
+  public let scope: LibraryFileScope
   /// Builds the authenticated requests. Only a refill with something to
   /// queue asks for it: preparing it can build the server's stack.
   public let repository: @MainActor @Sendable () async throws -> any Repository
 
   public init(
-    syncOverCellular: Bool, isEntireLibrary: Bool,
+    syncOverCellular: Bool, scope: LibraryFileScope,
     repository: @escaping @MainActor @Sendable () async throws -> any Repository
   ) {
     self.syncOverCellular = syncOverCellular
-    self.isEntireLibrary = isEntireLibrary
+    self.scope = scope
     self.repository = repository
   }
 }
 
-/// Keeps a window of archive downloads in flight for every *Entire library*
-/// server. The index is the source of truth for what is missing: a refill
-/// asks the database for the newest documents whose archive is missing or
-/// outdated, leaves out the ones in flight, and hands iOS the rest, up to the
-/// window.
+/// Keeps a window of archive downloads in flight per server: the whole
+/// library of an *Entire library* server, the documents kept offline of any
+/// other. The index is the source of truth for what is missing: a refill
+/// asks the database for the newest documents in that scope whose archive is
+/// missing or outdated, leaves out the ones in flight, and hands iOS the
+/// rest, up to the window.
 ///
 /// Everything happens as events through one loop on the main actor, in the
 /// order they arrive: the session's completions, from its serial delegate
@@ -69,16 +71,19 @@ public final class LibraryFileDownloader {
   public enum RefillOutcome: Equatable, Sendable {
     /// Handed this many new tasks to the session.
     case queued(Int)
-    /// Nothing is missing, or the server is not in *Entire library*.
+    /// Nothing is missing, or the server is gone.
     case complete
-    /// Free space is below the floor; nothing was queued.
+    /// Something is missing but free space is below the floor; nothing was
+    /// queued.
     case pausedLowStorage
   }
 
   /// Tasks in flight per server. Throttled for display: eight fast downloads
   /// change it many times a second.
   public private(set) var inFlight: [UUID: Int] = [:]
-  /// Whether the last refill stopped because free space is below the floor.
+  /// Whether a refill with something to queue stopped because free space is
+  /// below the floor. Cleared by any refill that finds room: the flag is
+  /// shared, so a server with nothing to queue must not clear it on low space.
   public private(set) var pausedLowStorage = false
 
   /// A download that failed, for the server's failure ledger.
@@ -207,7 +212,7 @@ public final class LibraryFileDownloader {
 
   /// Top every server's window up, after iOS relaunched the app for the
   /// session's events or at launch.
-  public func refillAllLibraryServers() async {
+  public func refillAllServers() async {
     for serverID in allServerIDs() {
       do {
         try await refill(serverID: serverID)
@@ -217,10 +222,11 @@ public final class LibraryFileDownloader {
     }
   }
 
-  /// Call off a server's downloads: it was removed, or left *Entire library*.
-  /// Returns once the completions that arrived before it are filed, so a
-  /// caller reclaiming the server's files runs after them; a completion that
-  /// arrives later finds the server no longer wants the file and drops it.
+  /// Call off a server's downloads: it was removed, or left *Entire library*
+  /// (a refill then queues the kept documents again). Returns once the
+  /// completions that arrived before it are filed, so a caller reclaiming
+  /// the server's files runs after them; a completion that arrives later
+  /// finds the server no longer wants the file and drops it.
   public func cancel(serverID: UUID) async {
     await withCheckedContinuation { events.yield(.cancel(serverID, $0)) }
   }
@@ -328,8 +334,9 @@ public final class LibraryFileDownloader {
   }
 
   /// File a finished task: record its file, or drop one its server no longer
-  /// wants (the server left *Entire library*, or is gone, and its reclaim
-  /// may already have run), or note the failure. Its server is refilled once
+  /// wants (the server left *Entire library*, the document is no longer
+  /// kept, or the server is gone, and the reclaim may already have run), or
+  /// note the failure. Its server is refilled once
   /// the events already queued are handled.
   private func file(task: Int, id: TaskID, size: Int64?, error: (any Error)?) async {
     tasks[task] = nil
@@ -367,7 +374,14 @@ public final class LibraryFileDownloader {
   /// Whether the file is still in its server's scope.
   private func isWanted(_ id: TaskID) async -> Bool {
     guard let server = try? await servers(id.key.serverID) else { return false }
-    return server.isEntireLibrary
+    switch server.scope {
+    case .library:
+      return true
+    case .keptOffline:
+      return
+        (try? await database.isKeptOffline(
+          serverID: id.key.serverID, documentID: id.documentID)) ?? false
+    }
   }
 
   private func refillFiled() async {
@@ -385,16 +399,10 @@ public final class LibraryFileDownloader {
   }
 
   private func performRefill(serverID: UUID) async throws -> RefillOutcome {
-    guard !isInvalidated, let server = try await servers(serverID), server.isEntireLibrary else {
-      return .complete
-    }
-    if let free = availableCapacity(store.root),
-      free < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
-    {
-      if !pausedLowStorage { pausedLowStorage = true }
-      return .pausedLowStorage
-    }
-    if pausedLowStorage { pausedLowStorage = false }
+    guard !isInvalidated, let server = try await servers(serverID) else { return .complete }
+    let lowStorage =
+      (availableCapacity(store.root) ?? .max) < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
+    if !lowStorage, pausedLowStorage { pausedLowStorage = false }
 
     let inFlightDocuments = Set(
       tasks.values.filter { $0.id.key.serverID == serverID }.map(\.id.documentID))
@@ -404,9 +412,14 @@ public final class LibraryFileDownloader {
     recentlyFailed = recentlyFailed.filter { now.timeIntervalSince($0.value) < 3600 }
     let backedOff = Set(recentlyFailed.keys.filter { $0.serverID == serverID }.map(\.versionID))
     let candidates = try await database.documentsNeedingArchive(
-      serverID: serverID, excluding: inFlightDocuments, limit: room + backedOff.count
+      serverID: serverID, scope: server.scope, excluding: inFlightDocuments,
+      limit: room + backedOff.count
     ).filter { !backedOff.contains($0.versionID) }.prefix(room)
     guard !candidates.isEmpty else { return .complete }
+    if lowStorage {
+      if !pausedLowStorage { pausedLowStorage = true }
+      return .pausedLowStorage
+    }
 
     let repository = try await withTimeout(repositoryTimeout) { try await server.repository() }
     for candidate in candidates {

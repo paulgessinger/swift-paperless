@@ -56,6 +56,10 @@ public final class ServerProjection {
   /// cold-cache default. Lets the UI distinguish "loading" from "denied".
   public private(set) var isHydrated = false
 
+  /// The documents kept offline, for the list's badges and the detail view's
+  /// toggle.
+  public private(set) var keptOfflineDocumentIDs: Set<UInt> = []
+
   // MARK: Members
 
   @ObservationIgnored
@@ -102,6 +106,8 @@ public final class ServerProjection {
       observeUISettings(database.observeUISettings(serverID: serverID)),
       observeValue(
         database.observeServerConfiguration(serverID: serverID), into: \.serverConfiguration),
+      observeValue(
+        database.observeKeptOfflineIDs(serverID: serverID), into: \.keptOfflineDocumentIDs),
     ])
   }
 

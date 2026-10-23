@@ -382,4 +382,36 @@ struct ContentReclaimerTests {
     var now: Date
     init(_ now: Date) { self.now = now }
   }
+
+  @Test("A kept document's archive is not evicted and survives the downgrade")
+  func keptArchivesAreKept() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    try addServer(server, to: database)
+    let store = try makeStore()
+    try await cache(store, database, key(server, 1), bytes: 100, accessed: date(1000))
+    try await cache(store, database, key(server, 2), bytes: 100, accessed: date(2000))
+    try await cache(store, database, key(server, 3), bytes: 100, accessed: date(3000))
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+    let reclaimer = ContentReclaimer(
+      database: database, store: store, budget: 150, now: { self.date(9000) })
+
+    // Oldest first among the evictable rows, which 1 is not.
+    let report = await reclaimer.run(reason: .manual)
+    #expect(report.evictedFiles == 1)
+    #expect(store.exists(key(server, 1)))
+    #expect(!store.exists(key(server, 2)))
+
+    let removed = await reclaimer.removeArchives(serverID: server)
+    #expect(removed.files == 1)
+    #expect(store.exists(key(server, 1)))
+    #expect(!store.exists(key(server, 3)))
+    #expect(try await database.anyFile(key(server, 1)) != nil)
+
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: false)
+    try await cache(store, database, key(server, 2), bytes: 100, accessed: date(5000))
+    let after = await reclaimer.run(reason: .manual)
+    #expect(after.evictedFiles == 1)
+    #expect(!store.exists(key(server, 1)))
+  }
 }

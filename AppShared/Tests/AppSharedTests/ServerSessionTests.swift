@@ -217,8 +217,10 @@ struct ServerSessionTests {
     await harness.fileDownloader?.invalidate()
   }
 
-  @Test("A session without a downloader, or a Recently browsed server, skips the files")
-  func filesStepSkipsWithoutADownloaderOrTheMode() async throws {
+  @Test(
+    "A session without a downloader skips the files; a Recently browsed server queues its kept documents"
+  )
+  func filesStepWithoutADownloaderAndOutsideTheLibrary() async throws {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
@@ -229,12 +231,57 @@ struct ServerSessionTests {
     let rows = try await closedRows(harness.database, count: 1)
     #expect(rows.map(\.step) == ["connection"])
 
+    var kept = document(2)
+    kept.modified = Date(timeIntervalSince1970: 2000)
     let browsing = try await StoreHarness.make(
-      documents: [document(1)], fileDownloader: StoreHarness.stubbedDownloader)
+      documents: [document(1), kept], fileDownloader: StoreHarness.stubbedDownloader)
     #expect(await browsing.session.fillFiles())
     #expect(StubDownloadURLProtocol.requests.isEmpty)
     #expect(browsing.session.syncActivities.isEmpty)
+
+    try await browsing.database.setKeptOffline(
+      serverID: browsing.serverID, documentID: 2, kept: true)
+    #expect(await browsing.session.fillFiles())
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 1 }, "the kept file was never requested")
+    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/2/download")
+    try await waitUntil(
+      { browsing.session.syncActivities.map(\.stage) == [.fileDownload] },
+      "the download row never showed")
     await browsing.fileDownloader?.invalidate()
+  }
+
+  @Test(
+    "The reconcile fetches a kept document's missing row, queues its file, and releases one the server lost"
+  )
+  func reconcileHydratesAndReleasesKeptDocuments() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let harness = try await StoreHarness.make(
+      documents: [document(1)], fileDownloader: StoreHarness.stubbedDownloader)
+    for id: UInt in [1, 2] {
+      var document = document(id)
+      document.modified = Date(timeIntervalSince1970: 500)
+      _ = try await harness.transient.update(document: document)
+    }
+    for id: UInt in [1, 2, 3] {
+      try await harness.database.setKeptOffline(
+        serverID: harness.serverID, documentID: id, kept: true)
+    }
+    let stored = StoredConnection(
+      id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
+      extraHeaders: [], user: StoreHarness.user)
+
+    await harness.session.sync(stored: stored, phases: [.reconcile])
+
+    #expect(try await harness.database.document(serverID: harness.serverID, id: 2) != nil)
+    #expect(try await harness.database.keptOfflineIDs(serverID: harness.serverID) == [1, 2])
+    #expect(harness.session.syncFailures.isEmpty)
+    // Both kept documents are missing their archive; the hydration queued them.
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 2 }, "the kept files were never requested")
+    await harness.fileDownloader?.invalidate()
   }
 
   @Test("A pass called off during the library fill never starts the detail fill")
