@@ -145,6 +145,35 @@ struct ContentStoreTests {
           .appendingPathComponent("archive.pdf").path))
   }
 
+  @Test("A failed rename keeps the file and retries on the next launch")
+  func failedRenameKeepsFileAndRetries() throws {
+    let (store, root) = try Self.makeStore()
+    let key = Self.key()
+    try Self.writeRaw(store, key, name: "archive.pdf", "kept")
+    try Self.removeMarker(root)
+    let directory = store.url(for: key).deletingLastPathComponent()
+    let legacy = directory.appendingPathComponent("archive.pdf")
+    let marker = AppGroup.Layout.contentStore(in: root).appendingPathComponent(".extensionless")
+
+    // Read-only, so the rename fails with nothing under the new name.
+    try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
+    defer {
+      try? FileManager.default.setAttributes(
+        [.posixPermissions: 0o755], ofItemAtPath: directory.path)
+    }
+    _ = try ContentStore(root: root)
+
+    #expect(FileManager.default.fileExists(atPath: legacy.path))
+    #expect(!FileManager.default.fileExists(atPath: marker.path))
+
+    try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
+    let reopened = try ContentStore(root: root)
+
+    #expect(try String(contentsOf: reopened.url(for: key), encoding: .utf8) == "kept")
+    #expect(!FileManager.default.fileExists(atPath: legacy.path))
+    #expect(FileManager.default.fileExists(atPath: marker.path))
+  }
+
   @Test("The rename runs once per store")
   func legacyRenameRunsOnce() throws {
     let (store, root) = try Self.makeStore()

@@ -119,23 +119,29 @@ public struct ContentStore: Sendable {
   /// inventory, and its bytes never reclaimed.
   private func dropLegacyExtensions() {
     guard !FileManager.default.fileExists(atPath: extensionlessMarker.path) else { return }
+    var complete = true
     for serverDirectory in contents(of: canonicalRoot) {
       guard UUID(uuidString: serverDirectory.lastPathComponent) != nil else { continue }
       for versionDirectory in contents(of: serverDirectory) {
         for kind in [Kind.original, .archive] {
           let legacy = versionDirectory.appendingPathComponent("\(kind.rawValue).pdf")
+          let current = versionDirectory.appendingPathComponent(kind.rawValue)
           guard FileManager.default.fileExists(atPath: legacy.path) else { continue }
           do {
-            try FileManager.default.moveItem(
-              at: legacy, to: versionDirectory.appendingPathComponent(kind.rawValue))
-          } catch {
+            try FileManager.default.moveItem(at: legacy, to: current)
+          } catch  where FileManager.default.fileExists(atPath: current.path) {
             // A download (possibly in another process) already put a file
             // under the new name, and that one is current.
             try? FileManager.default.removeItem(at: legacy)
+          } catch {
+            // Kept, and without the marker the next launch tries again.
+            Logger.cache.error("Renaming \(legacy.path) failed: \(error)")
+            complete = false
           }
         }
       }
     }
+    guard complete else { return }
     FileManager.default.createFile(atPath: extensionlessMarker.path, contents: nil)
   }
 
