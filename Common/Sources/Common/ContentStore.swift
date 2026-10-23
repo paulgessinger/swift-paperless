@@ -34,12 +34,13 @@ public struct ContentStore: Sendable {
     case archive
     case thumbnail
 
-    /// Part of the canonical path, not the content type: a document without
-    /// an archive version stores its original as `.archive`, whatever it is.
-    /// Whatever leaves the app goes through a named link instead.
-    public var fileExtension: String {
+    /// None for document files: their type isn't known from the key (a
+    /// document without an archive version stores its original as `.archive`),
+    /// so the name makes no claim. Whatever leaves the app goes through a
+    /// named link instead.
+    public var fileExtension: String? {
       switch self {
-      case .original, .archive: "pdf"
+      case .original, .archive: nil
       case .thumbnail: "bin"
       }
     }
@@ -85,6 +86,7 @@ public struct ContentStore: Sendable {
       try FileManager.default.moveItem(at: legacy, to: canonicalRoot)
     }
     try createDirectory(canonicalRoot)
+    dropLegacyExtensions()
     var excluded = canonicalRoot
     var values = URLResourceValues()
     values.isExcludedFromBackup = true
@@ -102,8 +104,39 @@ public struct ContentStore: Sendable {
   }
 
   public func url(for key: Key) -> URL {
-    directory(for: key).appendingPathComponent(
-      "\(key.kind.rawValue).\(key.kind.fileExtension)")
+    let name = key.kind.fileExtension.map { "\(key.kind.rawValue).\($0)" } ?? key.kind.rawValue
+    return directory(for: key).appendingPathComponent(name)
+  }
+
+  /// Present once the store holds no `.pdf` document names, so the walk below
+  /// runs once rather than on every launch.
+  private var extensionlessMarker: URL {
+    canonicalRoot.appendingPathComponent(".extensionless")
+  }
+
+  /// Rename `archive.pdf` and `original.pdf` from builds that named every
+  /// document file a PDF. A name left behind would be invisible to the
+  /// inventory, and its bytes never reclaimed.
+  private func dropLegacyExtensions() {
+    guard !FileManager.default.fileExists(atPath: extensionlessMarker.path) else { return }
+    for serverDirectory in contents(of: canonicalRoot) {
+      guard UUID(uuidString: serverDirectory.lastPathComponent) != nil else { continue }
+      for versionDirectory in contents(of: serverDirectory) {
+        for kind in [Kind.original, .archive] {
+          let legacy = versionDirectory.appendingPathComponent("\(kind.rawValue).pdf")
+          guard FileManager.default.fileExists(atPath: legacy.path) else { continue }
+          do {
+            try FileManager.default.moveItem(
+              at: legacy, to: versionDirectory.appendingPathComponent(kind.rawValue))
+          } catch {
+            // A download (possibly in another process) already put a file
+            // under the new name, and that one is current.
+            try? FileManager.default.removeItem(at: legacy)
+          }
+        }
+      }
+    }
+    FileManager.default.createFile(atPath: extensionlessMarker.path, contents: nil)
   }
 
   private func sidecarURL(for key: Key) -> URL {
