@@ -21,12 +21,12 @@ public enum DocumentListScope: Equatable, Sendable {
   case keptOffline
 
   /// - Parameters:
-  ///   - localView: The app-kept list the filter shows, if any.
+  ///   - localView: The app-kept list on screen, if any.
   ///   - savedView: The saved view the filter was built from, if any.
   ///   - modified: Whether the filter was edited after being built.
   ///   - filtering: Whether the filter narrows or re-sorts the default list.
   public init(
-    localView: FilterState.LocalView? = nil, savedView: UInt?, modified: Bool, filtering: Bool
+    localView: LocalView? = nil, savedView: UInt?, modified: Bool, filtering: Bool
   ) {
     if localView == .keptOffline {
       self = .keptOffline

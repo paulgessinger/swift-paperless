@@ -198,7 +198,7 @@ struct DocumentView: View {
       case .clearFilter:
         routeManager.pendingRoute = nil
         Logger.shared.info("Clearing filter in filter from route")
-        filterModel.filterState.clear()
+        filterModel.clear()
 
       default:
         break
@@ -252,7 +252,7 @@ struct DocumentView: View {
       state.sortOrder = sortOrder
     }
 
-    filterModel.filterState = state
+    filterModel.show(state)
   }
 
   private func applyDateArgument(
@@ -274,7 +274,7 @@ struct DocumentView: View {
   }
 
   private var savedViewNavigationTitle: String {
-    if filterModel.filterState.localView == .keptOffline {
+    if filterModel.localView == .keptOffline {
       return String(localized: .app(.keptOffline))
     }
     guard let id = filterModel.filterState.savedView else {
@@ -434,20 +434,20 @@ struct DocumentView: View {
 
   @ViewBuilder
   private var titleMenu: some View {
-    if !store.savedViews.isEmpty || filterModel.filterState.localView != nil {
+    if !store.savedViews.isEmpty || filterModel.localView != nil {
       Button {
         withAnimation {
-          filterModel.filterState.clear()
+          filterModel.clear()
         }
       } label: {
         Text(.app(.allDocuments))
       }
     }
 
-    if filterModel.filterState.localView != .keptOffline {
+    if filterModel.localView != .keptOffline {
       Button {
         withAnimation {
-          filterModel.filterState = .keptOffline
+          filterModel.localView = .keptOffline
         }
       } label: {
         Label(String(localized: .app(.keptOffline)), systemImage: "arrow.down.circle")
@@ -459,13 +459,13 @@ struct DocumentView: View {
         if !store.savedViews.isEmpty {
           ForEach(
             store.savedViews.map(\.value).sorted { $0.name < $1.name }.filter {
-              $0.id != filterModel.filterState.savedView
+              filterModel.localView != nil || $0.id != filterModel.filterState.savedView
             }, id: \.id
           ) { savedView in
             Button {
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 withAnimation {
-                  filterModel.filterState = .init(savedView: savedView)
+                  filterModel.show(.init(savedView: savedView))
                 }
               }
             } label: {
@@ -509,7 +509,7 @@ struct DocumentView: View {
 
   /// The sidebar row the filter on screen stands for.
   private var sidebarTarget: SidebarSelection {
-    if filterModel.filterState.localView == .keptOffline { return .keptOffline }
+    if filterModel.localView == .keptOffline { return .keptOffline }
     return filterModel.filterState.savedView.map(SidebarSelection.savedView) ?? .allDocuments
   }
 
@@ -665,17 +665,17 @@ struct DocumentView: View {
           // Only clear if there's actually something to clear — otherwise
           // the initial reverse-sync (below) ricochets back here and
           // wipes a perfectly valid restored filter.
+          filterModel.localView = nil
           if filterModel.filterState != .default {
             filterModel.filterState.clear()
           }
         case .keptOffline:
-          if filterModel.filterState.localView != .keptOffline {
-            filterModel.filterState = .keptOffline
-          }
+          filterModel.localView = .keptOffline
         case .savedView(let id):
           // Same idempotency guard: if we're already on this saved view
           // (e.g., we just adopted it from filterState), don't reassign
           // and discard any user modifications restored from defaults.
+          filterModel.localView = nil
           if filterModel.filterState.savedView != id, let sv = store.savedViews[id] {
             filterModel.filterState = .init(savedView: sv)
           }

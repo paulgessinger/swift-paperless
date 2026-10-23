@@ -53,11 +53,26 @@ public final class FilterModel {
     }
   }
 
-  /// The local view whose documents the list shows. It trails `filterState`
+  /// The local view the list opened on last, if it was one.
+  public nonisolated static func restoredLocalView() -> LocalView? {
+    UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?
+      .string(forKey: "GlobalLocalView").flatMap(LocalView.init(rawValue:))
+  }
+
+  /// The local view on screen in place of `filterState`'s query, if any.
+  /// `filterState` keeps the user's filter meanwhile, for when they leave it.
+  public var localView: LocalView? = FilterModel.restoredLocalView() {
+    didSet {
+      guard localView != oldValue else { return }
+      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(
+        localView?.rawValue, forKey: "GlobalLocalView")
+    }
+  }
+
+  /// The local view whose documents the list shows. It trails `localView`
   /// while the list animates to the new rows, and the filter bar follows it,
   /// so the inset above the list changes only once the rows have moved.
-  public var displayedLocalView: FilterState.LocalView? =
-    FilterModel.restoredFilterState().localView
+  public var displayedLocalView: LocalView? = FilterModel.restoredLocalView()
 
   public var filterState: FilterState = FilterModel.restoredFilterState()
   {
@@ -97,6 +112,23 @@ public final class FilterModel {
     var state = filterState
     state.sorting = filterState.sorting ?? defaultSorting
     return state
+  }
+
+  /// What the document list shows. A filter change under a local view leaves
+  /// it as it is.
+  public var listSource: DocumentListSource {
+    localView.map(DocumentListSource.local) ?? .query(resolvedFilterState)
+  }
+
+  /// Leaves any local view for the documents `filter` selects.
+  public func show(_ filter: FilterState) {
+    localView = nil
+    filterState = filter
+  }
+
+  /// Leaves any local view for the default list.
+  public func clear() {
+    show(.default)
   }
 
   public init() {

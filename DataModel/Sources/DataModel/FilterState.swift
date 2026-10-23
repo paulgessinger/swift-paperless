@@ -216,16 +216,6 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public var savedView: UInt? = nil
 
-  /// A list the app keeps itself, with no server query behind it. Set, the
-  /// filter's rules and sort are not consulted: the list is read from the
-  /// local database and never filled.
-  public enum LocalView: String, Equatable, Codable, Sendable {
-    /// The documents the user keeps on the device.
-    case keptOffline
-  }
-
-  public var localView: LocalView? = nil
-
   public var searchText: String = ""
 
   public var searchMode: SearchMode

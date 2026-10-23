@@ -1613,17 +1613,4 @@ struct FilterStateTest {
     #expect(keyword2.rawValue == "previous month")
     #expect(Range(rawValue: keyword2.rawValue) == keyword2)
   }
-
-  @Test("The local view round-trips through JSON and reads as absent from older state")
-  func localViewCoding() throws {
-    var state = FilterState.empty
-    state.localView = .keptOffline
-    let data = try JSONEncoder().encode(state)
-    #expect(try JSONDecoder().decode(FilterState.self, from: data) == state)
-
-    var json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
-    json.removeValue(forKey: "localView")
-    let older = try JSONSerialization.data(withJSONObject: json)
-    #expect(try JSONDecoder().decode(FilterState.self, from: older).localView == nil)
-  }
 }

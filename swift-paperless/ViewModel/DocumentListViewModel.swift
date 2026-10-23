@@ -31,7 +31,7 @@ import os
 @Observable
 class DocumentListViewModel {
   private var store: DocumentStore
-  private var filterState: FilterState
+  private var source: DocumentListSource
   private var errorController: ErrorController
 
   /// Assigned by the document observation; never a network fetch. Entries are
@@ -43,7 +43,7 @@ class DocumentListViewModel {
   /// once the rows have animated to the new list: the filter bar and the
   /// scroll to the top follow it, and moving the inset above the list while
   /// the rows move made them overlap.
-  private(set) var documentsLocalView: FilterState.LocalView?
+  private(set) var documentsLocalView: LocalView?
   var ready = false
   var noPermissions = false
 
@@ -100,16 +100,19 @@ class DocumentListViewModel {
   }
 
   /// A list the app keeps itself: served from the database, never filled.
-  private var isLocalView: Bool { filterState.localView != nil }
+  private var isLocalView: Bool { source.localView != nil }
 
   /// Which list the failure belongs to, for wording it.
   var scope: DocumentListScope {
-    let savedView = filterState.savedView.flatMap { store.savedViews[$0] }
+    guard let filter = source.filter else {
+      return DocumentListScope(
+        localView: source.localView, savedView: nil, modified: false, filtering: false)
+    }
+    let savedView = filter.savedView.flatMap { store.savedViews[$0] }
     return DocumentListScope(
-      localView: filterState.localView,
-      savedView: filterState.savedView,
-      modified: savedView.map { filterState.isModified(from: $0) } ?? false,
-      filtering: filterState.filtering)
+      savedView: filter.savedView,
+      modified: savedView.map { filter.isModified(from: $0) } ?? false,
+      filtering: filter.filtering)
   }
 
   /// The failed fill's error, as the user-facing text the error banners use.
@@ -149,11 +152,11 @@ class DocumentListViewModel {
 
   init(
     store: DocumentStore,
-    filterState: FilterState,
+    source: DocumentListSource,
     errorController: ErrorController
   ) {
     self.store = store
-    self.filterState = filterState
+    self.source = source
     self.errorController = errorController
     prefixLimit = initialLimit
     let prefetchPipeline = store.imagePipeline
@@ -181,7 +184,7 @@ class DocumentListViewModel {
 
     // Cached rows first: the sync below can take a full timeout when the
     // server is unreachable. An empty cache stays on placeholders via `state`.
-    if hasViewPermission(), let key = store.documentQueryKey(filter: filterState) {
+    if hasViewPermission(), let key = store.documentQueryKey(source: source) {
       subscribe(to: key, resettingWindow: true)
       ready = true
     }
@@ -197,7 +200,7 @@ class DocumentListViewModel {
     }
     noPermissions = false
 
-    guard let key = store.documentQueryKey(filter: filterState) else {
+    guard let key = store.documentQueryKey(source: source) else {
       // No caching backend (e.g. logged out) — nothing to show.
       ready = true
       return
@@ -237,14 +240,14 @@ class DocumentListViewModel {
   /// both fail when offline. We collect the *first* error and surface a single
   /// toast at the end, so a pull-to-refresh while offline doesn't stack two
   /// identical alerts.
-  func refresh(filter: FilterState? = nil, userInitiated: Bool = false) async {
-    if let filter {
-      filterState = filter
+  func refresh(source: DocumentListSource? = nil, userInitiated: Bool = false) async {
+    if let source {
+      self.source = source
       // Switch the observation before the element sync, not after it: the sync
       // can take a full timeout when the server is unreachable, and for that
       // whole time the list would otherwise keep showing the previous query's
       // rows — or its failure — under the new filter.
-      if let key = store.documentQueryKey(filter: filter), key != queryKey {
+      if let key = store.documentQueryKey(source: source), key != queryKey {
         subscribe(to: key, resettingWindow: true)
       }
     }
@@ -270,7 +273,7 @@ class DocumentListViewModel {
     }
     noPermissions = false
 
-    guard let key = store.documentQueryKey(filter: filterState) else {
+    guard let key = store.documentQueryKey(source: self.source) else {
       awaitingFill = false
       surface(firstError, userInitiated: userInitiated, announcedOffline: announcedOffline)
       return
@@ -347,6 +350,7 @@ class DocumentListViewModel {
   /// here, the background paging via `watchCompletion` — so the list can tell a
   /// failed load from a query with no matches.
   private func runFill() async throws {
+    guard let filter = source.filter else { return }
     fillsInFlight += 1
     defer { fillsInFlight -= 1 }
     fill?.cancel()
@@ -356,7 +360,7 @@ class DocumentListViewModel {
     isFollowingReplacement = false
     replacementStoppedShort = false
     do {
-      let handle = try await store.fillDocumentQuery(filter: filterState)
+      let handle = try await store.fillDocumentQuery(filter: filter)
       // A newer fill (or a query switch) started while page 1 was in flight:
       // this outcome no longer describes the list on screen.
       guard generation == fillGeneration else { return }
@@ -532,7 +536,7 @@ class DocumentListViewModel {
       // here stays strong across every suspension, and this task is stored on
       // the view model — so neither would ever deallocate.
       guard let store = self?.store else { return }
-      let localView = self?.filterState.localView
+      let localView = self?.source.localView
       do {
         for try await docs in store.observeDocumentPrefix(queryKey: key, limit: limit) {
           guard let self else { break }
@@ -602,13 +606,14 @@ class DocumentListViewModel {
         await store.waitForQueryWriters(queryKey: key)
         let status = try? await store.queryStatus(queryKey: key)
         guard let self, !Task.isCancelled, queryKey == key, let status,
+          let filter = source.filter,
           DocumentListFillTracking.resyncsMembershipAfterWriters(
             isStale: status.orderStale, isWidened: isWindowWidened)
         else { return }
         Logger.shared.info("Document list order went stale; re-syncing its membership")
         do {
           try await store.refreshDocumentQueryMembership(
-            filter: filterState, window: prefixLimit)
+            filter: filter, window: prefixLimit)
         } catch {
           // Not a load failure: the list keeps its rows and the next mark or
           // refresh retries.

@@ -86,7 +86,7 @@ struct DocumentList: View {
     _viewModel = State(
       initialValue: DocumentListViewModel(
         store: store,
-        filterState: filterModel.resolvedFilterState,
+        source: filterModel.listSource,
         errorController: errorController))
   }
 
@@ -265,7 +265,7 @@ struct DocumentList: View {
         await viewModel.reload()
       }
       Task {
-        filterModel.filterState.clear()
+        filterModel.clear()
         try? await Task.sleep(for: .seconds(0.5))
         filterModel.ready = true
       }
@@ -447,9 +447,9 @@ struct DocumentList: View {
     .animation(.default, value: viewModel.noPermissions)
     .animation(.default, value: viewModel.state)
 
-    .onChange(of: filterModel.resolvedFilterState) { _, filter in
+    .onChange(of: filterModel.listSource) { _, source in
       Task {
-        await viewModel.refresh(filter: filter)
+        await viewModel.refresh(source: source)
       }
     }
 

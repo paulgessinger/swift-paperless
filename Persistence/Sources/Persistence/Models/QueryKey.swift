@@ -30,10 +30,6 @@ public struct QueryKey: Hashable, Sendable {
   public let rawValue: String
 
   public init(serverID: UUID, filter: FilterState) {
-    if filter.localView == .keptOffline {
-      self = .keptOffline
-      return
-    }
     let ordering = (filter.sortOrder.reverse ? "-" : "") + filter.sortField.rawValue
     // `.legacy` is used as a *canonical* encoding, not because the request will
     // use it: the same search is spelled `title_content`/`title__icontains`
@@ -62,6 +58,13 @@ public struct QueryKey: Hashable, Sendable {
   /// device, served from the `kept_offline` table rather than `query_order`.
   /// Nothing fills it, so it never enters the reachability sweep's set.
   public static let keptOffline = QueryKey(sentinel: "local:kept-offline")
+
+  /// The key a local view is served under.
+  public init(localView: LocalView) {
+    switch localView {
+    case .keptOffline: self = .keptOffline
+    }
+  }
 
   /// Rehydrate a key already on disk (a `query_meta` / `query_order` row's
   /// `query_key`). Package-internal: outside `Persistence` a key is only ever

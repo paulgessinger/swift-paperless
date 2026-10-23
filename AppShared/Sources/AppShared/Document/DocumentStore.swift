@@ -859,6 +859,13 @@ extension DocumentStore {
     return QueryKey(serverID: backend.serverID, filter: filter)
   }
 
+  public func documentQueryKey(source: DocumentListSource) -> QueryKey? {
+    switch source {
+    case .query(let filter): documentQueryKey(filter: filter)
+    case .local(let view): session?.backend == nil ? nil : QueryKey(localView: view)
+    }
+  }
+
   /// Eager full-fill of a list: await page 1 + count, then background-page the
   /// rest. The returned handle carries the `QueryKey` the list then observes.
   ///

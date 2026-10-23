@@ -32,13 +32,6 @@ extension FilterState {
     )
   }
 
-  /// The local *Kept offline* list.
-  public static var keptOffline: Self {
-    var state = Self.default
-    state.localView = .keptOffline
-    return state
-  }
-
   public init(savedView: SavedView) {
     self = Self.create(using: \.default, withRules: savedView.filterRules)
     self.savedView = savedView.id
