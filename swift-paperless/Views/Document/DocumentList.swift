@@ -161,91 +161,92 @@ struct DocumentList: View {
     var body: some View {
       DocumentCell(
         document: document, store: store, showsKeptOfflineBadge: true,
-        isRemovingInboxTags: isRemovingInboxTags)
-        .contentShape(Rectangle())
+        isRemovingInboxTags: isRemovingInboxTags
+      )
+      .contentShape(Rectangle())
 
-        .padding(.horizontal)
-        .padding(.vertical)
-        .listRowBackground(
-          Group {
-            if isSelected {
-              // Bump opacity in dark mode so the accent tint stays
-              // visible against the darker chrome of the row backdrop.
-              // Rendered as the row background (not inside the cell)
-              // so it stays clipped to the row during swipe actions.
-              RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
-                .padding(.horizontal, 8)
-            } else {
-              Color.clear
-            }
+      .padding(.horizontal)
+      .padding(.vertical)
+      .listRowBackground(
+        Group {
+          if isSelected {
+            // Bump opacity in dark mode so the accent tint stays
+            // visible against the darker chrome of the row backdrop.
+            // Rendered as the row background (not inside the cell)
+            // so it stays clipped to the row during swipe actions.
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+              .fill(Color.accentColor.opacity(colorScheme == .dark ? 0.32 : 0.15))
+              .padding(.horizontal, 8)
+          } else {
+            Color.clear
           }
-        )
-        .onTapGesture {
+        }
+      )
+      .onTapGesture {
+        store.preloadThumbnail(for: document)
+        onSelect(document)
+      }
+
+      // The full swipe runs the first button, and that is the inbox
+      // removal; with nothing to remove, it runs nothing.
+      .swipeActions(edge: .leading, allowsFullSwipe: canRemoveInboxTags) {
+        if canRemoveInboxTags {
+          Button {
+            Task { await viewModel.removeInboxTags(document: document) }
+          } label: {
+            Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
+          }
+          .tint(.accentColor)
+        }
+        keepOfflineSwipeButton
+          .tint(.indigo)
+      }
+
+      .swipeActions(edge: .trailing) {
+        if userCanDelete {
+          Button(role: documentDeleteConfirmation ? .none : .destructive) {
+            onDeleteButtonPressed()
+          } label: {
+            Label(String(localized: .app(.delete)), systemImage: "trash")
+          }
+          .tint(.red)
+        }
+      }
+
+      .contextMenu {
+        Button {
           store.preloadThumbnail(for: document)
           onSelect(document)
+        } label: {
+          Label(String(localized: .app(.edit)), systemImage: "pencil")
         }
 
-        // The full swipe runs the first button, and that is the inbox
-        // removal; with nothing to remove, it runs nothing.
-        .swipeActions(edge: .leading, allowsFullSwipe: canRemoveInboxTags) {
-          if canRemoveInboxTags {
-            Button {
-              Task { await viewModel.removeInboxTags(document: document) }
-            } label: {
-              Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
-            }
-            .tint(.accentColor)
-          }
-          keepOfflineSwipeButton
-            .tint(.indigo)
+        KeepOfflineMenuButton(store: store, documentID: document.id) {
+          toggleKeptOffline()
         }
 
-        .swipeActions(edge: .trailing) {
-          if userCanDelete {
-            Button(role: documentDeleteConfirmation ? .none : .destructive) {
-              onDeleteButtonPressed()
-            } label: {
-              Label(String(localized: .app(.delete)), systemImage: "trash")
-            }
-            .tint(.red)
-          }
-        }
-
-        .contextMenu {
+        if canRemoveInboxTags {
           Button {
-            store.preloadThumbnail(for: document)
-            onSelect(document)
+            Task { await viewModel.removeInboxTags(document: document) }
           } label: {
-            Label(String(localized: .app(.edit)), systemImage: "pencil")
+            Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
           }
-
-          KeepOfflineMenuButton(store: store, documentID: document.id) {
-            toggleKeptOffline()
-          }
-
-          if canRemoveInboxTags {
-            Button {
-              Task { await viewModel.removeInboxTags(document: document) }
-            } label: {
-              Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
-            }
-          }
-
-          if userCanDelete {
-            Button(role: .destructive) {
-              onDeleteButtonPressed()
-            } label: {
-              Label(String(localized: .app(.delete)), systemImage: "trash")
-            }
-          }
-
-        } preview: {
-          PopupDocumentPreview(document: document)
-            .environment(store)
         }
 
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        if userCanDelete {
+          Button(role: .destructive) {
+            onDeleteButtonPressed()
+          } label: {
+            Label(String(localized: .app(.delete)), systemImage: "trash")
+          }
+        }
+
+      } preview: {
+        PopupDocumentPreview(document: document)
+          .environment(store)
+      }
+
+      .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
   }
 
