@@ -544,8 +544,11 @@ class DocumentListViewModel {
             withAnimation {
               documents = docs
             } completion: { [weak self] in
+              // A switch back before the rows settled already set the marker
+              // for the list on screen.
+              guard let self, source.localView == localView else { return }
               withAnimation {
-                self?.documentsLocalView = localView
+                documentsLocalView = localView
               }
             }
           } else {
