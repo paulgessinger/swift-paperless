@@ -473,9 +473,16 @@ struct PopupDocumentPreview: View {
           .blur(radius: 10)
 
       case .notPDF:
-        image.image?
-          .resizable()
-          .scaledToFit()
+        if let thumbnail = image.image {
+          thumbnail
+            .resizable()
+            .scaledToFit()
+        } else if !image.isLoading {
+          Image(systemName: "doc")
+            .imageScale(.large)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
 
       case .error:
         Label("Unable to load preview", systemImage: "eye.slash")
