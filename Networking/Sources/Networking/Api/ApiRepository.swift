@@ -950,7 +950,7 @@ extension ApiRepository: Repository {
     let dest = URL(
       fileURLWithPath: NSTemporaryDirectory(), isDirectory: true
     ).appendingPathComponent(
-      response.suggestedFilename ?? "document.pdf")
+      response.suggestedFilename ?? "document")
     if FileManager.default.fileExists(atPath: dest.path) {
       _ = try FileManager.default.replaceItemAt(dest, withItemAt: tempURL)
     } else {

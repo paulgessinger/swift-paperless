@@ -34,6 +34,9 @@ public struct ContentStore: Sendable {
     case archive
     case thumbnail
 
+    /// Part of the canonical path, not the content type: a document without
+    /// an archive version stores its original as `.archive`, whatever it is.
+    /// Whatever leaves the app goes through a named link instead.
     public var fileExtension: String {
       switch self {
       case .original, .archive: "pdf"
