@@ -84,15 +84,25 @@ struct LibraryFileDownloaderTests {
     func forget(_ key: ContentStore.Key) async throws { try await base.forget(key) }
   }
 
+  /// - Parameter storedThumbnails: whether the documents' thumbnails are
+  ///   already on the device, so only their archives are missing.
   private func makeFixture(
-    documents: [UInt], isEntireLibrary: Bool = true, syncOverCellular: Bool = false,
+    documents: [UInt], storedThumbnails: Bool = true, isEntireLibrary: Bool = true,
+    syncOverCellular: Bool = false,
     freeSpace: Int64 = 10_000_000_000, window: Int = 3, mode: Mode? = nil,
     index: ((ContentReclaimer) -> any FileIndex)? = nil,
     repositoryLookup: (@MainActor @Sendable () async throws -> any Repository)? = nil,
     repositoryTimeout: Duration = .seconds(10),
     backgroundEventsDeadline: Duration = .seconds(20)
-  ) throws -> Fixture {
+  ) async throws -> Fixture {
     let database = try Database.seeded(serverID: server, documents: documents.map(doc))
+    if storedThumbnails {
+      for id in documents {
+        _ = try await database.recordFile(
+          ContentStore.Key(serverID: server, versionID: id, kind: .thumbnail), documentID: id,
+          size: 1, modified: nil, checksum: nil, storedAt: Date(), lastAccessedAt: nil)
+      }
+    }
     let root = FileManager.default.temporaryDirectory
       .appendingPathComponent("LibraryFileDownloaderTests-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -143,7 +153,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1, 2, 3, 4, 5], syncOverCellular: true)
+    let fixture = try await makeFixture(documents: [1, 2, 3, 4, 5], syncOverCellular: true)
 
     let outcome = try await fixture.downloader.refill(serverID: server)
 
@@ -170,7 +180,7 @@ struct LibraryFileDownloaderTests {
     StubDownloadURLProtocol.responder = { request in
       request.url?.path.contains("/documents/2/") == true ? nil : (200, Data("PDF".utf8))
     }
-    let fixture = try makeFixture(documents: [1, 2, 3], window: 1)
+    let fixture = try await makeFixture(documents: [1, 2, 3], window: 1)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
 
@@ -199,7 +209,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in (403, Data()) }
-    let fixture = try makeFixture(documents: [1], window: 2)
+    let fixture = try await makeFixture(documents: [1], window: 2)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
 
@@ -219,13 +229,13 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1], freeSpace: 1)
+    let fixture = try await makeFixture(documents: [1], freeSpace: 1)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .pausedLowStorage)
     #expect(fixture.downloader.pausedLowStorage)
     #expect(StubDownloadURLProtocol.requests.isEmpty)
 
-    let roomy = try makeFixture(documents: [1])
+    let roomy = try await makeFixture(documents: [1])
     #expect(try await roomy.downloader.refill(serverID: server) == .queued(1))
     #expect(!roomy.downloader.pausedLowStorage)
     await fixture.downloader.invalidate()
@@ -238,7 +248,7 @@ struct LibraryFileDownloaderTests {
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
     // Recently browsed with nothing kept: the scope is empty.
-    let fixture = try makeFixture(documents: [1], isEntireLibrary: false, freeSpace: 1)
+    let fixture = try await makeFixture(documents: [1], isEntireLibrary: false, freeSpace: 1)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .complete)
     #expect(!fixture.downloader.pausedLowStorage)
@@ -251,7 +261,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1, 2, 3], isEntireLibrary: false)
+    let fixture = try await makeFixture(documents: [1, 2, 3], isEntireLibrary: false)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .complete)
     #expect(try await fixture.downloader.refill(serverID: UUID()) == .complete)
@@ -270,7 +280,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1, 2], window: 2)
+    let fixture = try await makeFixture(documents: [1, 2], window: 2)
     #expect(try await fixture.downloader.refill(serverID: server) == .queued(2))
 
     await fixture.downloader.cancel(serverID: UUID())
@@ -289,7 +299,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1])
+    let fixture = try await makeFixture(documents: [1])
     let called = Failures()
     fixture.downloader.backgroundEventsCompletion = {
       called.errors.append((UUID(), CancellationError()))
@@ -307,7 +317,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(documents: [1, 2, 3, 4, 5])
+    let fixture = try await makeFixture(documents: [1, 2, 3, 4, 5])
 
     async let first = fixture.downloader.refill(serverID: server)
     async let second = fixture.downloader.refill(serverID: server)
@@ -324,7 +334,7 @@ struct LibraryFileDownloaderTests {
   /// A fixture whose index holds the next write until opened.
   private func holdingFixture(documents: [UInt]) async throws -> (Fixture, HoldingIndex) {
     var holding: HoldingIndex?
-    let fixture = try makeFixture(
+    let fixture = try await makeFixture(
       documents: documents,
       index: { base in
         let index = HoldingIndex(base: base)
@@ -398,7 +408,7 @@ struct LibraryFileDownloaderTests {
       return (200, Data("PDF".utf8))
     }
     let mode = Mode()
-    let fixture = try makeFixture(documents: [1], mode: mode)
+    let fixture = try await makeFixture(documents: [1], mode: mode)
 
     #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
     try await waitUntil { StubDownloadURLProtocol.requests.count == 1 }
@@ -419,7 +429,7 @@ struct LibraryFileDownloaderTests {
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in (200, Data("PDF".utf8)) }
     var holding: HoldingIndex?
-    let fixture = try makeFixture(
+    let fixture = try await makeFixture(
       documents: [1],
       index: { base in
         let index = HoldingIndex(base: base)
@@ -451,7 +461,7 @@ struct LibraryFileDownloaderTests {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
-    let fixture = try makeFixture(
+    let fixture = try await makeFixture(
       documents: [1],
       repositoryLookup: {
         try await Task.sleep(for: .seconds(60))
@@ -464,6 +474,46 @@ struct LibraryFileDownloaderTests {
     }
     await fixture.downloader.cancel(serverID: server)
     #expect(StubDownloadURLProtocol.requests.isEmpty)
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("A missing thumbnail downloads with the archive, where the image cache reads it")
+  func thumbnailRidesAlong() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { request in
+      (200, Data((request.url?.path.hasSuffix("/thumb") == true ? "IMG" : "PDF").utf8))
+    }
+    let fixture = try await makeFixture(documents: [1, 2], storedThumbnails: false, window: 1)
+
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+    #expect(fixture.downloader.inFlight[server] == 1)
+
+    let thumbnail = ContentStore.Key(serverID: server, versionID: 2, kind: .thumbnail)
+    try await waitUntil { try await fixture.database.storedFile(thumbnail) != nil }
+    try await waitUntil { try await fixture.database.storedFile(self.key(2)) != nil }
+    let cache = ContentStoreDataCache(store: fixture.store, index: fixture.reclaimer)
+    let imageID = ThumbnailImageID.make(serverID: server, document: doc(2))
+    #expect(cache.cachedData(for: imageID) == Data("IMG".utf8))
+    #expect(
+      Set(StubDownloadURLProtocol.requests.prefix(2).compactMap(\.url?.path))
+        == ["/documents/2/download", "/documents/2/thumb"])
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("A document with its archive but no thumbnail queues the thumbnail only")
+  func thumbnailOnly() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let fixture = try await makeFixture(documents: [1], storedThumbnails: false)
+    try await fixture.reclaimer.recordStore(
+      key(1), documentID: 1, size: 3, modified: doc(1).modified, checksum: nil,
+      storedAt: Date())
+
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+    try await waitUntil { StubDownloadURLProtocol.requests.count == 1 }
+    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/1/thumb")
     await fixture.downloader.invalidate()
   }
 }

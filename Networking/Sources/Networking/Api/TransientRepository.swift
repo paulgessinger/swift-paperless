@@ -575,6 +575,10 @@ extension TransientRepository: Repository {
     URLRequest(url: URL(string: "https://example.com/documents/\(documentID)/download/")!)
   }
 
+  public func thumbnailRequest(documentID: UInt, version _: UInt?) throws -> URLRequest {
+    URLRequest(url: URL(string: "https://example.com/documents/\(documentID)/thumb/")!)
+  }
+
   public func uiSettings() async throws -> UISettings {
     try await UISettings(
       user: currentUser(),

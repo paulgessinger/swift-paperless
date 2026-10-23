@@ -210,8 +210,10 @@ struct ServerSessionTests {
     #expect(rows.first?.outcome == "ok")
     #expect(rows.first?.succeeded == 1)
     try await waitUntil(
-      { StubDownloadURLProtocol.requests.count == 1 }, "the file was never requested")
-    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/1/download")
+      { StubDownloadURLProtocol.requests.count == 2 }, "the files were never requested")
+    #expect(
+      Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path))
+        == ["/documents/1/download", "/documents/1/thumb"])
     #expect(harness.session.syncActivities.map(\.stage) == [.fileDownload])
     #expect(harness.session.syncFailures.isEmpty)
     await harness.fileDownloader?.invalidate()
@@ -243,8 +245,10 @@ struct ServerSessionTests {
       serverID: browsing.serverID, documentID: 2, kept: true)
     #expect(await browsing.session.fillFiles())
     try await waitUntil(
-      { StubDownloadURLProtocol.requests.count == 1 }, "the kept file was never requested")
-    #expect(StubDownloadURLProtocol.requests.first?.url?.path == "/documents/2/download")
+      { StubDownloadURLProtocol.requests.count == 2 }, "the kept files were never requested")
+    #expect(
+      Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path))
+        == ["/documents/2/download", "/documents/2/thumb"])
     try await waitUntil(
       { browsing.session.syncActivities.map(\.stage) == [.fileDownload] },
       "the download row never showed")
@@ -278,9 +282,10 @@ struct ServerSessionTests {
     #expect(try await harness.database.document(serverID: harness.serverID, id: 2) != nil)
     #expect(try await harness.database.keptOfflineIDs(serverID: harness.serverID) == [1, 2])
     #expect(harness.session.syncFailures.isEmpty)
-    // Both kept documents are missing their archive; the hydration queued them.
+    // Both kept documents are missing their archive and thumbnail; the
+    // hydration queued them.
     try await waitUntil(
-      { StubDownloadURLProtocol.requests.count == 2 }, "the kept files were never requested")
+      { StubDownloadURLProtocol.requests.count == 4 }, "the kept files were never requested")
     await harness.fileDownloader?.invalidate()
   }
 

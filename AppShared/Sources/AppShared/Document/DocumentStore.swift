@@ -124,7 +124,7 @@ public final class DocumentStore: Sendable {
     return OfflineStatus(database: backend.database, serverID: backend.serverID)
   }
 
-  /// The active server's archive downloads in flight on the background session.
+  /// The active server's documents downloading on the background session.
   public var libraryFilesInFlight: Int {
     guard let session, let downloader = registry?.fileDownloader else { return 0 }
     return downloader.inFlight[session.serverID] ?? 0

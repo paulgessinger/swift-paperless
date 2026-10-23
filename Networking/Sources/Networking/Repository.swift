@@ -114,6 +114,10 @@ public protocol Repository<Documents, Tasks>: Sendable {
   /// the `?version=` to send, `nil` when the server reports none.
   func downloadRequest(documentID: UInt, version: UInt?) throws -> URLRequest
 
+  /// The authenticated request for a document's thumbnail, for the same
+  /// session.
+  func thumbnailRequest(documentID: UInt, version: UInt?) throws -> URLRequest
+
   // Conformers receive a full Document handle so the cache layer can use
   // Document.modified as a staleness key and Document.currentVersionID to
   // address the right server-side version row.

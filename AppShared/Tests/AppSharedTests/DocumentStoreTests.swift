@@ -36,7 +36,7 @@ struct DocumentStoreTests {
     await harness.fileDownloader?.invalidate()
   }
 
-  @Test("Keeping a document records it and queues its archive; the projection follows")
+  @Test("Keeping a document records it and queues its files; the projection follows")
   func keepOfflineQueuesTheArchive() async throws {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
@@ -51,7 +51,10 @@ struct DocumentStoreTests {
     #expect(try await harness.database.keptOfflineIDs(serverID: harness.serverID) == [1])
     try await waitUntil({ harness.store.isKeptOffline(1) }, "the projection never saw the pin")
     try await waitUntil(
-      { StubDownloadURLProtocol.requests.count == 1 }, "the archive was never requested")
+      { StubDownloadURLProtocol.requests.count == 2 }, "the files were never requested")
+    #expect(
+      Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path))
+        == ["/documents/1/download", "/documents/1/thumb"])
     let status = try #require(harness.store.makeOfflineStatus())
     try await waitUntil(
       { status.keptOfflineFileProgress.totalDocuments == 1 }, "the status never saw the pin")

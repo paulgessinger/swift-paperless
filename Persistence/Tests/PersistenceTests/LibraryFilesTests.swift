@@ -31,6 +31,15 @@ struct LibraryFilesTests {
       modified: modified, checksum: nil, storedAt: date(1000), lastAccessedAt: nil)
   }
 
+  /// The candidates that still need their archive.
+  private func needingArchive(
+    _ database: Database, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int
+  ) async throws -> [LibraryFileCandidate] {
+    try await database.documentsNeedingFiles(
+      serverID: server, scope: scope, excluding: excluding, limit: limit
+    ).filter { $0.kinds.contains(.archive) }
+  }
+
   @Test("A document is a candidate until its current version has a fresh archive")
   func candidates() async throws {
     let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
@@ -38,10 +47,8 @@ struct LibraryFilesTests {
     try await recordArchive(database, 1, modified: date(500))
     try await recordArchive(database, 2, modified: date(400))
 
-    let ids = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, limit: 10
-    )
-    .map(\.documentID)
+    let ids = try await needingArchive(database, scope: .library, limit: 10)
+      .map(\.documentID)
     #expect(ids == [3, 2])
   }
 
@@ -50,10 +57,8 @@ struct LibraryFilesTests {
     let database = try Database.seeded(serverID: server, documents: [doc(1)])
     try await recordArchive(database, 1, modified: date(500), kind: .original)
 
-    let ids = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, limit: 10
-    )
-    .map(\.documentID)
+    let ids = try await needingArchive(database, scope: .library, limit: 10)
+      .map(\.documentID)
     #expect(ids == [1])
   }
 
@@ -62,8 +67,8 @@ struct LibraryFilesTests {
     let database = try Database.seeded(
       serverID: server, documents: [doc(1), doc(2), doc(3), doc(4), doc(5)])
 
-    let candidates = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, excluding: [5, 3], limit: 2)
+    let candidates = try await needingArchive(
+      database, scope: .library, excluding: [5, 3], limit: 2)
     #expect(candidates.map(\.documentID) == [4, 2])
   }
 
@@ -76,8 +81,7 @@ struct LibraryFilesTests {
         doc(2),
       ])
 
-    let candidates = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, limit: 10)
+    let candidates = try await needingArchive(database, scope: .library, limit: 10)
     let versioned = try #require(candidates.first { $0.documentID == 1 })
     #expect(versioned.versionID == 9)
     #expect(versioned.versionQueryID == 9)
@@ -88,8 +92,7 @@ struct LibraryFilesTests {
 
     // Filed under the current version: the archive of version 9 satisfies it.
     try await recordArchive(database, 1, version: 9, modified: date(500))
-    let after = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, limit: 10)
+    let after = try await needingArchive(database, scope: .library, limit: 10)
     #expect(after.map(\.documentID) == [2])
   }
 
@@ -101,10 +104,8 @@ struct LibraryFilesTests {
     try FileFixtures.addServer(other, to: database)
     try await database.upsertDocuments([doc(3)], serverID: other)
 
-    let ids = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, limit: 10
-    )
-    .map(\.documentID)
+    let ids = try await needingArchive(database, scope: .library, limit: 10)
+      .map(\.documentID)
     #expect(ids == [2])
     let progress = try await database.libraryFileProgress(serverID: server, scope: .library)
     #expect(progress == LibraryFileProgress(totalDocuments: 1, downloadedFiles: 0))
@@ -146,14 +147,10 @@ struct LibraryFilesTests {
       try await database.setKeptOffline(serverID: server, documentID: id, kept: true)
     }
 
-    let kept = try await database.documentsNeedingArchive(
-      serverID: server, scope: .keptOffline, limit: 10
-    ).map(\.documentID)
+    let kept = try await needingArchive(database, scope: .keptOffline, limit: 10).map(\.documentID)
     #expect(kept == [1])
-    let library = try await database.documentsNeedingArchive(
-      serverID: server, scope: .library, limit: 10
-    )
-    .map(\.documentID)
+    let library = try await needingArchive(database, scope: .library, limit: 10)
+      .map(\.documentID)
     #expect(library == [3, 1])
 
     let progress = try await database.libraryFileProgress(serverID: server, scope: .keptOffline)
@@ -161,5 +158,22 @@ struct LibraryFilesTests {
       progress == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
     let whole = try await database.libraryFileProgress(serverID: server, scope: .library)
     #expect(whole == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
+  }
+
+  @Test("A document is a candidate until its current version also has a thumbnail")
+  func thumbnails() async throws {
+    let database = try Database.seeded(
+      serverID: server, documents: [doc(1), doc(2), versioned(3, versions: [3, 7])])
+    // 1: fresh archive, no thumbnail. 2: both; the image cache records its
+    // thumbnail without a modified. 3: a thumbnail of an older version only.
+    try await recordArchive(database, 1, modified: date(500))
+    try await recordArchive(database, 2, modified: date(500))
+    try await recordArchive(database, 2, modified: nil, kind: .thumbnail)
+    try await recordArchive(database, 3, version: 3, modified: nil, kind: .thumbnail)
+
+    let candidates = try await database.documentsNeedingFiles(
+      serverID: server, scope: .library, limit: 10)
+    #expect(candidates.map(\.documentID) == [3, 1])
+    #expect(candidates.map(\.kinds) == [[.archive, .thumbnail], [.thumbnail]])
   }
 }
