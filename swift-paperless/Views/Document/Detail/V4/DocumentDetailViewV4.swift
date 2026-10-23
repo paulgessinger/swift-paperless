@@ -530,7 +530,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     Divider()
 
     let archiveURL: URL? =
-      if case .loaded(url: let url, document: _) = viewModel.download { url } else { nil }
+      if case .loaded(url: let url, content: _) = viewModel.download { url } else { nil }
     let originalURL: URL? =
       if case .loaded(url: let url) = viewModel.originalDownload { url } else { nil }
 
@@ -572,15 +572,30 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
   @ViewBuilder
   private var previewContent: some View {
-    if case .loaded(url: _, document: let document) = viewModel.download {
+    if case .loaded(url: _, content: let content) = viewModel.download {
       NavigationStack {
-        SearchablePDFPreview(
-          document: document,
-          currentPage: $previewPage
-        )
-        .ignoresSafeArea(.container)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle(viewModel.document.title)
+        switch content {
+        case .pdf(let document):
+          SearchablePDFPreview(
+            document: document,
+            currentPage: $previewPage
+          )
+          .ignoresSafeArea(.container)
+          .navigationBarTitleDisplayMode(.inline)
+          .navigationTitle(viewModel.document.title)
+        case .file(let url):
+          QuickLookView(url: url)
+            .ignoresSafeArea(.container, edges: .bottom)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(viewModel.document.title)
+            .toolbar {
+              ToolbarItem(placement: .topBarLeading) {
+                CancelIconButton {
+                  showPreview = false
+                }
+              }
+            }
+        }
       }
       // Preview is full-screen; other sheets keep `sheetZoomTransition` (iOS 26+) for detents.
       .backport.navigationTransitionZoom(sourceID: TransitionID.doc, in: namespace)
@@ -696,7 +711,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   // button. Edit panel goes into a resizable, togglable inspector.
   @ViewBuilder
   private var regularBody: some View {
-    let pdfReady: Bool = {
+    let contentReady: Bool = {
       if case .loaded = viewModel.download { return true }
       return false
     }()
@@ -706,7 +721,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     // animating PDFKit's insertion — PDFView's own layout phase otherwise
     // races the SwiftUI fade and you end up seeing nothing.
     ZStack {
-      if case .loaded(url: _, document: let pdfDocument) = viewModel.download {
+      if case .loaded(url: _, content: .pdf(let pdfDocument)) = viewModel.download {
         SearchablePDFPreview(
           document: pdfDocument,
           currentPage: $previewPage,
@@ -719,6 +734,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             metadataActionButtons
           }
         }
+      } else if case .loaded(url: _, content: .file(let url)) = viewModel.download {
+        QuickLookView(url: url)
+          .safeAreaInset(edge: .bottom) {
+            metadataBar
+          }
       }
 
       Color(.secondarySystemBackground)
@@ -728,9 +748,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
             .controlSize(.large)
             .scaleEffect(1.0)
         }
-        .opacity(pdfReady ? 0 : 1)
-        .animation(.easeOut(duration: 0.35), value: pdfReady)
-        .allowsHitTesting(!pdfReady)
+        .opacity(contentReady ? 0 : 1)
+        .animation(.easeOut(duration: 0.35), value: contentReady)
+        .allowsHitTesting(!contentReady)
     }
     .inspector(isPresented: $showEditInspector) {
       ScrollView {
