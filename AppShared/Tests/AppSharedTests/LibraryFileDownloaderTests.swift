@@ -232,6 +232,20 @@ struct LibraryFileDownloaderTests {
     await roomy.downloader.invalidate()
   }
 
+  @Test("Low free space does not pause a server with nothing to queue")
+  func lowStorageWithNothingToQueue() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    // Recently browsed with nothing kept: the scope is empty.
+    let fixture = try makeFixture(documents: [1], isEntireLibrary: false, freeSpace: 1)
+
+    #expect(try await fixture.downloader.refill(serverID: server) == .complete)
+    #expect(!fixture.downloader.pausedLowStorage)
+    #expect(StubDownloadURLProtocol.requests.isEmpty)
+    await fixture.downloader.invalidate()
+  }
+
   @Test("A server outside Entire library queues only its kept documents; an unknown one nothing")
   func keptDocumentsOutsideTheLibrary() async throws {
     let lease = await StubDownloadURLProtocol.lease()

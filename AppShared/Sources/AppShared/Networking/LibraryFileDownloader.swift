@@ -73,14 +73,17 @@ public final class LibraryFileDownloader {
     case queued(Int)
     /// Nothing is missing, or the server is gone.
     case complete
-    /// Free space is below the floor; nothing was queued.
+    /// Something is missing but free space is below the floor; nothing was
+    /// queued.
     case pausedLowStorage
   }
 
   /// Tasks in flight per server. Throttled for display: eight fast downloads
   /// change it many times a second.
   public private(set) var inFlight: [UUID: Int] = [:]
-  /// Whether the last refill stopped because free space is below the floor.
+  /// Whether a refill with something to queue stopped because free space is
+  /// below the floor. Cleared by any refill that finds room: the flag is
+  /// shared, so a server with nothing to queue must not clear it on low space.
   public private(set) var pausedLowStorage = false
 
   /// A download that failed, for the server's failure ledger.
@@ -397,13 +400,9 @@ public final class LibraryFileDownloader {
 
   private func performRefill(serverID: UUID) async throws -> RefillOutcome {
     guard !isInvalidated, let server = try await servers(serverID) else { return .complete }
-    if let free = availableCapacity(store.root),
-      free < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
-    {
-      if !pausedLowStorage { pausedLowStorage = true }
-      return .pausedLowStorage
-    }
-    if pausedLowStorage { pausedLowStorage = false }
+    let lowStorage =
+      (availableCapacity(store.root) ?? .max) < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
+    if !lowStorage, pausedLowStorage { pausedLowStorage = false }
 
     let inFlightDocuments = Set(
       tasks.values.filter { $0.id.key.serverID == serverID }.map(\.id.documentID))
@@ -417,6 +416,10 @@ public final class LibraryFileDownloader {
       limit: room + backedOff.count
     ).filter { !backedOff.contains($0.versionID) }.prefix(room)
     guard !candidates.isEmpty else { return .complete }
+    if lowStorage {
+      if !pausedLowStorage { pausedLowStorage = true }
+      return .pausedLowStorage
+    }
 
     let repository = try await withTimeout(repositoryTimeout) { try await server.repository() }
     for candidate in candidates {
