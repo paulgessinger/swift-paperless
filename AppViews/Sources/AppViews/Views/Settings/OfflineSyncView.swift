@@ -38,6 +38,9 @@ public struct OfflineSyncView: View {
   @State private var status: OfflineStatus?
 
   private var libraryFileProgress: LibraryFileProgress { status?.libraryFileProgress ?? .zero }
+  private var keptOfflineFileProgress: LibraryFileProgress {
+    status?.keptOfflineFileProgress ?? .zero
+  }
   private var syncErrors: [QuerySyncError] { status?.syncErrors ?? [] }
 
   public init() {}
@@ -183,35 +186,24 @@ public struct OfflineSyncView: View {
             .accessibilityElement(children: .combine)
           }
         }
-        if mode == .entireLibrary {
-          dateStatusRow(
-            String(localized: .settings(.offlineSyncLastFullFill)), date: status?.libraryCoverageAt)
-          // From the file index, so it reads right after a relaunch, while
-          // the download row above only shows while tasks are in flight.
-          statusRow(
-            String(localized: .settings(.offlineSyncFilesDownloaded)),
-            value: String(
-              localized: .settings(
-                .offlineSyncFilesDownloadedValue(
-                  libraryFileProgress.downloadedFiles,
-                  libraryFileProgress.totalDocuments,
-                  libraryFileProgress.downloadedBytes.formatted(.byteCount(style: .file))))))
+        // The download row counts the same files, so the rows that count
+        // them step aside while it shows.
+        if mode == .recentlyBrowsed || !isDownloading {
+          documentsRow
         }
-        if (status?.keptOfflineFileProgress ?? .zero).totalDocuments > 0 {
-          let progress = (status?.keptOfflineFileProgress ?? .zero)
+        // Kept documents are part of the library, so only the other mode
+        // counts them apart.
+        if mode == .recentlyBrowsed, !isDownloading, keptOfflineFileProgress.totalDocuments > 0 {
           statusRow(
             String(localized: .settings(.offlineSyncKeptOffline)),
             value: String(
               localized: .settings(
-                .offlineSyncFilesDownloadedValue(
-                  progress.downloadedFiles, progress.totalDocuments,
-                  progress.downloadedBytes.formatted(.byteCount(style: .file))))))
+                .offlineSyncFileProgressCount(
+                  keptOfflineFileProgress.downloadedFiles,
+                  keptOfflineFileProgress.totalDocuments))))
         }
         dateStatusRow(
           String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
-        statusRow(
-          String(localized: .settings(.offlineSyncCachedDocuments)),
-          value: (status?.cachedDocumentCount ?? 0).formatted())
 
         Button {
           Task {
@@ -364,11 +356,11 @@ public struct OfflineSyncView: View {
   /// kept documents otherwise, as the downloader scopes them.
   private var downloadProgress: LibraryFileProgress {
     mode == .entireLibrary
-      ? libraryFileProgress : (status?.keptOfflineFileProgress ?? .zero)
+      ? libraryFileProgress : keptOfflineFileProgress
   }
 
-  /// The download row counts from the file index, the same figure as the
-  /// files row below it, so the two never disagree mid-download.
+  /// The download row counts from the file index, the same figure the rows
+  /// below show once it's done, so the count doesn't jump when it goes.
   private func displayed(_ activity: SyncActivity) -> SyncActivity {
     guard activity.stage == .fileDownload else { return activity }
     var activity = activity
@@ -402,6 +394,32 @@ public struct OfflineSyncView: View {
         .offlineSyncFileDownloadDetail(
           downloadProgress.downloadedBytes.formatted(.byteCount(style: .file)),
           store.libraryFilesInFlight)))
+  }
+
+  private var isDownloading: Bool {
+    store.syncActivities.contains { $0.stage == .fileDownload }
+  }
+
+  /// The server's documents on the device; in *Entire library* also how many
+  /// have their file, and whether the library has been cached in full.
+  private var documentsRow: some View {
+    let cached = status?.cachedDocumentCount ?? 0
+    let value: LocalizedStringResource =
+      mode == .entireLibrary
+      ? .settings(.offlineSyncDocumentsCachedFiles(cached, libraryFileProgress.downloadedFiles))
+      : .settings(.offlineSyncDocumentsCached(cached))
+    return LabeledContent {
+      Text(value).foregroundStyle(.secondary)
+    } label: {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(.settings(.offlineSyncDocuments))
+        if mode == .entireLibrary, status?.libraryCoverageAt == nil {
+          Text(.settings(.offlineSyncLibraryIncomplete))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+    }
   }
 
   @ViewBuilder
