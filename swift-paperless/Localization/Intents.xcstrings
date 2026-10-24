@@ -37,7 +37,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Correspondent"
           }
         },
@@ -115,13 +115,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
@@ -139,13 +139,13 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
@@ -175,7 +175,7 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Tag"
           }
         },
@@ -187,7 +187,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Tag"
           }
         },
@@ -253,7 +253,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Correspondent"
           }
         },
@@ -349,7 +349,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Document"
           }
         },
@@ -361,7 +361,7 @@
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Document"
           }
         },
@@ -655,13 +655,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
@@ -679,13 +679,13 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Server"
           }
         },
@@ -769,7 +769,7 @@
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Tags"
           }
         },
@@ -781,7 +781,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Tags"
           }
         },
