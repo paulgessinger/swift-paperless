@@ -177,16 +177,22 @@ public final class DocumentStore: Sendable {
   /// view is recorded first, so a sync that fails here is retried by the next
   /// reconcile. Stopping leaves the files nothing else keeps to the budget.
   public func setKeptOffline(savedView: SavedView, _ kept: Bool) async throws {
-    guard let session, let backend = session.backend else { return }
     guard kept else {
-      try await backend.database.releaseOfflineView(
-        serverID: session.serverID, savedViewID: savedView.id)
+      try await stopKeepingOffline(savedViewID: savedView.id)
       return
     }
+    guard let session, let backend = session.backend else { return }
     try await backend.database.keepOfflineView(
       serverID: session.serverID, savedViewID: savedView.id)
     try await backend.syncKeptOfflineView(savedViewID: savedView.id)
     await session.fillFiles()
+  }
+
+  /// Stop keeping a saved view, by id: also one whose details are not cached.
+  public func stopKeepingOffline(savedViewID: UInt) async throws {
+    guard let session, let backend = session.backend else { return }
+    try await backend.database.releaseOfflineView(
+      serverID: session.serverID, savedViewID: savedViewID)
   }
 
   /// How many documents a saved view lists, from its cached list: what keeping
