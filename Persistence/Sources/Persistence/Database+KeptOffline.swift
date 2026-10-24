@@ -47,6 +47,22 @@ extension Database {
     }
   }
 
+  /// Whether one document is kept on its own or by a kept saved view: the
+  /// file pass's rule, which ``isKeptOffline(serverID:documentID:)`` (the
+  /// document's own membership) is not.
+  public func isKept(serverID: UUID, documentID: UInt) async throws -> Bool {
+    try await wrappingAsync("isKept") {
+      try await writer.read { db in
+        try Bool.fetchOne(
+          db,
+          sql: """
+            SELECT \(Self.keptOfflineExists) FROM (SELECT ? AS server_id, ? AS id) d
+            """,
+          arguments: [serverID, documentID]) ?? false
+      }
+    }
+  }
+
   /// Live ``keptOfflineIDs(serverID:)``, for the list's badges and the
   /// detail view's toggle.
   public func observeKeptOfflineIDs(serverID: UUID) -> AsyncThrowingStream<Set<UInt>, Error> {

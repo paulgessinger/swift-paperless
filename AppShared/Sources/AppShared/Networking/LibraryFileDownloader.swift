@@ -379,9 +379,11 @@ public final class LibraryFileDownloader {
     case .library:
       return true
     case .keptOffline:
+      // Kept by a view counts: dropping such a member's file would have the
+      // refill queue it again, over and over.
       return
-        (try? await database.isKeptOffline(
-          serverID: id.key.serverID, documentID: id.documentID)) ?? false
+        (try? await database.isKept(serverID: id.key.serverID, documentID: id.documentID))
+        ?? false
     }
   }
 

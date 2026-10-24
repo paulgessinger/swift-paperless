@@ -112,6 +112,18 @@ struct KeptOfflineViewTests {
       Set(try await database.archiveFiles(serverID: server).map(\.documentId)) == [1, 3])
   }
 
+  @Test("A document is kept on its own or by a kept view that lists it")
+  func isKept() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    try await keepView(database, members: [2])
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+
+    #expect(try await database.isKept(serverID: server, documentID: 1))
+    #expect(try await database.isKept(serverID: server, documentID: 2))
+    #expect(try await !database.isKept(serverID: server, documentID: 3))
+    #expect(try await !database.isKept(serverID: UUID(), documentID: 2))
+  }
+
   @Test("A view's list protects nothing until the view is kept")
   func unkeptViewProtectsNothing() async throws {
     let database = try Database.seeded(serverID: server, documents: [doc(1)])
