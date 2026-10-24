@@ -1602,7 +1602,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// document list restores from last time, which is what actually opens when
   /// one was left applied. That list opens as soon as the store has a
   /// repository, and every open refills it in full, so cutting it here would
-  /// only cost a download online and lose rows offline.
+  /// only cost a download online and lose rows offline. So are the kept saved
+  /// views, whose whole list is what keeps their documents on the device.
   ///
   /// Soft-fail: a missed pass leaves the cache as it was until the next launch.
   func applyRecentlyBrowsedCap() async {
@@ -1614,11 +1615,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       QueryKey(serverID: serverID, filter: FilterModel.restoredFilterState()),
     ]
     do {
+      let kept = try await database.keptOfflineViews(serverID: serverID).map(\.queryKey)
       let result = try await database.capRecentlyBrowsedQueries(
         serverID: serverID,
         keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap,
         notViewedSince: cutoff,
-        exempting: opening)
+        exempting: opening.union(kept))
       if result.truncatedRows > 0 {
         Logger.sync.info(
           "Recently browsed cap: trimmed \(result.truncatedRows, privacy: .public) row(s), reclaimed \(result.removedDocuments, privacy: .public) document(s) for server \(self.serverLogLabel, privacy: .public)"
