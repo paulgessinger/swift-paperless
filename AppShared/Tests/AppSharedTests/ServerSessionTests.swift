@@ -289,6 +289,93 @@ struct ServerSessionTests {
     await harness.fileDownloader?.invalidate()
   }
 
+  /// A saved view matching titles that contain `title`, on the server and in
+  /// the cache.
+  private func savedView(
+    _ harness: StoreHarness, title: String, name: String = "kept"
+  ) async throws -> SavedView {
+    let view = try await harness.transient.create(
+      savedView: ProtoSavedView(
+        name: name,
+        filterRules: [try #require(FilterRule(ruleType: .title, value: .string(value: title)))]))
+    try await harness.database.upsertElement(
+      view, of: SavedViewRecord.self, serverID: harness.serverID)
+    return view
+  }
+
+  private func titled(_ id: UInt, _ title: String) -> Document {
+    var document = document(id)
+    document.title = title
+    document.modified = Date(timeIntervalSince1970: 500)
+    return document
+  }
+
+  @Test("The reconcile re-syncs a kept view, fetches its members' rows and queues their files")
+  func reconcileSyncsKeptViews() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    // 1 is cached, 2 only on the server, 3 does not match.
+    let harness = try await StoreHarness.make(
+      documents: [titled(1, "invoice a"), titled(3, "other")],
+      fileDownloader: StoreHarness.stubbedDownloader)
+    for document in [titled(1, "invoice a"), titled(2, "invoice b"), titled(3, "other")] {
+      _ = try await harness.transient.update(document: document)
+    }
+    let view = try await savedView(harness, title: "invoice")
+    let key = QueryKey(serverID: harness.serverID, filter: FilterState(savedView: view))
+    try await harness.database.keepOfflineView(
+      serverID: harness.serverID, savedViewID: view.id, queryKey: key)
+    let stored = StoredConnection(
+      id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
+      extraHeaders: [], user: StoreHarness.user)
+
+    await harness.session.sync(stored: stored, phases: [.reconcile])
+
+    let listed = try await harness.database.queryDocuments(
+      queryKey: key, serverID: harness.serverID, limit: 10)
+    #expect(Set(listed.map(\.id)) == [1, 2])
+    #expect(listed.allSatisfy { $0.document != nil })
+    #expect(harness.session.syncFailures.isEmpty)
+    // Both members are missing their archive and thumbnail.
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 4 }, "the members' files were never requested")
+    #expect(
+      Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path)).isDisjoint(with: [
+        "/documents/3/download", "/documents/3/thumb",
+      ]))
+    await harness.fileDownloader?.invalidate()
+  }
+
+  @Test("The element sync moves an edited kept view's key and releases a deleted one")
+  func elementSyncFollowsKeptViews() async throws {
+    let harness = try await StoreHarness.make()
+    let edited = try await savedView(harness, title: "invoice", name: "edited")
+    let deleted = try await savedView(harness, title: "receipt", name: "deleted")
+    for view in [edited, deleted] {
+      try await harness.database.keepOfflineView(
+        serverID: harness.serverID, savedViewID: view.id,
+        queryKey: QueryKey(serverID: harness.serverID, filter: FilterState(savedView: view)))
+    }
+    var changed = edited
+    changed.filterRules = [
+      try #require(FilterRule(ruleType: .title, value: .string(value: "bill")))
+    ]
+    _ = try await harness.transient.update(savedView: changed)
+    try await harness.transient.delete(savedView: deleted)
+    let stored = StoredConnection(
+      id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
+      extraHeaders: [], user: StoreHarness.user)
+
+    await harness.session.sync(stored: stored, phases: [.elements])
+
+    let kept = try await harness.database.keptOfflineViews(serverID: harness.serverID)
+    #expect(kept.map(\.savedViewID) == [edited.id])
+    #expect(
+      kept.first?.queryKey
+        == QueryKey(serverID: harness.serverID, filter: FilterState(savedView: changed)))
+  }
+
   @Test("A pass called off during the library fill never starts the detail fill")
   func cancelledPassStartsNoFurtherPhase() async throws {
     let traffic = Traffic()

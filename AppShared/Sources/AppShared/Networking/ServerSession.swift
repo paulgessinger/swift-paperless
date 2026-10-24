@@ -565,7 +565,7 @@ public final class ServerSession {
     // reconcile. Cancellation is the exception: it means the pass as a whole is
     // unwanted, so it stops the remaining sweeps instead of being stepped over.
     var result = ReconcileResult()
-    var hydratedKept = 0
+    var keptChanges = 0
     func sweep(_ site: SyncFailureSite, _ body: () async throws -> Void) async {
       guard !result.cancelled else { return }
       do {
@@ -597,7 +597,7 @@ public final class ServerSession {
     }
 
     // Deletes first (correctness), then the changed-metadata delta (freshness),
-    // then the kept documents' missing rows, then the saved-view membership
+    // then what is kept offline, then the saved-view membership
     // sweep (so newly-matched docs — now landed at detail by the delta — appear
     // in every offline list). The delta and the membership sweep are no-ops
     // unless *Entire library* is enabled.
@@ -615,16 +615,16 @@ public final class ServerSession {
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
       }
-      await sweep(.keptOffline) { hydratedKept = try await backend.hydrateKeptOffline() }
+      await sweep(.keptOffline) { keptChanges = try await backend.reconcileKeptOffline() }
       await sweep(.membership) { try await backend.reconcileSavedViewMembership() }
       await sweep(.reachability) { try await backend.collectUnreachableQueries() }
     }
 
-    // A kept document that just got its row back has a `modified` to download
-    // against now; the planned files phase would only reach it on the next
-    // pass. Each task carries the server's network policy, so this queues
-    // nothing the link forbids.
-    if !result.cancelled, hydratedKept > 0 {
+    // A kept document that just got its row back, or a kept view's new member,
+    // has a `modified` to download against now; the planned files phase would
+    // only reach it on the next pass. Each task carries the server's network
+    // policy, so this queues nothing the link forbids.
+    if !result.cancelled, keptChanges > 0 {
       _ = await fillFiles()
     }
 

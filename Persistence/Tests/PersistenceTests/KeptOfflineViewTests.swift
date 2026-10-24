@@ -60,6 +60,21 @@ struct KeptOfflineViewTests {
     #expect(kept.first?.queryKey == moved)
   }
 
+  @Test("Moving a kept view changes its key; a view that is not kept stays unkept")
+  func move() async throws {
+    let database = try Database.seeded(serverID: server)
+    let moved = QueryKey(sentinel: "moved")
+    try await database.keepOfflineView(
+      serverID: server, savedViewID: 1, queryKey: QueryKey(sentinel: "old"))
+
+    try await database.moveKeptOfflineView(serverID: server, savedViewID: 1, to: moved)
+    try await database.moveKeptOfflineView(serverID: server, savedViewID: 2, to: moved)
+
+    let kept = try await database.keptOfflineViews(serverID: server)
+    #expect(kept.map(\.savedViewID) == [1])
+    #expect(kept.first?.queryKey == moved)
+  }
+
   // MARK: - Protections
 
   private let viewKey = QueryKey(sentinel: "view")

@@ -116,8 +116,11 @@ public struct DetailFillOutcome: Sendable {
 enum MembershipHydration {
   /// Leave them skeletons for the library fill.
   case deferToFill
-  /// Fetch the missing ones among the first `window` ids, in one request.
+  /// Fetch the missing ones among the first `window` ids.
   case window(Int)
+  /// Fetch every missing one: a kept view, whose members the file pass needs
+  /// a `modified` for.
+  case all
 }
 
 enum MembershipRewriteOutcome: Equatable {
@@ -254,14 +257,29 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// edits, and the list fill or detail write-through corrects them instead.
   func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws
 
-  /// Fetch the documents kept offline whose rows are not cached (after a cache
-  /// wipe, or a document pruned before it was kept), so the *Kept offline*
-  /// list has rows and the file pass has a `modified` to download against.
+  /// Bring what is kept offline up to date: fetch the kept documents whose rows
+  /// are not cached (after a cache wipe, or a document pruned before it was
+  /// kept), and under *Recently browsed* re-sync every kept saved view's
+  /// membership with all its rows, so the file pass has a `modified` to
+  /// download each member against. *Entire library*'s membership sweep and
+  /// fill cover the views there.
+  ///
   /// Fetch only: whether a kept document still exists is
-  /// ``reconcileDocumentDeletions()``'s call, against the server's id set.
-  /// Returns how many rows were fetched, so the caller can queue their files.
+  /// ``reconcileDocumentDeletions()``'s call, against the server's id set. A
+  /// view that fails is recorded and stepped over.
+  ///
+  /// - Returns: how many rows were fetched and lists rewritten, so the caller
+  ///   can queue their files.
   @discardableResult
-  func hydrateKeptOffline() async throws -> Int
+  func reconcileKeptOffline() async throws -> Int
+
+  /// Re-sync one kept saved view's membership from the server and fetch every
+  /// member without a row. What keeping a view does at once, and the
+  /// reconcile does for each kept view.
+  ///
+  /// - Returns: `false` if the view is not cached, or the rewrite didn't stand.
+  @discardableResult
+  func syncKeptOfflineView(savedViewID: UInt) async throws -> Bool
 
   /// The shared database and the active server this repository caches into.
   /// `DocumentStore` reads these to point its `ElementStore` projection at the
@@ -453,7 +471,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       if canView(.savedView) {
         total += 1
         group.addTask { [self] in
-          try await syncCollection(SavedViewRecord.self) { try await wrapped.savedViews() }
+          try await syncCollection(SavedViewRecord.self) {
+            let views = try await wrapped.savedViews()
+            try await followKeptOfflineViews(views)
+            return views
+          }
         }
       }
       if canView(.user) {
@@ -1190,8 +1212,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   public func update(savedView: SavedView) async throws -> SavedView {
     let updated = try await wrapped.update(savedView: savedView)
+    let key = QueryKey(serverID: serverID, filter: FilterState(savedView: updated))
     await commitCache("update(savedView:)", heal: .elements) { [database, serverID] in
       try await database.upsertElement(updated, of: SavedViewRecord.self, serverID: serverID)
+      try await database.moveKeptOfflineView(
+        serverID: serverID, savedViewID: updated.id, to: key)
     }
     return updated
   }
@@ -1201,6 +1226,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     await commitCache("delete(savedView:)", heal: .elements) {
       [database, serverID, id = savedView.id] in
       try await database.deleteElement(SavedViewRecord.self, serverID: serverID, id: id)
+      try await database.releaseOfflineView(serverID: serverID, savedViewID: id)
+    }
+  }
+
+  /// Follow the server's saved views: a kept view's key moves with an edit,
+  /// and a kept view the server no longer has is released. `views` is the
+  /// server's complete list.
+  private func followKeptOfflineViews(_ views: [SavedView]) async throws {
+    let keys = Dictionary(
+      views.map { ($0.id, QueryKey(serverID: serverID, filter: FilterState(savedView: $0))) },
+      uniquingKeysWith: { first, _ in first })
+    let released = try await database.reconcileKeptOfflineViews(
+      serverID: serverID, currentKeys: keys)
+    if !released.isEmpty {
+      Logger.sync.info(
+        "Released \(released.count, privacy: .public) kept saved view(s) the server no longer has")
     }
   }
 
@@ -1439,19 +1480,60 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  public func hydrateKeptOffline() async throws -> Int {
+  public func reconcileKeptOffline() async throws -> Int {
+    var changes = 0
     let missing = try await database.keptOfflineIDsMissingRows(serverID: serverID)
-    guard !missing.isEmpty else { return 0 }
-    Logger.sync.info(
-      "Reconcile: fetching \(missing.count, privacy: .public) kept documents without a row")
-    // `documents(ids:)` writes the rows through; in pages so a long list after
-    // a wipe is not one request.
-    var fetched = 0
-    var start = missing.startIndex
-    while start < missing.endIndex {
+    if !missing.isEmpty {
+      Logger.sync.info(
+        "Reconcile: fetching \(missing.count, privacy: .public) kept documents without a row")
+      changes += try await fetchInPages(missing)
+    }
+
+    guard offlineBrowsingMode == .recentlyBrowsed else { return changes }
+    for view in try await database.keptOfflineViews(serverID: serverID) {
       try Task.checkCancellation()
-      let end = min(start + 100, missing.endIndex)
-      fetched += try await documents(ids: Array(missing[start..<end])).count
+      do {
+        if try await syncKeptOfflineView(savedViewID: view.savedViewID) {
+          changes += 1
+          try? await database.clearQuerySyncError(
+            serverID: serverID, queryKey: view.queryKey.rawValue)
+        }
+      } catch is CancellationError {
+        throw CancellationError()
+      } catch {
+        Logger.sync.log(
+          level: SyncFailureClass(error).logLevel(),
+          "Kept view \(view.savedViewID, privacy: .public) failed (\(error)); continuing")
+        await recordViewFailure(error, key: view.queryKey, name: nil)
+      }
+      // As in the membership sweep: the `try?` above swallows cancellation.
+      try Task.checkCancellation()
+    }
+    return changes
+  }
+
+  public func syncKeptOfflineView(savedViewID: UInt) async throws -> Bool {
+    let views = try await database.elements(SavedViewRecord.self, serverID: serverID)
+    guard let view = views.first(where: { $0.id == savedViewID }) else { return false }
+    let filter = FilterState(savedView: view)
+    let key = QueryKey(serverID: serverID, filter: filter)
+    // The element sync moves the key too; a view edited since it last ran must
+    // not have its new list written under a key nothing protects.
+    try await database.moveKeptOfflineView(serverID: serverID, savedViewID: savedViewID, to: key)
+    let outcome = try await rewriteQueryMembership(
+      key, filter: filter, label: view.name, hydrating: .all)
+    return outcome == .rewritten
+  }
+
+  /// Fetch `ids` through ``documents(ids:)``, which writes the rows through,
+  /// in pages so a long list after a wipe is not one request.
+  private func fetchInPages(_ ids: [UInt]) async throws -> Int {
+    var fetched = 0
+    var start = ids.startIndex
+    while start < ids.endIndex {
+      try Task.checkCancellation()
+      let end = min(start + 100, ids.endIndex)
+      fetched += try await documents(ids: Array(ids[start..<end])).count
       start = end
     }
     return fetched
@@ -1543,14 +1625,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   private func hydrate(
     _ ids: [UInt], policy: MembershipHydration, label: String
   ) async throws {
-    guard case .window(let window) = policy else { return }
+    let candidates: [UInt]
+    switch policy {
+    case .deferToFill: return
+    case .window(let window): candidates = Array(ids.prefix(window))
+    case .all: candidates = ids
+    }
     let missing = try await database.documentIDsWithoutRows(
-      serverID: serverID, among: Array(ids.prefix(window)))
+      serverID: serverID, among: candidates)
     guard !missing.isEmpty else { return }
     Logger.sync.info(
       "Membership rewrite: '\(label, privacy: .public)' hydrating \(missing.count, privacy: .public) object(s)"
     )
-    _ = try await documents(ids: missing)
+    _ = try await fetchInPages(missing)
   }
 
   /// Rewrite `key`'s membership while *owning* the key, and report whether the
@@ -1640,6 +1727,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // keeping the reclaimed library from growing back one abandoned filter at a
     // time.
     let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
+    // A kept view's key even while its saved view is not cached (a permission
+    // the element sync skipped): its list is what keeps its documents.
+    let keptViewKeys = try await database.keptOfflineViews(serverID: serverID).map(\.queryKey)
     let cached = try await database.cachedQueries(serverID: serverID)
 
     // No suspension from here to the claim below — that is what makes the
@@ -1648,6 +1738,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // during either read above is already in one of them, and a fill that starts
     // after the claim has to drain this sweep (`takeOver`) before it writes.
     var reachable: Set<QueryKey> = [QueryKey(serverID: serverID, filter: .default)]
+    reachable.formUnion(keptViewKeys)
     for view in savedViews {
       reachable.insert(QueryKey(serverID: serverID, filter: FilterState(savedView: view)))
     }

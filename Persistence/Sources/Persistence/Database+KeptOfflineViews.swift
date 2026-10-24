@@ -69,6 +69,19 @@ extension Database {
     return stream(observation)
   }
 
+  /// Move a kept view to the key its edited filter or sort is stored under. A
+  /// view that is not kept is left alone.
+  public func moveKeptOfflineView(serverID: UUID, savedViewID: UInt, to queryKey: QueryKey)
+    async throws
+  {
+    try await wrappingAsync("moveKeptOfflineView") {
+      try await writer.write { db in
+        _ = try Self.keptView(serverID: serverID, savedViewID: savedViewID)
+          .updateAll(db, Column("query_key").set(to: queryKey.rawValue))
+      }
+    }
+  }
+
   /// Bring the kept views in line with the server's saved views: `currentKeys`
   /// maps every saved view the server returned to its key. A kept view missing
   /// from it was deleted and is released; one whose key moved (its filter or
