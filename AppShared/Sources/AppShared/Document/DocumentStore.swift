@@ -165,6 +165,13 @@ public final class DocumentStore: Sendable {
     keptOfflineViewIDs.contains(savedViewID)
   }
 
+  /// Whether a document stays on the device, kept on its own or by a kept
+  /// saved view: what the list's badge shows. Keeping and releasing a
+  /// document only change the first.
+  public func isOnDevice(_ documentID: UInt) -> Bool {
+    isKeptOffline(documentID) || projection?.keptOfflineViewMemberIDs.contains(documentID) == true
+  }
+
   /// Keep a saved view on the device, or stop keeping it. Keeping syncs the
   /// view's members, fetches their rows and queues their files at once; the
   /// view is recorded first, so a sync that fails here is retried by the next

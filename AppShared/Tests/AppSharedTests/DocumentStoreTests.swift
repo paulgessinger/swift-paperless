@@ -90,6 +90,9 @@ struct DocumentStoreTests {
     try await waitUntil(
       { harness.store.isKeptOffline(savedView: view.id) }, "the projection never saw the view")
     #expect(try await harness.database.document(serverID: harness.serverID, id: 1) != nil)
+    try await waitUntil({ harness.store.isOnDevice(1) }, "the projection never saw the member")
+    #expect(!harness.store.isKeptOffline(1))
+    #expect(!harness.store.isOnDevice(2))
     try await waitUntil(
       { StubDownloadURLProtocol.requests.count == 2 }, "the member's files were never requested")
     #expect(
@@ -104,6 +107,7 @@ struct DocumentStoreTests {
     try await harness.store.setKeptOffline(savedView: view, false)
     try await waitUntil(
       { !harness.store.isKeptOffline(savedView: view.id) }, "the projection kept the view")
+    try await waitUntil({ !harness.store.isOnDevice(1) }, "the member stayed on the device")
     await harness.fileDownloader?.invalidate()
   }
 

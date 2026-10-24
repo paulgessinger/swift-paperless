@@ -69,6 +69,24 @@ extension Database {
     return stream(observation)
   }
 
+  /// Live set of the documents kept through a kept view, for the list's badge,
+  /// next to the documents kept on their own.
+  public func observeKeptOfflineViewMemberIDs(serverID: UUID)
+    -> AsyncThrowingStream<Set<UInt>, Error>
+  {
+    let observation =
+      ValueObservation
+      .tracking { db in
+        try KeptOfflineRecord
+          .filter(Column("server_id") == serverID)
+          .filter(Column("saved_view_id") != KeptOfflineRecord.onItsOwn)
+          .select(Column("document_id"), as: UInt.self)
+          .fetchSet(db)
+      }
+      .removeDuplicates()
+    return stream(observation)
+  }
+
   /// Make `documentIDs` the members of a kept view: what the server lists for
   /// it now. A view that is no longer kept is left alone, so a sync finishing
   /// after the user stopped keeping it writes nothing.

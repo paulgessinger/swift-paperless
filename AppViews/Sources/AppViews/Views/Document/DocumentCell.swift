@@ -283,9 +283,10 @@ public struct DocumentCell: View {
   }
 }
 
-/// The kept-offline badge. It reads the kept state itself, so a toggle
-/// updates only the badge: re-running the row's body rebuilt its swipe and
-/// menu actions, and the row closing its swipe was drawn below its place.
+/// The kept-offline badge, for a document kept on its own or by a kept saved
+/// view. It reads the kept state itself, so a toggle updates only the badge:
+/// re-running the row's body rebuilt its swipe and menu actions, and the row
+/// closing its swipe was drawn below its place.
 /// Always in the tree and only shown or hidden, for the same reason, with
 /// its spring scoped to the kept state.
 private struct KeptOfflineBadge: View {
@@ -293,7 +294,7 @@ private struct KeptOfflineBadge: View {
   let documentID: UInt
 
   var body: some View {
-    let isKept = store.isKeptOffline(documentID)
+    let isKept = store.isOnDevice(documentID)
     Image(systemName: "arrow.down.circle.fill")
       .symbolRenderingMode(.palette)
       .foregroundStyle(.white, .indigo)
