@@ -55,12 +55,12 @@ public struct FileRecord:
       ConnectionRecord
       .filter(Column("id") == file[Column("server_id")])
       .filter(ConnectionRecord.Columns.offlineBrowsingMode == "entireLibrary")
-    let kept = KeptOfflineRecord.keeping(
+    let kept = KeptOfflineRecord.isKept(
       server: file[Column("server_id")], document: file[Column("document_id")])
     return aliased(file)
       .filter(evictableKinds.contains(Column("kind")))
       .filter(
         !(Column("kind") == ContentStore.Kind.archive.rawValue
-          && (libraryServer.exists() || kept.exists())))
+          && (libraryServer.exists() || kept)))
   }
 }

@@ -127,13 +127,13 @@ extension Database {
     try await wrappingAsync("archiveFiles") {
       try await writer.read { db in
         let file = TableAlias()
-        let kept = KeptOfflineRecord.keeping(
+        let kept = KeptOfflineRecord.isKept(
           server: file[Column("server_id")], document: file[Column("document_id")])
         return
           try FileRecord.aliased(file)
           .filter(Column("server_id") == serverID)
           .filter(Column("kind") == ContentStore.Kind.archive.rawValue)
-          .filter(!kept.exists())
+          .filter(!kept)
           .fetchAll(db)
       }
     }

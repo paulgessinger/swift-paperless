@@ -32,7 +32,8 @@ public struct LibraryFileCandidate: Sendable, Equatable {
 public enum LibraryFileScope: Sendable, Equatable {
   /// Every cached document: a server in *Entire library*.
   case library
-  /// The documents kept offline, whatever the server's mode.
+  /// The documents kept offline, on their own or by a kept saved view,
+  /// whatever the server's mode.
   case keptOffline
 }
 
@@ -97,6 +98,26 @@ extension Database {
         try Self.libraryFileProgress(serverID: serverID, scope: scope, db)
       }
     }
+  }
+
+  /// How much of each kept saved view has its archive on the device, keyed by
+  /// saved-view id. A view counts the members its cached list holds; one never
+  /// synced counts none.
+  public func keptOfflineViewProgress(serverID: UUID) async throws -> [UInt: LibraryFileProgress] {
+    try await wrappingAsync("keptOfflineViewProgress") {
+      try await writer.read { db in try Self.keptOfflineViewProgress(serverID: serverID, db) }
+    }
+  }
+
+  /// Live ``keptOfflineViewProgress(serverID:)``.
+  public func observeKeptOfflineViewProgress(serverID: UUID)
+    -> AsyncThrowingStream<[UInt: LibraryFileProgress], Error>
+  {
+    let observation =
+      ValueObservation
+      .tracking { db in try Self.keptOfflineViewProgress(serverID: serverID, db) }
+      .removeDuplicates()
+    return stream(observation)
   }
 
   /// Live ``libraryFileProgress(serverID:scope:)`` for the Offline & Sync screen.
@@ -170,6 +191,44 @@ extension Database {
     }
   }
 
+  /// The fresh archive of a member's `document d`, if it has one; a member
+  /// without a row or a `modified` joins nothing.
+  private static let keptArchiveJoin = """
+    LEFT JOIN file f
+      ON f.server_id = d.server_id
+      AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
+      AND f.kind = 'archive'
+      AND f.modified IS d.modified
+      AND d.modified IS NOT NULL
+    """
+
+  private static func keptOfflineViewProgress(
+    serverID: UUID, _ db: GRDB.Database
+  ) throws -> [UInt: LibraryFileProgress] {
+    let rows = try Row.fetchAll(
+      db,
+      sql: """
+        SELECT v.saved_view_id AS view_id,
+          COUNT(q.remote_id) AS total,
+          COUNT(f.version_id) AS downloaded,
+          COALESCE(SUM(f.size), 0) AS bytes
+        FROM kept_offline_view v
+        LEFT JOIN query_order q ON q.server_id = v.server_id AND q.query_key = v.query_key
+        LEFT JOIN document d ON d.server_id = q.server_id AND d.id = q.remote_id
+        \(keptArchiveJoin)
+        WHERE v.server_id = ?
+        GROUP BY v.saved_view_id
+        """,
+      arguments: [serverID])
+    var progress: [UInt: LibraryFileProgress] = [:]
+    for row in rows {
+      progress[row["view_id"]] = LibraryFileProgress(
+        totalDocuments: row["total"], downloadedFiles: row["downloaded"],
+        downloadedBytes: row["bytes"])
+    }
+    return progress
+  }
+
   private static func libraryFileProgress(
     serverID: UUID, scope: LibraryFileScope, _ db: GRDB.Database
   ) throws -> LibraryFileProgress {
@@ -189,25 +248,27 @@ extension Database {
           AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
           AND f.kind = 'archive'
           AND f.modified IS d.modified
-        WHERE d.server_id = ? AND d.modified IS NOT NULL
+        WHERE d.server_id = :server AND d.modified IS NOT NULL
         """
       case .keptOffline:
+        // A document kept on its own and by a view counts once.
         """
+        WITH kept(document_id) AS (
+          SELECT document_id FROM kept_offline WHERE server_id = :server
+          UNION
+          SELECT q.remote_id FROM kept_offline_view v
+          JOIN query_order q ON q.server_id = v.server_id AND q.query_key = v.query_key
+          WHERE v.server_id = :server
+        )
         SELECT COUNT(*) AS total,
           COUNT(f.version_id) AS downloaded,
           COALESCE(SUM(f.size), 0) AS bytes
-        FROM kept_offline k
-        LEFT JOIN document d ON d.server_id = k.server_id AND d.id = k.document_id
-        LEFT JOIN file f
-          ON f.server_id = d.server_id
-          AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
-          AND f.kind = 'archive'
-          AND f.modified IS d.modified
-          AND d.modified IS NOT NULL
-        WHERE k.server_id = ?
+        FROM kept k
+        LEFT JOIN document d ON d.server_id = :server AND d.id = k.document_id
+        \(keptArchiveJoin)
         """
       }
-    let row = try Row.fetchOne(db, sql: sql, arguments: [serverID])
+    let row = try Row.fetchOne(db, sql: sql, arguments: ["server": serverID])
     guard let row else { return .zero }
     return LibraryFileProgress(
       totalDocuments: row["total"], downloadedFiles: row["downloaded"],

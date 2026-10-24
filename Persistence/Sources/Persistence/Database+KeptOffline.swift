@@ -85,12 +85,18 @@ extension Database {
       .fetchSet(db)
   }
 
-  /// `d` is kept, correlated on a `document d` in raw SQL.
+  /// `d` is kept, on its own or by a kept saved view that lists it,
+  /// correlated on a `document d` in raw SQL. The SQL twin of
+  /// ``KeptOfflineRecord/isKept(server:document:)``.
   static let keptOfflineExists = """
-    EXISTS (
+    (EXISTS (
       SELECT 1 FROM kept_offline k
       WHERE k.server_id = d.server_id AND k.document_id = d.id
-    )
+    ) OR EXISTS (
+      SELECT 1 FROM kept_offline_view v
+      JOIN query_order q ON q.server_id = v.server_id AND q.query_key = v.query_key
+      WHERE v.server_id = d.server_id AND q.remote_id = d.id
+    ))
     """
 
   /// The *Kept offline* list: newest membership first, a skeleton for a kept

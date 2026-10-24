@@ -1,7 +1,6 @@
 import Common
 import DataModel
 import Foundation
-import GRDB
 import Testing
 
 @testable import Persistence
@@ -59,5 +58,83 @@ struct KeptOfflineViewTests {
     let kept = try await database.keptOfflineViews(serverID: server)
     #expect(kept.map(\.savedViewID) == [1])
     #expect(kept.first?.queryKey == moved)
+  }
+
+  // MARK: - Protections
+
+  private let viewKey = QueryKey(sentinel: "view")
+
+  /// A view listing `members`, kept.
+  private func keepView(_ database: Database, members: [UInt], id: UInt = 1) async throws {
+    try await database.replaceQueryOrder(
+      queryKey: viewKey, serverID: server, orderedIDs: members, basis: .initial)
+    try await database.keepOfflineView(serverID: server, savedViewID: id, queryKey: viewKey)
+  }
+
+  private func recordArchive(
+    _ database: Database, _ id: UInt, size: Int64 = 10, modified: Date? = nil
+  ) async throws {
+    try await database.recordFile(
+      FileFixtures.key(server, id), documentID: id, size: size,
+      modified: modified ?? date(500), checksum: nil, storedAt: date(1000),
+      lastAccessedAt: date(1000))
+  }
+
+  @Test("A kept view's members are not evictable until the view is released, unless kept alone")
+  func viewMembersAreNotEvictable() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    for id: UInt in [1, 2, 3] { try await recordArchive(database, id) }
+    try await keepView(database, members: [1, 2])
+    try await database.setKeptOffline(serverID: server, documentID: 2, kept: true)
+
+    #expect(try await database.evictableFileBytes() == 10)
+    #expect(try await database.archiveFiles(serverID: server).map(\.documentId) == [3])
+
+    try await database.releaseOfflineView(serverID: server, savedViewID: 1)
+
+    #expect(try await database.evictableFileBytes() == 20)
+    #expect(
+      Set(try await database.archiveFiles(serverID: server).map(\.documentId)) == [1, 3])
+  }
+
+  @Test("A view's list protects nothing until the view is kept")
+  func unkeptViewProtectsNothing() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    try await recordArchive(database, 1)
+    try await database.replaceQueryOrder(
+      queryKey: viewKey, serverID: server, orderedIDs: [1], basis: .initial)
+
+    #expect(try await database.evictableFileBytes() == 10)
+  }
+
+  @Test("The kept scope downloads and counts a view's members, a document kept twice once")
+  func keptScopeIncludesViewMembers() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    // 1: by the view and alone, fresh. 2: by the view, missing. 3: neither.
+    // 9: by the view, no row yet.
+    try await recordArchive(database, 1, size: 7)
+    try await keepView(database, members: [1, 2, 9])
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+
+    let needing = try await database.documentsNeedingFiles(
+      serverID: server, scope: .keptOffline, excluding: [], limit: 10
+    ).filter { $0.kinds.contains(.archive) }.map(\.documentID)
+    #expect(needing == [2])
+
+    let progress = try await database.libraryFileProgress(serverID: server, scope: .keptOffline)
+    #expect(
+      progress == LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7))
+    let perView = try await database.keptOfflineViewProgress(serverID: server)
+    #expect(
+      perView == [1: LibraryFileProgress(totalDocuments: 3, downloadedFiles: 1, downloadedBytes: 7)]
+    )
+  }
+
+  @Test("A kept view never synced counts no members")
+  func unsyncedViewProgress() async throws {
+    let database = try Database.seeded(serverID: server)
+    try await database.keepOfflineView(serverID: server, savedViewID: 4, queryKey: viewKey)
+
+    #expect(try await database.keptOfflineViewProgress(serverID: server) == [4: .zero])
   }
 }

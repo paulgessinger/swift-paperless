@@ -18,11 +18,19 @@ public struct KeptOfflineRecord:
     case keptAt = "kept_at"
   }
 
-  /// The membership rows for the document `document` on the server `server`,
-  /// for a correlated `EXISTS` in the protections that ask "is this kept".
-  static func keeping(server: SQLExpression, document: SQLExpression)
-    -> QueryInterfaceRequest<KeptOfflineRecord>
-  {
-    filter(Column("server_id") == server && Column("document_id") == document)
+  /// Whether the document `document` on the server `server` is kept, on its
+  /// own or by a kept saved view that lists it: the correlated test the
+  /// protections that ask "is this kept" share. The query-interface twin of
+  /// `Database.keptOfflineExists`.
+  static func isKept(server: SQLExpression, document: SQLExpression) -> SQLExpression {
+    let alone = filter(Column("server_id") == server && Column("document_id") == document)
+    let keptViewKeys =
+      KeptOfflineViewRecord
+      .filter(Column("server_id") == server)
+      .select(Column("query_key"))
+    let listed = QueryOrderRow.filter(
+      Column("server_id") == server && Column("remote_id") == document
+        && keptViewKeys.contains(Column("query_key")))
+    return alone.exists() || listed.exists()
   }
 }
