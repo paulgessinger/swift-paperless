@@ -1490,6 +1490,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
 
     guard offlineBrowsingMode == .recentlyBrowsed else { return changes }
+    // A failure is listed under the view's name; `nil` would read as the
+    // default list.
+    let names = Dictionary(
+      try await database.elements(SavedViewRecord.self, serverID: serverID).map {
+        ($0.id, $0.name)
+      },
+      uniquingKeysWith: { first, _ in first })
     for view in try await database.keptOfflineViews(serverID: serverID) {
       try Task.checkCancellation()
       do {
@@ -1504,7 +1511,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         Logger.sync.log(
           level: SyncFailureClass(error).logLevel(),
           "Kept view \(view.savedViewID, privacy: .public) failed (\(error)); continuing")
-        await recordViewFailure(error, key: view.queryKey, name: nil)
+        await recordViewFailure(error, key: view.queryKey, name: names[view.savedViewID])
       }
       // As in the membership sweep: the `try?` above swallows cancellation.
       try Task.checkCancellation()
