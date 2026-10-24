@@ -64,6 +64,49 @@ struct DocumentStoreTests {
     await harness.fileDownloader?.invalidate()
   }
 
+  @Test("Keeping a saved view syncs its list, fetches its members and queues their files")
+  func keepSavedViewQueuesTheMembers() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let harness = try await StoreHarness.make(fileDownloader: StoreHarness.stubbedDownloader)
+    for (id, title) in [(1, "invoice a"), (2, "other")] as [(UInt, String)] {
+      var document = document(id)
+      document.title = title
+      document.modified = Date(timeIntervalSince1970: 500)
+      _ = try await harness.transient.update(document: document)
+    }
+    let view = try await harness.transient.create(
+      savedView: ProtoSavedView(
+        name: "invoices",
+        filterRules: [
+          try #require(FilterRule(ruleType: .title, value: .string(value: "invoice")))
+        ]))
+    try await harness.database.upsertElement(
+      view, of: SavedViewRecord.self, serverID: harness.serverID)
+
+    try await harness.store.setKeptOffline(savedView: view, true)
+
+    try await waitUntil(
+      { harness.store.isKeptOffline(savedView: view.id) }, "the projection never saw the view")
+    #expect(try await harness.database.document(serverID: harness.serverID, id: 1) != nil)
+    try await waitUntil(
+      { StubDownloadURLProtocol.requests.count == 2 }, "the member's files were never requested")
+    #expect(
+      Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path))
+        == ["/documents/1/download", "/documents/1/thumb"])
+    let status = try #require(harness.store.makeOfflineStatus())
+    try await waitUntil(
+      { status.keptOfflineViewProgress[view.id]?.totalDocuments == 1 },
+      "the status never saw the view")
+    #expect(status.keptOfflineFileProgress.totalDocuments == 1)
+
+    try await harness.store.setKeptOffline(savedView: view, false)
+    try await waitUntil(
+      { !harness.store.isKeptOffline(savedView: view.id) }, "the projection kept the view")
+    await harness.fileDownloader?.invalidate()
+  }
+
   @Test("A thumbnail request is keyed by the session's server and the document's version")
   func thumbnailRequestCarriesTheImageID() async throws {
     let harness = try await StoreHarness.make()

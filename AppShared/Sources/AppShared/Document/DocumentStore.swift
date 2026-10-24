@@ -158,6 +158,32 @@ public final class DocumentStore: Sendable {
     }
   }
 
+  /// The active server's saved views kept offline.
+  public var keptOfflineViewIDs: Set<UInt> { projection?.keptOfflineViewIDs ?? [] }
+
+  public func isKeptOffline(savedView savedViewID: UInt) -> Bool {
+    keptOfflineViewIDs.contains(savedViewID)
+  }
+
+  /// Keep a saved view on the device, or stop keeping it. Keeping syncs the
+  /// view's list with all its rows and queues the members' files at once; the
+  /// membership is recorded first, so a sync that fails here is retried by
+  /// the next reconcile. Stopping leaves the files no longer kept to the
+  /// budget.
+  public func setKeptOffline(savedView: SavedView, _ kept: Bool) async throws {
+    guard let session, let backend = session.backend else { return }
+    guard kept else {
+      try await backend.database.releaseOfflineView(
+        serverID: session.serverID, savedViewID: savedView.id)
+      return
+    }
+    try await backend.database.keepOfflineView(
+      serverID: session.serverID, savedViewID: savedView.id,
+      queryKey: QueryKey(serverID: session.serverID, filter: FilterState(savedView: savedView)))
+    try await backend.syncKeptOfflineView(savedViewID: savedView.id)
+    await session.fillFiles()
+  }
+
   /// Debug: call off every library download.
   public func cancelLibraryDownloads() async {
     await registry?.fileDownloader?.cancelAll()

@@ -60,6 +60,9 @@ public final class ServerProjection {
   /// toggle.
   public private(set) var keptOfflineDocumentIDs: Set<UInt> = []
 
+  /// The saved views kept offline, for the view's toggle and badge.
+  public private(set) var keptOfflineViewIDs: Set<UInt> = []
+
   // MARK: Members
 
   @ObservationIgnored
@@ -108,6 +111,8 @@ public final class ServerProjection {
         database.observeServerConfiguration(serverID: serverID), into: \.serverConfiguration),
       observeValue(
         database.observeKeptOfflineIDs(serverID: serverID), into: \.keptOfflineDocumentIDs),
+      observeValue(
+        database.observeKeptOfflineViewIDs(serverID: serverID), into: \.keptOfflineViewIDs),
     ])
   }
 
