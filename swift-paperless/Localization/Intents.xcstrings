@@ -7,14 +7,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Korrespondent"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Korrespondent"
           }
         },
         "en" : {
@@ -25,32 +25,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Correspondant"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Corrispondente"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Correspondent"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Korespondent"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Muhatap"
           }
         }
       }
@@ -61,14 +61,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Dokumenttype"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Dokumenttyp"
           }
         },
         "en" : {
@@ -79,32 +79,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Type de document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Tipologia di documento"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Documentsoort"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Typ dokumentu"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Doküman türü"
           }
         }
       }
@@ -115,13 +115,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
@@ -133,32 +133,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Server"
+            "state" : "translated",
+            "value" : "Serveur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Server"
+            "state" : "translated",
+            "value" : "Serwer"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Server"
+            "state" : "translated",
+            "value" : "Sunucu"
           }
         }
       }
@@ -169,13 +169,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Etiket"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Tag"
           }
         },
@@ -187,32 +187,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Tag"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Etichetta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Label"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Znacznik"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tag"
+            "state" : "translated",
+            "value" : "Etiket"
           }
         }
       }
@@ -223,14 +223,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Korrespondent"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Korrespondent"
           }
         },
         "en" : {
@@ -241,32 +241,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Correspondant"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Corrispondente"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Correspondent"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Korespondent"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Correspondent"
+            "state" : "translated",
+            "value" : "Muhatap"
           }
         }
       }
@@ -277,14 +277,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Uploader et dokument til en Paperless-server."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Lädt ein Dokument auf einen Paperless-Server hoch."
           }
         },
         "en" : {
@@ -295,32 +295,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Envoie un document vers un serveur Paperless."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Carica un documento su un server Paperless."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Uploadt een document naar een Paperless-server."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Przesyła dokument na serwer Paperless."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploads a document to a Paperless server."
+            "state" : "translated",
+            "value" : "Bir dokümanı Paperless sunucusuna yükler."
           }
         }
       }
@@ -331,14 +331,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Dokument"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Dokument"
           }
         },
         "en" : {
@@ -349,32 +349,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Documento"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Document"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Dokument"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document"
+            "state" : "translated",
+            "value" : "Doküman"
           }
         }
       }
@@ -385,14 +385,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Dokumenttype"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Dokumenttyp"
           }
         },
         "en" : {
@@ -403,32 +403,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Type de document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Tipologia di documento"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Documentsoort"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Typ dokumentu"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Document Type"
+            "state" : "translated",
+            "value" : "Doküman türü"
           }
         }
       }
@@ -439,14 +439,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Kunne ikke indlæse valgmuligheder fra Paperless: %@"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Optionen konnten nicht von Paperless geladen werden: %@"
           }
         },
         "en" : {
@@ -457,32 +457,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Impossible de charger les options depuis Paperless : %@"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Impossibile caricare le opzioni da Paperless: %@"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Kan opties niet laden uit Paperless: %@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Nie można wczytać opcji z Paperless: %@"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Could not load options from Paperless: %@"
+            "state" : "translated",
+            "value" : "Seçenekler Paperless'tan yüklenemedi: %@"
           }
         }
       }
@@ -493,14 +493,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "Det valgte element (%@) findes ikke længere i Paperless. Rediger genvejen, og vælg det igen."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "Das ausgewählte Element (%@) existiert nicht mehr in Paperless. Bearbeite den Kurzbefehl und wähle es erneut aus."
           }
         },
         "en" : {
@@ -511,32 +511,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "L'élément sélectionné (%@) n'existe plus dans Paperless. Modifiez le raccourci et sélectionnez-le à nouveau."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "L'elemento selezionato (%@) non esiste più in Paperless. Modifica il comando rapido e selezionalo di nuovo."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "Het geselecteerde item (%@) bestaat niet meer in Paperless. Bewerk de opdracht en kies het opnieuw."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "Wybrany element (%@) nie istnieje już w Paperless. Edytuj skrót i wybierz go ponownie."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The selected %@ no longer exists in Paperless. Edit the shortcut and pick it again."
+            "state" : "translated",
+            "value" : "Seçilen öğe (%@) artık Paperless'ta mevcut değil. Kestirmeyi düzenleyip öğeyi yeniden seçin."
           }
         }
       }
@@ -547,14 +547,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Der er ikke konfigureret nogen Paperless-server. Åbn Paperless, og log ind først."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Es ist kein Paperless-Server eingerichtet. Öffne zuerst Paperless und melde dich an."
           }
         },
         "en" : {
@@ -565,32 +565,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Aucun serveur Paperless n'est configuré. Ouvrez d'abord Paperless et connectez-vous."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Nessun server Paperless configurato. Apri prima Paperless ed effettua l'accesso."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Er is geen Paperless-server ingesteld. Open eerst Paperless en log in."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Nie skonfigurowano serwera Paperless. Najpierw otwórz Paperless i zaloguj się."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Paperless server is configured. Open Paperless and sign in first."
+            "state" : "translated",
+            "value" : "Yapılandırılmış bir Paperless sunucusu yok. Önce Paperless'ı açıp oturum açın."
           }
         }
       }
@@ -601,14 +601,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Dokumentfilen kunne ikke klargøres til upload: %@"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Die Dokumentdatei konnte nicht für den Upload vorbereitet werden: %@"
           }
         },
         "en" : {
@@ -619,32 +619,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Le fichier du document n'a pas pu être préparé pour l'envoi : %@"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Impossibile preparare il file del documento per il caricamento: %@"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Het documentbestand kon niet worden voorbereid voor uploaden: %@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Nie można przygotować pliku dokumentu do przesłania: %@"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The document file could not be prepared for upload: %@"
+            "state" : "translated",
+            "value" : "Doküman dosyası yüklemeye hazırlanamadı: %@"
           }
         }
       }
@@ -655,13 +655,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
@@ -673,32 +673,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Server"
+            "state" : "translated",
+            "value" : "Serveur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Server"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Server"
+            "state" : "translated",
+            "value" : "Serwer"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Server"
+            "state" : "translated",
+            "value" : "Sunucu"
           }
         }
       }
@@ -709,14 +709,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Dokumentet er uploadet til Paperless."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Dokument wurde zu Paperless hochgeladen."
           }
         },
         "en" : {
@@ -727,32 +727,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Document envoyé vers Paperless."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Documento caricato su Paperless."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Document geüpload naar Paperless."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Przesłano dokument do Paperless."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Uploaded document to Paperless."
+            "state" : "translated",
+            "value" : "Doküman Paperless'a yüklendi."
           }
         }
       }
@@ -763,13 +763,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Etiketter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Tags"
           }
         },
@@ -781,32 +781,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Tags"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Etichette"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Labels"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Tagi"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Tags"
+            "state" : "translated",
+            "value" : "Etiketler"
           }
         }
       }
@@ -817,14 +817,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Upload dokument"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Dokument hochladen"
           }
         },
         "en" : {
@@ -835,32 +835,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Envoyer un document"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Carica documento"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Document uploaden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Prześlij dokument"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload Document"
+            "state" : "translated",
+            "value" : "Doküman yükle"
           }
         }
       }
@@ -871,14 +871,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titel"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titel"
           }
         },
         "en" : {
@@ -889,32 +889,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titre"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titolo"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Titel"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Tytuł"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Title"
+            "state" : "translated",
+            "value" : "Başlık"
           }
         }
       }
@@ -925,14 +925,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Upload mislykkedes: %@"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Upload fehlgeschlagen: %@"
           }
         },
         "en" : {
@@ -943,32 +943,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Échec de l'envoi : %@"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Caricamento non riuscito: %@"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Uploaden mislukt: %@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Przesyłanie nie powiodło się: %@"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Upload failed: %@"
+            "state" : "translated",
+            "value" : "Yükleme başarısız: %@"
           }
         }
       }

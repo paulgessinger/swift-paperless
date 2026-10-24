@@ -8164,14 +8164,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Behold offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Offline behalten"
           }
         },
         "en" : {
@@ -8182,32 +8182,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Conserver hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Mantieni offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Offline bewaren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Zachowaj offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı tut"
           }
         }
       }
@@ -8218,14 +8218,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Gemt offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Offline behalten"
           }
         },
         "en" : {
@@ -8236,32 +8236,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Conservés hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Mantenuti offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Offline bewaard"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Zachowane offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Kept offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı tutulanlar"
           }
         }
       }
@@ -8272,14 +8272,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Brug Behold offline på et dokument for at hente det og beholde det på denne enhed."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Verwende „Offline behalten“ bei einem Dokument, um es herunterzuladen und auf diesem Gerät zu behalten."
           }
         },
         "en" : {
@@ -8290,32 +8290,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Utilisez Conserver hors ligne sur un document pour le télécharger et le conserver sur cet appareil."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Usa Mantieni offline su un documento per scaricarlo e conservarlo su questo dispositivo."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Gebruik Offline bewaren bij een document om het te downloaden en op dit apparaat te bewaren."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Użyj opcji Zachowaj offline przy dokumencie, aby go pobrać i zachować na tym urządzeniu."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Use Keep offline on a document to download it and keep it on this device."
+            "state" : "translated",
+            "value" : "Bir dokümanı indirip bu cihazda tutmak için Çevrimdışı tut seçeneğini kullanın."
           }
         }
       }
@@ -8326,14 +8326,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Ingen dokumenter gemt offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Keine offline behaltenen Dokumente"
           }
         },
         "en" : {
@@ -8344,32 +8344,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Aucun document conservé hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Nessun documento mantenuto offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Geen documenten offline bewaard"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Brak dokumentów zachowanych offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No documents kept offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı tutulan doküman yok"
           }
         }
       }
@@ -11522,14 +11522,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Serverens certifikat blev ikke betroet på dette netværk. Det er forventeligt, hvis serveren kun kan nås fra et andet netværk eller via VPN."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Dem Zertifikat des Servers wurde in diesem Netzwerk nicht vertraut. Das ist zu erwarten, wenn der Server nur aus einem anderen Netzwerk oder über VPN erreichbar ist."
           }
         },
         "en" : {
@@ -11540,32 +11540,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Le certificat du serveur n'a pas été approuvé sur ce réseau. C'est normal si le serveur n'est accessible que depuis un autre réseau ou via un VPN."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Il certificato del server non è stato considerato attendibile su questa rete. È normale se il server è raggiungibile solo da un'altra rete o tramite VPN."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Het certificaat van de server werd op dit netwerk niet vertrouwd. Dat is te verwachten als de server alleen vanaf een ander netwerk of via een VPN bereikbaar is."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Certyfikat serwera nie został uznany za zaufany w tej sieci. To normalne, jeśli serwer jest dostępny tylko z innej sieci lub przez VPN."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The server's certificate wasn't trusted on this network. This is expected if the server is only reachable from another network or over a VPN."
+            "state" : "translated",
+            "value" : "Sunucunun sertifikasına bu ağda güvenilmedi. Sunucuya yalnızca başka bir ağdan veya VPN üzerinden erişilebiliyorsa bu beklenen bir durumdur."
           }
         }
       }
@@ -14391,14 +14391,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Behold ikke længere offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Nicht mehr offline behalten"
           }
         },
         "en" : {
@@ -14409,32 +14409,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Ne plus conserver hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Non mantenere più offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Niet meer offline bewaren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Przestań zachowywać offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı tutmayı bırak"
           }
         }
       }
@@ -16251,13 +16251,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Offline"
           }
         },
@@ -16269,32 +16269,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Offline"
+            "state" : "translated",
+            "value" : "Hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı"
           }
         }
       }
