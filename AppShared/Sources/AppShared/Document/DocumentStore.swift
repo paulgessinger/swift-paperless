@@ -189,6 +189,15 @@ public final class DocumentStore: Sendable {
     await session.fillFiles()
   }
 
+  /// How many documents a saved view lists, from its cached list: what keeping
+  /// it would download. `nil` for a view whose list has not been cached.
+  public func cachedDocumentCount(savedView: SavedView) async -> UInt? {
+    guard let session, let backend = session.backend else { return nil }
+    let key = QueryKey(serverID: session.serverID, filter: FilterState(savedView: savedView))
+    return try? await backend.database.queryStatus(queryKey: key, serverID: session.serverID)
+      .totalCount
+  }
+
   /// Debug: call off every library download.
   public func cancelLibraryDownloads() async {
     await registry?.fileDownloader?.cancelAll()

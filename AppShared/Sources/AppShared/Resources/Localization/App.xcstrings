@@ -8212,6 +8212,222 @@
         }
       }
     },
+    "keepSavedViewOffline" : {
+      "comment" : "Action on a saved view: download the files of every document it lists and keep them on the device while they are listed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep offline"
+          }
+        }
+      }
+    },
+    "keepSavedViewOfflineMessage" : {
+      "comment" : "Message of the confirmation before keeping a saved view offline, when the number of documents is not known yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+          }
+        }
+      }
+    },
+    "keepSavedViewOfflineMessageCount" : {
+      "comment" : "Message of the confirmation before keeping a saved view offline. %lld is how many documents the view lists",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+          }
+        }
+      }
+    },
+    "keepSavedViewOfflineTitle" : {
+      "comment" : "Title of the confirmation before keeping a saved view offline. %@ is the saved view's name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep “%@” offline?"
+          }
+        }
+      }
+    },
     "keptOffline" : {
       "comment" : "Title of the local view listing the documents the user keeps on the device; also in the saved view selector",
       "extractionState" : "manual",
@@ -14435,6 +14651,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çevrimdışı tutmayı bırak"
+          }
+        }
+      }
+    },
+    "stopKeepingSavedViewOffline" : {
+      "comment" : "Action on a saved view kept offline: stop keeping its documents on the device; documents kept on their own stay",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop keeping offline"
           }
         }
       }

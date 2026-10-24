@@ -85,7 +85,11 @@ struct DocumentStoreTests {
     try await harness.database.upsertElement(
       view, of: SavedViewRecord.self, serverID: harness.serverID)
 
+    #expect(await harness.store.cachedDocumentCount(savedView: view) == nil)
+
     try await harness.store.setKeptOffline(savedView: view, true)
+
+    #expect(await harness.store.cachedDocumentCount(savedView: view) == 1)
 
     try await waitUntil(
       { harness.store.isKeptOffline(savedView: view.id) }, "the projection never saw the view")

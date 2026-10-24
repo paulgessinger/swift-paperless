@@ -109,6 +109,10 @@ struct DocumentView: View {
 
   @State private var showDataScanner = false
   @State private var taskViewNavState: NavigationState? = nil
+
+  /// A saved view waiting for the user to confirm keeping it offline, with
+  /// how many documents its cached list holds.
+  @State private var keepOfflineRequest: KeepOfflineRequest?
   @Binding private var showSettings: Bool
 
   init(showSettings: Binding<Bool>) {
@@ -432,8 +436,40 @@ struct DocumentView: View {
     }
   }
 
+  /// Keep a saved view offline after the user confirms, or stop keeping it
+  /// at once.
+  private func toggleKeptOffline(_ savedView: SavedView) {
+    Task {
+      if store.isKeptOffline(savedView: savedView.id) {
+        await setKeptOffline(savedView, false)
+      } else {
+        let count = await store.cachedDocumentCount(savedView: savedView)
+        keepOfflineRequest = KeepOfflineRequest(savedView: savedView, documentCount: count)
+      }
+    }
+  }
+
+  private func setKeptOffline(_ savedView: SavedView, _ kept: Bool) async {
+    do {
+      try await store.setKeptOffline(savedView: savedView, kept)
+    } catch {
+      Logger.shared.error("Keeping a saved view offline failed: \(error)")
+      errorController.push(error: error)
+    }
+  }
+
   @ViewBuilder
   private var titleMenu: some View {
+    if filterModel.localView == nil, let id = filterModel.filterState.savedView,
+      let savedView = store.savedViews[id]
+    {
+      Section {
+        KeepSavedViewOfflineButton(store: store, savedView: savedView) {
+          toggleKeptOffline(savedView)
+        }
+      }
+    }
+
     if !store.savedViews.isEmpty || filterModel.localView != nil {
       Button {
         withAnimation {
@@ -469,7 +505,11 @@ struct DocumentView: View {
                 }
               }
             } label: {
-              Text(savedView.name)
+              if store.isKeptOffline(savedView: savedView.id) {
+                Label(savedView.name, systemImage: "arrow.down.circle.fill")
+              } else {
+                Text(savedView.name)
+              }
             }
           }
         } else {
@@ -590,7 +630,15 @@ struct DocumentView: View {
           } else {
             ForEach(savedViews, id: \.id) { sv in
               NavigationLink(value: SidebarSelection.savedView(sv.id)) {
-                Label(sv.name, systemImage: "bookmark")
+                Label(
+                  sv.name,
+                  systemImage: store.isKeptOffline(savedView: sv.id)
+                    ? "arrow.down.circle.fill" : "bookmark")
+              }
+              .contextMenu {
+                KeepSavedViewOfflineButton(store: store, savedView: sv) {
+                  toggleKeptOffline(sv)
+                }
               }
             }
           }
@@ -703,6 +751,28 @@ struct DocumentView: View {
     // That collapse writes .detailOnly, so a user choice of it isn't kept.
     .onChange(of: columnVisibility) { _, new in
       if new != .detailOnly { regularColumnVisibility = new }
+    }
+
+    .confirmationDialog(
+      keepOfflineRequest.map {
+        String(localized: .app(.keepSavedViewOfflineTitle($0.savedView.name)))
+      } ?? "",
+      isPresented: Binding(
+        get: { keepOfflineRequest != nil },
+        set: { if !$0 { keepOfflineRequest = nil } }),
+      titleVisibility: .visible,
+      presenting: keepOfflineRequest
+    ) { request in
+      Button(String(localized: .app(.keepSavedViewOffline))) {
+        Task { await setKeptOffline(request.savedView, true) }
+      }
+      Button(String(localized: .app(.cancel)), role: .cancel) {}
+    } message: { request in
+      if let count = request.documentCount {
+        Text(.app(.keepSavedViewOfflineMessageCount(Int(count))))
+      } else {
+        Text(.app(.keepSavedViewOfflineMessage))
+      }
     }
 
     .fileImporter(
@@ -840,4 +910,31 @@ struct DocumentView: View {
     .environment(connectionManager)
     .environment(RouteManager())
     .environment(networkMonitor)
+}
+
+/// A saved view the user asked to keep offline, waiting for confirmation.
+private struct KeepOfflineRequest {
+  let savedView: SavedView
+  /// The documents its cached list holds; `nil` if it was never opened.
+  let documentCount: UInt?
+}
+
+/// Keeps a saved view offline or stops keeping it. Reads the kept state
+/// itself, so a toggle redraws only the button.
+private struct KeepSavedViewOfflineButton: View {
+  let store: DocumentStore
+  let savedView: SavedView
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      if store.isKeptOffline(savedView: savedView.id) {
+        Label(
+          String(localized: .app(.stopKeepingSavedViewOffline)),
+          systemImage: "arrow.down.circle.fill")
+      } else {
+        Label(String(localized: .app(.keepSavedViewOffline)), systemImage: "arrow.down.circle")
+      }
+    }
+  }
 }
