@@ -5,6 +5,9 @@ files:
   - source: AppShared/Sources/AppShared/Resources/Localization/*.xcstrings
     translation: AppShared/Sources/AppShared/Resources/Localization/%original_file_name%
     multilingual: true
+    # Keep translations that match the source ("Server", "Tag"); Crowdin drops
+    # them by default and the next pull resets them to "new".
+    import_eq_suggestions: true
     # Xcode can auto-create an orphan default-table "Localizable.xcstrings" on IDE
     # builds; it only holds junk (real strings live in App.xcstrings), so never sync it.
     ignore:
@@ -14,3 +17,4 @@ files:
   - source: swift-paperless/Localization/*.xcstrings
     translation: swift-paperless/Localization/%original_file_name%
     multilingual: true
+    import_eq_suggestions: true
