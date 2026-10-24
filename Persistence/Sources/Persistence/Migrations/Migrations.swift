@@ -127,6 +127,10 @@ enum Migrations {
       try V19_CreateKeptOffline.run(db)
     }
 
+    migrator.registerMigration("v20_create_kept_offline_view") { db in
+      try V20_CreateKeptOfflineView.run(db)
+    }
+
     return migrator
   }
 }

@@ -144,6 +144,21 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v20 creates the kept_offline_view table keyed by server and saved view")
+  func v20CreatesKeptOfflineView() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(try db.tableExists("kept_offline_view"))
+      let columns = try db.columns(in: "kept_offline_view")
+      #expect(
+        Set(columns.map(\.name)) == ["server_id", "saved_view_id", "query_key", "kept_at"])
+      #expect(columns.allSatisfy { $0.isNotNull })
+      #expect(try db.primaryKey("kept_offline_view").columns == ["server_id", "saved_view_id"])
+      let fkTargets = Set(try db.foreignKeys(on: "kept_offline_view").map(\.destinationTable))
+      #expect(fkTargets == ["server"])
+    }
+  }
+
   @Test("v10 adds a nullable viewed_at to query_meta")
   func v10AddsQueryViewedAt() throws {
     let database = try Database.inMemory()
