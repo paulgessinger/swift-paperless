@@ -139,3 +139,28 @@ extension ApiUISettingsSavedViews {
     sidebar_views_visible_ids = domain.sidebarViewsVisibleIds
   }
 }
+
+// MARK: - Writing settings back
+
+extension ApiUISettingsSettings {
+  /// The `POST /api/ui_settings/` body that applies these settings on top of
+  /// `current`, a `GET /api/ui_settings/` response. The server replaces the
+  /// stored settings wholesale, so keys the app doesn't model (theme,
+  /// language, …) are carried over, as the web UI does.
+  func postBody(mergingInto current: Data, encoder: JSONEncoder) throws -> Data {
+    let response = try JSONSerialization.jsonObject(with: current) as? [String: Any]
+    let stored = response?["settings"] as? [String: Any] ?? [:]
+    let ours = try JSONSerialization.jsonObject(with: encoder.encode(self)) as? [String: Any] ?? [:]
+    return try JSONSerialization.data(
+      withJSONObject: ["settings": Self.merge(ours, into: stored)])
+  }
+
+  private static func merge(_ overlay: [String: Any], into base: [String: Any]) -> [String: Any] {
+    base.merging(overlay) { old, new in
+      if let old = old as? [String: Any], let new = new as? [String: Any] {
+        return merge(new, into: old)
+      }
+      return new
+    }
+  }
+}

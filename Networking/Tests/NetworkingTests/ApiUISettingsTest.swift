@@ -132,6 +132,48 @@ struct ApiUISettingsTest {
     #expect(try (encode(.user(4))["default_owner"] as? NSNumber)?.uintValue == 4)
   }
 
+  @Test("Writing settings keeps the keys the app doesn't model")
+  func testPostBodyKeepsUnmodeledKeys() throws {
+    let current = try #require(testData("Data/UISettings/ui_settings_v3.0.0_api_v10.json"))
+    var settings = try JSONDecoder().decode(ApiUISettings.self, from: current).domain.settings
+    settings.savedViews.dashboardViewsVisibleIds = [7, 9]
+
+    let body = try ApiUISettingsSettings(from: settings)
+      .postBody(mergingInto: current, encoder: JSONEncoder())
+    let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+    let posted = try #require(json["settings"] as? [String: Any])
+
+    let savedViews = try #require(posted["saved_views"] as? [String: Any])
+    #expect(savedViews["dashboard_views_visible_ids"] as? [UInt] == [7, 9])
+    #expect(savedViews["sidebar_views_visible_ids"] as? [UInt] == [7])
+    #expect(savedViews["warn_on_unsaved_change"] as? Bool == true)
+
+    let documentEditing = try #require(posted["document_editing"] as? [String: Any])
+    #expect(documentEditing["overlay_thumbnail"] as? Bool == true)
+    #expect(posted["notes_enabled"] as? Bool == true)
+    #expect(posted["language"] as? String == "")
+    #expect(posted["notifications"] is [String: Any])
+  }
+
+  @Test("Writing settings leaves an absent or null default_owner as stored")
+  func testPostBodyPreservesDefaultOwnerState() throws {
+    func posted(_ stored: String) throws -> [String: Any] {
+      let current = """
+        {"user": {"id": 1, "username": "u", "is_superuser": false, "groups": []},
+         "settings": {"permissions": {\(stored)}}, "permissions": []}
+        """.data(using: .utf8)!
+      let settings = try JSONDecoder().decode(ApiUISettings.self, from: current).domain.settings
+      let body = try ApiUISettingsSettings(from: settings)
+        .postBody(mergingInto: current, encoder: JSONEncoder())
+      let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+      let settingsJSON = try #require(json["settings"] as? [String: Any])
+      return try #require(settingsJSON["permissions"] as? [String: Any])
+    }
+
+    #expect(try !posted("").keys.contains("default_owner"))
+    #expect(try posted(#""default_owner": null"#)["default_owner"] is NSNull)
+  }
+
   @Test("app_title decodes when present as a string")
   func testAppTitleDecodes() throws {
     let json = """

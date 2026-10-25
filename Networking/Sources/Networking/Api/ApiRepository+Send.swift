@@ -101,6 +101,39 @@ extension ApiRepository {
     }
   }
 
+  // Raw response, no body.
+  func sendForData(
+    _ method: HttpMethod = .get,
+    endpoint: Endpoint,
+    expectedStatus: HTTPStatusCode = .ok
+  ) async throws -> Data {
+    let request = try buildRequest(method, endpoint: endpoint, jsonBody: nil)
+    do {
+      return try await fetchData(for: request, expectedStatus: expectedStatus).0
+    } catch {
+      Logger.networking.error(
+        "Api \(method.rawValue, privacy: .public) failed: \(error)")
+      throw error
+    }
+  }
+
+  // Void response, pre-encoded JSON body.
+  func send(
+    _ method: HttpMethod,
+    endpoint: Endpoint,
+    jsonBody: Data,
+    expectedStatus: HTTPStatusCode = .ok
+  ) async throws {
+    let request = try buildRequest(method, endpoint: endpoint, jsonBody: jsonBody)
+    do {
+      _ = try await fetchData(for: request, expectedStatus: expectedStatus)
+    } catch {
+      Logger.networking.error(
+        "Api \(method.rawValue, privacy: .public) failed: \(error)")
+      throw error
+    }
+  }
+
   // Latched typed response, no body.
   func send<Response: Sendable, Label: Sendable & Equatable>(
     _ method: HttpMethod = .get,
