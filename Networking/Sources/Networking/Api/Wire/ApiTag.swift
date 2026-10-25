@@ -75,7 +75,7 @@ struct ApiTagCreate: Encodable, Sendable {
   var match: String
   var matching_algorithm: MatchingAlgorithm
   var is_insensitive: Bool
-  var owner: Owner
+  var owner: Owner?
   var set_permissions: Permissions?
   var parent: UInt?
 }
@@ -90,7 +90,7 @@ extension ApiTagCreate {
       match: proto.match,
       matching_algorithm: proto.matchingAlgorithm,
       is_insensitive: proto.isInsensitive,
-      owner: proto.owner,
+      owner: proto.owner.createValue,
       set_permissions: proto.permissions,
       parent: proto.parent
     )

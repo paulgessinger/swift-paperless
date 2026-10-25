@@ -236,7 +236,7 @@ struct ElementCacheTests {
     })
     let settings = UISettingsSettings(
       documentEditing: .init(removeInboxTags: true),
-      permissions: .init(defaultOwner: 1, defaultViewUsers: [2, 3]),
+      permissions: .init(defaultOwner: .user(1), defaultViewUsers: [2, 3]),
       savedViews: .init(dashboardViewsVisibleIds: [9]),
       appTitle: "My Paperless")
     let uiSettings = UISettings(
@@ -254,5 +254,23 @@ struct ElementCacheTests {
     #expect(fetched.permissions.test(.view, for: .tag))
     #expect(!fetched.permissions.test(.delete, for: .document))
     #expect(!fetched.permissions.test(.view, for: .correspondent))
+  }
+
+  @Test(
+    "ui settings round-trips every default owner state",
+    arguments: [Owner.unset, .none, .user(4)])
+  func uiSettingsDefaultOwnerRoundtrip(owner: Owner) async throws {
+    let server = UUID()
+    let database = try makeDatabase(server: server)
+
+    let uiSettings = UISettings(
+      user: User(id: 1, isSuperUser: false, username: "alice"),
+      settings: UISettingsSettings(permissions: .init(defaultOwner: owner)),
+      permissions: .empty)
+
+    try await database.setUISettings(uiSettings, serverID: server)
+    let fetched = try #require(try await database.uiSettings(serverID: server))
+
+    #expect(fetched.settings.permissions.defaultOwner == owner)
   }
 }

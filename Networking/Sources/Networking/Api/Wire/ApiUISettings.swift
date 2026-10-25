@@ -64,14 +64,44 @@ extension ApiUISettingsDocumentEditing {
 }
 
 struct ApiUISettingsPermissions: Codable, Sendable {
-  var default_owner: UInt?
+  // Tri-state: absent is `.unset` (the creating user), `null` is `.none`.
+  var default_owner: Owner
   var default_view_users: [UInt]?
   var default_view_groups: [UInt]?
   var default_edit_users: [UInt]?
   var default_edit_groups: [UInt]?
+
+  // Required because of the custom init(from:) and encode(to:) below, which
+  // tell an absent `default_owner` apart from `null`.
+  enum CodingKeys: String, CodingKey {
+    case default_owner, default_view_users, default_view_groups
+    case default_edit_users, default_edit_groups
+  }
 }
 
 extension ApiUISettingsPermissions {
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    default_owner =
+      container.contains(.default_owner)
+      ? try container.decode(Owner.self, forKey: .default_owner) : .unset
+    default_view_users = try container.decodeIfPresent([UInt].self, forKey: .default_view_users)
+    default_view_groups = try container.decodeIfPresent([UInt].self, forKey: .default_view_groups)
+    default_edit_users = try container.decodeIfPresent([UInt].self, forKey: .default_edit_users)
+    default_edit_groups = try container.decodeIfPresent([UInt].self, forKey: .default_edit_groups)
+  }
+
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    if default_owner != .unset {
+      try container.encode(default_owner, forKey: .default_owner)
+    }
+    try container.encodeIfPresent(default_view_users, forKey: .default_view_users)
+    try container.encodeIfPresent(default_view_groups, forKey: .default_view_groups)
+    try container.encodeIfPresent(default_edit_users, forKey: .default_edit_users)
+    try container.encodeIfPresent(default_edit_groups, forKey: .default_edit_groups)
+  }
+
   var domain: UISettingsPermissions {
     UISettingsPermissions(
       defaultOwner: default_owner,
@@ -107,5 +137,30 @@ extension ApiUISettingsSavedViews {
   init(from domain: UISettingsSavedViews) {
     dashboard_views_visible_ids = domain.dashboardViewsVisibleIds
     sidebar_views_visible_ids = domain.sidebarViewsVisibleIds
+  }
+}
+
+// MARK: - Writing settings back
+
+extension ApiUISettingsSettings {
+  /// The `POST /api/ui_settings/` body that applies these settings on top of
+  /// `current`, a `GET /api/ui_settings/` response. The server replaces the
+  /// stored settings wholesale, so keys the app doesn't model (theme,
+  /// language, …) are carried over, as the web UI does.
+  func postBody(mergingInto current: Data, encoder: JSONEncoder) throws -> Data {
+    let response = try JSONSerialization.jsonObject(with: current) as? [String: Any]
+    let stored = response?["settings"] as? [String: Any] ?? [:]
+    let ours = try JSONSerialization.jsonObject(with: encoder.encode(self)) as? [String: Any] ?? [:]
+    return try JSONSerialization.data(
+      withJSONObject: ["settings": Self.merge(ours, into: stored)])
+  }
+
+  private static func merge(_ overlay: [String: Any], into base: [String: Any]) -> [String: Any] {
+    base.merging(overlay) { old, new in
+      if let old = old as? [String: Any], let new = new as? [String: Any] {
+        return merge(new, into: old)
+      }
+      return new
+    }
   }
 }

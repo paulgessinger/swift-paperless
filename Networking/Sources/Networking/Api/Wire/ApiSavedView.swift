@@ -59,7 +59,7 @@ struct ApiSavedViewCreate: Encodable, Sendable {
   var sort_field: SortField?
   var sort_reverse: Bool
   var filter_rules: [FilterRule]
-  var owner: Owner
+  var owner: Owner?
   var set_permissions: Permissions?
 }
 
@@ -72,7 +72,7 @@ extension ApiSavedViewCreate {
       sort_field: proto.sortField,
       sort_reverse: proto.sortOrder.reverse,
       filter_rules: proto.filterRules,
-      owner: proto.owner,
+      owner: proto.owner.createValue,
       set_permissions: proto.permissions
     )
   }

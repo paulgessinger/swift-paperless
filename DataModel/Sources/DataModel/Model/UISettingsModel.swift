@@ -14,14 +14,16 @@ public struct UISettingsDocumentEditing: Sendable, Equatable {
 }
 
 public struct UISettingsPermissions: Sendable, Equatable {
-  public var defaultOwner: UInt?
+  /// `.unset` when the server has no default owner setting, which means the
+  /// creating user (as in the web UI); `.none` when it is explicitly no owner.
+  public var defaultOwner: Owner
   public var defaultViewUsers: [UInt]
   public var defaultViewGroups: [UInt]
   public var defaultEditUsers: [UInt]
   public var defaultEditGroups: [UInt]
 
   public init(
-    defaultOwner: UInt? = nil,
+    defaultOwner: Owner = .unset,
     defaultViewUsers: [UInt] = [],
     defaultViewGroups: [UInt] = [],
     defaultEditUsers: [UInt] = [],
@@ -36,7 +38,7 @@ public struct UISettingsPermissions: Sendable, Equatable {
 
   public func applyAsDefaults(to model: inout some PermissionsModel) {
     if case .unset = model.owner {
-      model.owner = defaultOwner.map { .user($0) } ?? .none
+      model.owner = defaultOwner
     }
 
     var permissions = model.permissions ?? Permissions()

@@ -36,6 +36,9 @@ public struct UISettingsRecord: Codable, Sendable, Equatable {
     public struct SettingsData: Codable, Sendable, Equatable {
       public var removeInboxTags: Bool
       public var defaultOwner: UInt?
+      // Tells an explicit "no owner" (`true`) apart from no setting (`nil`) when
+      // `defaultOwner` is `nil`.
+      public var defaultOwnerIsNone: Bool?
       public var defaultViewUsers: [UInt]
       public var defaultViewGroups: [UInt]
       public var defaultEditUsers: [UInt]
@@ -73,6 +76,14 @@ extension UISettingsRecord: FetchableRecord, PersistableRecord, TableRecord {
       }
     }
 
+    var defaultOwnerId: UInt?
+    var defaultOwnerIsNone: Bool?
+    switch domain.settings.permissions.defaultOwner {
+    case .unset: break
+    case .none: defaultOwnerIsNone = true
+    case .user(let id): defaultOwnerId = id
+    }
+
     payload = Payload(
       user: Payload.UserData(
         id: domain.user.id,
@@ -81,7 +92,8 @@ extension UISettingsRecord: FetchableRecord, PersistableRecord, TableRecord {
         groups: domain.user.groups),
       settings: Payload.SettingsData(
         removeInboxTags: domain.settings.documentEditing.removeInboxTags,
-        defaultOwner: domain.settings.permissions.defaultOwner,
+        defaultOwner: defaultOwnerId,
+        defaultOwnerIsNone: defaultOwnerIsNone,
         defaultViewUsers: domain.settings.permissions.defaultViewUsers,
         defaultViewGroups: domain.settings.permissions.defaultViewGroups,
         defaultEditUsers: domain.settings.permissions.defaultEditUsers,
@@ -107,11 +119,20 @@ extension UISettingsRecord: FetchableRecord, PersistableRecord, TableRecord {
       username: payload.user.username,
       groups: payload.user.groups)
 
+    let defaultOwner: Owner =
+      if let id = payload.settings.defaultOwner {
+        .user(id)
+      } else if payload.settings.defaultOwnerIsNone == true {
+        .none
+      } else {
+        .unset
+      }
+
     let settings = UISettingsSettings(
       documentEditing: UISettingsDocumentEditing(
         removeInboxTags: payload.settings.removeInboxTags),
       permissions: UISettingsPermissions(
-        defaultOwner: payload.settings.defaultOwner,
+        defaultOwner: defaultOwner,
         defaultViewUsers: payload.settings.defaultViewUsers,
         defaultViewGroups: payload.settings.defaultViewGroups,
         defaultEditUsers: payload.settings.defaultEditUsers,

@@ -1360,13 +1360,10 @@ extension ApiRepository: Repository {
   }
 
   public func update(settings: UISettingsSettings) async throws {
-    struct UISettingsPayload: Encodable {
-      let settings: ApiUISettingsSettings
-    }
-
-    try await send(
-      .post, endpoint: .uiSettings(),
-      body: UISettingsPayload(settings: ApiUISettingsSettings(from: settings)))
+    let current = try await sendForData(endpoint: .uiSettings())
+    let body = try ApiUISettingsSettings(from: settings)
+      .postBody(mergingInto: current, encoder: encoder)
+    try await send(.post, endpoint: .uiSettings(), jsonBody: body)
   }
 
   public func tasks(limit: UInt) async throws -> [PaperlessTask] {
