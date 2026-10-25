@@ -298,7 +298,7 @@ public struct OfflineSyncView: View {
   }
 
   /// The kept saved views by name, each with its figures and how its last
-  /// sync failed, then the documents kept on their own and the total. In both
+  /// sync failed, then the total, captioned with what it is made of. In both
   /// modes: a kept view outlasts a switch between them.
   @ViewBuilder
   private var keptOfflineSection: some View {
@@ -326,14 +326,16 @@ public struct OfflineSyncView: View {
               }
             }
         }
-        if ownCount > 0 {
-          statusRow(
-            String(localized: .settings(.offlineSyncKeptOfflineDocuments)),
-            value: ownCount.formatted())
+        LabeledContent {
+          Text(keptFilesText(keptOfflineFileProgress)).foregroundStyle(.secondary)
+        } label: {
+          VStack(alignment: .leading, spacing: 2) {
+            Text(.settings(.offlineSyncKeptOfflineTotal))
+            Text(keptMembershipText(views: views.count, documents: ownCount))
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
         }
-        statusRow(
-          String(localized: .settings(.offlineSyncKeptOfflineTotal)),
-          value: keptFilesText(keptOfflineFileProgress))
       } header: {
         Text(.settings(.offlineSyncKeptOfflineHeader))
       } footer: {
@@ -365,6 +367,18 @@ public struct OfflineSyncView: View {
         }
       }
     }
+  }
+
+  /// "1 saved view and 2 single documents", leaving out a kind with none.
+  private func keptMembershipText(views: Int, documents: Int) -> String {
+    var parts: [String] = []
+    if views > 0 {
+      parts.append(String(localized: .settings(.offlineSyncKeptOfflineSavedViewCount(views))))
+    }
+    if documents > 0 {
+      parts.append(String(localized: .settings(.offlineSyncKeptOfflineSingleCount(documents))))
+    }
+    return parts.formatted(.list(type: .and))
   }
 
   private func keptFilesText(_ progress: LibraryFileProgress) -> String {
