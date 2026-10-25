@@ -10,13 +10,11 @@ public struct KeptOfflineViewRecord:
 
   public var serverId: UUID
   public var savedViewId: UInt
-  public var queryKey: String
   public var keptAt: Double
 
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
     case savedViewId = "saved_view_id"
-    case queryKey = "query_key"
     case keptAt = "kept_at"
   }
 }

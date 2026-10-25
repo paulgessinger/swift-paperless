@@ -281,11 +281,9 @@ struct LibraryFileDownloaderTests {
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in (200, Data("PDF".utf8)) }
     let fixture = try await makeFixture(documents: [1, 2], isEntireLibrary: false)
-    let key = QueryKey(sentinel: "view")
-    try await fixture.database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [2],
-      basis: fixture.database.queryWriteBasis(queryKey: key, serverID: server))
-    try await fixture.database.keepOfflineView(serverID: server, savedViewID: 7, queryKey: key)
+    try await fixture.database.keepOfflineView(serverID: server, savedViewID: 7)
+    try await fixture.database.replaceKeptOfflineViewMembers(
+      serverID: server, savedViewID: 7, documentIDs: [2])
 
     #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
 

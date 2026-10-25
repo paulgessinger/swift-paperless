@@ -130,32 +130,49 @@ struct DatabaseSchemaTests {
     }
   }
 
-  @Test("v19 creates the kept_offline table keyed by server and document")
-  func v19CreatesKeptOffline() throws {
+  @Test("v20 keys kept_offline by server, document and saved view, and lists the kept views")
+  func v20KeepsSavedViewsOffline() throws {
     let database = try Database.inMemory()
     try database.writer.read { db in
-      #expect(try db.tableExists("kept_offline"))
       let columns = try db.columns(in: "kept_offline")
-      #expect(Set(columns.map(\.name)) == ["server_id", "document_id", "kept_at"])
+      #expect(
+        Set(columns.map(\.name)) == ["server_id", "document_id", "saved_view_id", "kept_at"])
       #expect(columns.allSatisfy { $0.isNotNull })
-      #expect(try db.primaryKey("kept_offline").columns == ["server_id", "document_id"])
-      let fkTargets = Set(try db.foreignKeys(on: "kept_offline").map(\.destinationTable))
-      #expect(fkTargets == ["server"])
+      #expect(
+        try db.primaryKey("kept_offline").columns == ["server_id", "document_id", "saved_view_id"])
+      #expect(Set(try db.foreignKeys(on: "kept_offline").map(\.destinationTable)) == ["server"])
+
+      let viewColumns = try db.columns(in: "kept_offline_view")
+      #expect(Set(viewColumns.map(\.name)) == ["server_id", "saved_view_id", "kept_at"])
+      #expect(try db.primaryKey("kept_offline_view").columns == ["server_id", "saved_view_id"])
+      #expect(
+        Set(try db.foreignKeys(on: "kept_offline_view").map(\.destinationTable)) == ["server"])
     }
   }
 
-  @Test("v20 creates the kept_offline_view table keyed by server and saved view")
-  func v20CreatesKeptOfflineView() throws {
-    let database = try Database.inMemory()
-    try database.writer.read { db in
-      #expect(try db.tableExists("kept_offline_view"))
-      let columns = try db.columns(in: "kept_offline_view")
+  @Test("v20 keeps the documents kept before it, on their own")
+  func v20CarriesKeptDocuments() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v19_create_kept_offline")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+      try db.execute(
+        sql: "INSERT INTO kept_offline (server_id, document_id, kept_at) VALUES (?, 7, 12.5)",
+        arguments: [server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.read { db in
+      let rows = try KeptOfflineRecord.fetchAll(db)
       #expect(
-        Set(columns.map(\.name)) == ["server_id", "saved_view_id", "query_key", "kept_at"])
-      #expect(columns.allSatisfy { $0.isNotNull })
-      #expect(try db.primaryKey("kept_offline_view").columns == ["server_id", "saved_view_id"])
-      let fkTargets = Set(try db.foreignKeys(on: "kept_offline_view").map(\.destinationTable))
-      #expect(fkTargets == ["server"])
+        rows == [KeptOfflineRecord(serverId: server, documentId: 7, savedViewId: 0, keptAt: 12.5)])
     }
   }
 

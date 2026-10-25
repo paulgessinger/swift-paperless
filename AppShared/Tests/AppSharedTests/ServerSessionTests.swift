@@ -324,8 +324,7 @@ struct ServerSessionTests {
     }
     let view = try await savedView(harness, title: "invoice")
     let key = QueryKey(serverID: harness.serverID, filter: FilterState(savedView: view))
-    try await harness.database.keepOfflineView(
-      serverID: harness.serverID, savedViewID: view.id, queryKey: key)
+    try await harness.database.keepOfflineView(serverID: harness.serverID, savedViewID: view.id)
     let stored = StoredConnection(
       id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
       extraHeaders: [], user: StoreHarness.user)
@@ -336,6 +335,10 @@ struct ServerSessionTests {
       queryKey: key, serverID: harness.serverID, limit: 10)
     #expect(Set(listed.map(\.id)) == [1, 2])
     #expect(listed.allSatisfy { $0.document != nil })
+    for id: UInt in [1, 2] {
+      #expect(try await harness.database.isKept(serverID: harness.serverID, documentID: id))
+    }
+    #expect(try await !harness.database.isKept(serverID: harness.serverID, documentID: 3))
     #expect(harness.session.syncFailures.isEmpty)
     // Both members are missing their archive and thumbnail.
     try await waitUntil(
@@ -347,33 +350,39 @@ struct ServerSessionTests {
     await harness.fileDownloader?.invalidate()
   }
 
-  @Test("The element sync moves an edited kept view's key and releases a deleted one")
-  func elementSyncFollowsKeptViews() async throws {
+  @Test("An edited kept view's members follow it at the next reconcile; a deleted one is released")
+  func keptViewsFollowTheServer() async throws {
     let harness = try await StoreHarness.make()
+    for document in [titled(1, "invoice a"), titled(2, "bill b")] {
+      _ = try await harness.transient.update(document: document)
+    }
     let edited = try await savedView(harness, title: "invoice", name: "edited")
-    let deleted = try await savedView(harness, title: "receipt", name: "deleted")
+    let deleted = try await savedView(harness, title: "bill", name: "deleted")
     for view in [edited, deleted] {
       try await harness.database.keepOfflineView(
-        serverID: harness.serverID, savedViewID: view.id,
-        queryKey: QueryKey(serverID: harness.serverID, filter: FilterState(savedView: view)))
+        serverID: harness.serverID, savedViewID: view.id)
     }
+    let stored = StoredConnection(
+      id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
+      extraHeaders: [], user: StoreHarness.user)
+    await harness.session.sync(stored: stored, phases: [.reconcile])
+    #expect(try await harness.database.isKept(serverID: harness.serverID, documentID: 1))
+
     var changed = edited
     changed.filterRules = [
       try #require(FilterRule(ruleType: .title, value: .string(value: "bill")))
     ]
     _ = try await harness.transient.update(savedView: changed)
     try await harness.transient.delete(savedView: deleted)
-    let stored = StoredConnection(
-      id: harness.serverID, url: URL(string: "https://paperless.example.com/api/")!,
-      extraHeaders: [], user: StoreHarness.user)
-
-    await harness.session.sync(stored: stored, phases: [.elements])
+    await harness.session.sync(stored: stored, phases: [.elements, .reconcile])
 
     let kept = try await harness.database.keptOfflineViews(serverID: harness.serverID)
     #expect(kept.map(\.savedViewID) == [edited.id])
+    #expect(try await !harness.database.isKept(serverID: harness.serverID, documentID: 1))
+    #expect(try await harness.database.isKept(serverID: harness.serverID, documentID: 2))
     #expect(
-      kept.first?.queryKey
-        == QueryKey(serverID: harness.serverID, filter: FilterState(savedView: changed)))
+      try await harness.database.keptOfflineViewProgress(serverID: harness.serverID)[edited.id]?
+        .totalDocuments == 1)
   }
 
   @Test("A pass called off during the library fill never starts the detail fill")

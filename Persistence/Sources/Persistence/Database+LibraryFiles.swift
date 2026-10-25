@@ -101,8 +101,7 @@ extension Database {
   }
 
   /// How much of each kept saved view has its archive on the device, keyed by
-  /// saved-view id. A view counts the members its cached list holds; one never
-  /// synced counts none.
+  /// saved-view id. A view never synced has no members yet.
   public func keptOfflineViewProgress(serverID: UUID) async throws -> [UInt: LibraryFileProgress] {
     try await wrappingAsync("keptOfflineViewProgress") {
       try await writer.read { db in try Self.keptOfflineViewProgress(serverID: serverID, db) }
@@ -209,12 +208,13 @@ extension Database {
       db,
       sql: """
         SELECT v.saved_view_id AS view_id,
-          COUNT(q.remote_id) AS total,
+          COUNT(k.document_id) AS total,
           COUNT(f.version_id) AS downloaded,
           COALESCE(SUM(f.size), 0) AS bytes
         FROM kept_offline_view v
-        LEFT JOIN query_order q ON q.server_id = v.server_id AND q.query_key = v.query_key
-        LEFT JOIN document d ON d.server_id = q.server_id AND d.id = q.remote_id
+        LEFT JOIN kept_offline k
+          ON k.server_id = v.server_id AND k.saved_view_id = v.saved_view_id
+        LEFT JOIN document d ON d.server_id = k.server_id AND d.id = k.document_id
         \(keptArchiveJoin)
         WHERE v.server_id = ?
         GROUP BY v.saved_view_id
@@ -254,11 +254,7 @@ extension Database {
         // A document kept on its own and by a view counts once.
         """
         WITH kept(document_id) AS (
-          SELECT document_id FROM kept_offline WHERE server_id = :server
-          UNION
-          SELECT q.remote_id FROM kept_offline_view v
-          JOIN query_order q ON q.server_id = v.server_id AND q.query_key = v.query_key
-          WHERE v.server_id = :server
+          SELECT DISTINCT document_id FROM kept_offline WHERE server_id = :server
         )
         SELECT COUNT(*) AS total,
           COUNT(f.version_id) AS downloaded,
