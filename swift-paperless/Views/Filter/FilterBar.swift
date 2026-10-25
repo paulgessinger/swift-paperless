@@ -38,6 +38,12 @@ private struct FilterMenu<Content: View>: View {
   @EnvironmentObject private var errorController: ErrorController
   @Binding var savedView: ProtoSavedView?
   @ViewBuilder var label: () -> Content
+  @State private var keepOfflineRequest: KeepOfflineRequest?
+
+  /// The saved view on screen, changed or not.
+  private var activeSavedView: SavedView? {
+    filterModel.filterState.savedView.flatMap { store.savedViews[$0] }
+  }
 
   private func saveSavedView() {
     Logger.shared.info("Saving active saved view\("")")
@@ -87,11 +93,14 @@ private struct FilterMenu<Content: View>: View {
 
   var body: some View {
     Menu {
-      if filterModel.filterState.filtering, isModified {
+      let showsChanges = filterModel.filterState.filtering && isModified
+      if showsChanges || activeSavedView != nil {
         Section(menuSavedViewSectionTitle) {
-          if let savedViewId = filterModel.filterState.savedView,
-            let savedView = store.savedViews[savedViewId]
-          {
+          if let savedView = activeSavedView {
+            KeepSavedViewOfflineButton(savedView: savedView, request: $keepOfflineRequest)
+          }
+
+          if showsChanges, let savedView = activeSavedView {
             if store.permissions.test(.change, for: .savedView) {
               Button {
                 saveSavedView()
@@ -110,7 +119,7 @@ private struct FilterMenu<Content: View>: View {
             }
           }
 
-          if store.permissions.test(.add, for: .savedView) {
+          if showsChanges, store.permissions.test(.add, for: .savedView) {
             Button {
               let proto = ProtoSavedView(
                 name: "",
@@ -157,6 +166,7 @@ private struct FilterMenu<Content: View>: View {
       label()
     }
     .backport.glassEffect(.regular.interactive())
+    .keepSavedViewOfflineConfirmation($keepOfflineRequest)
   }
 }
 
