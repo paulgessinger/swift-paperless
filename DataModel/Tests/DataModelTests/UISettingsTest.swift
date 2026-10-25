@@ -21,7 +21,7 @@ struct UISettingsTest {
   @Test("Test application of UI settings permissions + owner to correspondent")
   func testApplyToCorrespondent() throws {
     let settingsPermissions = UISettingsPermissions(
-      defaultOwner: 2, defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
+      defaultOwner: .user(2), defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
       defaultEditGroups: [6])
 
     var correspondent = TestCorrespondent(name: "Aaaaaa")
@@ -37,7 +37,7 @@ struct UISettingsTest {
   @Test("Explicit owner and permissions override settings defaults")
   func testExplicitOwnerAndPermissionsOverrideSettingsDefaults() throws {
     let settingsPermissions = UISettingsPermissions(
-      defaultOwner: 2, defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
+      defaultOwner: .user(2), defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
       defaultEditGroups: [6])
 
     let correspondent = TestCorrespondent(
@@ -56,7 +56,7 @@ struct UISettingsTest {
   @Test("Partial permission overrides work correctly")
   func testPartialPermissionOverrides() throws {
     let settingsPermissions = UISettingsPermissions(
-      defaultOwner: 2, defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
+      defaultOwner: .user(2), defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
       defaultEditGroups: [6])
 
     // Only override some permissions, let others fall back to defaults
@@ -77,7 +77,7 @@ struct UISettingsTest {
   @Test("Test explicit none owner")
   func testExplicitNoneOwner() throws {
     let settingsPermissions = UISettingsPermissions(
-      defaultOwner: 2, defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
+      defaultOwner: .user(2), defaultViewUsers: [3], defaultViewGroups: [1], defaultEditUsers: [8],
       defaultEditGroups: [6])
 
     let correspondent = TestCorrespondent(
@@ -86,5 +86,19 @@ struct UISettingsTest {
         view: .init(users: [4], groups: [2]), change: .init(users: [9], groups: [7])))
     let applied = settingsPermissions.appliedAsDefaults(to: correspondent)
     #expect(applied.owner == .none)  // Explicit none owner overrides default
+  }
+
+  @Test("Without a default owner setting, the owner stays unset")
+  func testUnsetDefaultOwnerKeepsUnset() {
+    let applied = UISettingsPermissions().appliedAsDefaults(
+      to: TestCorrespondent(name: "Aaaaaa"))
+    #expect(applied.owner == .unset)
+  }
+
+  @Test("An explicit no-owner default applies as none")
+  func testNoneDefaultOwnerAppliesNone() {
+    let applied = UISettingsPermissions(defaultOwner: .none).appliedAsDefaults(
+      to: TestCorrespondent(name: "Aaaaaa"))
+    #expect(applied.owner == .none)
   }
 }

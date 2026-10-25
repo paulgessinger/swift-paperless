@@ -28,7 +28,7 @@ struct ApiUISettingsTest {
     #expect(!permissions.test(.delete, for: .shareLink))
     #expect(!permissions.test(.add, for: .workflow))
 
-    #expect(settings.permissions.defaultOwner == nil)
+    #expect(settings.permissions.defaultOwner == .unset)
     #expect(settings.permissions.defaultViewUsers == [])
     #expect(settings.permissions.defaultViewGroups == [])
     #expect(settings.permissions.defaultEditUsers == [])
@@ -59,7 +59,7 @@ struct ApiUISettingsTest {
       #expect(permissions.test(.delete, for: resource))
     }
 
-    #expect(settings.permissions.defaultOwner == 123)
+    #expect(settings.permissions.defaultOwner == .user(123))
     #expect(settings.permissions.defaultViewUsers == [])
     #expect(settings.permissions.defaultViewGroups == [1])
     #expect(settings.permissions.defaultEditUsers == [])
@@ -104,6 +104,32 @@ struct ApiUISettingsTest {
 
     #expect(decoded.dashboardViewsVisibleIds == savedViews.dashboardViewsVisibleIds)
     #expect(decoded.sidebarViewsVisibleIds == savedViews.sidebarViewsVisibleIds)
+  }
+
+  @Test("default_owner: absent is unset, null is none")
+  func testDefaultOwnerTriState() throws {
+    func decode(_ permissions: String) throws -> Owner {
+      let json = "{\(permissions)}".data(using: .utf8)!
+      return try JSONDecoder().decode(ApiUISettingsPermissions.self, from: json).domain
+        .defaultOwner
+    }
+
+    #expect(try decode("") == .unset)
+    #expect(try decode(#""default_owner": null"#) == .none)
+    #expect(try decode(#""default_owner": 4"#) == .user(4))
+  }
+
+  @Test("default_owner encodes absent for unset, null for none")
+  func testDefaultOwnerEncoding() throws {
+    func encode(_ owner: Owner) throws -> [String: Any] {
+      let wire = ApiUISettingsPermissions(from: UISettingsPermissions(defaultOwner: owner))
+      let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(wire))
+      return try #require(json as? [String: Any])
+    }
+
+    #expect(try !encode(.unset).keys.contains("default_owner"))
+    #expect(try encode(.none)["default_owner"] is NSNull)
+    #expect(try (encode(.user(4))["default_owner"] as? NSNumber)?.uintValue == 4)
   }
 
   @Test("app_title decodes when present as a string")

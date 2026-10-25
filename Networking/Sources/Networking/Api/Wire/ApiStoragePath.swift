@@ -39,7 +39,7 @@ struct ApiStoragePathCreate: Encodable, Sendable {
   var matching_algorithm: MatchingAlgorithm
   var match: String
   var is_insensitive: Bool
-  var owner: Owner
+  var owner: Owner?
   var set_permissions: Permissions?
 }
 
@@ -51,7 +51,7 @@ extension ApiStoragePathCreate {
       matching_algorithm: proto.matchingAlgorithm,
       match: proto.match,
       is_insensitive: proto.isInsensitive,
-      owner: proto.owner,
+      owner: proto.owner.createValue,
       set_permissions: proto.permissions
     )
   }

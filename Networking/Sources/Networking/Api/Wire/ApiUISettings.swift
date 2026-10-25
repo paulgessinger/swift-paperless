@@ -64,14 +64,44 @@ extension ApiUISettingsDocumentEditing {
 }
 
 struct ApiUISettingsPermissions: Codable, Sendable {
-  var default_owner: UInt?
+  // Tri-state: absent is `.unset` (the creating user), `null` is `.none`.
+  var default_owner: Owner
   var default_view_users: [UInt]?
   var default_view_groups: [UInt]?
   var default_edit_users: [UInt]?
   var default_edit_groups: [UInt]?
+
+  // Required because of the custom init(from:) and encode(to:) below, which
+  // tell an absent `default_owner` apart from `null`.
+  enum CodingKeys: String, CodingKey {
+    case default_owner, default_view_users, default_view_groups
+    case default_edit_users, default_edit_groups
+  }
 }
 
 extension ApiUISettingsPermissions {
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    default_owner =
+      container.contains(.default_owner)
+      ? try container.decode(Owner.self, forKey: .default_owner) : .unset
+    default_view_users = try container.decodeIfPresent([UInt].self, forKey: .default_view_users)
+    default_view_groups = try container.decodeIfPresent([UInt].self, forKey: .default_view_groups)
+    default_edit_users = try container.decodeIfPresent([UInt].self, forKey: .default_edit_users)
+    default_edit_groups = try container.decodeIfPresent([UInt].self, forKey: .default_edit_groups)
+  }
+
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    if default_owner != .unset {
+      try container.encode(default_owner, forKey: .default_owner)
+    }
+    try container.encodeIfPresent(default_view_users, forKey: .default_view_users)
+    try container.encodeIfPresent(default_view_groups, forKey: .default_view_groups)
+    try container.encodeIfPresent(default_edit_users, forKey: .default_edit_users)
+    try container.encodeIfPresent(default_edit_groups, forKey: .default_edit_groups)
+  }
+
   var domain: UISettingsPermissions {
     UISettingsPermissions(
       defaultOwner: default_owner,

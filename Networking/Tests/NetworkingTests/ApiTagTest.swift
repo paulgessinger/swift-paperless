@@ -103,6 +103,33 @@ struct ApiTagTest {
 
     #expect((dict["parent"] as? NSNumber)?.uintValue == 42)
   }
+
+  // paperless-ngx assigns the requesting user only when `owner` is absent; an
+  // explicit `null` creates an unowned object.
+  @Test("ApiTagCreate omits an unset owner")
+  func testCreateOmitsUnsetOwner() throws {
+    let dict = try encodedCreate(owner: .unset)
+    #expect(!dict.keys.contains("owner"))
+  }
+
+  @Test("ApiTagCreate emits `owner: null` for no owner")
+  func testCreateEmitsNullOwner() throws {
+    let dict = try encodedCreate(owner: .none)
+    #expect(dict["owner"] is NSNull)
+  }
+
+  @Test("ApiTagCreate emits the owner id when set")
+  func testCreateEmitsOwnerId() throws {
+    let dict = try encodedCreate(owner: .user(3))
+    #expect((dict["owner"] as? NSNumber)?.uintValue == 3)
+  }
+
+  private func encodedCreate(owner: Owner) throws -> [String: Any] {
+    let create = ApiTagCreate(
+      from: ProtoTag(name: "Tag", color: HexColor(Color(hex: "#ff0000")!), owner: owner))
+    let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(create))
+    return try #require(json as? [String: Any])
+  }
 }
 
 private func assertNestedTagsV219(_ all: [DataModel.Tag]) {
