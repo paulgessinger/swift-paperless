@@ -275,6 +275,29 @@ struct LibraryFileDownloaderTests {
     await fixture.downloader.invalidate()
   }
 
+  @Test("A kept view's member is downloaded once and kept, outside Entire library")
+  func keptViewMemberIsStored() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in (200, Data("PDF".utf8)) }
+    let fixture = try await makeFixture(documents: [1, 2], isEntireLibrary: false)
+    try await fixture.database.keepOfflineView(serverID: server, savedViewID: 7)
+    try await fixture.database.replaceKeptOfflineViewMembers(
+      serverID: server, savedViewID: 7, documentIDs: [2])
+
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+
+    try await waitUntil { fixture.store.exists(self.key(2)) }
+    try await waitUntil { (fixture.downloader.inFlight[self.server] ?? 0) == 0 }
+    #expect(
+      try await fixture.database.libraryFileProgress(serverID: server, scope: .keptOffline)
+        .downloadedFiles == 1)
+    // The fixture seeds thumbnails, so only the archive; nothing queued it
+    // again.
+    #expect(StubDownloadURLProtocol.requests.count == 1)
+    await fixture.downloader.invalidate()
+  }
+
   @Test("Cancelling a server calls off its tasks only")
   func cancelIsScoped() async throws {
     let lease = await StubDownloadURLProtocol.lease()
