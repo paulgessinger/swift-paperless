@@ -115,12 +115,12 @@ extension Database {
 
   /// The *Kept offline* list, the documents kept on their own: newest
   /// membership first, a skeleton for a kept document whose row is not cached
-  /// yet. Served under ``QueryKey/keptOffline``
-  /// in place of the `query_order` replay.
+  /// yet. Served under ``QueryKey/keptOffline`` in place of the `query_order`
+  /// replay.
   static let keptOfflineWindowSQL = """
     SELECT k.document_id AS remote_id, d.* FROM kept_offline k
     LEFT JOIN document d ON d.server_id = k.server_id AND d.id = k.document_id
-    WHERE k.server_id = ? AND k.saved_view_id = 0
+    WHERE k.server_id = ? AND k.saved_view_id = \(KeptOfflineRecord.onItsOwn)
     ORDER BY k.kept_at DESC, k.document_id DESC
     LIMIT ? OFFSET ?
     """
@@ -133,7 +133,7 @@ extension Database {
       sql: """
         SELECT COUNT(*) AS total, COUNT(d.id) AS local_count FROM kept_offline k
         LEFT JOIN document d ON d.server_id = k.server_id AND d.id = k.document_id
-        WHERE k.server_id = ? AND k.saved_view_id = 0
+        WHERE k.server_id = ? AND k.saved_view_id = \(KeptOfflineRecord.onItsOwn)
         """,
       arguments: [serverID])
     let total: Int = row?["total"] ?? 0

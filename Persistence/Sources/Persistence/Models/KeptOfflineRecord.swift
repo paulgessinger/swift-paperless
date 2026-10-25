@@ -9,15 +9,15 @@ public struct KeptOfflineRecord:
 {
   public static let databaseTableName = "kept_offline"
 
-  public var serverId: UUID
-  public var documentId: UInt
-  /// 0 for a document kept on its own; otherwise the kept saved view that
-  /// keeps it.
-  public var savedViewId: UInt = 0
-  public var keptAt: Double
-
   /// `savedViewId` of a document kept on its own.
   public static let onItsOwn: UInt = 0
+
+  public var serverId: UUID
+  public var documentId: UInt
+  /// ``onItsOwn`` for a document kept on its own; otherwise the kept saved
+  /// view that keeps it.
+  public var savedViewId: UInt = KeptOfflineRecord.onItsOwn
+  public var keptAt: Double
 
   enum CodingKeys: String, CodingKey {
     case serverId = "server_id"
