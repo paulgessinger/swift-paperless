@@ -1,3 +1,4 @@
+import Common
 import DataModel
 import Foundation
 import GRDB
@@ -450,5 +451,36 @@ struct DowngradeGCTests {
     try await database.setKeptOffline(serverID: server, documentID: 2, kept: false)
     #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 1)
     #expect(try await database.document(serverID: server, id: 2) == nil)
+  }
+
+  @Test("a kept view's members keep their rows and archives through the downgrade")
+  func keptViewMembersSurvive() async throws {
+    let server = UUID()
+    let database = try database(server)
+    let keep = QueryKey(sentinel: "default")
+    let view = QueryKey(sentinel: "saved-view")
+
+    try await database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
+    try await database.replaceQueryOrder(
+      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
+    try await database.replaceQueryOrder(
+      queryKey: view, serverID: server, orderedIDs: [2, 3], basis: .initial)
+    try await database.keepOfflineView(serverID: server, savedViewID: 7)
+    try await database.replaceKeptOfflineViewMembers(
+      serverID: server, savedViewID: 7, documentIDs: [2])
+    for id: UInt in [1, 2, 3] {
+      try await database.recordFile(
+        ContentStore.Key(serverID: server, versionID: id, kind: .archive), documentID: id,
+        size: 10, modified: nil, checksum: nil, storedAt: date(1), lastAccessedAt: nil)
+    }
+
+    try await database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+
+    #expect(try await database.document(serverID: server, id: 2) != nil)
+    #expect(try await database.document(serverID: server, id: 3) == nil)
+    #expect(try await database.isKept(serverID: server, documentID: 2))
+    // The archives the downgrade removes: not the kept view's member.
+    #expect(Set(try await database.archiveFiles(serverID: server).map(\.documentId)) == [1, 3])
   }
 }
