@@ -40,6 +40,9 @@ public struct ApiDocument: Codable, Sendable {
   // Read-only on the wire; absent on backends predating multi-version support.
   var versions: [ApiDocumentVersion]?
   var permissions: Permissions?
+  // Full on the detail endpoint, truncated on lists. Not part of the domain
+  // model: the text lives in the content store.
+  var content: String?
 }
 
 extension ApiDocument {
