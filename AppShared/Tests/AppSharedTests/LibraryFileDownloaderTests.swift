@@ -439,7 +439,9 @@ struct LibraryFileDownloaderTests {
     respond.signal()
 
     try await waitUntil { (fixture.downloader.inFlight[self.server] ?? 0) == 0 }
-    #expect(!fixture.store.exists(key(1)))
+    // The count drops before the filing asks whether the file is still wanted,
+    // so the file goes a moment later.
+    try await waitUntil { !fixture.store.exists(self.key(1)) }
     #expect(
       try await fixture.database.libraryFileProgress(serverID: server, scope: .library)
         .downloadedFiles == 0)
