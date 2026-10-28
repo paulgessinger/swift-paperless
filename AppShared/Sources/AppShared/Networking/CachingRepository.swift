@@ -1313,6 +1313,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return fetched
   }
 
+  public func storeContents(ids: [UInt]) async throws -> Set<UInt> {
+    try await wrapped.storeContents(ids: ids)
+  }
+
   public func document(asn: UInt) async throws -> Document? {
     do {
       guard let fetched = try await wrapped.document(asn: asn) else { return nil }

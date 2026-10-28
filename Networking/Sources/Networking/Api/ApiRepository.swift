@@ -1127,6 +1127,24 @@ extension ApiRepository: Repository {
       .results.map(\.domain)
   }
 
+  public func storeContents(ids: [UInt]) async throws -> Set<UInt> {
+    guard !ids.isEmpty else { return [] }
+    // `document(id:)` keeps the text of each.
+    guard supports(feature: .documentIDFilter) else {
+      return Set(try await documentsOneByOne(ids: ids).map(\.id))
+    }
+    let results = try await send(
+      endpoint: .documentContents(ids: ids), returns: ListResponse<ApiDocumentContent>.self
+    ).results
+    for document in results {
+      guard let content = document.content else { continue }
+      await storeText(
+        content, documentID: document.id, versionID: document.currentVersionID,
+        modified: document.modified)
+    }
+    return Set(results.filter { $0.content != nil }.map(\.id))
+  }
+
   public func document(asn: UInt) async throws -> Document? {
     Logger.networking.notice("Getting document by ASN")
 

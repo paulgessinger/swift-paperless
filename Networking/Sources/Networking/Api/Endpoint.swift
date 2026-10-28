@@ -175,6 +175,20 @@ extension Endpoint {
       path: endpoint.path, queryItems: endpoint.queryItems + [.init(name: "id__in", value: idList)])
   }
 
+  /// One page holding the full text of the documents with the given ids,
+  /// with what it is filed under: no truncation, and no other fields. Needs
+  /// ``BackendFeature/documentIDFilter``.
+  public static func documentContents(ids: [UInt]) -> Endpoint {
+    Endpoint(
+      path: "/api/documents",
+      queryItems: [
+        URLQueryItem(name: "page", value: "1"),
+        URLQueryItem(name: "page_size", value: String(max(ids.count, 1))),
+        URLQueryItem(name: "fields", value: "id,modified,versions,content"),
+        URLQueryItem(name: "id__in", value: ids.map(String.init).joined(separator: ",")),
+      ])
+  }
+
   public static func document(id: UInt, fullPerms: Bool = true) -> Endpoint {
     var queryItems: [URLQueryItem] = []
 

@@ -107,7 +107,10 @@ struct ApiRepositoryDownloadTest {
   nonisolated static let serverID = UUID(
     uuidString: "11111111-2222-3333-4444-555555555555")!
 
-  static func makeRepo(contentStore: ContentStore, index: (any FileIndex)? = InMemoryFileIndex())
+  static func makeRepo(
+    contentStore: ContentStore, index: (any FileIndex)? = InMemoryFileIndex(),
+    backendVersion: Version? = nil
+  )
     -> ApiRepository
   {
     let session = DownloadMockURLProtocol.makeSession()
@@ -117,7 +120,9 @@ struct ApiRepositoryDownloadTest {
       mode: .release,
       contentStore: contentStore,
       fileIndex: index,
-      urlSession: session)
+      urlSession: session,
+      apiVersion: backendVersion.map { _ in 9 },
+      backendVersion: backendVersion)
   }
 
   static func makeStore() throws -> (ContentStore, URL) {
@@ -808,5 +813,61 @@ struct ApiRepositoryDownloadTest {
 
     #expect(try await repo.document(id: 7) != nil)
     #expect(!store.exists(Self.contentKey))
+  }
+
+  @Test("A batch keeps each text under its current version, and reports who sent one")
+  func batchStoresTexts() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index, backendVersion: Version(2, 15, 0))
+    let seen = LastValue<URL?>(nil)
+    DownloadMockURLProtocol.responder = { req in
+      seen.set(req.url)
+      let body: [String: Any] = [
+        "count": 3, "next": NSNull(), "previous": NSNull(),
+        "results": [
+          ["id": 7, "modified": "2026-01-16T19:15:49Z", "content": "seven"],
+          [
+            "id": 8, "modified": "2026-01-16T19:15:49Z", "content": "eight",
+            "versions": [
+              ["id": 8, "added": "2026-01-16T19:15:49Z", "is_root": true],
+              ["id": 12, "added": "2026-01-17T19:15:49Z", "is_root": false],
+            ],
+          ],
+          // Without a text: nothing to keep, and not reported.
+          ["id": 9, "modified": "2026-01-16T19:15:49Z"],
+        ],
+      ]
+      return (Self.jsonResponse(for: req), try JSONSerialization.data(withJSONObject: body))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let received = try await repo.storeContents(ids: [7, 8, 9, 10])
+
+    #expect(received == [7, 8])
+    let query =
+      URLComponents(url: try #require(seen.value), resolvingAgainstBaseURL: false)?
+      .queryItems ?? []
+    #expect(query.contains(URLQueryItem(name: "id__in", value: "7,8,9,10")))
+    #expect(try store.text(for: Self.contentKey) == "seven")
+    let eight = ContentStore.Key(serverID: Self.serverID, versionID: 12, kind: .content)
+    #expect(try store.text(for: eight) == "eight")
+    #expect(await index.entries[eight]?.documentID == 8)
+  }
+
+  @Test("Without the id filter each document is fetched on its own and its text kept")
+  func batchFallsBackToDetail() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store, backendVersion: Version(1, 17, 4))
+    let paths = LastValue<[String]>([])
+    DownloadMockURLProtocol.responder = { req in
+      paths.set(paths.value + [req.url!.path])
+      return (Self.jsonResponse(for: req), Self.detailJSON(content: "seven"))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    #expect(try await repo.storeContents(ids: [7]) == [7])
+    #expect(paths.value.map { $0.trimmingCharacters(in: ["/"]) } == ["api/documents/7"])
+    #expect(try store.text(for: Self.contentKey) == "seven")
   }
 }
