@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 26.05.26.
 //
 
+import CryptoKit
 import Foundation
 import os
 
@@ -33,6 +34,8 @@ public struct ContentStore: Sendable {
     case original
     case archive
     case thumbnail
+    /// The document's full OCR text, zlib-compressed.
+    case content
 
     /// None for document files: their type isn't known from the key (a
     /// document without an archive version stores its original as `.archive`),
@@ -42,6 +45,7 @@ public struct ContentStore: Sendable {
       switch self {
       case .original, .archive: nil
       case .thumbnail: "bin"
+      case .content: "zlib"
       }
     }
   }
@@ -184,6 +188,29 @@ public struct ContentStore: Sendable {
     let temp = directory.appendingPathComponent(".\(key.kind.rawValue)-\(UUID().uuidString).tmp")
     try data.write(to: temp, options: .atomic)
     return try store(key, movingFrom: temp)
+  }
+
+  /// Write `text` as the blob for `key`, zlib-compressed. Returns the bytes
+  /// the blob occupies, like ``size(of:)``.
+  @discardableResult
+  public func storeText(_ text: String, for key: Key) throws -> Int64 {
+    let compressed = try (Data(text.utf8) as NSData).compressed(using: .zlib) as Data
+    try storeData(compressed, for: key)
+    return size(of: key) ?? Int64(compressed.count)
+  }
+
+  /// The text stored for `key` by ``storeText(_:for:)``, or `nil` when there
+  /// is none.
+  public func text(for key: Key) throws -> String? {
+    guard let data = try? Data(contentsOf: url(for: key)) else { return nil }
+    let raw = try (data as NSData).decompressed(using: .zlib) as Data
+    return String(decoding: raw, as: UTF8.self)
+  }
+
+  /// The checksum the index records for a text blob: SHA-256 of its UTF-8,
+  /// so an unchanged text is recognized without reading the file.
+  public static func checksum(of text: String) -> String {
+    SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
   }
 
   /// Bytes the blob for `key` occupies on disk, or `nil` when there is none.
