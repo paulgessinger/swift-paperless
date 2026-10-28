@@ -176,4 +176,55 @@ struct LibraryFilesTests {
     #expect(candidates.map(\.documentID) == [3, 1])
     #expect(candidates.map(\.kinds) == [[.archive, .thumbnail], [.thumbnail]])
   }
+
+  // MARK: - Texts
+
+  private func needingContent(
+    _ database: Database, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int = 10
+  ) async throws -> [UInt] {
+    try await database.documentsNeedingContent(
+      serverID: server, scope: scope, excluding: excluding, limit: limit
+    ).map(\.documentID)
+  }
+
+  @Test("A document needs its text until one is fetched against its modified")
+  func contentCandidates() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    // 1: fresh text. 2: text fetched against an older modified. 3: only an archive.
+    try await recordArchive(database, 1, modified: date(500), kind: .content)
+    try await recordArchive(database, 2, modified: date(400), kind: .content)
+    try await recordArchive(database, 3, modified: date(500))
+
+    #expect(try await needingContent(database, scope: .library) == [3, 2])
+    #expect(try await needingContent(database, scope: .library, excluding: [3], limit: 1) == [2])
+    let candidates = try await database.documentsNeedingContent(
+      serverID: server, scope: .library, limit: 10)
+    #expect(candidates.allSatisfy { $0.kinds == [.content] })
+  }
+
+  @Test("Any change to modified makes a text stale, a tag edit included")
+  func contentGoesStale() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1)])
+    try await recordArchive(database, 1, modified: date(500), kind: .content)
+    #expect(try await needingContent(database, scope: .library).isEmpty)
+
+    var edited = doc(1, modified: date(600))
+    edited.tags = [7]
+    try await database.upsertDocuments([edited], serverID: server)
+    #expect(try await needingContent(database, scope: .library) == [1])
+  }
+
+  @Test("A text is filed under the current version, and kept scope is the kept documents")
+  func contentVersionsAndScope() async throws {
+    let database = try Database.seeded(
+      serverID: server, documents: [versioned(1, versions: [1, 9]), doc(2), doc(3, modified: nil)])
+    try await recordArchive(database, 1, version: 1, modified: date(500), kind: .content)
+    #expect(try await needingContent(database, scope: .library) == [2, 1])
+    try await recordArchive(database, 1, version: 9, modified: date(500), kind: .content)
+    #expect(try await needingContent(database, scope: .library) == [2])
+
+    #expect(try await needingContent(database, scope: .keptOffline).isEmpty)
+    try await database.setKeptOffline(serverID: server, documentID: 2, kept: true)
+    #expect(try await needingContent(database, scope: .keptOffline) == [2])
+  }
 }

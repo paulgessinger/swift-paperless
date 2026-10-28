@@ -88,6 +88,40 @@ extension Database {
     }
   }
 
+  /// The documents whose current version has no text fetched against its
+  /// `modified`, highest id first like ``documentsNeedingFiles(serverID:scope:excluding:limit:)``.
+  /// Every candidate's `kinds` is `[.content]`.
+  public func documentsNeedingContent(
+    serverID: UUID, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int
+  ) async throws -> [LibraryFileCandidate] {
+    try await wrappingAsync("documentsNeedingContent") {
+      try await writer.read { db in
+        try DocumentRecord.fetchAll(
+          db,
+          sql: """
+            SELECT d.* FROM document d
+            WHERE d.server_id = ?
+              AND d.modified IS NOT NULL
+              \(Self.scopeClause(scope))
+              AND NOT \(Self.freshFileExists(.content))
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+          arguments: [serverID, limit + excluding.count]
+        )
+        .filter { !excluding.contains($0.id) }
+        .prefix(limit)
+        .map { record in
+          let document = record.domain
+          return LibraryFileCandidate(
+            documentID: record.id, versionID: document.currentVersionID,
+            versionQueryID: document.versionQueryID, modified: record.modified ?? Date(),
+            kinds: [.content])
+        }
+      }
+    }
+  }
+
   /// The documents with a fresh archive, and their bytes, against all in the
   /// scope.
   public func libraryFileProgress(serverID: UUID, scope: LibraryFileScope)
@@ -132,16 +166,19 @@ extension Database {
 
   // MARK: - Query bodies
 
-  /// A fresh archive for the document's current version, correlated on `d`.
-  private static let freshArchiveExists = """
+  /// A file of `kind` fetched against the document's `modified`, for its
+  /// current version, correlated on `d`.
+  private static func freshFileExists(_ kind: ContentStore.Kind) -> String {
+    """
     EXISTS (
       SELECT 1 FROM file f
       WHERE f.server_id = d.server_id
         AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
-        AND f.kind = 'archive'
+        AND f.kind = '\(kind.rawValue)'
         AND f.modified IS d.modified
     )
     """
+  }
 
   /// A thumbnail for the document's current version, correlated on `d`. Any
   /// row will do: the image cache records its own without a `modified`.
@@ -170,7 +207,7 @@ extension Database {
       sql: """
         SELECT * FROM (
           SELECT d.*,
-            NOT \(freshArchiveExists) AS needs_archive,
+            NOT \(freshFileExists(.archive)) AS needs_archive,
             NOT \(thumbnailExists) AS needs_thumbnail
           FROM document d
           WHERE d.server_id = ?

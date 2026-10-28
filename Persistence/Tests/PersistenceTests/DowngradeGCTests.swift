@@ -481,6 +481,7 @@ struct DowngradeGCTests {
     #expect(try await database.document(serverID: server, id: 3) == nil)
     #expect(try await database.isKept(serverID: server, documentID: 2))
     // The archives the downgrade removes: not the kept view's member.
-    #expect(Set(try await database.archiveFiles(serverID: server).map(\.documentId)) == [1, 3])
+    #expect(
+      Set(try await database.libraryPinnedFiles(serverID: server).map(\.documentId)) == [1, 3])
   }
 }

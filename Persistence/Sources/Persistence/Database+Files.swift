@@ -23,8 +23,8 @@ public struct FileAdoption: Sendable, Equatable {
 }
 
 /// What the indexed files occupy, summed from `size`. Documents are the
-/// originals and archives; thumbnails are kept apart because they are not
-/// budgeted.
+/// originals, archives and texts; thumbnails are kept apart because they are
+/// not budgeted.
 public struct FileUsage: Sendable, Equatable {
   public var documents: DiskUsage
   public var documentsByServer: [UUID: DiskUsage]
@@ -121,10 +121,10 @@ extension Database {
     }
   }
 
-  /// A server's archive rows apart from the kept documents', for the downgrade
-  /// that removes them.
-  public func archiveFiles(serverID: UUID) async throws -> [FileRecord] {
-    try await wrappingAsync("archiveFiles") {
+  /// A server's archive and text rows apart from the kept documents', for
+  /// the downgrade that removes them.
+  public func libraryPinnedFiles(serverID: UUID) async throws -> [FileRecord] {
+    try await wrappingAsync("libraryPinnedFiles") {
       try await writer.read { db in
         let file = TableAlias()
         let kept = KeptOfflineRecord.keeping(
@@ -132,7 +132,7 @@ extension Database {
         return
           try FileRecord.aliased(file)
           .filter(Column("server_id") == serverID)
-          .filter(Column("kind") == ContentStore.Kind.archive.rawValue)
+          .filter(FileRecord.pinnableKinds.contains(Column("kind")))
           .filter(!kept.exists())
           .fetchAll(db)
       }
