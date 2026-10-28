@@ -38,6 +38,9 @@ public class TransientRepository {
   /// stall or record the "network" traffic of a sync.
   public var onRequest: (@Sendable (String) async -> Void)?
 
+  /// Answers ``storeContents(ids:)``; without it nothing is kept.
+  public var onStoreContents: (@Sendable ([UInt]) async throws -> Set<UInt>)?
+
   public init() {
     documents = [:]
     tags = [:]
@@ -470,6 +473,10 @@ extension TransientRepository: Repository {
       archiveMetadata: [],
       lang: "en"
     )
+  }
+
+  public func storeContents(ids: [UInt]) async throws -> Set<UInt> {
+    try await onStoreContents?(ids) ?? []
   }
 
   public func notes(documentId: UInt) async throws -> [Document.Note] {

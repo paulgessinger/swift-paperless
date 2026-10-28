@@ -159,6 +159,8 @@ public enum SyncFailureSite: String, Sendable, Hashable, CaseIterable {
   /// Queueing the document files, and the downloads themselves: the whole
   /// library in *Entire library*, the documents kept offline otherwise.
   case fileFill
+  /// Fetching the full text of the same documents.
+  case contentFill
 
   /// Whether this part only runs in *Entire library* mode. Its failure is
   /// hidden in *Recently browsed*, where nothing will run it again to clear it.

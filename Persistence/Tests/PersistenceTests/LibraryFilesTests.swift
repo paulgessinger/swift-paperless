@@ -180,10 +180,10 @@ struct LibraryFilesTests {
   // MARK: - Texts
 
   private func needingContent(
-    _ database: Database, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int = 10
+    _ database: Database, scope: LibraryFileScope, below: UInt? = nil, limit: Int = 10
   ) async throws -> [UInt] {
     try await database.documentsNeedingContent(
-      serverID: server, scope: scope, excluding: excluding, limit: limit
+      serverID: server, scope: scope, below: below, limit: limit
     ).map(\.documentID)
   }
 
@@ -196,7 +196,9 @@ struct LibraryFilesTests {
     try await recordArchive(database, 3, modified: date(500))
 
     #expect(try await needingContent(database, scope: .library) == [3, 2])
-    #expect(try await needingContent(database, scope: .library, excluding: [3], limit: 1) == [2])
+    #expect(try await needingContent(database, scope: .library, below: 3, limit: 1) == [2])
+    #expect(try await needingContent(database, scope: .library, below: 2).isEmpty)
+    #expect(try await database.countDocumentsNeedingContent(serverID: server, scope: .library) == 2)
     let candidates = try await database.documentsNeedingContent(
       serverID: server, scope: .library, limit: 10)
     #expect(candidates.allSatisfy { $0.kinds == [.content] })
@@ -226,5 +228,7 @@ struct LibraryFilesTests {
     #expect(try await needingContent(database, scope: .keptOffline).isEmpty)
     try await database.setKeptOffline(serverID: server, documentID: 2, kept: true)
     #expect(try await needingContent(database, scope: .keptOffline) == [2])
+    #expect(
+      try await database.countDocumentsNeedingContent(serverID: server, scope: .keptOffline) == 1)
   }
 }

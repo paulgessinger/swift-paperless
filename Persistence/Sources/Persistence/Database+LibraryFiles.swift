@@ -89,10 +89,12 @@ extension Database {
   }
 
   /// The documents whose current version has no text fetched against its
-  /// `modified`, highest id first like ``documentsNeedingFiles(serverID:scope:excluding:limit:)``.
-  /// Every candidate's `kinds` is `[.content]`.
+  /// `modified`, highest id first like ``documentsNeedingFiles(serverID:scope:excluding:limit:)``,
+  /// and below `below` when given: a pass walks down from the last id it
+  /// asked for, so a document whose text did not become fresh is not asked
+  /// for again until the next pass. Every candidate's `kinds` is `[.content]`.
   public func documentsNeedingContent(
-    serverID: UUID, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int
+    serverID: UUID, scope: LibraryFileScope, below: UInt? = nil, limit: Int
   ) async throws -> [LibraryFileCandidate] {
     try await wrappingAsync("documentsNeedingContent") {
       try await writer.read { db in
@@ -100,24 +102,33 @@ extension Database {
           db,
           sql: """
             SELECT d.* FROM document d
-            WHERE d.server_id = ?
-              AND d.modified IS NOT NULL
-              \(Self.scopeClause(scope))
-              AND NOT \(Self.freshFileExists(.content))
+            WHERE \(Self.needsContent(scope))
+              AND d.id < ?
             ORDER BY id DESC
             LIMIT ?
             """,
-          arguments: [serverID, limit + excluding.count]
-        )
-        .filter { !excluding.contains($0.id) }
-        .prefix(limit)
-        .map { record in
+          arguments: [serverID, below.map(Int64.init) ?? .max, limit]
+        ).map { record in
           let document = record.domain
           return LibraryFileCandidate(
             documentID: record.id, versionID: document.currentVersionID,
             versionQueryID: document.versionQueryID, modified: record.modified ?? Date(),
             kinds: [.content])
         }
+      }
+    }
+  }
+
+  /// How many documents ``documentsNeedingContent(serverID:scope:below:limit:)``
+  /// would list in all.
+  public func countDocumentsNeedingContent(serverID: UUID, scope: LibraryFileScope)
+    async throws -> Int
+  {
+    try await wrappingAsync("countDocumentsNeedingContent") {
+      try await writer.read { db in
+        try Int.fetchOne(
+          db, sql: "SELECT COUNT(*) FROM document d WHERE \(Self.needsContent(scope))",
+          arguments: [serverID]) ?? 0
       }
     }
   }
@@ -190,6 +201,17 @@ extension Database {
         AND f.kind = 'thumbnail'
     )
     """
+
+  /// A document of the server bound first whose text is missing or stale,
+  /// on `document d`.
+  private static func needsContent(_ scope: LibraryFileScope) -> String {
+    """
+    d.server_id = ?
+      AND d.modified IS NOT NULL
+      \(scopeClause(scope))
+      AND NOT \(freshFileExists(.content))
+    """
+  }
 
   /// The scope's restriction on `document d`; the library has none.
   private static func scopeClause(_ scope: LibraryFileScope) -> String {

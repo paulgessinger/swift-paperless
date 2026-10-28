@@ -131,6 +131,7 @@ public final class ServerSession {
   private let libraryFillSlot = TaskSlot<Bool, Never>()
   private let detailFillSlot = TaskSlot<Bool, Never>()
   private let fileFillSlot = TaskSlot<Bool, Never>()
+  private let contentFillSlot = TaskSlot<Bool, Never>()
 
   /// Whether any work is running for this server.
   ///
@@ -149,6 +150,7 @@ public final class ServerSession {
   public var isSyncing: Bool {
     syncSlot.isOccupied || elementSyncSlot.isOccupied || reconcileSlot.isOccupied
       || libraryFillSlot.isOccupied || detailFillSlot.isOccupied || fileFillSlot.isOccupied
+      || contentFillSlot.isOccupied
   }
 
   public private(set) var state: State = .idle
@@ -445,6 +447,7 @@ public final class ServerSession {
     libraryFillSlot.retire()
     detailFillSlot.retire()
     fileFillSlot.retire()
+    contentFillSlot.retire()
   }
 
   /// Call off every step in flight, keeping the repository. Used when iOS's
@@ -626,6 +629,7 @@ public final class ServerSession {
     // policy, so this queues nothing the link forbids.
     if !result.cancelled, keptChanges > 0 {
       _ = await fillFiles()
+      _ = await fillContents()
     }
 
     // File reclaim last, and outside the transfer category: it touches no
@@ -746,6 +750,51 @@ public final class ServerSession {
           return false
         } catch {
           self?.recordFailure(error, at: .fileFill)
+          await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
+          return false
+        }
+      }
+    }
+  }
+
+  /// Proactive document texts, for the same documents as ``fillFiles()``.
+  /// Runs after it, and to the end, unlike the downloads. `true` also when
+  /// there is nothing to fetch or the free space is below the floor; `false`
+  /// when it errored or was called off.
+  @discardableResult
+  public func fillContents() async -> Bool {
+    guard let backend = current, let store = contentReclaimer?.store else {
+      recordSuccess(at: .contentFill)
+      return true
+    }
+    return await contentFillSlot.joinOrStart { [weak self] in
+      guard let self else { return false }
+      return await asBackgroundWork { [weak self] in
+        let row = await self?.recorder.begin(.contentFill)
+        let free = LibraryFileDownloader.volumeCapacity(of: store.root) ?? .max
+        guard free >= StoragePolicy.libraryDownloadFreeSpaceFloorBytes else {
+          await self?.recorder.end(row, .partial, message: "low storage")
+          return true
+        }
+        do {
+          let outcome = try await backend.fillContents { self?.report($0, for: .contentFill) }
+          try Task.checkCancellation()
+          if let failure = outcome.failure {
+            self?.recordFailure(failure, at: .contentFill)
+            await self?.recorder.end(
+              row, .failed, message: Self.failureMessage(failure), failed: outcome.failed)
+          } else if outcome.failed == 0 {
+            self?.recordSuccess(at: .contentFill)
+            await self?.recorder.end(row, .ok, failed: 0)
+          } else {
+            await self?.recorder.end(row, .partial, failed: outcome.failed)
+          }
+          return true
+        } catch is CancellationError {
+          await self?.recorder.end(row, .cancelled)
+          return false
+        } catch {
+          self?.recordFailure(error, at: .contentFill)
           await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
           return false
         }
@@ -931,6 +980,8 @@ public final class ServerSession {
         case .files:
           guard !reconcile.cancelled else { continue }
           filled = await fillFiles() && filled
+          try Task.checkCancellation()
+          filled = await fillContents() && filled
         }
       }
 
