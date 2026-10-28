@@ -109,6 +109,10 @@ struct DocumentView: View {
 
   @State private var showDataScanner = false
   @State private var taskViewNavState: NavigationState? = nil
+
+  /// A saved view from the sidebar waiting for the user to confirm keeping it
+  /// offline.
+  @State private var keepOfflineRequest: KeepOfflineRequest?
   @Binding private var showSettings: Bool
 
   init(showSettings: Binding<Bool>) {
@@ -469,7 +473,11 @@ struct DocumentView: View {
                 }
               }
             } label: {
-              Text(savedView.name)
+              if store.isKeptOffline(savedView: savedView.id) {
+                Label(savedView.name, systemImage: "arrow.down.circle.fill")
+              } else {
+                Text(savedView.name)
+              }
             }
           }
         } else {
@@ -590,7 +598,13 @@ struct DocumentView: View {
           } else {
             ForEach(savedViews, id: \.id) { sv in
               NavigationLink(value: SidebarSelection.savedView(sv.id)) {
-                Label(sv.name, systemImage: "bookmark")
+                Label(
+                  sv.name,
+                  systemImage: store.isKeptOffline(savedView: sv.id)
+                    ? "arrow.down.circle.fill" : "bookmark")
+              }
+              .contextMenu {
+                KeepSavedViewOfflineButton(savedView: sv, request: $keepOfflineRequest)
               }
             }
           }
@@ -704,6 +718,8 @@ struct DocumentView: View {
     .onChange(of: columnVisibility) { _, new in
       if new != .detailOnly { regularColumnVisibility = new }
     }
+
+    .keepSavedViewOfflineConfirmation($keepOfflineRequest)
 
     .fileImporter(
       isPresented: $showFileImporter,

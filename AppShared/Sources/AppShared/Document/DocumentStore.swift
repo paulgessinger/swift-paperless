@@ -165,21 +165,43 @@ public final class DocumentStore: Sendable {
     keptOfflineViewIDs.contains(savedViewID)
   }
 
+  /// Whether a document stays on the device, kept on its own or by a kept
+  /// saved view: what the list's badge shows. Keeping and releasing a
+  /// document only change the first.
+  public func isOnDevice(_ documentID: UInt) -> Bool {
+    isKeptOffline(documentID) || projection?.keptOfflineViewMemberIDs.contains(documentID) == true
+  }
+
   /// Keep a saved view on the device, or stop keeping it. Keeping syncs the
   /// view's members, fetches their rows and queues their files at once; the
   /// view is recorded first, so a sync that fails here is retried by the next
   /// reconcile. Stopping leaves the files nothing else keeps to the budget.
   public func setKeptOffline(savedView: SavedView, _ kept: Bool) async throws {
-    guard let session, let backend = session.backend else { return }
     guard kept else {
-      try await backend.database.releaseOfflineView(
-        serverID: session.serverID, savedViewID: savedView.id)
+      try await stopKeepingOffline(savedViewID: savedView.id)
       return
     }
+    guard let session, let backend = session.backend else { return }
     try await backend.database.keepOfflineView(
       serverID: session.serverID, savedViewID: savedView.id)
     try await backend.syncKeptOfflineView(savedViewID: savedView.id)
     await session.fillFiles()
+  }
+
+  /// Stop keeping a saved view, by id: also one whose details are not cached.
+  public func stopKeepingOffline(savedViewID: UInt) async throws {
+    guard let session, let backend = session.backend else { return }
+    try await backend.database.releaseOfflineView(
+      serverID: session.serverID, savedViewID: savedViewID)
+  }
+
+  /// How many documents a saved view lists, from its cached list: what keeping
+  /// it would download. `nil` for a view whose list has not been cached.
+  public func cachedDocumentCount(savedView: SavedView) async -> UInt? {
+    guard let session, let backend = session.backend else { return nil }
+    let key = QueryKey(serverID: session.serverID, filter: FilterState(savedView: savedView))
+    return try? await backend.database.queryStatus(queryKey: key, serverID: session.serverID)
+      .totalCount
   }
 
   /// Debug: call off every library download.

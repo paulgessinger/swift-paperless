@@ -191,17 +191,6 @@ public struct OfflineSyncView: View {
         if mode == .recentlyBrowsed || !isDownloading {
           documentsRow
         }
-        // Kept documents are part of the library, so only the other mode
-        // counts them apart.
-        if mode == .recentlyBrowsed, !isDownloading, keptOfflineFileProgress.totalDocuments > 0 {
-          statusRow(
-            String(localized: .settings(.offlineSyncKeptOffline)),
-            value: String(
-              localized: .settings(
-                .offlineSyncFileProgressCount(
-                  keptOfflineFileProgress.downloadedFiles,
-                  keptOfflineFileProgress.totalDocuments))))
-        }
         dateStatusRow(
           String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
 
@@ -244,6 +233,8 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineSyncStatusHeader))
       }
       .labeledContentStyle(StatusRowStyle())
+
+      keptOfflineSection
 
       // Both modes, unlike the per-view list below; empty renders nothing.
       SyncFailuresSection(
@@ -304,6 +295,98 @@ public struct OfflineSyncView: View {
     .task(id: store.activeServerID) { status = store.makeOfflineStatus() }
     .navigationTitle(Text(.settings(.offlineSyncTitle)))
     .navigationBarTitleDisplayMode(.inline)
+  }
+
+  /// The kept saved views by name, each with its figures and how its last
+  /// sync failed, then the total, captioned with what it is made of. In both
+  /// modes: a kept view outlasts a switch between them.
+  @ViewBuilder
+  private var keptOfflineSection: some View {
+    let views = store.keptOfflineViewIDs
+      .map { (id: $0, savedView: store.savedViews[$0]) }
+      .sorted { ($0.savedView?.name ?? "") < ($1.savedView?.name ?? "") }
+    let ownCount = store.keptOfflineDocumentIDs.count
+    if !views.isEmpty || ownCount > 0 {
+      Section {
+        ForEach(views, id: \.id) { view in
+          keptViewRow(id: view.id, savedView: view.savedView)
+            .swipeActions {
+              Button(role: .destructive) {
+                Task {
+                  do {
+                    try await store.stopKeepingOffline(savedViewID: view.id)
+                  } catch {
+                    errorController.push(error: error)
+                  }
+                }
+              } label: {
+                Label(
+                  String(localized: .app(.stopKeepingSavedViewOffline)),
+                  systemImage: "arrow.down.circle")
+              }
+            }
+        }
+        LabeledContent {
+          Text(keptFilesText(keptOfflineFileProgress)).foregroundStyle(.secondary)
+        } label: {
+          VStack(alignment: .leading, spacing: 2) {
+            Text(.settings(.offlineSyncKeptOfflineTotal))
+            Text(keptMembershipText(views: views.count, documents: ownCount))
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
+      } header: {
+        Text(.settings(.offlineSyncKeptOfflineHeader))
+      } footer: {
+        Text(.settings(.offlineSyncKeptOfflineFooter))
+      }
+      .labeledContentStyle(StatusRowStyle())
+    }
+  }
+
+  private func keptViewRow(id: UInt, savedView: SavedView?) -> some View {
+    let progress = status?.keptOfflineViewProgress[id] ?? .zero
+    let failure = savedView.flatMap { savedView in
+      store.activeServerID.flatMap { serverID in
+        let key = QueryKey(serverID: serverID, filter: FilterState(savedView: savedView))
+        return syncErrors.first { $0.queryKey == key.rawValue }
+      }
+    }
+    return LabeledContent {
+      Text(keptFilesText(progress)).foregroundStyle(.secondary)
+    } label: {
+      VStack(alignment: .leading, spacing: 2) {
+        Label(
+          savedView?.name ?? String(localized: .settings(.offlineSyncKeptOfflineUnknownView)),
+          systemImage: "arrow.down.circle.fill")
+        if let failure {
+          Text(failure.message)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+    }
+  }
+
+  /// "1 saved view and 2 single documents", leaving out a kind with none.
+  private func keptMembershipText(views: Int, documents: Int) -> String {
+    var parts: [String] = []
+    if views > 0 {
+      parts.append(String(localized: .settings(.offlineSyncKeptOfflineSavedViewCount(views))))
+    }
+    if documents > 0 {
+      parts.append(String(localized: .settings(.offlineSyncKeptOfflineSingleCount(documents))))
+    }
+    return parts.formatted(.list(type: .and))
+  }
+
+  private func keptFilesText(_ progress: LibraryFileProgress) -> String {
+    String(
+      localized: .settings(
+        .offlineSyncKeptOfflineFiles(
+          progress.downloadedFiles.formatted(), progress.totalDocuments.formatted(),
+          byteText(progress.downloadedBytes))))
   }
 
   @ViewBuilder
