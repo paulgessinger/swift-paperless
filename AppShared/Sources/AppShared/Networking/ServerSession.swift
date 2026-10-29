@@ -626,10 +626,10 @@ public final class ServerSession {
     // A kept document that just got its row back, or a kept view's new member,
     // has a `modified` to download against now; the planned files phase would
     // only reach it on the next pass. Each task carries the server's network
-    // policy, so this queues nothing the link forbids.
+    // policy, so this queues nothing the link forbids. Texts are plain requests
+    // without that policy, so they wait for the planned files phase.
     if !result.cancelled, keptChanges > 0 {
       _ = await fillFiles()
-      _ = await fillContents()
     }
 
     // File reclaim last, and outside the transfer category: it touches no
