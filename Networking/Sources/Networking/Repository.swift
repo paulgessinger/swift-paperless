@@ -135,6 +135,11 @@ public protocol Repository<Documents, Tasks>: Sendable {
   /// the network. It may be outdated; `download` is what validates.
   func storedDownload(document: Document, original: Bool) async -> URL?
 
+  /// The locally stored full text of the document's current version, if any,
+  /// read like ``storedDownload(document:original:)``: unvalidated, without
+  /// the network, and not counted as an access.
+  func storedText(document: Document) async -> String?
+
   func suggestions(documentId: UInt) async throws -> Suggestions
 
   // MARK: Saved views
@@ -231,6 +236,8 @@ extension Repository {
 
   /// Nothing to keep the text in.
   public func fetchContents(ids: [UInt]) async throws -> Set<UInt> { [] }
+
+  public func storedText(document _: Document) async -> String? { nil }
 
   /// One `document(id:)` per id, for conformers without a batch request.
   public func documentsOneByOne(ids: [UInt]) async throws -> [Document] {

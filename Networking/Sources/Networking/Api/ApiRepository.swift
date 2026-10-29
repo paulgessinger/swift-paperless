@@ -763,6 +763,25 @@ extension ApiRepository: Repository {
     return contentStore.exists(key) ? contentStore.url(for: key) : nil
   }
 
+  public func storedText(document: Document) async -> String? {
+    guard let contentStore else { return nil }
+    let key = ContentStore.Key(
+      serverID: connection.serverID, versionID: document.currentVersionID, kind: .content)
+    return await Self.readText(key, in: contentStore)
+  }
+
+  /// Off the main actor: decompressing a long text takes a while.
+  private nonisolated static func readText(
+    _ key: ContentStore.Key, in contentStore: ContentStore
+  ) async -> String? {
+    do {
+      return try contentStore.text(for: key)
+    } catch {
+      Logger.networking.error("Reading a document's text failed: \(error)")
+      return nil
+    }
+  }
+
   private func streamDownload(
     document: Document, original: Bool,
     progress: (@Sendable (Double) -> Void)?

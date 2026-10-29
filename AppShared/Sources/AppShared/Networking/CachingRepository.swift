@@ -2076,6 +2076,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     await wrapped.storedDownload(document: document, original: original)
   }
 
+  public func storedText(document: Document) async -> String? {
+    await wrapped.storedText(document: document)
+  }
+
   public func suggestions(documentId: UInt) async throws -> Suggestions {
     try await wrapped.suggestions(documentId: documentId)
   }
