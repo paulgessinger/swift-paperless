@@ -115,6 +115,9 @@ public struct DetailFillOutcome: Sendable {
   /// documents are still missing, and the next pass tries them again.
   public var failed: Int
 
+  /// The pass stopped early because free space fell below the floor.
+  public var lowStorage = false
+
   public static let complete = DetailFillOutcome(failure: nil, failed: 0)
 }
 
@@ -220,12 +223,14 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// Fetch the full text of every document whose archive the file pass
   /// keeps, the whole library in *Entire library* and the kept documents
   /// otherwise, where it is missing or older than the document's `modified`.
-  /// In batches, newest first; uncapped, reporting progress, stopped only by
-  /// cancellation. A batch that fails doesn't abort the pass, and each
-  /// document is asked for once per pass, whether its text came back fresh
-  /// or not. Throws when cancelled or when the cache can't say what's missing.
+  /// In batches, newest first; uncapped, reporting progress, stopped by
+  /// cancellation or by `hasRoom` turning false before a batch. A batch that
+  /// fails doesn't abort the pass, and each document is asked for once per
+  /// pass, whether its text came back fresh or not. Throws when cancelled or
+  /// when the cache can't say what's missing.
   @discardableResult
-  func fillContents(progress: SyncProgressReporter?) async throws -> DetailFillOutcome
+  func fillContents(progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool)
+    async throws -> DetailFillOutcome
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -343,7 +348,7 @@ extension CachingBackend {
 
   @discardableResult
   public func fillContents() async throws -> DetailFillOutcome {
-    try await fillContents(progress: nil)
+    try await fillContents(progress: nil, hasRoom: { true })
   }
 
   public func reconcileDocumentChanges() async throws {
@@ -913,7 +918,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   @discardableResult
-  public func fillContents(progress: SyncProgressReporter?) async throws -> DetailFillOutcome {
+  public func fillContents(progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool)
+    async throws -> DetailFillOutcome
+  {
     let scope: LibraryFileScope =
       offlineBrowsingMode == .entireLibrary ? .library : .keptOffline
     progress?(SyncActivity(stage: .contentFill))
@@ -924,6 +931,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     var received = 0
     var failure: (any Error)?
     var failed = 0
+    var lowStorage = false
     // Walks down by id, so a document whose text didn't come back fresh
     // (deleted, or edited since its row was cached) is not asked for again.
     var below: UInt?
@@ -934,6 +942,11 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         serverID: serverID, scope: scope, below: below, limit: ContentFillPolicy.batchSize
       ).map(\.documentID)
       guard let last = ids.last else { break }
+      // Texts are pinned, so eviction can't make room for them later.
+      guard hasRoom() else {
+        lowStorage = true
+        break
+      }
       below = last
       do {
         received += try await NetworkTransfer.$category.withValue(.fill) {
@@ -950,7 +963,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     Logger.sync.info(
       "Content fill: \(received, privacy: .public) of \(done, privacy: .public) texts received, \(failed, privacy: .public) failed"
     )
-    return DetailFillOutcome(failure: failure, failed: failed)
+    return DetailFillOutcome(failure: failure, failed: failed, lowStorage: lowStorage)
   }
 
   /// Record a saved view's failure for the Offline & Sync screen, unless the

@@ -758,9 +758,9 @@ public final class ServerSession {
   }
 
   /// Proactive document texts, for the same documents as ``fillFiles()``.
-  /// Runs after it, and to the end, unlike the downloads. `true` also when
-  /// there is nothing to fetch or the free space is below the floor; `false`
-  /// when it errored or was called off.
+  /// Runs after it, and to the end unless free space falls below the floor.
+  /// `true` also when there is nothing to fetch or it stopped for space;
+  /// `false` when it errored or was called off.
   @discardableResult
   public func fillContents() async -> Bool {
     guard let backend = current, let store = contentReclaimer?.store else {
@@ -771,18 +771,21 @@ public final class ServerSession {
       guard let self else { return false }
       return await asBackgroundWork { [weak self] in
         let row = await self?.recorder.begin(.contentFill)
-        let free = LibraryFileDownloader.volumeCapacity(of: store.root) ?? .max
-        guard free >= StoragePolicy.libraryDownloadFreeSpaceFloorBytes else {
-          await self?.recorder.end(row, .partial, message: "low storage")
-          return true
-        }
+        let root = store.root
         do {
-          let outcome = try await backend.fillContents { self?.report($0, for: .contentFill) }
+          let outcome = try await backend.fillContents(
+            progress: { self?.report($0, for: .contentFill) },
+            hasRoom: {
+              (LibraryFileDownloader.volumeCapacity(of: root) ?? .max)
+                >= StoragePolicy.libraryDownloadFreeSpaceFloorBytes
+            })
           try Task.checkCancellation()
           if let failure = outcome.failure {
             self?.recordFailure(failure, at: .contentFill)
             await self?.recorder.end(
               row, .failed, message: Self.failureMessage(failure), failed: outcome.failed)
+          } else if outcome.lowStorage {
+            await self?.recorder.end(row, .partial, message: "low storage", failed: outcome.failed)
           } else if outcome.failed == 0 {
             self?.recordSuccess(at: .contentFill)
             await self?.recorder.end(row, .ok, failed: 0)

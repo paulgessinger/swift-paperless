@@ -86,6 +86,28 @@ struct ContentFillTests {
     #expect(await requests.batches.map(\.count) == [25, 5])
   }
 
+  @Test("The pass stops before a batch once free space is below the floor")
+  func stopsForSpace() async throws {
+    let harness = try await harness(documents: 60, mode: "entireLibrary")
+    let requests = Requests()
+    harness.transient.onStoreContents = { ids in
+      await requests.append(ids)
+      return Set(ids)
+    }
+    var checks = 0
+
+    let outcome = try await #require(harness.session.backend).fillContents(
+      progress: nil,
+      hasRoom: {
+        checks += 1
+        return checks <= 1
+      })
+
+    #expect(outcome.lowStorage)
+    #expect(outcome.failed == 0)
+    #expect(await requests.batches.map(\.count) == [25])
+  }
+
   @Test("Outside Entire library only the kept documents' texts are fetched")
   func keptScope() async throws {
     let harness = try await harness(documents: 5, mode: "recentlyBrowsed")
