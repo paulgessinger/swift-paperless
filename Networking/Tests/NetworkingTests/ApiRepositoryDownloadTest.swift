@@ -91,9 +91,9 @@ actor InMemoryFileIndex: FileIndex {
     entries[key] = nil
   }
 
-  /// Wait for the fire-and-forget access record to land.
-  func accessCount() async -> Int {
-    for _ in 0..<50 where accesses.isEmpty {
+  /// Wait for the fire-and-forget access records to land.
+  func accessCount(awaiting expected: Int = 1) async -> Int {
+    for _ in 0..<50 where accesses.count < expected {
       try? await Task.sleep(for: .milliseconds(10))
     }
     return accesses.count
@@ -238,7 +238,7 @@ struct ApiRepositoryDownloadTest {
     #expect(counter.value == 1)
   }
 
-  @Test
+  @Test("A cache hit records an access on the file and on the version's text")
   func cacheHitRecordsAnAccess() async throws {
     let (store, _) = try Self.makeStore()
     let index = InMemoryFileIndex()
@@ -250,7 +250,14 @@ struct ApiRepositoryDownloadTest {
     #expect(await index.accesses.isEmpty)
     _ = try await repo.download(document: Self.makeDocument())
 
-    #expect(await index.accessCount() == 1)
+    #expect(await index.accessCount(awaiting: 2) == 2)
+    let document = Self.makeDocument()
+    #expect(
+      await index.accesses == [
+        Self.canonicalKey(for: document),
+        ContentStore.Key(
+          serverID: Self.serverID, versionID: document.currentVersionID, kind: .content),
+      ])
   }
 
   @Test

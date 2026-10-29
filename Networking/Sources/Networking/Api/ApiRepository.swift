@@ -800,10 +800,15 @@ extension ApiRepository: Repository {
       Logger.networking.info(
         "ContentStore hit for documentID \(document.id) version \(version) (original: \(original))"
       )
-      // Not awaited: a hit must not wait on the writer.
+      // Not awaited: a hit must not wait on the writer. An open uses the
+      // version's text too, so it counts for both.
+      let textKey = ContentStore.Key(
+        serverID: connection.serverID, versionID: version, kind: .content)
       Task { [fileIndex] in
         do {
-          try await fileIndex.recordAccess(key, at: Date())
+          let now = Date()
+          try await fileIndex.recordAccess(key, at: now)
+          try await fileIndex.recordAccess(textKey, at: now)
         } catch {
           Logger.networking.debug("Recording a file access failed: \(error)")
         }
