@@ -8,6 +8,9 @@
 
 import Foundation
 
+/// Not `ApiDocument`, which requires `title`, `created` and `tags`: the
+/// request leaves out the metadata, since a batch of texts already runs to
+/// megabytes.
 struct ApiDocumentContent: Decodable, Sendable {
   var id: UInt
   var modified: Date?

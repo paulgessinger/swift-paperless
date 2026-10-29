@@ -950,7 +950,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       below = last
       do {
         received += try await NetworkTransfer.$category.withValue(.fill) {
-          try await wrapped.storeContents(ids: ids).count
+          try await wrapped.fetchContents(ids: ids).count
         }
       } catch is CancellationError {
         throw CancellationError()
@@ -1388,8 +1388,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return fetched
   }
 
-  public func storeContents(ids: [UInt]) async throws -> Set<UInt> {
-    try await wrapped.storeContents(ids: ids)
+  public func fetchContents(ids: [UInt]) async throws -> Set<UInt> {
+    try await wrapped.fetchContents(ids: ids)
   }
 
   public func document(asn: UInt) async throws -> Document? {

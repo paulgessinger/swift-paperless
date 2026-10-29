@@ -1132,7 +1132,7 @@ extension ApiRepository: Repository {
       .results.map(\.domain)
   }
 
-  public func storeContents(ids: [UInt]) async throws -> Set<UInt> {
+  public func fetchContents(ids: [UInt]) async throws -> Set<UInt> {
     guard !ids.isEmpty else { return [] }
     // `document(id:)` keeps the text of each.
     guard supports(feature: .documentIDFilter) else {

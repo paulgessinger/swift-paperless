@@ -67,7 +67,7 @@ public protocol Repository<Documents, Tasks>: Sendable {
 
   /// Fetch the full text of the documents with the given ids and keep it in
   /// the content store. Returns the ids the server sent a text for.
-  func storeContents(ids: [UInt]) async throws -> Set<UInt>
+  func fetchContents(ids: [UInt]) async throws -> Set<UInt>
 
   func documents(filter: FilterState) throws -> Documents
 
@@ -230,7 +230,7 @@ extension Repository {
   }
 
   /// Nothing to keep the text in.
-  public func storeContents(ids: [UInt]) async throws -> Set<UInt> { [] }
+  public func fetchContents(ids: [UInt]) async throws -> Set<UInt> { [] }
 
   /// One `document(id:)` per id, for conformers without a batch request.
   public func documentsOneByOne(ids: [UInt]) async throws -> [Document] {

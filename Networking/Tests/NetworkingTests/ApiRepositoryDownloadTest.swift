@@ -849,7 +849,7 @@ struct ApiRepositoryDownloadTest {
     }
     defer { DownloadMockURLProtocol.reset() }
 
-    let received = try await repo.storeContents(ids: [7, 8, 9, 10])
+    let received = try await repo.fetchContents(ids: [7, 8, 9, 10])
 
     #expect(received == [7, 8])
     let query =
@@ -873,7 +873,7 @@ struct ApiRepositoryDownloadTest {
     }
     defer { DownloadMockURLProtocol.reset() }
 
-    #expect(try await repo.storeContents(ids: [7]) == [7])
+    #expect(try await repo.fetchContents(ids: [7]) == [7])
     #expect(paths.value.map { $0.trimmingCharacters(in: ["/"]) } == ["api/documents/7"])
     #expect(try store.text(for: Self.contentKey) == "seven")
   }

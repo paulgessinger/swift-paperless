@@ -50,7 +50,7 @@ struct ContentFillTests {
     let requests = Requests()
     let database = harness.database
     let serverID = harness.serverID
-    harness.transient.onStoreContents = { ids in
+    harness.transient.onFetchContents = { ids in
       await requests.append(ids)
       // 60 comes back without a text, and stays missing.
       let sent = ids.filter { $0 != 60 }
@@ -73,7 +73,7 @@ struct ContentFillTests {
   func failedBatchContinues() async throws {
     let harness = try await harness(documents: 30, mode: "entireLibrary")
     let requests = Requests()
-    harness.transient.onStoreContents = { ids in
+    harness.transient.onFetchContents = { ids in
       await requests.append(ids)
       if ids.first == 30 { throw Unavailable() }
       return Set(ids)
@@ -90,7 +90,7 @@ struct ContentFillTests {
   func stopsForSpace() async throws {
     let harness = try await harness(documents: 60, mode: "entireLibrary")
     let requests = Requests()
-    harness.transient.onStoreContents = { ids in
+    harness.transient.onFetchContents = { ids in
       await requests.append(ids)
       return Set(ids)
     }
@@ -114,7 +114,7 @@ struct ContentFillTests {
     try await harness.database.setKeptOffline(
       serverID: harness.serverID, documentID: 2, kept: true)
     let requests = Requests()
-    harness.transient.onStoreContents = { ids in
+    harness.transient.onFetchContents = { ids in
       await requests.append(ids)
       return Set(ids)
     }

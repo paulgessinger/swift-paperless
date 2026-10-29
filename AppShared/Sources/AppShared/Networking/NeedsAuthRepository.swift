@@ -137,8 +137,8 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     try await intercept { try await wrapped.documents(ids: ids) }
   }
 
-  public func storeContents(ids: [UInt]) async throws -> Set<UInt> {
-    try await intercept { try await wrapped.storeContents(ids: ids) }
+  public func fetchContents(ids: [UInt]) async throws -> Set<UInt> {
+    try await intercept { try await wrapped.fetchContents(ids: ids) }
   }
 
   public func documents(filter: FilterState) throws
