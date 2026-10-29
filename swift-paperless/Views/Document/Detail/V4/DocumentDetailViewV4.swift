@@ -66,6 +66,7 @@ private enum FieldEdit: Identifiable, Hashable {
 private enum AuxiliarySheet: Identifiable, Hashable {
   case metadata
   case notes
+  case content
   case shareLink
 
   var id: Self { self }
@@ -444,6 +445,15 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       transitionID: .notes,
       namespace: namespace,
       badge: viewModel.document.notes.count > 0 ? "\(viewModel.document.notes.count)" : nil
+    )
+
+    BottomBarButton(
+      label: .documentMetadata(.content), image: "doc.plaintext",
+      action: {
+        activeSheet = .content
+      },
+      transitionID: .content,
+      namespace: namespace
     )
 
     let canDelete = store.userCanDelete(document: viewModel.document)
@@ -864,6 +874,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .environment(store)
           .environmentObject(errorController)
           .sheetZoomTransition(sourceID: TransitionID.notes, in: namespace)
+
+      case .content:
+        DocumentContentView(document: $viewModel.document)
+          .environment(store)
+          .sheetZoomTransition(sourceID: TransitionID.content, in: namespace)
 
       case .shareLink:
         ShareLinkView(document: viewModel.document)

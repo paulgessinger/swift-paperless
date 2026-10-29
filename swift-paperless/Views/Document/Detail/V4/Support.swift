@@ -32,6 +32,7 @@ enum TransitionID: Hashable {
   case owner
   case metadata
   case notes
+  case content
   case title
   case customFields
 }
