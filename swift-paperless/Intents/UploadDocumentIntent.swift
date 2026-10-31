@@ -103,7 +103,7 @@ struct PaperlessShortcutsProvider: AppShortcutsProvider {
         "Upload document to \(.applicationName)",
         "Upload a document to \(.applicationName)",
       ],
-      shortTitle: "Upload Document",
+      shortTitle: LocalizedStringResource("uploadDocumentIntentTitle", table: "Intents"),
       systemImageName: "doc.badge.arrow.up")
   }
 }
