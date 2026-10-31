@@ -8,11 +8,19 @@ final class StubDownloadURLProtocol: URLProtocol, @unchecked Sendable {
 
   private static let lock = NSLock()
   nonisolated(unsafe) private static var _responder: Responder?
+  nonisolated(unsafe) private static var _stalls: (@Sendable (URLRequest) -> Bool)?
   nonisolated(unsafe) private static var _requests: [URLRequest] = []
 
   static var responder: Responder? {
     get { lock.withLock { _responder } }
     set { lock.withLock { _responder = newValue } }
+  }
+
+  /// Whether a request's response stops after its body, leaving the task in
+  /// flight with bytes received.
+  static var stalls: (@Sendable (URLRequest) -> Bool)? {
+    get { lock.withLock { _stalls } }
+    set { lock.withLock { _stalls = newValue } }
   }
 
   /// Every request the stub saw, in order.
@@ -21,6 +29,7 @@ final class StubDownloadURLProtocol: URLProtocol, @unchecked Sendable {
   static func reset() {
     lock.withLock {
       _responder = nil
+      _stalls = nil
       _requests = []
     }
   }
@@ -90,6 +99,7 @@ final class StubDownloadURLProtocol: URLProtocol, @unchecked Sendable {
       url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
     client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
     client?.urlProtocol(self, didLoad: body)
+    if Self.stalls?(request) == true { return }
     client?.urlProtocolDidFinishLoading(self)
   }
 

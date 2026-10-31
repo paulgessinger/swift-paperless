@@ -66,14 +66,15 @@ extension Database {
   /// timestamps, and only the order of a pass that downloads everything
   /// depends on it). Documents without `modified` are left out: a file for
   /// them could never be validated. `excluding` holds the documents already
-  /// downloading.
+  /// downloading, and `only` limits the result to these documents.
   public func documentsNeedingFiles(
-    serverID: UUID, scope: LibraryFileScope, excluding: Set<UInt> = [], limit: Int
+    serverID: UUID, scope: LibraryFileScope, only: Set<UInt>? = nil,
+    excluding: Set<UInt> = [], limit: Int
   ) async throws -> [LibraryFileCandidate] {
     try await wrappingAsync("documentsNeedingFiles") {
       try await writer.read { db in
         try Self.documentsNeedingFiles(
-          serverID: serverID, scope: scope, limit: limit + excluding.count, db
+          serverID: serverID, scope: scope, only: only, limit: limit + excluding.count, db
         )
         .filter { !excluding.contains($0.record.id) }
         .prefix(limit)
@@ -222,9 +223,12 @@ extension Database {
   }
 
   private static func documentsNeedingFiles(
-    serverID: UUID, scope: LibraryFileScope, limit: Int, _ db: GRDB.Database
+    serverID: UUID, scope: LibraryFileScope, only: Set<UInt>?, limit: Int, _ db: GRDB.Database
   ) throws -> [(record: DocumentRecord, kinds: [ContentStore.Kind])] {
-    try Row.fetchAll(
+    // Ids rather than bound arguments: a kept view can exceed SQLite's limit.
+    let onlyClause =
+      only.map { "AND d.id IN (\($0.map(String.init).joined(separator: ",")))" } ?? ""
+    return try Row.fetchAll(
       db,
       sql: """
         SELECT * FROM (
@@ -235,6 +239,7 @@ extension Database {
           WHERE d.server_id = ?
             AND d.modified IS NOT NULL
             \(scopeClause(scope))
+            \(onlyClause)
         )
         WHERE needs_archive OR needs_thumbnail
         ORDER BY id DESC

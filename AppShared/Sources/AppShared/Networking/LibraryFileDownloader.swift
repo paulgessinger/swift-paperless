@@ -211,6 +211,18 @@ public final class LibraryFileDownloader {
     return try await withCheckedThrowingContinuation { events.yield(.refill(serverID, $0)) }
   }
 
+  /// Queue the missing files of kept documents the user just asked for: all
+  /// of them at once rather than up to the window, and on any link, so they
+  /// neither wait behind the window nor for an allowed link. The policy stays
+  /// on the tasks. A file whose task fails or is lost to a force quit is
+  /// queued by a later refill, under the server's own policy.
+  public func queueNow(serverID: UUID, documentIDs: Set<UInt>) async throws -> RefillOutcome {
+    guard !isInvalidated else { return .complete }
+    return try await withCheckedThrowingContinuation {
+      events.yield(.queueNow(serverID, documentIDs, $0))
+    }
+  }
+
   /// Top every server's window up, after iOS relaunched the app for the
   /// session's events or at launch.
   public func refillAllServers() async {
@@ -286,6 +298,7 @@ public final class LibraryFileDownloader {
     /// A task ended: `size` when its file is in the store, else `error`.
     case finished(task: Int, id: TaskID, size: Int64?, error: (any Error)?)
     case refill(UUID, CheckedContinuation<RefillOutcome, any Error>)
+    case queueNow(UUID, Set<UInt>, CheckedContinuation<RefillOutcome, any Error>)
     /// `nil` calls off every server's.
     case cancel(UUID?, CheckedContinuation<Void, Never>)
     /// Refill the servers in ``needsRefill``.
@@ -312,6 +325,15 @@ public final class LibraryFileDownloader {
       do {
         let outcome = try await suspension.performBackgroundWork {
           try await performRefill(serverID: serverID)
+        }
+        reply.resume(returning: outcome)
+      } catch {
+        reply.resume(throwing: error)
+      }
+    case .queueNow(let serverID, let documentIDs, let reply):
+      do {
+        let outcome = try await suspension.performBackgroundWork {
+          try await performQueueNow(serverID: serverID, documentIDs: documentIDs)
         }
         reply.resume(returning: outcome)
       } catch {
@@ -430,6 +452,59 @@ public final class LibraryFileDownloader {
     }
 
     let repository = try await withTimeout(repositoryTimeout) { try await server.repository() }
+    try queue(
+      Array(candidates), repository: repository,
+      allowsExpensive: server.syncOverCellular, allowsConstrained: false)
+    return .queued(candidates.count)
+  }
+
+  private func performQueueNow(
+    serverID: UUID, documentIDs: Set<UInt>
+  ) async throws -> RefillOutcome {
+    guard !isInvalidated, let server = try await servers(serverID) else { return .complete }
+    let lowStorage =
+      (availableCapacity(store.root) ?? .max) < StoragePolicy.libraryDownloadFreeSpaceFloorBytes
+    if !lowStorage, pausedLowStorage { pausedLowStorage = false }
+
+    // A task that has not received anything may be waiting for an allowed link
+    // under the server's policy, so a new one replaces it.
+    for (identifier, entry) in tasks
+    where entry.id.key.serverID == serverID && documentIDs.contains(entry.id.documentID)
+      && entry.task.countOfBytesReceived == 0
+    {
+      entry.task.cancel()
+      tasks[identifier] = nil
+    }
+
+    // By file: a document's other file may still be downloading.
+    let inFlightKeys = Set(tasks.values.map(\.id.key))
+    let candidates = try await database.documentsNeedingFiles(
+      serverID: serverID, scope: .keptOffline, only: documentIDs, limit: documentIDs.count
+    ).compactMap { candidate -> (LibraryFileCandidate, [ContentStore.Key])? in
+      let keys = candidate.kinds.map {
+        ContentStore.Key(serverID: serverID, versionID: candidate.versionID, kind: $0)
+      }.filter { !inFlightKeys.contains($0) }
+      return keys.isEmpty ? nil : (candidate, keys)
+    }
+    guard !candidates.isEmpty else {
+      publish()
+      return .complete
+    }
+    if lowStorage {
+      if !pausedLowStorage { pausedLowStorage = true }
+      publish()
+      return .pausedLowStorage
+    }
+
+    let repository = try await withTimeout(repositoryTimeout) { try await server.repository() }
+    try queue(candidates, repository: repository, allowsExpensive: true, allowsConstrained: true)
+    return .queued(candidates.count)
+  }
+
+  private func queue(
+    _ candidates: [(LibraryFileCandidate, [ContentStore.Key])], repository: any Repository,
+    allowsExpensive: Bool, allowsConstrained: Bool
+  ) throws {
     for (candidate, keys) in candidates {
       for key in keys {
         var request =
@@ -441,8 +516,8 @@ public final class LibraryFileDownloader {
             try repository.downloadRequest(
               documentID: candidate.documentID, version: candidate.versionQueryID)
           }
-        request.allowsExpensiveNetworkAccess = server.syncOverCellular
-        request.allowsConstrainedNetworkAccess = false
+        request.allowsExpensiveNetworkAccess = allowsExpensive
+        request.allowsConstrainedNetworkAccess = allowsConstrained
         let task = session.downloadTask(with: request)
         task.taskDescription = LibraryFileTaskID.make(
           key: key, documentID: candidate.documentID, modified: candidate.modified)
@@ -451,7 +526,6 @@ public final class LibraryFileDownloader {
       }
     }
     publish()
-    return .queued(candidates.count)
   }
 
   private func publish() {

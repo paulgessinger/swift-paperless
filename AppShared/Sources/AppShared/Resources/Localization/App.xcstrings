@@ -8374,6 +8374,19 @@
         }
       }
     },
+    "keepSavedViewOfflineLinkWarning" : {
+      "comment" : "Added to the confirmation before keeping a saved view offline, when the device is on cellular data or in Low Data Mode: keeping the view downloads its documents at once on that connection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+          }
+        }
+      }
+    },
+
     "keepSavedViewOfflineTitle" : {
       "comment" : "Title of the confirmation before keeping a saved view offline. %@ is the saved view's name",
       "extractionState" : "manual",

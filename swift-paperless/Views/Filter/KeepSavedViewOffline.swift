@@ -60,7 +60,23 @@ extension View {
 private struct KeepSavedViewOfflineConfirmation: ViewModifier {
   @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
+  @Environment(NetworkMonitor.self) private var networkMonitor: NetworkMonitor?
   @Binding var request: KeepOfflineRequest?
+
+  /// Keeping downloads on any link, so a restricted one is worth saying.
+  private var isRestrictedLink: Bool {
+    guard let cost = networkMonitor?.cost else { return false }
+    return cost.isExpensive || cost.isConstrained
+  }
+
+  private func message(for request: KeepOfflineRequest) -> String {
+    let message =
+      request.documentCount.map {
+        String(localized: .app(.keepSavedViewOfflineMessageCount(Int($0))))
+      } ?? String(localized: .app(.keepSavedViewOfflineMessage))
+    guard isRestrictedLink else { return message }
+    return "\(message)\n\n\(String(localized: .app(.keepSavedViewOfflineLinkWarning)))"
+  }
 
   func body(content: Content) -> some View {
     content
@@ -82,11 +98,7 @@ private struct KeepSavedViewOfflineConfirmation: ViewModifier {
         }
         Button(String(localized: .app(.cancel)), role: .cancel) {}
       } message: { request in
-        if let count = request.documentCount {
-          Text(.app(.keepSavedViewOfflineMessageCount(Int(count))))
-        } else {
-          Text(.app(.keepSavedViewOfflineMessage))
-        }
+        Text(verbatim: message(for: request))
       }
   }
 }

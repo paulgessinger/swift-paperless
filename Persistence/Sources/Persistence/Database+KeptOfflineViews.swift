@@ -87,6 +87,19 @@ extension Database {
     return stream(observation)
   }
 
+  /// The documents a kept view keeps.
+  public func keptOfflineViewMemberIDs(serverID: UUID, savedViewID: UInt) async throws -> Set<UInt>
+  {
+    try await wrappingAsync("keptOfflineViewMemberIDs") {
+      try await writer.read { db in
+        try KeptOfflineRecord
+          .filter(Column("server_id") == serverID && Column("saved_view_id") == savedViewID)
+          .select(Column("document_id"), as: UInt.self)
+          .fetchSet(db)
+      }
+    }
+  }
+
   /// Make `documentIDs` the members of a kept view: what the server lists for
   /// it now. A view that is no longer kept is left alone, so a sync finishing
   /// after the user stopped keeping it writes nothing.
