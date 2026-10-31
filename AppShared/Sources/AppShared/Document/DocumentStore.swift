@@ -148,14 +148,14 @@ public final class DocumentStore: Sendable {
   }
 
   /// Keep a document on the device, or stop keeping it. Keeping queues its
-  /// archive and fetches its text at once; stopping leaves the file to the
-  /// budget.
+  /// files and fetches its text at once, on any link; stopping leaves the
+  /// file to the budget.
   public func setKeptOffline(_ documentID: UInt, _ kept: Bool) async throws {
     guard let session, let backend = session.backend else { return }
     try await backend.database.setKeptOffline(
       serverID: session.serverID, documentID: documentID, kept: kept)
     if kept {
-      await session.fillFiles()
+      await session.queueFiles(documentIDs: [documentID])
       fillKeptContents(session)
     }
   }
@@ -182,7 +182,8 @@ public final class DocumentStore: Sendable {
   }
 
   /// Keep a saved view on the device, or stop keeping it. Keeping syncs the
-  /// view's members, fetches their rows and queues their files at once; the
+  /// view's members, fetches their rows and queues their files at once, on
+  /// any link, so the caller confirms it first; the
   /// view is recorded first, so a sync that fails here is retried by the next
   /// reconcile. Stopping leaves the files nothing else keeps to the budget.
   public func setKeptOffline(savedView: SavedView, _ kept: Bool) async throws {
@@ -194,7 +195,9 @@ public final class DocumentStore: Sendable {
     try await backend.database.keepOfflineView(
       serverID: session.serverID, savedViewID: savedView.id)
     try await backend.syncKeptOfflineView(savedViewID: savedView.id)
-    await session.fillFiles()
+    let members = try await backend.database.keptOfflineViewMemberIDs(
+      serverID: session.serverID, savedViewID: savedView.id)
+    await session.queueFiles(documentIDs: members)
     fillKeptContents(session)
   }
 

@@ -55,6 +55,10 @@ struct DocumentStoreTests {
     #expect(
       Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path))
         == ["/documents/1/download", "/documents/1/thumb"])
+    #expect(
+      StubDownloadURLProtocol.requests.allSatisfy {
+        $0.allowsExpensiveNetworkAccess && $0.allowsConstrainedNetworkAccess
+      })
     let status = try #require(harness.store.makeOfflineStatus())
     try await waitUntil(
       { status.keptOfflineFileProgress.totalDocuments == 1 }, "the status never saw the pin")
@@ -102,6 +106,10 @@ struct DocumentStoreTests {
     #expect(
       Set(StubDownloadURLProtocol.requests.compactMap(\.url?.path))
         == ["/documents/1/download", "/documents/1/thumb"])
+    #expect(
+      StubDownloadURLProtocol.requests.allSatisfy {
+        $0.allowsExpensiveNetworkAccess && $0.allowsConstrainedNetworkAccess
+      })
     let status = try #require(harness.store.makeOfflineStatus())
     try await waitUntil(
       { status.keptOfflineViewProgress[view.id]?.totalDocuments == 1 },

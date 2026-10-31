@@ -758,6 +758,36 @@ public final class ServerSession {
     }
   }
 
+  /// The files of documents the user just kept, queued at once and on any
+  /// link: see ``LibraryFileDownloader/queueNow(serverID:documentIDs:)``. Not
+  /// in ``fillFiles()``'s single-flight: joining a refill would drop these
+  /// documents.
+  public func queueFiles(documentIDs: Set<UInt>) async {
+    guard current != nil, let fileDownloader else { return }
+    let serverID = serverID
+    await asBackgroundWork {
+      let row = await recorder.begin(.fileFill)
+      do {
+        let outcome = try await fileDownloader.queueNow(
+          serverID: serverID, documentIDs: documentIDs)
+        recordSuccess(at: .fileFill)
+        switch outcome {
+        case .queued(let count):
+          await recorder.end(row, .ok, succeeded: count)
+        case .complete:
+          await recorder.end(row, .ok)
+        case .pausedLowStorage:
+          await recorder.end(row, .partial, message: "low storage")
+        }
+      } catch is CancellationError {
+        await recorder.end(row, .cancelled)
+      } catch {
+        recordFailure(error, at: .fileFill)
+        await recorder.end(row, .failed, message: Self.failureMessage(error))
+      }
+    }
+  }
+
   /// Proactive document texts, for the same documents as ``fillFiles()``.
   /// Runs after it, and to the end unless free space falls below the floor.
   /// `true` also when there is nothing to fetch or it stopped for space;
