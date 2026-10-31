@@ -43,6 +43,18 @@ public struct OfflineSyncView: View {
   }
   private var syncErrors: [QuerySyncError] { status?.syncErrors ?? [] }
 
+  /// Every failed view in *Entire library*, otherwise the kept views: nothing
+  /// else is downloaded ahead of time.
+  private var visibleSyncErrors: [QuerySyncError] {
+    guard mode != .entireLibrary else { return syncErrors }
+    guard let serverID = store.activeServerID else { return [] }
+    let keptKeys = Set(
+      store.keptOfflineViewIDs
+        .compactMap { store.savedViews[$0] }
+        .map { QueryKey(serverID: serverID, filter: FilterState(savedView: $0)).rawValue })
+    return syncErrors.filter { keptKeys.contains($0.queryKey) }
+  }
+
   public init() {}
 
   // The active server's mode, read/written through ConnectionManager (persisted
@@ -191,6 +203,7 @@ public struct OfflineSyncView: View {
         if mode == .recentlyBrowsed || !isDownloading {
           documentsRow
         }
+        keptOfflineRow
         dateStatusRow(
           String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
 
@@ -234,17 +247,15 @@ public struct OfflineSyncView: View {
       }
       .labeledContentStyle(StatusRowStyle())
 
-      keptOfflineSection
-
-      // Both modes, unlike the per-view list below; empty renders nothing.
+      // Empty renders nothing.
       SyncFailuresSection(
         failures: store.syncFailures.filter {
           mode == .entireLibrary || !$0.site.isEntireLibraryOnly
         })
 
-      if mode == .entireLibrary, !syncErrors.isEmpty {
+      if !visibleSyncErrors.isEmpty {
         Section {
-          ForEach(syncErrors) { error in
+          ForEach(visibleSyncErrors) { error in
             VStack(alignment: .leading, spacing: 2) {
               Text(error.savedViewName ?? String(localized: .settings(.offlineSyncDefaultView)))
               Text(error.message)
@@ -297,74 +308,33 @@ public struct OfflineSyncView: View {
     .navigationBarTitleDisplayMode(.inline)
   }
 
-  /// The kept saved views by name, each with its figures and how its last
-  /// sync failed, then the total, captioned with what it is made of. In both
-  /// modes: a kept view outlasts a switch between them.
+  /// The total, captioned with what it is made of, leading to the kept saved
+  /// views where there are any. In both modes: a kept view outlasts a switch
+  /// between them.
   @ViewBuilder
-  private var keptOfflineSection: some View {
-    let views = store.keptOfflineViewIDs
-      .map { (id: $0, savedView: store.savedViews[$0]) }
-      .sorted { ($0.savedView?.name ?? "") < ($1.savedView?.name ?? "") }
+  private var keptOfflineRow: some View {
+    let viewCount = store.keptOfflineViewIDs.count
     let ownCount = store.keptOfflineDocumentIDs.count
-    if !views.isEmpty || ownCount > 0 {
-      Section {
-        ForEach(views, id: \.id) { view in
-          keptViewRow(id: view.id, savedView: view.savedView)
-            .swipeActions {
-              Button(role: .destructive) {
-                Task {
-                  do {
-                    try await store.stopKeepingOffline(savedViewID: view.id)
-                  } catch {
-                    errorController.push(error: error)
-                  }
-                }
-              } label: {
-                Label(
-                  String(localized: .app(.stopKeepingSavedViewOffline)),
-                  systemImage: "arrow.down.circle")
-              }
-            }
-        }
-        LabeledContent {
-          Text(keptFilesText(keptOfflineFileProgress)).foregroundStyle(.secondary)
-        } label: {
-          VStack(alignment: .leading, spacing: 2) {
-            Text(.settings(.offlineSyncKeptOfflineTotal))
-            Text(keptMembershipText(views: views.count, documents: ownCount))
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
-        }
-      } header: {
-        Text(.settings(.offlineSyncKeptOfflineHeader))
-      } footer: {
-        Text(.settings(.offlineSyncKeptOfflineFooter))
+    if viewCount > 0 {
+      NavigationLink {
+        KeptOfflineViewsView(status: status)
+      } label: {
+        keptOfflineSummary(views: viewCount, documents: ownCount)
       }
-      .labeledContentStyle(StatusRowStyle())
+    } else if ownCount > 0 {
+      keptOfflineSummary(views: viewCount, documents: ownCount)
     }
   }
 
-  private func keptViewRow(id: UInt, savedView: SavedView?) -> some View {
-    let progress = status?.keptOfflineViewProgress[id] ?? .zero
-    let failure = savedView.flatMap { savedView in
-      store.activeServerID.flatMap { serverID in
-        let key = QueryKey(serverID: serverID, filter: FilterState(savedView: savedView))
-        return syncErrors.first { $0.queryKey == key.rawValue }
-      }
-    }
-    return LabeledContent {
-      Text(keptFilesText(progress)).foregroundStyle(.secondary)
+  private func keptOfflineSummary(views: Int, documents: Int) -> some View {
+    LabeledContent {
+      Text(keptFilesText(keptOfflineFileProgress)).foregroundStyle(.secondary)
     } label: {
       VStack(alignment: .leading, spacing: 2) {
-        Label(
-          savedView?.name ?? String(localized: .settings(.offlineSyncKeptOfflineUnknownView)),
-          systemImage: "arrow.down.circle.fill")
-        if let failure {
-          Text(failure.message)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
+        Text(.settings(.offlineSyncKeptOfflineHeader))
+        Text(keptMembershipText(views: views, documents: documents))
+          .font(.caption)
+          .foregroundStyle(.secondary)
       }
     }
   }
@@ -379,14 +349,6 @@ public struct OfflineSyncView: View {
       parts.append(String(localized: .settings(.offlineSyncKeptOfflineSingleCount(documents))))
     }
     return parts.formatted(.list(type: .and))
-  }
-
-  private func keptFilesText(_ progress: LibraryFileProgress) -> String {
-    String(
-      localized: .settings(
-        .offlineSyncKeptOfflineFiles(
-          progress.downloadedFiles.formatted(), progress.totalDocuments.formatted(),
-          byteText(progress.downloadedBytes))))
   }
 
   @ViewBuilder
@@ -485,22 +447,25 @@ public struct OfflineSyncView: View {
   }
 
   /// The server's documents on the device; in *Entire library* also how many
-  /// have their file, and whether the library has been cached in full.
+  /// have their file, and whether the library has been cached in full. The
+  /// file count is a caption so the value stays short enough to leave room
+  /// for the label.
   private var documentsRow: some View {
-    let cached = status?.cachedDocumentCount ?? 0
-    let value: LocalizedStringResource =
-      mode == .entireLibrary
-      ? .settings(.offlineSyncDocumentsCachedFiles(cached, libraryFileProgress.downloadedFiles))
-      : .settings(.offlineSyncDocumentsCached(cached))
-    return LabeledContent {
-      Text(value).foregroundStyle(.secondary)
+    LabeledContent {
+      Text(.settings(.offlineSyncDocumentsCached(status?.cachedDocumentCount ?? 0)))
+        .foregroundStyle(.secondary)
     } label: {
       VStack(alignment: .leading, spacing: 2) {
         Text(.settings(.offlineSyncDocuments))
-        if mode == .entireLibrary, status?.libraryCoverageAt == nil {
-          Text(.settings(.offlineSyncLibraryIncomplete))
-            .font(.caption)
-            .foregroundStyle(.secondary)
+        if mode == .entireLibrary {
+          Group {
+            Text(.settings(.offlineStorageFileCount(libraryFileProgress.downloadedFiles)))
+            if status?.libraryCoverageAt == nil {
+              Text(.settings(.offlineSyncLibraryIncomplete))
+            }
+          }
+          .font(.caption)
+          .foregroundStyle(.secondary)
         }
       }
     }
@@ -525,10 +490,71 @@ public struct OfflineSyncView: View {
   private func formattedDate(_ date: Date) -> String {
     date.formatted(date: .numeric, time: .shortened)
   }
+}
 
-  private func byteText(_ bytes: Int64) -> String {
-    ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+/// The saved views kept offline, each with its figures, swiped to stop keeping
+/// them.
+private struct KeptOfflineViewsView: View {
+  @Environment(DocumentStore.self) private var store
+  @EnvironmentObject private var errorController: ErrorController
+
+  let status: OfflineStatus?
+
+  private var views: [(id: UInt, savedView: SavedView?)] {
+    store.keptOfflineViewIDs
+      .map { (id: $0, savedView: store.savedViews[$0]) }
+      .sorted { ($0.savedView?.name ?? "") < ($1.savedView?.name ?? "") }
   }
+
+  var body: some View {
+    Form {
+      Section {
+        ForEach(views, id: \.id) { view in
+          LabeledContent {
+            Text(keptFilesText(status?.keptOfflineViewProgress[view.id] ?? .zero))
+              .foregroundStyle(.secondary)
+          } label: {
+            Label(
+              view.savedView?.name
+                ?? String(localized: .settings(.offlineSyncKeptOfflineUnknownView)),
+              systemImage: "arrow.down.circle.fill")
+          }
+          .swipeActions {
+            Button(role: .destructive) {
+              Task {
+                do {
+                  try await store.stopKeepingOffline(savedViewID: view.id)
+                } catch {
+                  errorController.push(error: error)
+                }
+              }
+            } label: {
+              Label(
+                String(localized: .app(.stopKeepingSavedViewOffline)),
+                systemImage: "arrow.down.circle")
+            }
+          }
+        }
+      } footer: {
+        Text(.settings(.offlineSyncKeptOfflineFooter))
+      }
+      .labeledContentStyle(StatusRowStyle())
+    }
+    .navigationTitle(Text(.settings(.offlineSyncKeptOfflineHeader)))
+    .navigationBarTitleDisplayMode(.inline)
+  }
+}
+
+private func keptFilesText(_ progress: LibraryFileProgress) -> String {
+  String(
+    localized: .settings(
+      .offlineSyncKeptOfflineFiles(
+        progress.downloadedFiles.formatted(), progress.totalDocuments.formatted(),
+        byteText(progress.downloadedBytes))))
+}
+
+private func byteText(_ bytes: Int64) -> String {
+  bytes.formatted(.byteCount(style: .file))
 }
 
 /// Label and value on one line whatever the value's length, so a count that
