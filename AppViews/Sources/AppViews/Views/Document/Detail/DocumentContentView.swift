@@ -10,7 +10,8 @@ import DataModel
 import SwiftUI
 
 /// A document's OCR text, as stored on the device. Opening the document keeps
-/// it, so this reads the store alone and works offline.
+/// it and the files phase fetches it for kept documents, so this reads the
+/// store alone and works offline.
 public struct DocumentContentView: View {
   @Binding private var document: Document
 
