@@ -166,14 +166,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Indhold"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Inhalt"
           }
         },
         "en" : {
@@ -184,32 +184,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Contenu"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Contenuto"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Inhoud"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "Zawartość"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Content"
+            "state" : "translated",
+            "value" : "İçerik"
           }
         }
       }
@@ -220,14 +220,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "Teksten hentes, når dokumentet åbnes online."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "Der Text wird heruntergeladen, wenn das Dokument online geöffnet wird."
           }
         },
         "en" : {
@@ -238,32 +238,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "Le texte est téléchargé à l'ouverture du document en ligne."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "Il testo viene scaricato quando il documento viene aperto online."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "De tekst wordt gedownload wanneer het document online wordt geopend."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "Tekst zostanie pobrany po otwarciu dokumentu w trybie online."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The text is downloaded when the document is opened while online."
+            "state" : "translated",
+            "value" : "Metin, doküman çevrimiçiyken açıldığında indirilir."
           }
         }
       }
@@ -274,14 +274,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "Intet indhold"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "Kein Inhalt"
           }
         },
         "en" : {
@@ -292,32 +292,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "Aucun contenu"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "Nessun contenuto"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "Geen inhoud"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "Brak zawartości"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No Content"
+            "state" : "translated",
+            "value" : "İçerik yok"
           }
         }
       }

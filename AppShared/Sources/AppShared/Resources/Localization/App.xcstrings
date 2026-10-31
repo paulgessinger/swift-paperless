@@ -8218,14 +8218,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Behold offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Offline behalten"
           }
         },
         "en" : {
@@ -8236,32 +8236,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Conserver hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Mantieni offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Offline bewaren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Zachowaj offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı tut"
           }
         }
       }
@@ -8272,14 +8272,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Filerne for alle dokumenter i denne visning hentes til denne enhed og bliver her, så længe de er i visningen."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Die Dateien aller Dokumente in dieser Ansicht werden auf dieses Gerät heruntergeladen und bleiben dort, solange sie in der Ansicht sind."
           }
         },
         "en" : {
@@ -8290,32 +8290,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Les fichiers de tous les documents de cette vue sont téléchargés sur cet appareil et y restent tant qu'ils figurent dans la vue."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "I file di tutti i documenti in questa vista vengono scaricati su questo dispositivo e vi restano finché sono nella vista."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "De bestanden van alle documenten in deze weergave worden naar dit apparaat gedownload en blijven daar zolang ze in de weergave staan."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Pliki wszystkich dokumentów w tym widoku zostaną pobrane na to urządzenie i pozostaną na nim, dopóki są w widoku."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "The files of every document in this view download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Bu görünümdeki tüm dokümanların dosyaları bu cihaza indirilir ve görünümde kaldıkları sürece burada tutulur."
           }
         }
       }
@@ -8326,14 +8326,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Dokumenter i denne visning: %lld. Deres filer hentes til denne enhed og bliver her, så længe de er i visningen."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Dokumente in dieser Ansicht: %lld. Ihre Dateien werden auf dieses Gerät heruntergeladen und bleiben dort, solange sie in der Ansicht sind."
           }
         },
         "en" : {
@@ -8344,32 +8344,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Documents dans cette vue : %lld. Leurs fichiers sont téléchargés sur cet appareil et y restent tant qu'ils figurent dans la vue."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Documenti in questa vista: %lld. I loro file vengono scaricati su questo dispositivo e vi restano finché sono nella vista."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Documenten in deze weergave: %lld. Hun bestanden worden naar dit apparaat gedownload en blijven daar zolang ze in de weergave staan."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Dokumenty w tym widoku: %lld. Ich pliki zostaną pobrane na to urządzenie i pozostaną na nim, dopóki są w widoku."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
+            "state" : "translated",
+            "value" : "Bu görünümdeki dokümanlar: %lld. Dosyaları bu cihaza indirilir ve görünümde kaldıkları sürece burada tutulur."
           }
         }
       }
@@ -8380,14 +8380,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Du bruger mobildata eller Lavdataindstilling. Alt hentes nu via denne forbindelse."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Du nutzt Mobilfunkdaten oder den Datensparmodus. Alles wird jetzt über diese Verbindung heruntergeladen."
           }
         },
         "en" : {
@@ -8398,32 +8398,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Vous utilisez les données cellulaires ou le mode Données limitées. Tout sera téléchargé maintenant sur cette connexion."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Stai usando la rete cellulare o la modalità Risparmio dati. Tutto viene scaricato ora su questa connessione."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Je gebruikt mobiele data of de spaarstand voor data. Alles wordt nu via deze verbinding gedownload."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Korzystasz z danych komórkowych lub trybu niskiego zużycia danych. Wszystko zostanie teraz pobrane przez to połączenie."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You are on cellular data or Low Data Mode. Everything downloads now on this connection."
+            "state" : "translated",
+            "value" : "Hücresel veri veya Az Veri Modu kullanıyorsunuz. Her şey şimdi bu bağlantı üzerinden indirilecek."
           }
         }
       }
@@ -8434,14 +8434,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "Behold “%@” offline?"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "„%@“ offline behalten?"
           }
         },
         "en" : {
@@ -8452,32 +8452,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "Conserver « %@ » hors ligne ?"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "Mantenere «%@» offline?"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "“%@” offline bewaren?"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "Zachować „%@” offline?"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Keep “%@” offline?"
+            "state" : "translated",
+            "value" : "“%@” çevrimdışı tutulsun mu?"
           }
         }
       }
@@ -14715,14 +14715,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Behold ikke længere offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Nicht mehr offline behalten"
           }
         },
         "en" : {
@@ -14733,32 +14733,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Ne plus conserver hors ligne"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Non mantenere più offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Niet meer offline bewaren"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Przestań zachowywać offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stop keeping offline"
+            "state" : "translated",
+            "value" : "Çevrimdışı tutmayı bırak"
           }
         }
       }
