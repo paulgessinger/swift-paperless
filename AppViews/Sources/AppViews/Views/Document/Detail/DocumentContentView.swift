@@ -14,14 +14,24 @@ import SwiftUI
 /// store alone and works offline.
 public struct DocumentContentView: View {
   @Binding private var document: Document
+  private let isDocumentLoaded: Bool
 
   @Environment(DocumentStore.self) private var store
 
   @State private var text: String?
   @State private var loaded = false
 
-  public init(document: Binding<Document>) {
+  private struct ReadTrigger: Hashable {
+    let modified: Date?
+    let isDocumentLoaded: Bool
+  }
+
+  /// - Parameter isDocumentLoaded: The detail load has ended. Until then a
+  ///   missing text may still arrive, so the view waits instead of calling it
+  ///   empty.
+  public init(document: Binding<Document>, isDocumentLoaded: Bool) {
     _document = document
+    self.isDocumentLoaded = isDocumentLoaded
   }
 
   public var body: some View {
@@ -55,10 +65,11 @@ public struct DocumentContentView: View {
         }
       }
 
-      // The detail load replaces the text when it brings a newer document.
-      .task(id: document.modified) {
+      // The detail load stores the text, and replaces it for a newer document.
+      .task(id: ReadTrigger(modified: document.modified, isDocumentLoaded: isDocumentLoaded)) {
+        let detailEnded = isDocumentLoaded
         text = await store.repository.storedText(document: document)
-        loaded = true
+        loaded = detailEnded || text != nil
       }
     }
   }

@@ -876,9 +876,11 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           .sheetZoomTransition(sourceID: TransitionID.notes, in: namespace)
 
       case .content:
-        DocumentContentView(document: $viewModel.document)
-          .environment(store)
-          .sheetZoomTransition(sourceID: TransitionID.content, in: namespace)
+        DocumentContentView(
+          document: $viewModel.document, isDocumentLoaded: viewModel.isDocumentLoaded
+        )
+        .environment(store)
+        .sheetZoomTransition(sourceID: TransitionID.content, in: namespace)
 
       case .shareLink:
         ShareLinkView(document: viewModel.document)
