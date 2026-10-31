@@ -148,6 +148,65 @@ struct LibraryFileDownloaderTests {
     #expect(try await condition(), sourceLocation: sourceLocation)
   }
 
+  @Test("Queueing now goes past the window, on any link, and only for those documents")
+  func queueNowPassesTheWindow() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let fixture = try await makeFixture(documents: [1, 2, 3, 4, 5, 6], isEntireLibrary: false)
+    for id: UInt in [1, 2, 3, 4, 5, 6] {
+      try await fixture.database.setKeptOffline(serverID: server, documentID: id, kept: true)
+    }
+
+    let outcome = try await fixture.downloader.queueNow(
+      serverID: server, documentIDs: [1, 2, 3, 4, 5])
+
+    #expect(outcome == .queued(5))
+    try await waitUntil { StubDownloadURLProtocol.requests.count == 5 }
+    #expect(
+      !StubDownloadURLProtocol.requests.compactMap(\.url?.path).contains("/documents/6/download"))
+    #expect(
+      StubDownloadURLProtocol.requests.allSatisfy {
+        $0.allowsExpensiveNetworkAccess && $0.allowsConstrainedNetworkAccess
+      })
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("Queueing now replaces a task waiting under the server's policy")
+  func queueNowReplacesAWaitingTask() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let fixture = try await makeFixture(documents: [1, 2, 3], window: 3)
+    try await fixture.database.setKeptOffline(serverID: server, documentID: 2, kept: true)
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(3))
+
+    let outcome = try await fixture.downloader.queueNow(serverID: server, documentIDs: [2])
+
+    #expect(outcome == .queued(1))
+    try await waitUntil {
+      StubDownloadURLProtocol.requests.contains {
+        $0.url?.path == "/documents/2/download" && $0.allowsExpensiveNetworkAccess
+      }
+    }
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("Queueing now stops for low storage")
+  func queueNowStopsForSpace() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    StubDownloadURLProtocol.responder = { _ in nil }
+    let fixture = try await makeFixture(documents: [1], isEntireLibrary: false, freeSpace: 0)
+    try await fixture.database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+
+    let outcome = try await fixture.downloader.queueNow(serverID: server, documentIDs: [1])
+
+    #expect(outcome == .pausedLowStorage)
+    #expect(fixture.downloader.pausedLowStorage)
+    await fixture.downloader.invalidate()
+  }
+
   @Test("Queues up to the window, newest document first, with the server's network policy")
   func queuesTheWindow() async throws {
     let lease = await StubDownloadURLProtocol.lease()
