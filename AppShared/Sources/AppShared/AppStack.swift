@@ -111,11 +111,11 @@ public final class AppStack {
         }
       }
     }
-    // Leaving Entire library drops the server's archives, after its downloads.
+    // Leaving Entire library drops the server's archives and texts, after its downloads.
     connectionManager.onDowngrade = { serverID in
       await fileDownloader?.cancel(serverID: serverID)
       _ = await suspension.performBackgroundWork {
-        await contentReclaimer.removeArchives(serverID: serverID)
+        await contentReclaimer.removeLibraryFiles(serverID: serverID)
       }
     }
 

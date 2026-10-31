@@ -4923,6 +4923,19 @@
         }
       }
     },
+    "offlineSyncContentFill" : {
+      "comment" : "Activity label on the Offline & Sync screen while the full OCR text of documents is downloading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading document text…"
+          }
+        }
+      }
+    },
+
     "offlineSyncFailureSiteFileFill" : {
       "comment" : "Name of a sync step in the Offline & Sync error list: downloading the library's document PDFs ahead of time",
       "extractionState" : "manual",
@@ -4977,6 +4990,19 @@
         }
       }
     },
+    "offlineSyncFailureSiteContentFill" : {
+      "comment" : "Name of a sync step in the Offline & Sync error list: downloading the full OCR text of documents ahead of time",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading document text"
+          }
+        }
+      }
+    },
+
     "offlineSyncFailureSiteKeptOffline" : {
       "comment" : "Offline & Sync, Sync errors: the reconcile step that fetches the rows of documents kept offline",
       "extractionState" : "manual",

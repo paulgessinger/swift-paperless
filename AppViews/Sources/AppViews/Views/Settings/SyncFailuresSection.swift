@@ -62,6 +62,7 @@ struct SyncFailuresSection: View {
     case .libraryFill: .settings(.offlineSyncFailureSiteLibraryFill)
     case .detailFill: .settings(.offlineSyncFailureSiteDetailFill)
     case .fileFill: .settings(.offlineSyncFailureSiteFileFill)
+    case .contentFill: .settings(.offlineSyncFailureSiteContentFill)
     }
   }
 }

@@ -91,9 +91,9 @@ actor InMemoryFileIndex: FileIndex {
     entries[key] = nil
   }
 
-  /// Wait for the fire-and-forget access record to land.
-  func accessCount() async -> Int {
-    for _ in 0..<50 where accesses.isEmpty {
+  /// Wait for the fire-and-forget access records to land.
+  func accessCount(awaiting expected: Int = 1) async -> Int {
+    for _ in 0..<50 where accesses.count < expected {
       try? await Task.sleep(for: .milliseconds(10))
     }
     return accesses.count
@@ -107,7 +107,10 @@ struct ApiRepositoryDownloadTest {
   nonisolated static let serverID = UUID(
     uuidString: "11111111-2222-3333-4444-555555555555")!
 
-  static func makeRepo(contentStore: ContentStore, index: (any FileIndex)? = InMemoryFileIndex())
+  static func makeRepo(
+    contentStore: ContentStore, index: (any FileIndex)? = InMemoryFileIndex(),
+    backendVersion: Version? = nil
+  )
     -> ApiRepository
   {
     let session = DownloadMockURLProtocol.makeSession()
@@ -117,7 +120,9 @@ struct ApiRepositoryDownloadTest {
       mode: .release,
       contentStore: contentStore,
       fileIndex: index,
-      urlSession: session)
+      urlSession: session,
+      apiVersion: backendVersion.map { _ in 9 },
+      backendVersion: backendVersion)
   }
 
   static func makeStore() throws -> (ContentStore, URL) {
@@ -233,7 +238,7 @@ struct ApiRepositoryDownloadTest {
     #expect(counter.value == 1)
   }
 
-  @Test
+  @Test("A cache hit records an access on the file and on the version's text")
   func cacheHitRecordsAnAccess() async throws {
     let (store, _) = try Self.makeStore()
     let index = InMemoryFileIndex()
@@ -245,7 +250,14 @@ struct ApiRepositoryDownloadTest {
     #expect(await index.accesses.isEmpty)
     _ = try await repo.download(document: Self.makeDocument())
 
-    #expect(await index.accessCount() == 1)
+    #expect(await index.accessCount(awaiting: 2) == 2)
+    let document = Self.makeDocument()
+    #expect(
+      await index.accesses == [
+        Self.canonicalKey(for: document),
+        ContentStore.Key(
+          serverID: Self.serverID, versionID: document.currentVersionID, kind: .content),
+      ])
   }
 
   @Test
@@ -725,5 +737,144 @@ struct ApiRepositoryDownloadTest {
       URLComponents(url: try #require(seenURL.value), resolvingAgainstBaseURL: false)?
       .queryItems ?? []
     #expect(query.contains(URLQueryItem(name: "version", value: "91")))
+  }
+
+  // MARK: - Text
+
+  nonisolated static func detailJSON(content: String, modified: String = "2026-01-16T19:15:49Z")
+    -> Data
+  {
+    let body: [String: Any] = [
+      "id": 7, "title": "doc", "content": content, "tags": [], "created": "2026-01-16",
+      "modified": modified, "notes": [], "custom_fields": [],
+    ]
+    return try! JSONSerialization.data(withJSONObject: body)
+  }
+
+  nonisolated static func jsonResponse(for request: URLRequest) -> HTTPURLResponse {
+    HTTPURLResponse(
+      url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1",
+      headerFields: ["Content-Type": "application/json"])!
+  }
+
+  nonisolated static let contentKey = ContentStore.Key(
+    serverID: serverID, versionID: 7, kind: .content)
+
+  @Test("Opening a document keeps its full text, recorded against its modified")
+  func detailStoresText() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    DownloadMockURLProtocol.responder = { req in
+      (Self.jsonResponse(for: req), Self.detailJSON(content: "Rechnung 4711"))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let document = try #require(try await repo.document(id: 7))
+
+    #expect(try store.text(for: Self.contentKey) == "Rechnung 4711")
+    let entry = try #require(await index.entries[Self.contentKey])
+    #expect(entry.documentID == 7)
+    #expect(entry.modified == document.modified)
+    #expect(entry.checksum == ContentStore.checksum(of: "Rechnung 4711"))
+    #expect(entry.size == store.size(of: Self.contentKey))
+  }
+
+  @Test("An unchanged text is re-recorded against the new modified without a rewrite")
+  func unchangedTextIsNotRewritten() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    let modified = LastValue("2026-01-16T19:15:49Z")
+    let content = LastValue("same")
+    DownloadMockURLProtocol.responder = { req in
+      (
+        Self.jsonResponse(for: req),
+        Self.detailJSON(content: content.value, modified: modified.value)
+      )
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    _ = try await repo.document(id: 7)
+    // A marker the rewrite would replace.
+    try Data("marker".utf8).write(to: store.url(for: Self.contentKey))
+    modified.set("2026-02-01T10:00:00Z")
+    let edited = try #require(try await repo.document(id: 7))
+
+    #expect(try Data(contentsOf: store.url(for: Self.contentKey)) == Data("marker".utf8))
+    #expect(await index.entries[Self.contentKey]?.modified == edited.modified)
+
+    content.set("changed")
+    _ = try await repo.document(id: 7)
+    #expect(try store.text(for: Self.contentKey) == "changed")
+  }
+
+  @Test("Without a store nothing is kept and the open still succeeds")
+  func detailWithoutStore() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store, index: nil)
+    DownloadMockURLProtocol.responder = { req in
+      (Self.jsonResponse(for: req), Self.detailJSON(content: "x"))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    #expect(try await repo.document(id: 7) != nil)
+    #expect(!store.exists(Self.contentKey))
+  }
+
+  @Test("A batch keeps each text under its current version, and reports who sent one")
+  func batchStoresTexts() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index, backendVersion: Version(2, 15, 0))
+    let seen = LastValue<URL?>(nil)
+    DownloadMockURLProtocol.responder = { req in
+      seen.set(req.url)
+      let body: [String: Any] = [
+        "count": 3, "next": NSNull(), "previous": NSNull(),
+        "results": [
+          ["id": 7, "modified": "2026-01-16T19:15:49Z", "content": "seven"],
+          [
+            "id": 8, "modified": "2026-01-16T19:15:49Z", "content": "eight",
+            "versions": [
+              ["id": 8, "added": "2026-01-16T19:15:49Z", "is_root": true],
+              ["id": 12, "added": "2026-01-17T19:15:49Z", "is_root": false],
+            ],
+          ],
+          // Without a text: nothing to keep, and not reported.
+          ["id": 9, "modified": "2026-01-16T19:15:49Z"],
+        ],
+      ]
+      return (Self.jsonResponse(for: req), try JSONSerialization.data(withJSONObject: body))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    let received = try await repo.fetchContents(ids: [7, 8, 9, 10])
+
+    #expect(received == [7, 8])
+    let query =
+      URLComponents(url: try #require(seen.value), resolvingAgainstBaseURL: false)?
+      .queryItems ?? []
+    #expect(query.contains(URLQueryItem(name: "id__in", value: "7,8,9,10")))
+    #expect(try store.text(for: Self.contentKey) == "seven")
+    let eight = ContentStore.Key(serverID: Self.serverID, versionID: 12, kind: .content)
+    #expect(try store.text(for: eight) == "eight")
+    #expect(await index.entries[eight]?.documentID == 8)
+  }
+
+  @Test("Without the id filter each document is fetched on its own and its text kept")
+  func batchFallsBackToDetail() async throws {
+    let (store, _) = try Self.makeStore()
+    let repo = Self.makeRepo(contentStore: store, backendVersion: Version(1, 17, 4))
+    let paths = LastValue<[String]>([])
+    DownloadMockURLProtocol.responder = { req in
+      paths.set(paths.value + [req.url!.path])
+      return (Self.jsonResponse(for: req), Self.detailJSON(content: "seven"))
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    #expect(try await repo.fetchContents(ids: [7]) == [7])
+    #expect(paths.value.map { $0.trimmingCharacters(in: ["/"]) } == ["api/documents/7"])
+    #expect(try store.text(for: Self.contentKey) == "seven")
   }
 }

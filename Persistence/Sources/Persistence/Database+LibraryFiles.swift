@@ -88,6 +88,51 @@ extension Database {
     }
   }
 
+  /// The documents whose current version has no text fetched against its
+  /// `modified`, highest id first like ``documentsNeedingFiles(serverID:scope:excluding:limit:)``,
+  /// and below `below` when given: a pass walks down from the last id it
+  /// asked for, so a document whose text did not become fresh is not asked
+  /// for again until the next pass. Every candidate's `kinds` is `[.content]`.
+  public func documentsNeedingContent(
+    serverID: UUID, scope: LibraryFileScope, below: UInt? = nil, limit: Int
+  ) async throws -> [LibraryFileCandidate] {
+    try await wrappingAsync("documentsNeedingContent") {
+      try await writer.read { db in
+        try DocumentRecord.fetchAll(
+          db,
+          sql: """
+            SELECT d.* FROM document d
+            WHERE \(Self.needsContent(scope))
+              AND d.id < ?
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+          arguments: [serverID, below.map(Int64.init) ?? .max, limit]
+        ).map { record in
+          let document = record.domain
+          return LibraryFileCandidate(
+            documentID: record.id, versionID: document.currentVersionID,
+            versionQueryID: document.versionQueryID, modified: record.modified ?? Date(),
+            kinds: [.content])
+        }
+      }
+    }
+  }
+
+  /// How many documents ``documentsNeedingContent(serverID:scope:below:limit:)``
+  /// would list in all.
+  public func countDocumentsNeedingContent(serverID: UUID, scope: LibraryFileScope)
+    async throws -> Int
+  {
+    try await wrappingAsync("countDocumentsNeedingContent") {
+      try await writer.read { db in
+        try Int.fetchOne(
+          db, sql: "SELECT COUNT(*) FROM document d WHERE \(Self.needsContent(scope))",
+          arguments: [serverID]) ?? 0
+      }
+    }
+  }
+
   /// The documents with a fresh archive, and their bytes, against all in the
   /// scope.
   public func libraryFileProgress(serverID: UUID, scope: LibraryFileScope)
@@ -132,16 +177,19 @@ extension Database {
 
   // MARK: - Query bodies
 
-  /// A fresh archive for the document's current version, correlated on `d`.
-  private static let freshArchiveExists = """
+  /// A file of `kind` fetched against the document's `modified`, for its
+  /// current version, correlated on `d`.
+  private static func freshFileExists(_ kind: ContentStore.Kind) -> String {
+    """
     EXISTS (
       SELECT 1 FROM file f
       WHERE f.server_id = d.server_id
         AND f.version_id = COALESCE(NULLIF(d.current_version_id, 0), d.id)
-        AND f.kind = 'archive'
+        AND f.kind = '\(kind.rawValue)'
         AND f.modified IS d.modified
     )
     """
+  }
 
   /// A thumbnail for the document's current version, correlated on `d`. Any
   /// row will do: the image cache records its own without a `modified`.
@@ -153,6 +201,17 @@ extension Database {
         AND f.kind = 'thumbnail'
     )
     """
+
+  /// A document of the server bound first whose text is missing or stale,
+  /// on `document d`.
+  private static func needsContent(_ scope: LibraryFileScope) -> String {
+    """
+    d.server_id = ?
+      AND d.modified IS NOT NULL
+      \(scopeClause(scope))
+      AND NOT \(freshFileExists(.content))
+    """
+  }
 
   /// The scope's restriction on `document d`; the library has none.
   private static func scopeClause(_ scope: LibraryFileScope) -> String {
@@ -170,7 +229,7 @@ extension Database {
       sql: """
         SELECT * FROM (
           SELECT d.*,
-            NOT \(freshArchiveExists) AS needs_archive,
+            NOT \(freshFileExists(.archive)) AS needs_archive,
             NOT \(thumbnailExists) AS needs_thumbnail
           FROM document d
           WHERE d.server_id = ?

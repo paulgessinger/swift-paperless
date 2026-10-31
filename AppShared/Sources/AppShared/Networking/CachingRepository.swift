@@ -43,6 +43,12 @@ enum DetailFillPolicy {
   static let concurrency = 8
 }
 
+enum ContentFillPolicy {
+  /// How many documents' texts one request of the content fill asks for. A
+  /// long document's text runs to megabytes.
+  static let batchSize = 25
+}
+
 /// One request of the detail fill.
 enum DetailFetch: Sendable {
   case metadata(UInt)
@@ -98,7 +104,7 @@ enum QueryRetentionPolicy {
   static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
-/// How a detail-fill pass that ran to the end left things.
+/// How a detail-fill or content-fill pass that ran to the end left things.
 public struct DetailFillOutcome: Sendable {
   /// The first failure this pass hit that is worth surfacing (see
   /// `SyncFailureClass.firstSurfaced`); `nil` if nothing failed, or only for
@@ -108,6 +114,9 @@ public struct DetailFillOutcome: Sendable {
   /// How many fetches failed in this pass, whatever the reason. Those
   /// documents are still missing, and the next pass tries them again.
   public var failed: Int
+
+  /// The pass stopped early because free space fell below the floor.
+  public var lowStorage = false
 
   public static let complete = DetailFillOutcome(failure: nil, failed: 0)
 }
@@ -210,6 +219,20 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// cache can't say what's missing; otherwise the pass ran to the end.
   @discardableResult
   func fillDocumentDetails(progress: SyncProgressReporter?) async throws -> DetailFillOutcome
+
+  /// Fetch the full text of every document whose archive the file pass
+  /// keeps, the whole library in *Entire library* and the kept documents
+  /// otherwise, where it is missing or older than the document's `modified`.
+  /// In batches, newest first; uncapped, reporting progress, stopped by
+  /// cancellation or by `hasRoom` turning false before a batch. A batch that
+  /// fails doesn't abort the pass, and each document is asked for once per
+  /// pass, whether its text came back fresh or not. Throws when cancelled or
+  /// when the cache can't say what's missing. `scope` narrows the pass; `nil`
+  /// follows the server's mode.
+  @discardableResult
+  func fillContents(
+    scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
+  ) async throws -> DetailFillOutcome
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -323,6 +346,11 @@ extension CachingBackend {
   @discardableResult
   public func fillDocumentDetails() async throws -> DetailFillOutcome {
     try await fillDocumentDetails(progress: nil)
+  }
+
+  @discardableResult
+  public func fillContents() async throws -> DetailFillOutcome {
+    try await fillContents(scope: nil, progress: nil, hasRoom: { true })
   }
 
   public func reconcileDocumentChanges() async throws {
@@ -891,6 +919,58 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return DetailFillOutcome(failure: failure, failed: failed)
   }
 
+  @discardableResult
+  public func fillContents(
+    scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
+  ) async throws -> DetailFillOutcome {
+    // Read for every batch: leaving Entire library mid-pass narrows the rest of it.
+    var currentScope: LibraryFileScope {
+      scope ?? (offlineBrowsingMode == .entireLibrary ? .library : .keptOffline)
+    }
+    progress?(SyncActivity(stage: .contentFill))
+    defer { progress?(nil) }
+
+    let total = try await database.countDocumentsNeedingContent(
+      serverID: serverID, scope: currentScope)
+    var done = 0
+    var received = 0
+    var failure: (any Error)?
+    var failed = 0
+    var lowStorage = false
+    // Walks down by id, so a document whose text didn't come back fresh
+    // (deleted, or edited since its row was cached) is not asked for again.
+    var below: UInt?
+    while true {
+      try Task.checkCancellation()
+      progress?(SyncActivity(stage: .contentFill, completed: done, total: total))
+      let ids = try await database.documentsNeedingContent(
+        serverID: serverID, scope: currentScope, below: below, limit: ContentFillPolicy.batchSize
+      ).map(\.documentID)
+      guard let last = ids.last else { break }
+      // Texts are pinned, so eviction can't make room for them later.
+      guard hasRoom() else {
+        lowStorage = true
+        break
+      }
+      below = last
+      do {
+        received += try await NetworkTransfer.$category.withValue(.fill) {
+          try await wrapped.fetchContents(ids: ids).count
+        }
+      } catch is CancellationError {
+        throw CancellationError()
+      } catch {
+        failed += ids.count
+        failure = SyncFailureClass.firstSurfaced(failure, error)
+      }
+      done += ids.count
+    }
+    Logger.sync.info(
+      "Content fill: \(received, privacy: .public) of \(done, privacy: .public) texts received, \(failed, privacy: .public) failed"
+    )
+    return DetailFillOutcome(failure: failure, failed: failed, lowStorage: lowStorage)
+  }
+
   /// Record a saved view's failure for the Offline & Sync screen, unless the
   /// device is offline: that says nothing about the view. An error the view
   /// already has stays until it next syncs. Returns whether it was recorded.
@@ -1311,6 +1391,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let fetched = try await wrapped.documents(ids: ids)
     try await database.upsertDocuments(fetched, serverID: serverID)
     return fetched
+  }
+
+  public func fetchContents(ids: [UInt]) async throws -> Set<UInt> {
+    try await wrapped.fetchContents(ids: ids)
   }
 
   public func document(asn: UInt) async throws -> Document? {

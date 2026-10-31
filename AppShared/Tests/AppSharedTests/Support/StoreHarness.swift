@@ -65,7 +65,8 @@ struct StoreHarness {
     permissions: UserPermissions = .full,
     settings: UISettingsSettings = UISettingsSettings(),
     suspension: DatabaseSuspensionController? = nil,
-    fileDownloader: ((Database, UUID, any Repository) -> LibraryFileDownloader)? = nil
+    fileDownloader: ((Database, UUID, any Repository) -> LibraryFileDownloader)? = nil,
+    contentStore: ContentStore? = nil
   ) async throws -> StoreHarness {
     let serverID = UUID()
     let database = try Database.seeded(
@@ -78,6 +79,7 @@ struct StoreHarness {
     let downloader = fileDownloader?(database, serverID, caching)
     let session = ServerSession(
       serverID: serverID, repository: caching, suspension: suspension,
+      contentReclaimer: contentStore.map { ContentReclaimer(database: database, store: $0) },
       fileDownloader: downloader)
     let store = DocumentStore(session: session)
     try await waitUntil({ store.permissionsKnown }, "projection never hydrated")

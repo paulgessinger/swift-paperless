@@ -298,6 +298,28 @@ struct FileIndexTests {
       budget: 0, protectAccessedAfter: date(9000))
     #expect(candidates.compactMap(\.key) == [key(server, 1, .original)])
   }
+
+  @Test("A text is evictable unless its document is kept, like the archive")
+  func keptTextsAreNotEvictable() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    try addServer(server, to: database)
+    try await record(database, key(server, 1, .content), size: 40, accessed: date(1000))
+    try await record(database, key(server, 2, .content), size: 40, accessed: date(1000))
+    try await record(database, key(server, 2, .thumbnail), size: 40, accessed: date(2000))
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+
+    #expect(try await database.evictableFileBytes() == 40)
+    let candidates = try await database.evictionCandidates(
+      budget: 0, protectAccessedAfter: date(9000))
+    // The newest evictable row always stays, and it is the only one.
+    #expect(candidates.isEmpty)
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: false)
+    #expect(try await database.evictableFileBytes() == 80)
+    #expect(
+      try await database.evictionCandidates(budget: 0, protectAccessedAfter: date(9000))
+        .compactMap(\.key).count == 1)
+  }
 }
 
 extension Database {

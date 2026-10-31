@@ -79,6 +79,19 @@ import Testing
     #expect(endpoint.queryItems.contains { $0.name == "full_perms" && $0.value == "true" })
   }
 
+  @Test func testDocumentContentsByIDs() {
+    let endpoint = Endpoint.documentContents(ids: [3, 1])
+    #expect(endpoint.path == "/api/documents")
+    #expect(endpoint.queryItems.contains { $0.name == "id__in" && $0.value == "3,1" })
+    #expect(endpoint.queryItems.contains { $0.name == "page_size" && $0.value == "2" })
+    #expect(
+      endpoint.queryItems.contains {
+        $0.name == "fields" && $0.value == "id,modified,versions,content"
+      })
+    // The text is wanted whole.
+    #expect(!endpoint.queryItems.contains { $0.name == "truncate_content" })
+  }
+
   @Test func testDocumentIDFilterNeedsVersion2() {
     #expect(!BackendFeature.documentIDFilter.isSupported(on: Version(1, 17, 4), api: 3))
     #expect(BackendFeature.documentIDFilter.isSupported(on: Version(2, 0, 0), api: 3))

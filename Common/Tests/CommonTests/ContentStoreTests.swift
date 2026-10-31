@@ -294,6 +294,32 @@ struct ContentStoreTests {
     #expect(try Data(contentsOf: url) == Data("png2".utf8))
   }
 
+  @Test("Text is stored compressed and read back as written")
+  func textRoundTrip() throws {
+    let (store, _) = try Self.makeStore()
+    let key = Self.key(kind: .content)
+    #expect(try store.text(for: key) == nil)
+    let text = String(repeating: "Rechnung Nr. 4711 – Müller GmbH\n", count: 200)
+
+    let size = try store.storeText(text, for: key)
+
+    #expect(store.url(for: key).lastPathComponent == "content.zlib")
+    #expect(try store.text(for: key) == text)
+    #expect(size == store.size(of: key))
+    let compressed = try Data(contentsOf: store.url(for: key))
+    #expect(compressed.count < Data(text.utf8).count)
+    #expect(store.inventory().map(\.key) == [key])
+    _ = try store.storeText("", for: key)
+    #expect(try store.text(for: key) == "")
+  }
+
+  @Test("The text checksum depends on the text alone")
+  func textChecksum() {
+    #expect(ContentStore.checksum(of: "a") == ContentStore.checksum(of: "a"))
+    #expect(ContentStore.checksum(of: "a") != ContentStore.checksum(of: "b"))
+    #expect(ContentStore.checksum(of: "").count == 64)
+  }
+
   @Test("size reports the stored blob and nil for an absent one")
   func sizeOfBlob() throws {
     let (store, _) = try Self.makeStore()

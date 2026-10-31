@@ -800,10 +800,15 @@ extension ApiRepository: Repository {
       Logger.networking.info(
         "ContentStore hit for documentID \(document.id) version \(version) (original: \(original))"
       )
-      // Not awaited: a hit must not wait on the writer.
+      // Not awaited: a hit must not wait on the writer. An open uses the
+      // version's text too, so it counts for both.
+      let textKey = ContentStore.Key(
+        serverID: connection.serverID, versionID: version, kind: .content)
       Task { [fileIndex] in
         do {
-          try await fileIndex.recordAccess(key, at: Date())
+          let now = Date()
+          try await fileIndex.recordAccess(key, at: now)
+          try await fileIndex.recordAccess(textKey, at: now)
         } catch {
           Logger.networking.debug("Recording a file access failed: \(error)")
         }
@@ -979,6 +984,44 @@ extension ApiRepository: Repository {
     }
   }
 
+  // MARK: - Text
+
+  /// Keep a document's full text in the content store, filed under the
+  /// version and `modified` it was fetched against. Never for truncated text,
+  /// so never from a list. Failures are logged, not thrown: the text rides
+  /// along with a fetch that has already succeeded.
+  func storeText(_ text: String, documentID: UInt, versionID: UInt, modified: Date?) async {
+    guard let contentStore, let fileIndex, let modified else { return }
+    let key = ContentStore.Key(
+      serverID: connection.serverID, versionID: versionID, kind: .content)
+    await Self.storeText(
+      text, key: key, documentID: documentID, modified: modified, in: contentStore,
+      index: fileIndex)
+  }
+
+  /// Off the main actor: compressing a long text takes a while.
+  private nonisolated static func storeText(
+    _ text: String, key: ContentStore.Key, documentID: UInt, modified: Date,
+    in contentStore: ContentStore, index fileIndex: any FileIndex
+  ) async {
+    let checksum = ContentStore.checksum(of: text)
+    do {
+      var storedAt = Date()
+      // An unchanged text is re-dated rather than rewritten, as a 304 is: the
+      // touch protects it from a reclaim that claimed the old row.
+      let stored = contentStore.exists(key) ? try? await fileIndex.storedChecksum(key) : nil
+      if stored != checksum || (try? contentStore.touch(key, at: storedAt)) == nil {
+        try contentStore.storeText(text, for: key)
+        storedAt = Date()
+      }
+      try await fileIndex.recordStore(
+        key, documentID: documentID, size: contentStore.size(of: key) ?? 0, modified: modified,
+        checksum: checksum, storedAt: storedAt)
+    } catch {
+      Logger.networking.error("Storing a document's text failed: \(error)")
+    }
+  }
+
   public func tag(id: UInt) async throws -> Tag? {
     try await get(ApiTag.self, endpoint: .tag(id: id))?.domain
   }
@@ -1069,7 +1112,17 @@ extension ApiRepository: Repository {
   }
 
   public func document(id: UInt) async throws -> Document? {
-    try await get(ApiDocument.self, endpoint: .document(id: id))?.domain
+    guard let fetched = try await get(ApiDocument.self, endpoint: .document(id: id)) else {
+      return nil
+    }
+    let document = fetched.domain
+    // The detail endpoint sends the full text, so the open keeps it too.
+    if let content = fetched.content {
+      await storeText(
+        content, documentID: document.id, versionID: document.currentVersionID,
+        modified: document.modified)
+    }
+    return document
   }
 
   public func documents(ids: [UInt]) async throws -> [Document] {
@@ -1077,6 +1130,24 @@ extension ApiRepository: Repository {
     guard supports(feature: .documentIDFilter) else { return try await documentsOneByOne(ids: ids) }
     return try await send(endpoint: .documents(ids: ids), returns: ListResponse<ApiDocument>.self)
       .results.map(\.domain)
+  }
+
+  public func fetchContents(ids: [UInt]) async throws -> Set<UInt> {
+    guard !ids.isEmpty else { return [] }
+    // `document(id:)` keeps the text of each.
+    guard supports(feature: .documentIDFilter) else {
+      return Set(try await documentsOneByOne(ids: ids).map(\.id))
+    }
+    let results = try await send(
+      endpoint: .documentContents(ids: ids), returns: ListResponse<ApiDocumentContent>.self
+    ).results
+    for document in results {
+      guard let content = document.content else { continue }
+      await storeText(
+        content, documentID: document.id, versionID: document.currentVersionID,
+        modified: document.modified)
+    }
+    return Set(results.filter { $0.content != nil }.map(\.id))
   }
 
   public func document(asn: UInt) async throws -> Document? {
