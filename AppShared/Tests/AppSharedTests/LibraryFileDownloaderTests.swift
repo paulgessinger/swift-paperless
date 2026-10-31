@@ -93,7 +93,8 @@ struct LibraryFileDownloaderTests {
     index: ((ContentReclaimer) -> any FileIndex)? = nil,
     repositoryLookup: (@MainActor @Sendable () async throws -> any Repository)? = nil,
     repositoryTimeout: Duration = .seconds(10),
-    backgroundEventsDeadline: Duration = .seconds(20)
+    backgroundEventsDeadline: Duration = .seconds(20),
+    sessionCreated: ((URLSession) -> Void)? = nil
   ) async throws -> Fixture {
     let database = try Database.seeded(serverID: server, documents: documents.map(doc))
     if storedThumbnails {
@@ -127,7 +128,11 @@ struct LibraryFileDownloaderTests {
       availableCapacity: { _ in freeSpace },
       window: window, displayInterval: .zero, repositoryTimeout: repositoryTimeout,
       backgroundEventsDeadline: backgroundEventsDeadline,
-      makeSession: StubDownloadURLProtocol.makeSession)
+      makeSession: { delegate in
+        let session = StubDownloadURLProtocol.makeSession(delegate: delegate)
+        sessionCreated?(session)
+        return session
+      })
     downloader.onFailure = { id, error in failures.errors.append((id, error)) }
     return Fixture(
       database: database, store: store, reclaimer: reclaimer, downloader: downloader,
@@ -189,6 +194,39 @@ struct LibraryFileDownloaderTests {
         $0.url?.path == "/documents/2/download" && $0.allowsExpensiveNetworkAccess
       }
     }
+    await fixture.downloader.invalidate()
+  }
+
+  @Test("Queueing now replaces a waiting file while the document's other file downloads")
+  func queueNowReplacesAFileBesideARunningOne() async throws {
+    let lease = await StubDownloadURLProtocol.lease()
+    defer { lease.release() }
+    let isThumbnail: @Sendable (URLRequest) -> Bool = { $0.url?.path.hasSuffix("/thumb") == true }
+    // Large enough that the session doesn't hold it back before counting it.
+    StubDownloadURLProtocol.responder = { isThumbnail($0) ? (200, Data(count: 1 << 20)) : nil }
+    StubDownloadURLProtocol.stalls = isThumbnail
+    var session: URLSession?
+    let fixture = try await makeFixture(
+      documents: [1], storedThumbnails: false, isEntireLibrary: false,
+      sessionCreated: { session = $0 })
+    try await fixture.database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+    #expect(try await fixture.downloader.refill(serverID: server) == .queued(1))
+    let downloads = try #require(session)
+    try await waitUntil {
+      await downloads.allTasks.contains {
+        $0.originalRequest.map(isThumbnail) == true && $0.countOfBytesReceived > 0
+      }
+    }
+
+    let outcome = try await fixture.downloader.queueNow(serverID: server, documentIDs: [1])
+
+    #expect(outcome == .queued(1))
+    try await waitUntil {
+      StubDownloadURLProtocol.requests.contains {
+        $0.url?.path == "/documents/1/download" && $0.allowsExpensiveNetworkAccess
+      }
+    }
+    #expect(StubDownloadURLProtocol.requests.filter(isThumbnail).count == 1)
     await fixture.downloader.invalidate()
   }
 

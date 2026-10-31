@@ -476,16 +476,15 @@ public final class LibraryFileDownloader {
       tasks[identifier] = nil
     }
 
-    let inFlightDocuments = Set(
-      tasks.values.filter { $0.id.key.serverID == serverID }.map(\.id.documentID))
+    // By file: a document's other file may still be downloading.
+    let inFlightKeys = Set(tasks.values.map(\.id.key))
     let candidates = try await database.documentsNeedingFiles(
-      serverID: serverID, scope: .keptOffline, only: documentIDs, excluding: inFlightDocuments,
-      limit: documentIDs.count
-    ).map { candidate in
+      serverID: serverID, scope: .keptOffline, only: documentIDs, limit: documentIDs.count
+    ).compactMap { candidate -> (LibraryFileCandidate, [ContentStore.Key])? in
       let keys = candidate.kinds.map {
         ContentStore.Key(serverID: serverID, versionID: candidate.versionID, kind: $0)
-      }
-      return (candidate, keys)
+      }.filter { !inFlightKeys.contains($0) }
+      return keys.isEmpty ? nil : (candidate, keys)
     }
     guard !candidates.isEmpty else {
       publish()
