@@ -8218,13 +8218,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         },
@@ -8236,31 +8236,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep offline"
           }
         }
@@ -8272,13 +8272,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         },
@@ -8290,31 +8290,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "The files of every document in this view download to this device and stay there while they are in the view."
           }
         }
@@ -8326,13 +8326,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         },
@@ -8344,31 +8344,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Documents in this view: %lld. Their files download to this device and stay there while they are in the view."
           }
         }
@@ -8380,13 +8380,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         },
@@ -8398,31 +8398,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Keep “%@” offline?"
           }
         }
@@ -14661,13 +14661,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         },
@@ -14679,31 +14679,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Stop keeping offline"
           }
         }

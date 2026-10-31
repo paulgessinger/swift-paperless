@@ -3903,13 +3903,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         },
@@ -3921,31 +3921,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%1$@ of %2$@ · %3$@"
           }
         }
@@ -3957,13 +3957,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         },
@@ -3975,31 +3975,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Their files download in the background and stay on this device. Swipe a view to stop keeping it."
           }
         }
@@ -4011,13 +4011,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         },
@@ -4029,31 +4029,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Kept offline"
           }
         }
@@ -4389,13 +4389,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         },
@@ -4407,31 +4407,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "All kept documents"
           }
         }
@@ -4443,13 +4443,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         },
@@ -4461,31 +4461,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Saved view unavailable"
           }
         }
@@ -4927,15 +4927,56 @@
       "comment" : "Activity label on the Offline & Sync screen while the full OCR text of documents is downloading",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloading document text…"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text…"
+          }
         }
       }
     },
-
     "offlineSyncFailureSiteFileFill" : {
       "comment" : "Name of a sync step in the Offline & Sync error list: downloading the library's document PDFs ahead of time",
       "extractionState" : "manual",
@@ -4994,15 +5035,56 @@
       "comment" : "Name of a sync step in the Offline & Sync error list: downloading the full OCR text of documents ahead of time",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloading document text"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading document text"
+          }
         }
       }
     },
-
     "offlineSyncFailureSiteKeptOffline" : {
       "comment" : "Offline & Sync, Sync errors: the reconcile step that fetches the rows of documents kept offline",
       "extractionState" : "manual",
