@@ -160,6 +160,42 @@
         }
       }
     },
+    "content" : {
+      "comment" : "Title of the sheet and button showing a document's OCR text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
+          }
+        }
+      }
+    },
+    "contentEmptyDescription" : {
+      "comment" : "Shown when no OCR text is stored for a document",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The text is downloaded when the document is opened while online."
+          }
+        }
+      }
+    },
+    "contentEmptyTitle" : {
+      "comment" : "Shown when no OCR text is stored for a document",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Content"
+          }
+        }
+      }
+    },
     "mediaFilename" : {
       "extractionState" : "manual",
       "localizations" : {

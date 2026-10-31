@@ -293,6 +293,10 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
     await wrapped.storedDownload(document: document, original: original)
   }
 
+  public func storedText(document: Document) async -> String? {
+    await wrapped.storedText(document: document)
+  }
+
   // MARK: - Suggestions
 
   public func suggestions(documentId: UInt) async throws -> Suggestions {
