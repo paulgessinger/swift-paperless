@@ -28,13 +28,19 @@ struct ContentFillTests {
       return document
     }
     let harness = try await StoreHarness.make(documents: documents, contentStore: contentStore)
-    try harness.database.upsertConnection(
+    try Self.setMode(mode, in: harness.database, serverID: harness.serverID)
+    return harness
+  }
+
+  private nonisolated static func setMode(
+    _ mode: String, in database: Database, serverID: UUID
+  ) throws {
+    try database.upsertConnection(
       ConnectionRecord(
-        id: harness.serverID,
+        id: serverID,
         url: URL(string: "https://paperless.example.com/api/")!,
         user: .init(id: 1, isSuperUser: true, username: "preview"),
         offlineBrowsingMode: mode))
-    return harness
   }
 
   private func contentStore() throws -> ContentStore {
@@ -124,6 +130,29 @@ struct ContentFillTests {
     #expect(outcome.lowStorage)
     #expect(outcome.failed == 0)
     #expect(await requests.batches.map(\.count) == [25])
+  }
+
+  @Test("Leaving Entire library mid-pass narrows the rest to the kept documents")
+  func narrowsOnDowngrade() async throws {
+    let harness = try await harness(documents: 60, mode: "entireLibrary")
+    try await harness.database.setKeptOffline(
+      serverID: harness.serverID, documentID: 2, kept: true)
+    let requests = Requests()
+    let database = harness.database
+    let serverID = harness.serverID
+    harness.transient.onFetchContents = { ids in
+      await requests.append(ids)
+      try Self.setMode("recentlyBrowsed", in: database, serverID: serverID)
+      return Set(ids)
+    }
+
+    let outcome = try await #require(harness.session.backend).fillContents()
+
+    #expect(outcome.failed == 0)
+    let batches = await requests.batches
+    #expect(batches.count == 2)
+    #expect(batches.first?.count == 25)
+    #expect(batches.last == [2])
   }
 
   @Test("Outside Entire library only the kept documents' texts are fetched")

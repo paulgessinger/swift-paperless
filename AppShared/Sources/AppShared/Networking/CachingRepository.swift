@@ -923,11 +923,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func fillContents(
     scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
   ) async throws -> DetailFillOutcome {
-    let scope = scope ?? (offlineBrowsingMode == .entireLibrary ? .library : .keptOffline)
+    // Read for every batch: leaving Entire library mid-pass narrows the rest of it.
+    var currentScope: LibraryFileScope {
+      scope ?? (offlineBrowsingMode == .entireLibrary ? .library : .keptOffline)
+    }
     progress?(SyncActivity(stage: .contentFill))
     defer { progress?(nil) }
 
-    let total = try await database.countDocumentsNeedingContent(serverID: serverID, scope: scope)
+    let total = try await database.countDocumentsNeedingContent(
+      serverID: serverID, scope: currentScope)
     var done = 0
     var received = 0
     var failure: (any Error)?
@@ -940,7 +944,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       try Task.checkCancellation()
       progress?(SyncActivity(stage: .contentFill, completed: done, total: total))
       let ids = try await database.documentsNeedingContent(
-        serverID: serverID, scope: scope, below: below, limit: ContentFillPolicy.batchSize
+        serverID: serverID, scope: currentScope, below: below, limit: ContentFillPolicy.batchSize
       ).map(\.documentID)
       guard let last = ids.last else { break }
       // Texts are pinned, so eviction can't make room for them later.
