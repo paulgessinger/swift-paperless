@@ -148,14 +148,23 @@ public final class DocumentStore: Sendable {
   }
 
   /// Keep a document on the device, or stop keeping it. Keeping queues its
-  /// archive at once; stopping leaves the file to the budget.
+  /// archive and fetches its text at once; stopping leaves the file to the
+  /// budget.
   public func setKeptOffline(_ documentID: UInt, _ kept: Bool) async throws {
     guard let session, let backend = session.backend else { return }
     try await backend.database.setKeptOffline(
       serverID: session.serverID, documentID: documentID, kept: kept)
     if kept {
       await session.fillFiles()
+      fillKeptContents(session)
     }
+  }
+
+  /// Fetch the kept documents' missing texts now, on any link: the user asked
+  /// for them, and only these, whatever the server's mode. In the background,
+  /// since a kept view's texts can take a while.
+  private func fillKeptContents(_ session: ServerSession) {
+    Task { await session.fillContents(scope: .keptOffline) }
   }
 
   /// The active server's saved views kept offline.
@@ -186,6 +195,7 @@ public final class DocumentStore: Sendable {
       serverID: session.serverID, savedViewID: savedView.id)
     try await backend.syncKeptOfflineView(savedViewID: savedView.id)
     await session.fillFiles()
+    fillKeptContents(session)
   }
 
   /// Stop keeping a saved view, by id: also one whose details are not cached.
@@ -1026,6 +1036,7 @@ extension DocumentStore {
       }
       if phases.contains(.files) {
         await session.fillFiles()
+        await session.fillContents()
       }
     }
   }

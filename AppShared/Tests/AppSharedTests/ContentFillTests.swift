@@ -19,13 +19,15 @@ struct ContentFillTests {
 
   private static let modified = Date(timeIntervalSince1970: 500)
 
-  private func harness(documents count: UInt, mode: String) async throws -> StoreHarness {
+  private func harness(
+    documents count: UInt, mode: String, contentStore: ContentStore? = nil
+  ) async throws -> StoreHarness {
     let documents = (1...count).map { id in
       var document = document(id)
       document.modified = Self.modified
       return document
     }
-    let harness = try await StoreHarness.make(documents: documents)
+    let harness = try await StoreHarness.make(documents: documents, contentStore: contentStore)
     try harness.database.upsertConnection(
       ConnectionRecord(
         id: harness.serverID,
@@ -33,6 +35,22 @@ struct ContentFillTests {
         user: .init(id: 1, isSuperUser: true, username: "preview"),
         offlineBrowsingMode: mode))
     return harness
+  }
+
+  private func contentStore() throws -> ContentStore {
+    try ContentStore(
+      root: FileManager.default.temporaryDirectory
+        .appendingPathComponent("ContentFillTests-\(UUID().uuidString)"))
+  }
+
+  /// The first batch the fill asked for, which a keep starts in the background;
+  /// `nil` when none arrives within five seconds.
+  private func firstBatch(of requests: Requests) async throws -> [UInt]? {
+    for _ in 0..<2500 {
+      if let batch = await requests.batches.first { return batch }
+      try await Task.sleep(for: .milliseconds(2))
+    }
+    return nil
   }
 
   /// Record a fresh text row for each id, as the repository would.
@@ -97,7 +115,7 @@ struct ContentFillTests {
     var checks = 0
 
     let outcome = try await #require(harness.session.backend).fillContents(
-      progress: nil,
+      scope: nil, progress: nil,
       hasRoom: {
         checks += 1
         return checks <= 1
@@ -121,6 +139,55 @@ struct ContentFillTests {
 
     _ = try await #require(harness.session.backend).fillContents()
 
+    #expect(await requests.batches == [[2]])
+  }
+
+  @Test("A foreground files phase fetches the kept documents' texts")
+  func foregroundFillReachesTheTexts() async throws {
+    let harness = try await harness(
+      documents: 5, mode: "recentlyBrowsed", contentStore: contentStore())
+    try await harness.database.setKeptOffline(
+      serverID: harness.serverID, documentID: 2, kept: true)
+    let requests = Requests()
+    harness.transient.onFetchContents = { ids in
+      await requests.append(ids)
+      return Set(ids)
+    }
+
+    await harness.store.fillIfEnabled(phases: [.files])
+
+    #expect(await requests.batches == [[2]])
+  }
+
+  @Test("Keeping a document fetches its text")
+  func keepingFetchesTheText() async throws {
+    let harness = try await harness(
+      documents: 5, mode: "recentlyBrowsed", contentStore: contentStore())
+    let requests = Requests()
+    harness.transient.onFetchContents = { ids in
+      await requests.append(ids)
+      return Set(ids)
+    }
+
+    try await harness.store.setKeptOffline(2, true)
+
+    #expect(try await firstBatch(of: requests) == [2])
+  }
+
+  @Test("Keeping on an Entire library server fetches only the kept texts")
+  func keepingStaysInKeptScope() async throws {
+    let harness = try await harness(
+      documents: 30, mode: "entireLibrary", contentStore: contentStore())
+    let requests = Requests()
+    harness.transient.onFetchContents = { ids in
+      await requests.append(ids)
+      return Set(ids)
+    }
+
+    try await harness.store.setKeptOffline(2, true)
+
+    #expect(try await firstBatch(of: requests) == [2])
+    try await waitUntil({ !harness.session.isSyncing }, "the text fill never finished")
     #expect(await requests.batches == [[2]])
   }
 }

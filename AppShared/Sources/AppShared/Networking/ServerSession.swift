@@ -329,12 +329,13 @@ public final class ServerSession {
     serverID: UUID,
     repository: any Repository & CachingBackend,
     suspension: DatabaseSuspensionController? = nil,
+    contentReclaimer: ContentReclaimer? = nil,
     fileDownloader: LibraryFileDownloader? = nil
   ) {
     self.serverID = serverID
     source = .fixed(repository)
     self.suspension = suspension ?? DatabaseSuspensionController()
-    contentReclaimer = nil
+    self.contentReclaimer = contentReclaimer
     self.fileDownloader = fileDownloader
     recorder = SyncRunRecorder(database: repository.database, serverID: serverID)
     state = .ready
@@ -760,9 +761,10 @@ public final class ServerSession {
   /// Proactive document texts, for the same documents as ``fillFiles()``.
   /// Runs after it, and to the end unless free space falls below the floor.
   /// `true` also when there is nothing to fetch or it stopped for space;
-  /// `false` when it errored or was called off.
+  /// `false` when it errored or was called off. `scope` narrows the pass;
+  /// `nil` follows the server's mode.
   @discardableResult
-  public func fillContents() async -> Bool {
+  public func fillContents(scope: LibraryFileScope? = nil) async -> Bool {
     guard let backend = current, let store = contentReclaimer?.store else {
       recordSuccess(at: .contentFill)
       return true
@@ -774,6 +776,7 @@ public final class ServerSession {
         let root = store.root
         do {
           let outcome = try await backend.fillContents(
+            scope: scope,
             progress: { self?.report($0, for: .contentFill) },
             hasRoom: {
               (LibraryFileDownloader.volumeCapacity(of: root) ?? .max)

@@ -227,10 +227,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// cancellation or by `hasRoom` turning false before a batch. A batch that
   /// fails doesn't abort the pass, and each document is asked for once per
   /// pass, whether its text came back fresh or not. Throws when cancelled or
-  /// when the cache can't say what's missing.
+  /// when the cache can't say what's missing. `scope` narrows the pass; `nil`
+  /// follows the server's mode.
   @discardableResult
-  func fillContents(progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool)
-    async throws -> DetailFillOutcome
+  func fillContents(
+    scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
+  ) async throws -> DetailFillOutcome
 
   /// Rebuild the cached membership (`query_order`) of the default list and every
   /// saved view from the cheap Tier-0 id projection, so documents that newly
@@ -348,7 +350,7 @@ extension CachingBackend {
 
   @discardableResult
   public func fillContents() async throws -> DetailFillOutcome {
-    try await fillContents(progress: nil, hasRoom: { true })
+    try await fillContents(scope: nil, progress: nil, hasRoom: { true })
   }
 
   public func reconcileDocumentChanges() async throws {
@@ -918,11 +920,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   @discardableResult
-  public func fillContents(progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool)
-    async throws -> DetailFillOutcome
-  {
-    let scope: LibraryFileScope =
-      offlineBrowsingMode == .entireLibrary ? .library : .keptOffline
+  public func fillContents(
+    scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
+  ) async throws -> DetailFillOutcome {
+    let scope = scope ?? (offlineBrowsingMode == .entireLibrary ? .library : .keptOffline)
     progress?(SyncActivity(stage: .contentFill))
     defer { progress?(nil) }
 
