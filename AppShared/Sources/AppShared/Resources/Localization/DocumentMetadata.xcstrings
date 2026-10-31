@@ -164,10 +164,52 @@
       "comment" : "Title of the sheet and button showing a document's OCR text",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indhold"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inhalt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Content"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenuto"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inhoud"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zawartość"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İçerik"
           }
         }
       }
@@ -176,10 +218,52 @@
       "comment" : "Shown when no OCR text is stored for a document",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teksten hentes, når dokumentet åbnes online."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Text wird heruntergeladen, wenn das Dokument online geöffnet wird."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The text is downloaded when the document is opened while online."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le texte est téléchargé à l'ouverture du document en ligne."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il testo viene scaricato quando il documento viene aperto online."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De tekst wordt gedownload wanneer het document online wordt geopend."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekst zostanie pobrany po otwarciu dokumentu w trybie online."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metin, doküman çevrimiçiyken açıldığında indirilir."
           }
         }
       }
@@ -188,10 +272,52 @@
       "comment" : "Shown when no OCR text is stored for a document",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intet indhold"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Inhalt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Content"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun contenu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun contenuto"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen inhoud"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak zawartości"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İçerik yok"
           }
         }
       }
