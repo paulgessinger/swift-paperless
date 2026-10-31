@@ -138,6 +138,10 @@ class DocumentDetailModel {
 
   var document: Document
 
+  /// The first `loadDocument` has ended, either way. A successful one stored
+  /// the document's text, usually without changing `document.modified`.
+  var isDocumentLoaded = false
+
   // Not fully used by the edit model yet (I think we're loading suggestions twice right now)
   var suggestions = Suggestions()
 
@@ -382,6 +386,7 @@ class DocumentDetailModel {
       Logger.shared.error("Error updating document with full perms for editing: \(error)")
       onError?(error)
     }
+    isDocumentLoaded = true
 
     // On a refresh with the PDF already on screen there is nothing to wait for
     // (`provisionalDownload` is nil).

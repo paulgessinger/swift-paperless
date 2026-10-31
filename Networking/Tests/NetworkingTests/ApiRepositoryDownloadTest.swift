@@ -780,6 +780,27 @@ struct ApiRepositoryDownloadTest {
     #expect(entry.size == store.size(of: Self.contentKey))
   }
 
+  @Test("The stored text is read without the network and without recording an access")
+  func storedTextReadsTheStore() async throws {
+    let (store, _) = try Self.makeStore()
+    let index = InMemoryFileIndex()
+    let repo = Self.makeRepo(contentStore: store, index: index)
+    let document = Self.makeDocument()
+    #expect(await repo.storedText(document: document) == nil)
+
+    _ = try store.storeText("Rechnung 4711", for: Self.contentKey)
+    let counter = Counter()
+    DownloadMockURLProtocol.responder = { req in
+      counter.bump()
+      return (Self.jsonResponse(for: req), Data())
+    }
+    defer { DownloadMockURLProtocol.reset() }
+
+    #expect(await repo.storedText(document: document) == "Rechnung 4711")
+    #expect(counter.value == 0)
+    #expect(await index.accesses.isEmpty)
+  }
+
   @Test("An unchanged text is re-recorded against the new modified without a rewrite")
   func unchangedTextIsNotRewritten() async throws {
     let (store, _) = try Self.makeStore()
