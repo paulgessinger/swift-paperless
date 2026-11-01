@@ -30,7 +30,13 @@ struct DocumentDuplicatesView: View {
         open(duplicate.id)
       } label: {
         LabeledContent(title(of: duplicate)) {
-          Text(verbatim: "#\(duplicate.id)")
+          HStack {
+            Text(verbatim: "#\(duplicate.id)")
+            Image(systemName: "chevron.right")
+              .font(.footnote)
+              .fontWeight(.semibold)
+              .foregroundStyle(.tertiary)
+          }
         }
       }
       .tint(.primary)
