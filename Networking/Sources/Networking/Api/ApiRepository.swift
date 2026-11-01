@@ -31,6 +31,7 @@ public class ApiRepository {
     let mode: Mode
 
   private let urlSession: URLSession
+  private let connections: SessionConnections
   private let urlSessionDelegate: PaperlessURLSessionDelegate
   private let thumbnailSessionDelegate: PaperlessURLSessionDelegate
   private let contentStore: ContentStore?
@@ -99,6 +100,7 @@ public class ApiRepository {
     fileIndex: (any FileIndex)? = nil,
     urlSession: URLSession, apiVersion: UInt? = nil,
     backendVersion: Version? = nil,
+    connectionEpoch: ConnectionEpoch = .shared,
     onVersionsChange: (@MainActor (BackendVersions) -> Void)? = nil
   ) {
     self.connection = connection
@@ -109,6 +111,7 @@ public class ApiRepository {
     urlSessionDelegate = delegate
     thumbnailSessionDelegate = Self.makeThumbnailSessionDelegate(from: delegate)
     self.urlSession = urlSession
+    connections = SessionConnections(session: urlSession, epoch: connectionEpoch)
     self.apiVersion = apiVersion
     self.backendVersion = backendVersion
     self.onVersionsChange = onVersionsChange
@@ -141,6 +144,7 @@ public class ApiRepository {
     urlSessionDelegate = delegate
     thumbnailSessionDelegate = Self.makeThumbnailSessionDelegate(from: delegate)
     urlSession = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+    connections = SessionConnections(session: urlSession, epoch: .shared)
 
     if let knownVersions {
       // Serve from the last-known versions right away; the server's answer
@@ -312,7 +316,7 @@ public class ApiRepository {
     do {
       return try await Self.fetchData(
         for: request, expectedStatus: expectedStatus, progress: progress, cachePolicy: cachePolicy,
-        urlSession: urlSession
+        connections: connections
       )
     } catch RequestError.unsupportedVersion(let sentVersion) {
       // The backend rejected our API version. This is the recovery path for a
@@ -333,7 +337,7 @@ public class ApiRepository {
           "application/json; version=\(version)", forHTTPHeaderField: "Accept")
         return try await Self.fetchData(
           for: retry, expectedStatus: expectedStatus, progress: progress,
-          cachePolicy: cachePolicy, urlSession: urlSession
+          cachePolicy: cachePolicy, connections: connections
         )
       }
 
@@ -394,6 +398,7 @@ public class ApiRepository {
     }
 
     let task = Task<UInt?, Never> {
+      await connections.refresh()
       let probe = await Self.loadBackendVersions(urlSession: urlSession, connection: connection)
       switch probe {
       case .found(let versions):
@@ -428,20 +433,45 @@ public class ApiRepository {
     return await task.value
   }
 
+  /// Timeout of a read's first attempt. A connection left over from an earlier
+  /// network path fails this one; the retry gets the request's full timeout, so
+  /// a slow server is not held to it.
+  nonisolated static let firstReadTimeout: TimeInterval = 20
+
+  nonisolated private static func isRead(_ request: URLRequest) -> Bool {
+    let method = request.httpMethod ?? "GET"
+    return method == "GET" || method == "HEAD"
+  }
+
   /// Whether a request that failed with `error` is retried once: only reads,
   /// since a write that timed out may already have been applied, and only for
   /// a connection that stalled or dropped mid-flight.
-  nonisolated static func retriesOnce(_ request: URLRequest, after error: URLError) -> Bool {
-    let method = request.httpMethod ?? "GET"
-    guard method == "GET" || method == "HEAD" else { return false }
-    return error.code == .timedOut || error.code == .networkConnectionLost
+  ///
+  /// A failure to resolve or reach the host also retries if the connection
+  /// epoch moved during the attempt (`connectionsChanged`): a VPN came up, say.
+  /// Without that, those failures are final, or a mistyped address would be
+  /// retried for nothing.
+  nonisolated static func retriesOnce(
+    _ request: URLRequest, after error: any Error, connectionsChanged: Bool
+  ) -> Bool {
+    guard isRead(request) else { return false }
+    if error is ConnectionEpochChanged { return true }
+    guard let error = error as? URLError else { return false }
+    switch error.code {
+    case .timedOut, .networkConnectionLost:
+      return true
+    case .cannotFindHost, .dnsLookupFailed, .cannotConnectToHost:
+      return connectionsChanged
+    default:
+      return false
+    }
   }
 
   private static func fetchData(
     for request: URLRequest, expectedStatus: HTTPStatusCode = .ok,
     progress: (@Sendable (Double) -> Void)? = nil,
     cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalCacheData,
-    urlSession: URLSession
+    connections: SessionConnections
   ) async throws -> (Data, URLResponse) {
     var request = request
 
@@ -484,8 +514,12 @@ public class ApiRepository {
     // silently collapsed the whole breakdown into "Other".
     let transferCategory = NetworkTransfer.category
 
-    func load() async throws -> (Data, URLResponse) {
-      try await urlSession.getData(for: request, progress: progress) { sent, received in
+    let sentRequest = request
+    @Sendable func load(timeout: TimeInterval? = nil) async throws -> (Data, URLResponse) {
+      var attempt = sentRequest
+      if let timeout { attempt.timeoutInterval = min(attempt.timeoutInterval, timeout) }
+      return try await connections.session.getData(for: attempt, progress: progress) {
+        sent, received in
         // Best-effort data-transfer accounting. Wire bytes from the task
         // metrics, not `data.count`: the API gzips well, so the decoded length
         // overstated actual traffic several-fold, and a `URLCache` hit counted
@@ -494,16 +528,32 @@ public class ApiRepository {
       }
     }
 
+    let epoch = connections.epoch.value
+    await connections.refresh()
+
     let result: (Data, URLResponse)
     do {
       do {
-        result = try await load()
-      } catch let error as URLError where Self.retriesOnce(request, after: error) {
-        // Typically a pooled connection that died while the device slept (or a
-        // VPN re-established its path); a second attempt opens a fresh one.
+        // A read with a progress reader is a file transfer: restarting it would
+        // lose what it has received, and its pauses aren't a stale connection.
+        if isRead(request), progress == nil {
+          result = try await connections.epoch.cancellingOnChange(from: epoch) {
+            try await load(timeout: firstReadTimeout)
+          }
+        } else {
+          result = try await load()
+        }
+      } catch
+        where Self.retriesOnce(
+          request, after: error, connectionsChanged: connections.epoch.value != epoch)
+      {
+        // Typically a pooled connection that died while the device slept, or an
+        // attempt stranded on the path a VPN just replaced; a second attempt
+        // opens a fresh one.
         Logger.networking.notice(
-          "Retrying \(request.httpMethod ?? "GET", privacy: .public) \(sanitizedUrl, privacy: .public) once after \(error.code.rawValue)"
+          "Retrying \(request.httpMethod ?? "GET", privacy: .public) \(sanitizedUrl, privacy: .public) once after \(String(describing: error), privacy: .public)"
         )
+        await connections.refresh()
         result = try await load()
       }
     } catch let error where error.isCancellationError {
@@ -861,6 +911,7 @@ extension ApiRepository: Repository {
         // Coalesced callers share this one task, so its bytes are recorded once.
         let (tempURL, response): (URL, URLResponse)
         do {
+          await self.connections.refresh()
           (tempURL, response) = try await self.urlSession.getDownload(
             for: request, progress: report, onTransfer: Self.recordDocumentTransfer)
         } catch {
@@ -964,6 +1015,7 @@ extension ApiRepository: Repository {
       .download(documentId: documentID, original: original, version: version))
     let (tempURL, response): (URL, URLResponse)
     do {
+      await connections.refresh()
       (tempURL, response) = try await urlSession.getDownload(
         for: request, progress: progress, onTransfer: Self.recordDocumentTransfer)
     } catch {

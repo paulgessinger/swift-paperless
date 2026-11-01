@@ -40,9 +40,21 @@ public final class NetworkMonitor {
   /// facts are only meaningful together, and every consumer wants both.
   public private(set) var cost: LinkCost = .unrestricted
 
+  /// Counts changes of the route to the network while a path is in use, such as
+  /// a VPN tunnel coming up, which `isOnline` doesn't show: the device was
+  /// already online. Observe it to retry what failed on the previous route.
+  public private(set) var routeChangeCount = 0
+
   /// Whether a path has been reported. Until then `isOnline` and `cost` are
   /// defaults, not readings.
   @ObservationIgnored private var hasReportedPath = false
+
+  @ObservationIgnored private var route: [String]?
+  @ObservationIgnored private var backgroundedAt: ContinuousClock.Instant?
+
+  /// How long the app stays in the background before its pooled connections are
+  /// presumed dead.
+  private static let staleConnectionAge: Duration = .seconds(30)
 
   @ObservationIgnored private let monitor = NWPathMonitor()
   @ObservationIgnored private let queue = DispatchQueue(label: "NetworkMonitor.queue")
@@ -55,6 +67,8 @@ public final class NetworkMonitor {
       // properties below only catch up after a hop to the main actor — too
       // late for a request failing right after the path changes.
       NetworkPathProbe.update(interfaceSatisfied: online)
+      let route = path.availableInterfaces.map(\.name) + path.gateways.map(\.debugDescription)
+      ConnectionEpoch.shared.update(route: route)
       let cost = LinkCost(isExpensive: path.isExpensive, isConstrained: path.isConstrained)
       Task { @MainActor [weak self] in
         guard let self else { return }
@@ -64,6 +78,11 @@ public final class NetworkMonitor {
           self.interfaceOnline = online
         }
         if self.cost != cost { self.cost = cost }
+        if let previous = self.route, previous != route {
+          Logger.shared.info("NetworkMonitor: route changed")
+          self.routeChangeCount += 1
+        }
+        self.route = route
         self.hasReportedPath = true
       }
     }
@@ -72,6 +91,19 @@ public final class NetworkMonitor {
 
   deinit {
     monitor.cancel()
+  }
+
+  /// Call when the app moves to the background.
+  public func didEnterBackground() {
+    backgroundedAt = .now
+  }
+
+  /// Call when the app returns to the foreground, before its first request.
+  public func willEnterForeground() {
+    defer { backgroundedAt = nil }
+    guard let backgroundedAt, backgroundedAt.duration(to: .now) >= Self.staleConnectionAge
+    else { return }
+    ConnectionEpoch.shared.invalidate()
   }
 
   /// The current path's cost, or `nil` if there is no usable path.
