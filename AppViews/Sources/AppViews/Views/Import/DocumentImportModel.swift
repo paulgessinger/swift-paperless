@@ -27,17 +27,20 @@ public class DocumentImportModel: ObservableObject {
   public func reset() {
     importUrls = []
     totalUrls = 0
+    done = false
   }
 
   public func next() -> URL? {
     importUrls.first
   }
 
+  /// Advances past the current file, or sets `done` if it was the last one.
+  /// The last URL stays queued so its form remains visible while the sheet
+  /// closes; `reset()` clears it.
   public func pop() {
     if importUrls.count > 1 {
       importUrls.removeFirst()
-    }
-    if importUrls.count == 1 {
+    } else {
       done = true
     }
   }
