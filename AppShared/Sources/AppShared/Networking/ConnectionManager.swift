@@ -27,6 +27,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   /// The server's versions as last probed, which seed its repository so
   /// activation needs no network. `nil` until a probe has succeeded.
   public var knownVersions: BackendVersions? = nil
+  /// Ids of the tags preselected when uploading to this server.
+  public var defaultUploadTags: [UInt] = []
 
   public init(
     id: UUID = .init(),
@@ -37,7 +39,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     friendlyName: String? = nil,
     offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed,
     syncOverCellular: Bool = false,
-    knownVersions: BackendVersions? = nil
+    knownVersions: BackendVersions? = nil,
+    defaultUploadTags: [UInt] = []
   ) {
     self.id = id
     self.url = url
@@ -48,6 +51,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.offlineBrowsingMode = offlineBrowsingMode
     self.syncOverCellular = syncOverCellular
     self.knownVersions = knownVersions
+    self.defaultUploadTags = defaultUploadTags
   }
 
   public var token: String? {
@@ -567,6 +571,25 @@ public final class ConnectionManager {
         stored.toRecord(needsAuth: needsAuthIds.contains(stored.id)))
     } catch {
       Logger.api.error("setSyncOverCellular DB write failed: \(error)")
+    }
+  }
+
+  /// Takes the server rather than using the active one: tag ids belong to the
+  /// server they were picked on, and the active server can move while a picker
+  /// for the previous one is still open.
+  public func setDefaultUploadTags(_ tags: [UInt], for id: UUID) {
+    guard var stored = connections[id] else {
+      Logger.api.warning("Tried to set default upload tags on an unknown connection")
+      return
+    }
+    guard stored.defaultUploadTags != tags else { return }
+    stored.defaultUploadTags = tags
+    connections[id] = stored
+    do {
+      try database.upsertConnection(
+        stored.toRecord(needsAuth: needsAuthIds.contains(stored.id)))
+    } catch {
+      Logger.api.error("setDefaultUploadTags DB write failed: \(error)")
     }
   }
 

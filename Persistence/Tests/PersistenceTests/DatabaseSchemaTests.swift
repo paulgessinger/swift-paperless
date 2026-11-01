@@ -16,6 +16,7 @@ struct DatabaseSchemaTests {
         names == [
           "id", "url", "friendly_name", "identity", "user", "extra_headers", "needs_auth",
           "offline_browsing_mode", "sync_over_cellular", "api_version", "backend_version",
+          "default_upload_tags",
         ])
 
       // Added by V8 on an existing table, so it needs a default for every row
@@ -23,6 +24,10 @@ struct DatabaseSchemaTests {
       let cellular = try #require(columns.first(where: { $0.name == "sync_over_cellular" }))
       #expect(cellular.isNotNull)
       #expect(cellular.defaultValueSQL == "0")
+
+      let uploadTags = try #require(columns.first(where: { $0.name == "default_upload_tags" }))
+      #expect(uploadTags.isNotNull)
+      #expect(uploadTags.defaultValueSQL == "'[]'")
 
       let needsAuth = try #require(columns.first(where: { $0.name == "needs_auth" }))
       #expect(needsAuth.isNotNull)

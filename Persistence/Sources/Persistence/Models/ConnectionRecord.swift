@@ -8,8 +8,9 @@ import GRDB
 /// → ConnectionRecord` (the AppShared layer drives the last step), so
 /// `Persistence` never depends on `Networking` or sees wire shapes.
 ///
-/// Two columns carry nested data as JSON: `user` (`StoredUser`) and
-/// `extra_headers` (`[StoredHeader]`). They are encoded with the record's own
+/// Three columns carry nested data as JSON: `user` (`StoredUser`),
+/// `extra_headers` (`[StoredHeader]`) and `default_upload_tags` (`[UInt]`).
+/// They are encoded with the record's own
 /// `storageEncoder` / `storageDecoder`, not the wire encoder — storage shape
 /// is independent of API shape on purpose.
 public struct ConnectionRecord: Equatable, Sendable, Codable {
@@ -30,6 +31,8 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
   public var apiVersion: Int?
   /// Last-known `X-Version` string, or `nil` until a probe has succeeded.
   public var backendVersion: String?
+  /// Ids of the tags preselected when uploading to this server.
+  public var defaultUploadTags: [UInt]
 
   public init(
     id: UUID,
@@ -42,7 +45,8 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     offlineBrowsingMode: String = "recentlyBrowsed",
     syncOverCellular: Bool = false,
     apiVersion: Int? = nil,
-    backendVersion: String? = nil
+    backendVersion: String? = nil,
+    defaultUploadTags: [UInt] = []
   ) {
     self.id = id
     self.url = url
@@ -55,6 +59,7 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     self.syncOverCellular = syncOverCellular
     self.apiVersion = apiVersion
     self.backendVersion = backendVersion
+    self.defaultUploadTags = defaultUploadTags
   }
 
   public struct StoredUser: Codable, Equatable, Sendable {
@@ -95,6 +100,7 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     case syncOverCellular = "sync_over_cellular"
     case apiVersion = "api_version"
     case backendVersion = "backend_version"
+    case defaultUploadTags = "default_upload_tags"
   }
 }
 
@@ -115,6 +121,7 @@ extension ConnectionRecord: FetchableRecord, PersistableRecord, TableRecord {
     public static let syncOverCellular = Column(CodingKeys.syncOverCellular)
     public static let apiVersion = Column(CodingKeys.apiVersion)
     public static let backendVersion = Column(CodingKeys.backendVersion)
+    public static let defaultUploadTags = Column(CodingKeys.defaultUploadTags)
   }
 
   // Storage-dedicated JSON coders. Sorted keys for deterministic on-disk
