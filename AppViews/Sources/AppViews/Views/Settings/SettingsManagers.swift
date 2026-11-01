@@ -44,8 +44,7 @@ public struct TagManager: ManagerProtocol {
         })
     }
 
-    public func hierarchy() -> [HierarchyNode<Tag>]? {
-      let all = load()
+    public func hierarchy(of all: [Tag]) -> [HierarchyNode<Tag>]? {
       guard all.contains(where: { $0.parent != nil }) else { return nil }
 
       let known = Set(all.map(\.id))
