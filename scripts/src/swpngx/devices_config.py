@@ -19,6 +19,7 @@ class ScreenshotDevice(BaseModel):
     simulator_name: str
     bezel_pack: str
     bezel: str
+    asc_display_type: str
     frames_dir: Path = Path("fastlane/screenshots/frames")
     target_size: tuple[int, int]
     offset: tuple[int, int]

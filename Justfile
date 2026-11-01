@@ -89,36 +89,23 @@ crowdin-push-translations:
 set-test-notes build version='' notes='':
   scripts/set_test_notes.sh {{build}} {{version}} {{notes}}
 
+# Creates the App Store version if needed. Needs `asc` logged in or
+# APP_STORE_CONNECT_*.
 # Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
-deliver:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  bundle exec fastlane deliver \
-    --metadata_path fastlane/metadata \
-    --overwrite_screenshots \
-    --app_version "$(just get-version)" \
-    --force
+deliver *args:
+  uv run --project scripts swpngx deliver --version "$(just get-version)" {{args}}
 
 # Metadata only (release notes, description, …) — no screenshots.
 deliver-metadata:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  bundle exec fastlane deliver \
-    --metadata_path fastlane/metadata \
-    --skip_screenshots \
-    --app_version "$(just get-version)" \
-    --force
+  just deliver --skip-screenshots
 
 # Dry run for `just deliver`.
 deliver-preview:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  bundle exec fastlane deliver \
-    --metadata_path fastlane/metadata \
-    --preview \
-    --overwrite_screenshots \
-    --app_version "$(just get-version)" \
-    --force
+  just deliver --dry-run
+
+# Offline tests for `just deliver`.
+deliver-test:
+  uv run --project scripts --with pytest==8.4.2 python -m pytest scripts/tests/test_deliver.py
 
 default_os := '27.0'
 default_device := 'iPhone 18 Pro'

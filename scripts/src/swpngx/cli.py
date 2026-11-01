@@ -1,5 +1,6 @@
 import typer
 from swpngx.bezel_frames import download_frames
+from swpngx.deliver import main as deliver_cmd
 from swpngx.fonts import download_fonts
 from swpngx.devices_cli import check_devices, migrate_prefix
 from swpngx.frame import main as frame_cmd
@@ -34,3 +35,6 @@ app.add_typer(fonts_app, name="fonts")
 app.add_typer(devices_app, name="devices")
 app.add_typer(capture_app, name="capture", help="Capture screenshots from simulator")
 app.command("preview", help="Preview metadata and screenshots in browser")(preview_cmd)
+app.command("deliver", help="Upload metadata and screenshots to App Store Connect")(
+    deliver_cmd
+)

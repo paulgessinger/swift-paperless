@@ -191,33 +191,34 @@ Preview locally:
 uv run --project scripts swpngx preview
 ```
 
-**4. Upload** metadata and framed screenshots with [deliver](https://docs.fastlane.tools/actions/deliver/)
-(config: [`fastlane/Deliverfile`](fastlane/Deliverfile)):
+**4. Upload** metadata and framed screenshots with [`asc`](https://github.com/rorkai/App-Store-Connect-CLI)
+(`brew install asc`):
 
 ```console
 just deliver-preview    # dry run
-just deliver              # metadata + screenshots
-just deliver-metadata     # metadata only (What's New, description, …)
+just deliver            # metadata + screenshots
+just deliver-metadata   # metadata only (What's New, description, …)
 ```
 
-`just deliver` uploads **both** metadata and screenshots in one `fastlane deliver`
-run (not a separate command). It uses `MARKETING_VERSION` from
-`Config/Shared/Version.xcconfig`, replaces all screenshots, and reads metadata
-from `fastlane/metadata/`.
+`just deliver` runs `swpngx deliver` for `MARKETING_VERSION` from
+`Config/Shared/Version.xcconfig`, creating that App Store version if it does not
+exist yet. It reads metadata from `fastlane/metadata/`, sets the copyright and
+categories, and replaces all screenshots of each device in
+[`screenshot_devices.toml`](screenshot_devices.toml) that has framed PNGs. No IPA
+is uploaded; TestFlight builds go through `just beta` separately. `just
+deliver-preview` also validates locally, then shows the changes against App Store
+Connect once the version exists.
 
-**What's New** is edited only in `fastlane/metadata/default/release_notes.txt`.
-The Deliverfile reads that once and applies it to every metadata locale (including
-`en-US`, which App Store Connect does not fill from `default/` on its own).
+`fastlane/metadata/default/` applies to every locale, including `en-US`, unless
+the locale directory overrides a file.
 
-Before uploading:
-- Edit `fastlane/metadata/default/release_notes.txt` for the new version.
-`skip_binary_upload` is enabled in the Deliverfile, so this uploads **metadata and
-screenshots only** (no IPA). TestFlight builds go through `just beta` separately.
+**What's New** is edited only in `fastlane/metadata/default/release_notes.txt`
+and applies to every locale.
 
-Authentication uses the same App Store Connect API key as TestFlight
-(`APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, and
-`APP_STORE_CONNECT_KEY_FILEPATH` or `APP_STORE_CONNECT_KEY_CONTENT`), plus
-`APPLE_ID`, `ITC_TEAM_ID`, and `TEAM_ID` from [`fastlane/Appfile`](fastlane/Appfile).
+Authentication uses the `asc auth login` credentials, or the same App Store
+Connect API key as TestFlight (`APP_STORE_CONNECT_API_KEY_ID`,
+`APP_STORE_CONNECT_ISSUER_ID`, and `APP_STORE_CONNECT_KEY_FILEPATH` or
+`APP_STORE_CONNECT_KEY_CONTENT`).
 
 PNG screenshots under `fastlane/screenshots/` are gitignored; generate them locally
 before upload.
