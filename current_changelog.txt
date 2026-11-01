@@ -74,3 +74,4 @@
 - New installs start with a short welcome page before the login screen, explaining that the app needs your own Paperless-ngx server
 - What's New can now show a paged overview of a release, with an icon and a short description per feature and more detail on request; versions without one keep showing the release notes
 - A "Leave a tip" link in the release notes now opens the tip jar in the app
+- Nested tags in Settings now show delete buttons in edit mode

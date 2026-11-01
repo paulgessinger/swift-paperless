@@ -89,6 +89,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
 
   @State private var elements: [Element] = []
   @State private var hierarchy: [HierarchyNode<Element>]? = nil
+  @State private var expanded = Set<Element.ID>()
 
   @State private var searchText = ""
 
@@ -141,6 +142,46 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
         }
 
       })
+    }
+  }
+
+  /// One level of the outline. Each level is its own `ForEach` because
+  /// `OutlineGroup` has no `onDelete`, which provides the edit mode delete controls.
+  private struct OutlineLevel<Row: View>: View {
+    var nodes: [HierarchyNode<Element>]
+    @Binding var expanded: Set<Element.ID>
+    var onDelete: (([Element]) -> Void)?
+    @ViewBuilder var row: (Element) -> Row
+
+    private func isExpanded(_ id: Element.ID) -> Binding<Bool> {
+      Binding {
+        expanded.contains(id)
+      } set: { isExpanded in
+        if isExpanded {
+          expanded.insert(id)
+        } else {
+          expanded.remove(id)
+        }
+      }
+    }
+
+    var body: some View {
+      ForEach(nodes) { node in
+        if let children = node.children {
+          DisclosureGroup(isExpanded: isExpanded(node.id)) {
+            OutlineLevel(nodes: children, expanded: $expanded, onDelete: onDelete, row: row)
+          } label: {
+            row(node.element)
+          }
+        } else {
+          row(node.element)
+        }
+      }
+      .if(onDelete != nil) {
+        $0.onDelete { offsets in
+          onDelete?(offsets.map { nodes[$0].element })
+        }
+      }
     }
   }
 
@@ -268,8 +309,13 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
         } else if elements.isEmpty, searchText.isEmpty {
           noElementsView
         } else if useHierarchy, let hierarchy {
-          OutlineGroup(hierarchy, children: \.children) { node in
-            elementLink(node.element, model: model)
+          OutlineLevel(
+            nodes: hierarchy,
+            expanded: $expanded,
+            onDelete: test(.delete)
+              ? { targets in Task { await delete(targets, model: model) } } : nil
+          ) { element in
+            elementLink(element, model: model)
           }
         } else {
           if !displayElements.isEmpty {
