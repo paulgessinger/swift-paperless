@@ -96,7 +96,12 @@ class DocumentListViewModel {
       isFillTakenOver: isFollowingReplacement,
       totalCount: totalCount,
       isCacheComplete: isCacheComplete,
-      fillFailed: fillError != nil || replacementStoppedShort)
+      fillFailed: hasFailedFill)
+  }
+
+  /// Whether the last fill of the query on screen failed.
+  var hasFailedFill: Bool {
+    fillError != nil || replacementStoppedShort
   }
 
   /// A list the app keeps itself: served from the database, never filled.
@@ -327,8 +332,7 @@ class DocumentListViewModel {
   /// back, the link changed), so the failure state doesn't wait for a tap. The
   /// outcome shows in the list, as for `retry()`, without its offline notice.
   func retryIfFailed() async {
-    guard queryKey != nil, fillError != nil || replacementStoppedShort, fillsInFlight == 0
-    else { return }
+    guard queryKey != nil, hasFailedFill, fillsInFlight == 0 else { return }
     Logger.shared.info("Retrying the failed document fill")
     do {
       try await runFill()
