@@ -322,6 +322,42 @@
         }
       }
     },
+    "duplicateInTrash" : {
+      "comment" : "Label on a duplicate document that is in the trash and can't be opened",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In trash"
+          }
+        }
+      }
+    },
+    "duplicates" : {
+      "comment" : "Title of the list of other documents with the same file content as this document",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicates"
+          }
+        }
+      }
+    },
+    "duplicatesExplanation" : {
+      "comment" : "Footer below the list of duplicate documents",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These documents have the same file content as this one."
+          }
+        }
+      }
+    },
     "mediaFilename" : {
       "extractionState" : "manual",
       "localizations" : {

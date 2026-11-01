@@ -67,6 +67,7 @@ private enum AuxiliarySheet: Identifiable, Hashable {
   case metadata
   case notes
   case content
+  case duplicates
   case shareLink
 
   var id: Self { self }
@@ -93,6 +94,9 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
   @State private var showDeleteConfirmation = false
   @State private var deleted = false
   @State private var sharedFile: NamedShareItem?
+  // Opened once the sheet is gone: a push during its dismissal leaves the new
+  // screen without a navigation title.
+  @State private var pendingDuplicate: UInt?
 
   private let appSettings = AppSettings.shared
 
@@ -181,6 +185,26 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         }
       } catch {
         errorController.push(mutationError: error)
+      }
+    }
+  }
+
+  /// iPad's detail column has no navigation path of its own, so a document
+  /// opens there through its route. On iPhone the duplicate is pushed, keeping
+  /// this document one step back.
+  private func openDuplicate(id: UInt) {
+    guard horizontalSizeClass == .compact, let navPath else {
+      routeManager.pendingRoute = Route(action: .document(id: id, edit: nil))
+      return
+    }
+    Task {
+      do {
+        guard let document = try await store.document(id: id) else { return }
+        store.preloadThumbnail(for: document)
+        navPath.wrappedValue.append(.detail(document: document))
+      } catch {
+        Logger.shared.error("Unable to open duplicate document: \(error)")
+        errorController.push(readError: error)
       }
     }
   }
@@ -351,6 +375,37 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
       .padding(12)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+  }
+
+  @ViewBuilder
+  private var duplicatesNotice: some View {
+    if !viewModel.duplicates.isEmpty {
+      Button {
+        activeSheet = .duplicates
+      } label: {
+        HStack {
+          Label {
+            Text(.documentMetadata(.duplicates))
+          } icon: {
+            Image(systemName: "doc.on.doc.fill")
+              .foregroundStyle(.orange)
+          }
+          Spacer()
+          Text(viewModel.duplicates.count, format: .number)
+            .foregroundStyle(.secondary)
+          Image(systemName: "chevron.right")
+            .fontWeight(.semibold)
+            .foregroundStyle(.tertiary)
+        }
+        .font(.footnote)
+        .padding(12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(.rect(cornerRadius: 12))
+        .backport.matchedTransitionSource(id: TransitionID.duplicates, in: namespace)
+      }
+      .buttonStyle(.plain)
+      .transition(.opacity.combined(with: .move(edge: .top)))
     }
   }
 
@@ -640,6 +695,8 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
       readOnlyExplanation
 
+      duplicatesNotice
+
       detailAspects
         .animation(.spring(duration: 0.25), value: viewModel.document)
 
@@ -671,6 +728,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         }
       }
     }
+    .animation(.spring(duration: 0.25), value: viewModel.duplicates)
   }
 
   // iPhone layout: horizontal page preview + edit panel stacked in a scroll
@@ -854,14 +912,29 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
           Button {
             showEditInspector.toggle()
           } label: {
-            Label(localized: .app(.edit), systemImage: "sidebar.right")
-              .labelStyle(.iconOnly)
+            // An image, not a `Label`: the toolbar drops overlays on a `Label`.
+            Image(systemName: "sidebar.right")
+              .accessibilityLabel(Text(.app(.edit)))
+              // The duplicates notice lives in the inspector, out of sight here.
+              .overlay(alignment: .topTrailing) {
+                if !showEditInspector, !viewModel.duplicates.isEmpty {
+                  Circle()
+                    .fill(.orange)
+                    .frame(width: 8, height: 8)
+                    .offset(x: 3, y: -3)
+                }
+              }
           }
         }
       }
     }
 
-    .sheet(item: $activeSheet) { sheet in
+    .sheet(item: $activeSheet) {
+      if let pendingDuplicate {
+        self.pendingDuplicate = nil
+        openDuplicate(id: pendingDuplicate)
+      }
+    } content: { sheet in
       switch sheet {
       case .metadata:
         DocumentMetadataView(document: $viewModel.document, metadata: $viewModel.metadata)
@@ -881,6 +954,13 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         )
         .environment(store)
         .sheetZoomTransition(sourceID: TransitionID.content, in: namespace)
+
+      case .duplicates:
+        DocumentDuplicatesView(duplicates: viewModel.duplicates) { id in
+          pendingDuplicate = id
+          activeSheet = nil
+        }
+        .sheetZoomTransition(sourceID: TransitionID.duplicates, in: namespace)
 
       case .shareLink:
         ShareLinkView(document: viewModel.document)

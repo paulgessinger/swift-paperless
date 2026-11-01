@@ -147,6 +147,10 @@ class DocumentDetailModel {
 
   var metadata: Metadata?
 
+  /// Kept apart from `document`, which is replaced by responses that don't
+  /// carry duplicates. Only a detail fetch from the server changes this.
+  var duplicates: [DocumentDuplicate] = []
+
   /// The in-flight load, owned by the model rather than by whichever view task
   /// happened to start it. See `startLoad(onError:)`.
   @ObservationIgnored
@@ -379,6 +383,9 @@ class DocumentDetailModel {
     do {
       if let updated = try await store.document(id: document.id) {
         document = updated
+        if let duplicates = updated.duplicates {
+          self.duplicates = duplicates
+        }
       }
     } catch let error where error.isCancellationError {
     } catch {
