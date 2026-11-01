@@ -71,3 +71,4 @@
 - New "Duplicates" filter for documents with or without duplicates, on Paperless-ngx v3.2 and later
 - Deleting a tag, correspondent, document type, storage path or saved view in Settings now removes the row only once the delete has succeeded, so a failed delete leaves it in the list instead of hiding it until the next refresh
 - Swipe-to-delete in those lists now deletes the row you swiped while a search is active, instead of a different item
+- Deleting a document from the Trash now keeps its row until the delete has succeeded, so a failed delete leaves it in the list
