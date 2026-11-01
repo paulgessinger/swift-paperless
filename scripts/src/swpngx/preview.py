@@ -317,9 +317,9 @@ def main(
         typer.Option(
             "--metadata-dir",
             "-m",
-            help="Path to fastlane metadata directory",
+            help="Path to metadata directory",
         ),
-    ] = Path("fastlane/metadata"),
+    ] = Path("store/metadata"),
     screenshots_dir: Annotated[
         Path,
         typer.Option(
@@ -327,7 +327,7 @@ def main(
             "-s",
             help="Path to framed screenshots directory",
         ),
-    ] = Path("fastlane/screenshots/framed"),
+    ] = Path("store/screenshots/framed"),
     port: Annotated[
         int,
         typer.Option(

@@ -107,10 +107,10 @@ def pull(
         Path, typer.Option(exists=True, file_okay=False)
     ] = root_dir
     / "swift-paperless/Localization",
-    fastlane_directory: Annotated[
+    store_directory: Annotated[
         Path, typer.Option(exists=True, file_okay=False)
     ] = root_dir
-    / "fastlane",
+    / "store",
 ):
     session = requests.Session()
     session.headers["Authorization"] = f"Bearer {crowdin_token}"
@@ -124,16 +124,16 @@ def pull(
 
             if member.filename == "Metadata.xcstrings":
                 with console.status("Handling Metadata.xcstrings"):
-                    translations.extract(member, fastlane_directory)
-                    target_file = fastlane_directory / member.filename
+                    translations.extract(member, store_directory)
+                    target_file = store_directory / member.filename
                     extracted_files.append(target_file)
                     catalog = string_catalog.load(target_file.read_text())
-                    extract_metadata(catalog, fastlane_directory / "metadata")
+                    extract_metadata(catalog, store_directory / "metadata")
             elif member.filename == "Screenshots.xcstrings":
                 console.print("Handling Screenshots.xcstrings")
-                translations.extract(member, fastlane_directory / "screenshots")
+                translations.extract(member, store_directory / "screenshots")
                 extracted_files.append(
-                    fastlane_directory / "screenshots" / member.filename
+                    store_directory / "screenshots" / member.filename
                 )
             else:
                 translations.extract(member, localizations_directory)
@@ -149,15 +149,13 @@ def pull(
 
 @app.command()
 def extract(
-    fastlane_directory: Annotated[
+    store_directory: Annotated[
         Path, typer.Option(exists=True, file_okay=False)
     ] = root_dir
-    / "fastlane",
+    / "store",
 ):
-    catalog = string_catalog.load(
-        (fastlane_directory / "Metadata.xcstrings").read_text()
-    )
-    extract_metadata(catalog, fastlane_directory / "metadata")
+    catalog = string_catalog.load((store_directory / "Metadata.xcstrings").read_text())
+    extract_metadata(catalog, store_directory / "metadata")
 
 
 if __name__ == "__main__":

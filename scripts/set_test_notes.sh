@@ -50,7 +50,7 @@ notes_file="${3:-}"
   exit 1
 }
 
-# Bridge fastlane's credential names to the ASC_* env vars `asc` reads (mirrors
+# Bridge the APP_STORE_CONNECT_* names to the ASC_* env vars `asc` reads (mirrors
 # scripts/beta_ci.sh), so the same secrets work here. asc also falls back to its
 # keychain login when no env is set.
 [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}" ]   && export ASC_KEY_ID="${ASC_KEY_ID:-$APP_STORE_CONNECT_API_KEY_ID}"

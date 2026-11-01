@@ -1,8 +1,0 @@
-*.ttf
-screenshots/screenshots.html
-metadata/review_information
-screenshots/**/*.png
-Preview.html
-report.xml
-README.md
-test_output/report.junit

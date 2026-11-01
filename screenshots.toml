@@ -8,7 +8,7 @@ locales = [
     "da-DK",
     "tr-TR",
 ]
-output_dir = "fastlane/screenshots"
+output_dir = "store/screenshots"
 bundle_id = "com.paulgessinger.swift-paperless"
 launch_wait = 2.0
 url_wait = 2.0

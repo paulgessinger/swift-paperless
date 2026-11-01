@@ -71,9 +71,9 @@ If you have any questions or need support create an issue on [GitHub](https://gi
 <!-- --8<-- [start:maintenance] -->
 ## Maintenance
 
-Automation lives in the [`scripts/`](scripts/) package (`swpngx`) and
-[`fastlane/`](fastlane/). Run `swpngx` via `uv run --project scripts swpngx …`
-from the repo root (or install the package so `swpngx` is on your `PATH`).
+Automation lives in the [`scripts/`](scripts/) package (`swpngx`). Run `swpngx`
+via `uv run --project scripts swpngx …` from the repo root (or install the package
+so `swpngx` is on your `PATH`).
 
 Device ids, simulator names, bezel PNGs, and framing geometry are defined once in
 [`screenshot_devices.toml`](screenshot_devices.toml). [`screenshots.toml`](screenshots.toml)
@@ -142,14 +142,14 @@ uv run --project scripts swpngx capture setup --random-tags 1000 --random-corres
 uv run --project scripts swpngx capture capture
 ```
 
-Writes files like `fastlane/screenshots/en-US/iPhone_17_Pro_Max-01_documents.png`
+Writes files like `store/screenshots/en-US/iPhone_17_Pro_Max-01_documents.png`
 (the prefix is the device `id` from `screenshot_devices.toml`). Tear down the backend
 with `uv run --project scripts swpngx capture teardown`.
 
 **2. Install device bezels** from [Apple Design Resources](https://developer.apple.com/design/resources/)
 (Product Bezels). Each `[[device]]` in [`screenshot_devices.toml`](screenshot_devices.toml)
 names a `bezel_pack` from [`bezel_packs.toml`](bezel_packs.toml) and the PNG filename
-to install under `fastlane/screenshots/frames/`:
+to install under `store/screenshots/frames/`:
 
 ```console
 # Use DMGs you already downloaded (e.g. from ~/Downloads):
@@ -172,12 +172,12 @@ Requires macOS (`hdiutil`). Apple’s DMG license prompt is accepted automatical
 uv run --project scripts swpngx frame
 ```
 
-Reads `fastlane/screenshots/<locale>/`, composites device bezels and localized
-titles (from [`fastlane/screenshots/Screenshots.xcstrings`](fastlane/screenshots/Screenshots.xcstrings)),
-and writes `fastlane/screenshots/framed/<locale>/*-framed.png`. Device names in
+Reads `store/screenshots/<locale>/`, composites device bezels and localized
+titles (from [`store/screenshots/Screenshots.xcstrings`](store/screenshots/Screenshots.xcstrings)),
+and writes `store/screenshots/framed/<locale>/*-framed.png`. Device names in
 filenames must match device `id` in `screenshot_devices.toml`.
 
-The framing font (Open Sans) is not in git (`fastlane/.gitignore` ignores `*.ttf`).
+The framing font (Open Sans) is not in git (`store/.gitignore` ignores `*.ttf`).
 `swpngx frame` downloads it automatically from [Google Fonts](https://fonts.google.com/specimen/Open+Sans)
 via [`fonts.toml`](fonts.toml), or you can prefetch:
 
@@ -191,46 +191,44 @@ Preview locally:
 uv run --project scripts swpngx preview
 ```
 
-**4. Upload** metadata and framed screenshots with [deliver](https://docs.fastlane.tools/actions/deliver/)
-(config: [`fastlane/Deliverfile`](fastlane/Deliverfile)):
+**4. Upload** metadata and framed screenshots with [`asc`](https://github.com/rorkai/App-Store-Connect-CLI)
+(`brew install asc`):
 
 ```console
 just deliver-preview    # dry run
-just deliver              # metadata + screenshots
-just deliver-metadata     # metadata only (What's New, description, …)
+just deliver            # metadata + screenshots
+just deliver-metadata   # metadata only (What's New, description, …)
 ```
 
-`just deliver` uploads **both** metadata and screenshots in one `fastlane deliver`
-run (not a separate command). It uses `MARKETING_VERSION` from
-`Config/Shared/Version.xcconfig`, replaces all screenshots, and reads metadata
-from `fastlane/metadata/`.
+`just deliver` runs `swpngx deliver` for `MARKETING_VERSION` from
+`Config/Shared/Version.xcconfig`, creating that App Store version if it does not
+exist yet. It reads metadata from `store/metadata/`, sets the copyright and
+categories, and replaces all screenshots of each device in
+[`screenshot_devices.toml`](screenshot_devices.toml) that has framed PNGs. No IPA
+is uploaded; TestFlight builds go through `just beta` separately. `just
+deliver-preview` also validates locally, then shows the changes against App Store
+Connect once the version exists.
 
-**What's New** is edited only in `fastlane/metadata/default/release_notes.txt`.
-The Deliverfile reads that once and applies it to every metadata locale (including
-`en-US`, which App Store Connect does not fill from `default/` on its own).
+`store/metadata/default/` applies to every locale, including `en-US`, unless
+the locale directory overrides a file.
 
-Before uploading:
-- Edit `fastlane/metadata/default/release_notes.txt` for the new version.
-`skip_binary_upload` is enabled in the Deliverfile, so this uploads **metadata and
-screenshots only** (no IPA). TestFlight builds go through `just beta` separately.
+**What's New** is edited only in `store/metadata/default/release_notes.txt`
+and applies to every locale.
 
-Authentication uses the same App Store Connect API key as TestFlight
-(`APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, and
-`APP_STORE_CONNECT_KEY_FILEPATH` or `APP_STORE_CONNECT_KEY_CONTENT`), plus
-`APPLE_ID`, `ITC_TEAM_ID`, and `TEAM_ID` from [`fastlane/Appfile`](fastlane/Appfile).
+Authentication uses the `asc auth login` credentials, or the same App Store
+Connect API key as TestFlight (`APP_STORE_CONNECT_API_KEY_ID`,
+`APP_STORE_CONNECT_ISSUER_ID`, and `APP_STORE_CONNECT_KEY_FILEPATH` or
+`APP_STORE_CONNECT_KEY_CONTENT`).
 
-PNG screenshots under `fastlane/screenshots/` are gitignored; generate them locally
+PNG screenshots under `store/screenshots/` are gitignored; generate them locally
 before upload.
-
-There is also `bundle exec fastlane screenshots` (`snapshot` + [`fastlane/Snapfile`](fastlane/Snapfile)),
-a UI-test-based path that is separate from the `swpngx` workflow above.
 
 ### Panorama montage
 
 Concatenate framed screenshots (adjust the glob for your device name):
 
 ```console
-montage fastlane/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
+montage store/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
     -tile 4x1 -geometry +20+0 panorama.png
 ```
 
