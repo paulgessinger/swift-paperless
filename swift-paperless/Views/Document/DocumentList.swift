@@ -470,6 +470,20 @@ struct DocumentList: View {
     .onChange(of: networkMonitor?.cost) { _, _ in
       Task { await viewModel.retryIfFailed() }
     }
+    .onChange(of: networkMonitor?.routeChangeCount) { _, _ in
+      Task { await viewModel.retryIfFailed() }
+    }
+
+    // A server can become reachable with no route change to observe, so a failed
+    // load also retries on a timer for as long as it stays on screen.
+    .task(id: viewModel.hasFailedFill && scenePhase == .active) {
+      guard viewModel.hasFailedFill, scenePhase == .active else { return }
+      for seconds in [3, 6, 12, 24, 48] {
+        guard (try? await Task.sleep(for: .seconds(seconds))) != nil else { return }
+        await viewModel.retryIfFailed()
+        if !store.syncFailures.isEmpty { try? await store.sync() }
+      }
+    }
 
     // @TODO: Re-evaluate if we want an animation here
     .animation(.default, value: viewModel.documents)
