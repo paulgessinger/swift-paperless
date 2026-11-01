@@ -225,6 +225,23 @@ struct DocumentStoreTests {
     #expect(harness.store.tagDescendants(of: 3) == [])
   }
 
+  // MARK: - Tags
+
+  @Test("knownTags drops the tags the server does not have, keeping the order")
+  func knownTagsDropsUnknownIds() async throws {
+    let harness = try await StoreHarness.make(tags: [tag(1), tag(2)])
+    try await waitUntil({ !harness.store.tags.isEmpty }, "the projection never saw the tags")
+
+    #expect(harness.store.knownTags([2, 99, 1]) == [2, 1])
+  }
+
+  @Test("knownTags keeps everything while no tags are loaded")
+  func knownTagsWithoutTags() async throws {
+    let harness = try await StoreHarness.make()
+
+    #expect(harness.store.knownTags([2, 99]) == [2, 99])
+  }
+
   // MARK: - Sync
 
   @Test("sync copies the repository's elements into the projection")

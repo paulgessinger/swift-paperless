@@ -10,6 +10,7 @@ struct PreferencesView: View {
 
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
   @Environment(DocumentStore.self) private var store
+  @Environment(ConnectionManager.self) private var connectionManager
 
   var body: some View {
     Form {
@@ -67,6 +68,31 @@ struct PreferencesView: View {
         FilterBarConfigView()
       } label: {
         Text(.settings(.filterConfiguration))
+      }
+
+      if let serverID = store.activeServerID {
+        Section {
+          NavigationLink {
+            DefaultUploadTagsView(serverID: serverID)
+          } label: {
+            let tags = (connectionManager.connections[serverID]?.defaultUploadTags ?? [])
+              .compactMap { store.tags[$0] }
+            VStack(alignment: .leading, spacing: 8) {
+              Text(.settings(.defaultUploadTags))
+              if tags.isEmpty {
+                Text(.app(.createDocumentNoTags))
+                  .foregroundStyle(.secondary)
+              } else {
+                TagsView(tags: tags)
+              }
+            }
+            .contentShape(Rectangle())
+          }
+        } header: {
+          Text(.settings(.upload))
+        } footer: {
+          Text(.settings(.defaultUploadTagsDescription))
+        }
       }
     }
     .navigationTitle(Text(.settings(.preferences)))

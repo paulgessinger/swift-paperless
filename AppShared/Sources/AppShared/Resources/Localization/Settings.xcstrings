@@ -1543,6 +1543,40 @@
         }
       }
     },
+    "defaultUploadTags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default upload tags"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard-Tags für Uploads"
+          }
+        }
+      }
+    },
+    "defaultUploadTagsDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These tags are preselected for every document you upload to this server. You can still change them per document."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Tags werden bei jedem Dokument, das du auf diesen Server hochlädst, vorausgewählt. Du kannst sie pro Dokument weiterhin anpassen."
+          }
+        }
+      }
+    },
     "detailsFeedback" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9006,6 +9040,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Güncelleme mevcut"
+          }
+        }
+      }
+    },
+    "upload" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload"
           }
         }
       }

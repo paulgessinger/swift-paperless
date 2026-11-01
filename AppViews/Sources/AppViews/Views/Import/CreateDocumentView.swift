@@ -137,6 +137,10 @@ public struct CreateDocumentView: View {
   @State private var status = Status.none
   @State private var isAsnValid = true
 
+  // The server whose defaults `document.tags` started from. `.task` runs again
+  // whenever a picker is popped, which must not overwrite what was picked there.
+  @State private var defaultTagsServerID: UUID?
+
   @AppStorage("IncludeDocumentCreatedDate", store: .group)
   private var includeCreatedDate = true
 
@@ -170,7 +174,9 @@ public struct CreateDocumentView: View {
 
   public func upload() async {
     do {
-      try await store.create(document: document, file: sourceUrl, filename: filename)
+      var upload = document
+      upload.tags = store.knownTags(document.tags)
+      try await store.create(document: upload, file: sourceUrl, filename: filename)
     } catch {
       errorController.push(mutationError: error)
       status = .error
@@ -195,11 +201,20 @@ public struct CreateDocumentView: View {
     callback()
   }
 
+  /// Preselects the upload defaults of the server the store is on, which is
+  /// the one this document goes to.
+  private func applyDefaultTags() {
+    guard let id = store.activeServerID, id != defaultTagsServerID else { return }
+    defaultTagsServerID = id
+    document.tags = connectionManager.connections[id]?.defaultUploadTags ?? []
+  }
+
   private func resetDocument() {
     document.asn = nil
     document.documentType = nil
     document.correspondent = nil
     document.tags = []
+    defaultTagsServerID = nil
     document.storagePath = nil
     document.created = includeCreatedDate ? .now : nil
   }
@@ -364,10 +379,11 @@ public struct CreateDocumentView: View {
               TagSelectionView(tags: $document.tags)
                 .navigationTitle(Text(.app(.tags)))
             }) {
-              if document.tags.isEmpty {
+              let tags = document.tags.compactMap { store.tags[$0] }
+              if tags.isEmpty {
                 Text(.app(.createDocumentNoTags))
               } else {
-                TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                TagsView(tags: tags)
                   .contentShape(Rectangle())
               }
             }
@@ -440,6 +456,7 @@ public struct CreateDocumentView: View {
         }
       }
       .task {
+        applyDefaultTags()
         do {
           try await store.sync()
         } catch {
@@ -451,6 +468,8 @@ public struct CreateDocumentView: View {
         switch event {
         case .repositoryWillChange:
           resetDocument()
+        case .repositoryChanged:
+          applyDefaultTags()
         default: break
         }
       }

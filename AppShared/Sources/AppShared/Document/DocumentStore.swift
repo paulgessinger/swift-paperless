@@ -1181,6 +1181,14 @@ extension DocumentStore {
     return currentUser?.canDelete(document) ?? false
   }
 
+  /// `ids` without the tags this server does not have, which would fail an
+  /// upload: a default tag can be deleted after it was picked. Unchanged while
+  /// no tags are loaded, when there is nothing to tell them apart with.
+  public func knownTags(_ ids: [UInt]) -> [UInt] {
+    guard !tags.isEmpty else { return ids }
+    return ids.filter { tags[$0] != nil }
+  }
+
   /// All ancestor tag ids of `id` (excluding `id` itself), walking up the
   /// `parent` chain. Stops at unknown ids and at cycles. Used to mirror the
   /// backend behavior of implicitly attaching ancestors when a child tag is
