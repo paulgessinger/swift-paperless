@@ -45,6 +45,6 @@ extension Route.ParseError: DisplayableError {
   }
 
   public var documentationLink: URL? {
-    URL(string: "https://swift-paperless.gessinger.dev/deeplinks")
+    URL(string: "https://swift-paperless.app/deeplinks")
   }
 }

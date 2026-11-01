@@ -139,7 +139,7 @@ First beta release in th v1.10.0 series
 1.9.0 (174)
 
 - Add trashed document management
-- Add support for OIDC login using social account providers. Please see the [documentation](https://swift-paperless.gessinger.dev/oidc/). Thanks to [@hendrik1120](https://github.com/hendrik1120) for the help with this! Let me know if you run into any issues with this.
+- Add support for OIDC login using social account providers. Please see the [documentation](https://swift-paperless.app/oidc/). Thanks to [@hendrik1120](https://github.com/hendrik1120) for the help with this! Let me know if you run into any issues with this.
 
 1.9.0 (173)
 
@@ -152,7 +152,7 @@ First beta release in th v1.10.0 series
 1.9.0 (171)
 
 - Add ability to share link to the web UI for a document
-- Add deep link support (open scanner, open document, set / clear filters). [Documentation](https://swift-paperless.gessinger.dev/deeplinks/)
+- Add deep link support (open scanner, open document, set / clear filters). [Documentation](https://swift-paperless.app/deeplinks/)
 - Add a home screen quick action to open the scanner
 
 1.9.0 (170)

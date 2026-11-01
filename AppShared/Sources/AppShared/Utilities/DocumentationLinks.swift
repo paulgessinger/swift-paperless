@@ -10,7 +10,7 @@ import Foundation
 public struct DocumentationLinks {
   private init() {}
 
-  public static let baseUrl = URL(string: "https://swift-paperless.gessinger.dev")!
+  public static let baseUrl = URL(string: "https://swift-paperless.app")!
 
   public static let localNetworkDenied = Self.baseUrl.appending(
     path: "common_issues/local-network-denied")

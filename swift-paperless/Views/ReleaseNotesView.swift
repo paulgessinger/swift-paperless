@@ -78,7 +78,7 @@ class ReleaseNotesViewModel {
     }
   }
 
-  static let baseUrl = #URL("https://swift-paperless.gessinger.dev/release_notes/")
+  static let baseUrl = #URL("https://swift-paperless.app/release_notes/")
   static let githubUrl = #URL("https://api.github.com")
   static let githubRepo = "paulgessinger/swift-paperless"
   static let githubIssuesBaseUrl = "https://github.com/paulgessinger/swift-paperless/issues"
