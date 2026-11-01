@@ -223,9 +223,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
   }
 
   @ViewBuilder
-  private func elementLink(
-    _ element: Element, model: Manager.Model, swipeDelete: Bool = false
-  ) -> some View {
+  private func elementLink(_ element: Element, model: Manager.Model) -> some View {
     NavigationLink {
       Edit(model: model, element: element) { element in
         guard model.permissions.test(.change) else {
@@ -246,12 +244,16 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
       Manager.RowView(element: element)
     }
     .swipeActions(edge: .trailing) {
-      if swipeDelete && test(.delete) {
-        Button(role: .destructive) {
+      if test(.delete) {
+        // Not `role: .destructive`: `List` hides a row when its destructive action
+        // runs and doesn't bring it back unless the view updates, which a failed
+        // delete doesn't cause. This action also replaces the `onDelete` swipe.
+        Button {
           Task { await delete([element], model: model) }
         } label: {
           Label(String(localized: .app(.delete)), systemImage: "trash")
         }
+        .tint(.red)
       }
     }
   }
@@ -267,13 +269,14 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
           noElementsView
         } else if useHierarchy, let hierarchy {
           OutlineGroup(hierarchy, children: \.children) { node in
-            elementLink(node.element, model: model, swipeDelete: true)
+            elementLink(node.element, model: model)
           }
         } else {
           if !displayElements.isEmpty {
             ForEach(displayElements, id: \.self) { element in
               elementLink(element, model: model)
             }
+            // Provides the edit mode delete controls.
             .if(test(.delete)) {
               $0.onDelete { offsets in
                 let targets = offsets.map { displayElements[$0] }
