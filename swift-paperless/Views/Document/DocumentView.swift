@@ -320,12 +320,16 @@ struct DocumentView: View {
             }
           }
 
-          // Always offered: discovery — and with it the Local Network
-          // permission prompt — only starts once the sheet is open.
-          Button {
-            showNetworkScanner = true
-          } label: {
-            Label(String(localized: .app(.scanNetworkDocument)), systemImage: "scanner")
+          // No availability probe to pair this with: whether a scanner is
+          // reachable is only known once discovery runs, and discovery is what
+          // raises the Local Network permission prompt. So the item is offered
+          // wherever the feature is, and the prompt waits for the sheet.
+          if AppFeatures.enabled(.networkScanner) {
+            Button {
+              showNetworkScanner = true
+            } label: {
+              Label(String(localized: .app(.scanNetworkDocument)), systemImage: "scanner")
+            }
           }
 
           Button {
