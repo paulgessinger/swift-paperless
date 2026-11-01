@@ -24,6 +24,7 @@ struct DebugMenuView: View {
   @State private var showCacheClearedConfirmation = false
   @State private var reclaimResult: ReclaimResult?
   @State private var isReclaiming = false
+  @State private var showWhatsNewDeck = false
 
   /// Outcome of the legacy-storage export, reported in an alert rather than
   /// through `ErrorController` so it stays visible above the settings sheet.
@@ -151,6 +152,23 @@ struct DebugMenuView: View {
             the local database. The database restores from it on first launch, \
             so you can export, wipe the database, and relaunch to test recovery.
             """)
+      }
+
+      Section {
+        Button {
+          showWhatsNewDeck = true
+        } label: {
+          Label {
+            Text(verbatim: "Show What's New prototype")
+          } icon: {
+            Image(systemName: "sparkles")
+          }
+        }
+        .fullScreenCover(isPresented: $showWhatsNewDeck) {
+          WhatsNewDeckView(deck: .sample) {
+            showWhatsNewDeck = false
+          }
+        }
       }
 
       Section {
