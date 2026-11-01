@@ -44,7 +44,5 @@ extension Route.ParseError: DisplayableError {
     return String(localized: res)
   }
 
-  public var documentationLink: URL? {
-    URL(string: "https://swift-paperless.app/deeplinks")
-  }
+  public var documentationLink: URL? { DocumentationLinks.deeplinks }
 }

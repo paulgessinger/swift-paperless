@@ -78,7 +78,6 @@ class ReleaseNotesViewModel {
     }
   }
 
-  static let baseUrl = #URL("https://swift-paperless.app/release_notes/")
   static let githubUrl = #URL("https://api.github.com")
   static let githubRepo = "paulgessinger/swift-paperless"
   static let githubIssuesBaseUrl = "https://github.com/paulgessinger/swift-paperless/issues"
@@ -447,7 +446,7 @@ private struct ReleaseNotesBareView: View {
               .padding(.top, 60)
               .transition(.opacity)
           case .content(let content):
-            Markdown(content, baseURL: ReleaseNotesViewModel.baseUrl)
+            Markdown(content, baseURL: DocumentationLinks.releaseNotes)
               .frame(maxWidth: .infinity, alignment: .leading)
               .padding()
           case .error(let error):

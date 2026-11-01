@@ -26,4 +26,9 @@ public struct DocumentationLinks {
     path: "common_issues/supported-versions")
 
   public static let oidc = Self.baseUrl.appending(path: "oidc")
+
+  public static let deeplinks = Self.baseUrl.appending(path: "deeplinks")
+
+  // Trailing slash so relative links in release notes resolve inside this directory.
+  public static let releaseNotes = Self.baseUrl.appending(path: "release_notes/")
 }
