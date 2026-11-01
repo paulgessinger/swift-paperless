@@ -2776,7 +2776,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokumente, die auf diesem Server für die Offline-Nutzung heruntergeladen wurden, werden entfernt – mit Ausnahme der neuesten in deiner Dokumentliste. Gespeicherte Ansichten werden erneut heruntergeladen, sobald du sie öffnest."
+            "value" : "Für die Offline-Nutzung auf diesem Server heruntergeladene Dokumente und PDF-Dateien werden entfernt – außer den neuesten Dokumenten in deiner Dokumentliste und den Dokumenten, die du offline behältst. Dateien werden erneut heruntergeladen, sobald du ein Dokument öffnest."
           }
         },
         "en" : {
@@ -2884,7 +2884,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bei „Gesamte Bibliothek“ werden alle gespeicherten Ansichten und deine vollständige Dokumentliste über WLAN heruntergeladen, damit sie offline durchgesehen werden können. Die Dokumentdateien selbst werden weiterhin erst beim Öffnen heruntergeladen. Beim Wechsel zurück zu „Zuletzt angesehen“ wird das Heruntergeladene entfernt."
+            "value" : "Bei „Gesamte Bibliothek“ werden alle gespeicherten Ansichten, deine vollständige Dokumentliste und die PDF-Datei jedes Dokuments über WLAN heruntergeladen, damit du sie offline lesen kannst. Beim Wechsel zurück zu „Zuletzt angesehen“ wird das Heruntergeladene entfernt."
           }
         },
         "en" : {
@@ -3304,7 +3304,7 @@
       }
     },
     "offlineStorageFileCount" : {
-      "comment" : "Caption under a Storage row: how many downloaded document files it covers. %lld is the number of files",
+      "comment" : "Caption on the Offline & Sync screen: how many downloaded document files a row covers. %lld is the number of files",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -3331,13 +3331,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld file"
+                  "value" : "%lld Datei"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld files"
+                  "value" : "%lld Dateien"
                 }
               }
             }
@@ -3802,7 +3802,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld zwischengespeichert"
+            "value" : "%lld gespeichert"
           }
         },
         "en" : {
@@ -3843,62 +3843,8 @@
         }
       }
     },
-    "offlineSyncDocumentsCachedFiles" : {
-      "comment" : "Value of the Documents status row in Entire library: %1$lld documents whose details are on the device, %2$lld of them with their file too",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld cachelagret · %2$lld filer"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld zwischengespeichert · %2$lld Dateien"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld cached · %2$lld files"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld en cache · %2$lld fichiers"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld nella cache · %2$lld file"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld in cache · %2$lld bestanden"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "W pamięci podręcznej: %1$lld · pliki: %2$lld"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld önbellekte · %2$lld dosya"
-          }
-        }
-      }
-    },
     "offlineSyncKeptOfflineFiles" : {
-      "comment" : "Value of a row in the Kept offline section of Offline & Sync. %1$@ is how many documents have their file on the device, %2$@ how many are kept, %3$@ the size on the device, e.g. 1.2 GB",
+      "comment" : "Value of a Kept offline row in Offline & Sync. %1$@ is how many documents have their file on the device, %2$@ how many are kept, %3$@ the size on the device, e.g. 1.2 GB",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -3952,7 +3898,7 @@
       }
     },
     "offlineSyncKeptOfflineFooter" : {
-      "comment" : "Footer of the Kept offline section in Offline & Sync",
+      "comment" : "Footer of the Kept offline screen, which lists the saved views kept on the device",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -4006,7 +3952,7 @@
       }
     },
     "offlineSyncKeptOfflineHeader" : {
-      "comment" : "Header of the Offline & Sync section listing the saved views and documents kept on the device",
+      "comment" : "Offline & Sync status row for the saved views and documents kept on the device, and the title of the screen listing the kept saved views",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -4060,7 +4006,7 @@
       }
     },
     "offlineSyncKeptOfflineSavedViewCount" : {
-      "comment" : "Part of the caption under All kept documents in Offline & Sync: how many saved views are kept offline. %lld is the number of saved views; joined with the single-documents count as a list",
+      "comment" : "Part of the caption under Kept offline in Offline & Sync: how many saved views are kept offline. %lld is the number of saved views; joined with the single-documents count as a list",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -4222,7 +4168,7 @@
       }
     },
     "offlineSyncKeptOfflineSingleCount" : {
-      "comment" : "Part of the caption under All kept documents in Offline & Sync: how many documents are kept offline on their own, not through a saved view. %lld is the number of documents; joined with the saved-view count as a list",
+      "comment" : "Part of the caption under Kept offline in Offline & Sync: how many documents are kept offline on their own, not through a saved view. %lld is the number of documents; joined with the saved-view count as a list",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -4383,62 +4329,8 @@
         }
       }
     },
-    "offlineSyncKeptOfflineTotal" : {
-      "comment" : "Row in the Kept offline section of Offline & Sync: every document kept, on its own or by a saved view, counted once",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle dokumenter gemt offline"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle offline behaltenen Dokumente"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All kept documents"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tous les documents conservés hors ligne"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tutti i documenti mantenuti offline"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle offline bewaarde documenten"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wszystkie dokumenty zachowane offline"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Çevrimdışı tutulan tüm dokümanlar"
-          }
-        }
-      }
-    },
     "offlineSyncKeptOfflineUnknownView" : {
-      "comment" : "Name shown in the Kept offline section for a kept saved view whose details are not on the device yet",
+      "comment" : "Name shown in the Kept offline list for a kept saved view whose details are not on the device yet",
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
@@ -4504,7 +4396,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Noch nicht vollständig zwischengespeichert"
+            "value" : "Noch nicht vollständig gespeichert"
           }
         },
         "en" : {
@@ -4666,7 +4558,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Umfasst Dokumentlisten, Details, Notizen, Elementsynchronisierung, Uploads, Vorschaubilder und heruntergeladene Dokumentdateien. Aus dem Offline-Cache geöffnete Dokumente verbrauchen keine Daten."
+            "value" : "Umfasst Dokumentlisten, Details, Notizen, Attribute, Uploads, Vorschaubilder und heruntergeladene Dokumentdateien. Aus dem Offline-Cache geöffnete Dokumente verbrauchen keine Daten."
           }
         },
         "en" : {
@@ -5368,7 +5260,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inaktiv"
+            "value" : "Keine"
           }
         },
         "en" : {
@@ -8274,7 +8166,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bibliothek laden"
+            "value" : "Bibliotheks-Download"
           }
         },
         "en" : {
@@ -8382,7 +8274,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Listen durchsuchen"
+            "value" : "Dokumentlisten"
           }
         },
         "en" : {
@@ -8544,7 +8436,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elementsynchronisierung"
+            "value" : "Attribute"
           }
         },
         "en" : {
