@@ -68,3 +68,4 @@
 - New per-server "Default upload tags" setting in Preferences: the chosen tags are preselected when uploading a document, including from the share sheet
 - Task results and error messages show up again on Paperless-ngx v3, including files rejected as duplicates
 - Documents with duplicates now say so: on Paperless-ngx v3 a document that shares its file content with others shows them in its details, and you can open them from there
+- New "Duplicates" filter for documents that have duplicates, on Paperless-ngx v3.2 and later

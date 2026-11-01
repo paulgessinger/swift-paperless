@@ -93,6 +93,8 @@ import Testing
   }
 
   @Test func testDocumentIDFilterNeedsVersion2() {
+    #expect(!BackendFeature.hasDuplicatesFilter.isSupported(on: Version(3, 1, 0), api: 10))
+    #expect(BackendFeature.hasDuplicatesFilter.isSupported(on: Version(3, 2, 0), api: 10))
     #expect(!BackendFeature.documentIDFilter.isSupported(on: Version(1, 17, 4), api: 3))
     #expect(BackendFeature.documentIDFilter.isSupported(on: Version(2, 0, 0), api: 3))
   }

@@ -16,6 +16,7 @@ public enum FilterBarComponent: String, CaseIterable, Codable, Sendable {
   case customFields
   case asn
   case date
+  case duplicates
 
   public var localizedName: LocalizedStringResource {
     switch self {
@@ -27,6 +28,7 @@ public enum FilterBarComponent: String, CaseIterable, Codable, Sendable {
     case .customFields: .app(.customFields)
     case .asn: .app(.asn)
     case .date: .app(.dateFilterTitle)
+    case .duplicates: .documentMetadata(.duplicates)
     }
   }
 }

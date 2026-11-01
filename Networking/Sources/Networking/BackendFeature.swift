@@ -43,6 +43,11 @@ public enum BackendFeature {
   // the search results — this must stay gated.
   case tantivySimpleSearch
 
+  // https://github.com/paperless-ngx/paperless-ngx/pull/13994 / 3.2.0
+  // Older backends ignore the `has_duplicates` parameter and would return every
+  // document as if filtered.
+  case hasDuplicatesFilter
+
   func isSupported(on backendVersion: Version, api apiVersion: UInt) -> Bool {
     switch self {
     case .nextAsnEndpoint, .documentIDFilter:
@@ -55,6 +60,8 @@ public enum BackendFeature {
       backendVersion >= Version(2, 20, 0)
     case .savedViewNewVisibility, .savedViewPermissions, .taskListEnvelope, .tantivySimpleSearch:
       apiVersion >= 10 || backendVersion >= Version(3, 0, 0)
+    case .hasDuplicatesFilter:
+      backendVersion >= Version(3, 2, 0)
     }
   }
 }

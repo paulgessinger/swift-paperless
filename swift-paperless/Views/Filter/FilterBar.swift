@@ -952,6 +952,15 @@ struct FilterBar: View {
         DateFilterView(query: $filterModel.filterState.date)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
       }
+    case .duplicates:
+      if store.repository.supports(feature: .hasDuplicatesFilter) {
+        Element(
+          label: { Text(.documentMetadata(.duplicates)) },
+          active: filterModel.filterState.hasDuplicatesOnly,
+          action: { filterModel.filterState.hasDuplicatesOnly.toggle() },
+          chevron: false
+        )
+      }
     }
   }
 

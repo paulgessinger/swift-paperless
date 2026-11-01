@@ -46,6 +46,35 @@ extension FilterState {
 
 @Suite
 struct FilterStateTest {
+  @Test("The duplicates filter counts as a rule and survives a round trip")
+  func hasDuplicatesOnly() throws {
+    var state = FilterState.empty
+    #expect(!state.hasDuplicatesOnly)
+
+    state.hasDuplicatesOnly = true
+    #expect(state.hasDuplicatesOnly)
+    #expect(state.ruleCount == 1)
+
+    let rules = state.rules(for: .tantivy)
+    #expect(rules.filter { $0.ruleType == .hasDuplicates }.count == 1)
+    var restored = FilterState.empty
+    restored.populateWith(rules: rules)
+    #expect(restored.hasDuplicatesOnly)
+
+    state.hasDuplicatesOnly = false
+    #expect(state.remaining.isEmpty)
+    #expect(state.ruleCount == 0)
+  }
+
+  @Test("A saved view asking for no duplicates isn't read as the filter")
+  func hasDuplicatesFalse() throws {
+    var state = FilterState.empty
+    let rule = try #require(FilterRule(ruleType: .hasDuplicates, value: .boolean(value: false)))
+    state.populateWith(rules: [rule])
+    #expect(!state.hasDuplicatesOnly)
+    #expect(state.rules(for: .tantivy).contains(rule))
+  }
+
   // - MARK: FilterRule to FilterState
 
   @Test("Search mode conversion between FilterRuleType and FilterState.SearchMode")
