@@ -98,6 +98,7 @@ struct DocumentView: View {
   @State private var isDocumentScannerAvailable = false
   @State private var isDataScannerAvailable = false
   @State private var showDocumentScanner = false
+  @State private var showNetworkScanner = false
   @State private var showCreateModal = false
 
   @StateObject private var importModel = DocumentImportModel()
@@ -316,6 +317,18 @@ struct DocumentView: View {
               showDocumentScanner = true
             } label: {
               Label(String(localized: .app(.scanDocument)), systemImage: "doc.viewfinder")
+            }
+          }
+
+          // No availability probe to pair this with: whether a scanner is
+          // reachable is only known once discovery runs, and discovery is what
+          // raises the Local Network permission prompt. So the item is offered
+          // wherever the feature is, and the prompt waits for the sheet.
+          if AppFeatures.enabled(.networkScanner) {
+            Button {
+              showNetworkScanner = true
+            } label: {
+              Label(String(localized: .app(.scanNetworkDocument)), systemImage: "scanner")
             }
           }
 
@@ -758,6 +771,16 @@ struct DocumentView: View {
         }
       )
       .ignoresSafeArea()
+    }
+
+    .sheet(isPresented: $showNetworkScanner) {
+      NetworkScannerView { url in
+        Task { @MainActor in
+          await importModel.importFile(
+            result: [url], isSecurityScoped: false, errorController: errorController)
+          showCreateModal = true
+        }
+      }
     }
 
     .sheet(
