@@ -603,7 +603,7 @@ extension FilterState {
       remaining.append(rule)
       return
     }
-    duplicates = value
+    duplicates = value ? .with : .without
   }
 
   private mutating func handleAsnGtRule(_ rule: FilterRule) {

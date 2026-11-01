@@ -776,19 +776,19 @@ struct FilterBar: View {
     @Bindable var filterModel = filterModel
     return Menu {
       Picker(selection: $filterModel.filterState.duplicates) {
-        Text(.app(.commonFilterAny)).tag(Bool?.none)
-        Text(.app(.filterWithDuplicates)).tag(Bool?.some(true))
-        Text(.app(.filterWithoutDuplicates)).tag(Bool?.some(false))
+        Text(.app(.commonFilterAny)).tag(FilterState.DuplicatesFilter.any)
+        Text(.app(.filterWithDuplicates)).tag(FilterState.DuplicatesFilter.with)
+        Text(.app(.filterWithoutDuplicates)).tag(FilterState.DuplicatesFilter.without)
       } label: {
         EmptyView()
       }
       .pickerStyle(.inline)
     } label: {
-      Pill(active: filterModel.filterState.duplicates != nil) {
+      Pill(active: filterModel.filterState.duplicates != .any) {
         switch filterModel.filterState.duplicates {
-        case .none: Text(.documentMetadata(.duplicates))
-        case .some(true): Text(.app(.filterWithDuplicates))
-        case .some(false): Text(.app(.filterWithoutDuplicates))
+        case .any: Text(.documentMetadata(.duplicates))
+        case .with: Text(.app(.filterWithDuplicates))
+        case .without: Text(.app(.filterWithoutDuplicates))
         }
       }
       .transaction { $0.animation = nil }

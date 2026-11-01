@@ -275,8 +275,11 @@ extension FilterState {
   }
 
   private var duplicatesRules: [FilterRule] {
-    guard let duplicates else { return [] }
-    return [FilterRule(ruleType: .hasDuplicates, value: .boolean(value: duplicates))!]
+    switch duplicates {
+    case .any: return []
+    case .with: return [FilterRule(ruleType: .hasDuplicates, value: .boolean(value: true))!]
+    case .without: return [FilterRule(ruleType: .hasDuplicates, value: .boolean(value: false))!]
+    }
   }
 
   private var asnRules: [FilterRule] {

@@ -46,10 +46,14 @@ extension FilterState {
 
 @Suite
 struct FilterStateTest {
-  @Test("The duplicates filter round-trips each state through rules", arguments: [true, false])
-  func duplicatesRoundTrip(value: Bool) throws {
+  @Test(
+    "The duplicates filter round-trips each state through rules",
+    arguments: [
+      (FilterState.DuplicatesFilter.with, true), (FilterState.DuplicatesFilter.without, false),
+    ])
+  func duplicatesRoundTrip(filter: FilterState.DuplicatesFilter, value: Bool) throws {
     var state = FilterState.empty
-    state.duplicates = value
+    state.duplicates = filter
     #expect(state.ruleCount == 1)
 
     let rule = try #require(FilterRule(ruleType: .hasDuplicates, value: .boolean(value: value)))
@@ -57,14 +61,22 @@ struct FilterStateTest {
 
     var restored = FilterState.empty
     restored.populateWith(rules: [rule])
-    #expect(restored.duplicates == value)
+    #expect(restored.duplicates == filter)
     #expect(restored.remaining.isEmpty)
+  }
+
+  @Test("Clearing the duplicates filter compares equal to never setting it")
+  func duplicatesClearedEqualsUnset() {
+    var state = FilterState.empty
+    state.duplicates = .with
+    state.duplicates = .any
+    #expect(state == FilterState.empty)
   }
 
   @Test("No duplicates filter generates no rule")
   func duplicatesAny() {
     let state = FilterState.empty
-    #expect(state.duplicates == nil)
+    #expect(state.duplicates == .any)
     #expect(state.ruleCount == 0)
     #expect(state.rules(for: .tantivy).isEmpty)
   }
@@ -74,9 +86,9 @@ struct FilterStateTest {
     var stored = try #require(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(FilterState.empty))
         as? [String: Any])
-    stored["duplicates"] = nil
+    stored["storedDuplicates"] = nil
     let data = try JSONSerialization.data(withJSONObject: stored)
-    #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == nil)
+    #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == .any)
   }
 
   // - MARK: FilterRule to FilterState

@@ -224,10 +224,20 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public var date: DateFilter = .init()
 
-  /// Whether documents must have duplicates (`true`) or none (`false`). `nil`
-  /// doesn't filter on duplicates, and generates no rule. Optional as well so
-  /// that filters stored before this existed still decode.
-  public var duplicates: Bool?
+  public enum DuplicatesFilter: Equatable, Codable, Sendable {
+    case any
+    case with
+    case without
+  }
+
+  // Optional so filters stored before this existed still decode. `.any` stays
+  // `nil`, so a cleared filter compares equal to one that never set it.
+  private var storedDuplicates: DuplicatesFilter?
+
+  public var duplicates: DuplicatesFilter {
+    get { storedDuplicates ?? .any }
+    set { storedDuplicates = newValue == .any ? nil : newValue }
+  }
 
   public init(
     correspondent: Filter,
@@ -353,7 +363,7 @@ public struct FilterState: Equatable, Codable, Sendable {
     if date.isActive {
       result += 1
     }
-    if duplicates != nil {
+    if duplicates != .any {
       result += 1
     }
 
