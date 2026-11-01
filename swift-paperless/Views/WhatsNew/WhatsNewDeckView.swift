@@ -23,22 +23,33 @@ struct WhatsNewDeckView: View {
         }
       }
       .tabViewStyle(.page(indexDisplayMode: .never))
+      .safeAreaInset(edge: .top) {
+        if deck.pages.count > 1 {
+          skipButton
+        }
+      }
       .safeAreaInset(edge: .bottom) {
         footer
       }
-      .toolbar {
-        if !isLastPage {
-          ToolbarItem(placement: .cancellationAction) {
-            Button {
-              onDismiss()
-            } label: {
-              Text(.app(.skip))
-            }
-          }
-        }
-      }
+      .toolbar(.hidden, for: .navigationBar)
     }
     .tipJarLinks()
+  }
+
+  /// Fades rather than leaving the layout: changing the navigation bar while
+  /// `page` flips mid-swipe cancels the swipe.
+  private var skipButton: some View {
+    Button {
+      onDismiss()
+    } label: {
+      Text(.app(.skip))
+    }
+    .opacity(isLastPage ? 0 : 1)
+    .disabled(isLastPage)
+    .animation(.default, value: isLastPage)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal)
+    .padding(.vertical, 8)
   }
 
   private var footer: some View {
