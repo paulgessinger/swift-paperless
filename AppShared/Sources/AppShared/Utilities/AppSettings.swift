@@ -91,6 +91,9 @@ public final class AppSettings: Observable {
   @Setting(.filterBarConfiguration)
   public var filterBarConfiguration: FilterBarConfiguration
 
+  @Setting(.telemetryOptIn)
+  public var telemetryOptIn: Bool?
+
   @Setting(.currentAppVersion)
   public var currentAppVersion: AppVersion?
 

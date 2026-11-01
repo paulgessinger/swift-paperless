@@ -328,6 +328,11 @@ struct MainView: View {
           WhatsNewDeckView(
             deck: .onboarding, finishLabel: String(localized: .login(.onboardingGetStarted))
           ) {
+            // Moving on with the toggle off is a decision too, so nobody gets
+            // asked again.
+            if AppFeatures.enabled(.telemetry), AppSettings.shared.telemetryOptIn == nil {
+              AppSettings.shared.telemetryOptIn = false
+            }
             releaseNotesModel.showReleaseNotes = false
             withAnimation { showOnboarding = false }
           }

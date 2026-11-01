@@ -100,7 +100,9 @@ private struct PageView: View {
             case .tip(let card):
               TipBlock(card: card)
             case .telemetry(let card):
-              TelemetryBlock(card: card)
+              if AppFeatures.enabled(.telemetry) {
+                TelemetryBlock(card: card)
+              }
             }
           }
         }
@@ -185,19 +187,23 @@ private struct TipBlock: View {
   }
 }
 
-/// Placeholder: not connected to anything yet, so only sample decks use it and
-/// its text stays out of the string catalogs.
+/// Records the choice in ``AppSettings/telemetryOptIn``. The text is a placeholder
+/// until telemetry exists, so it stays out of the string catalogs.
 private struct TelemetryBlock: View {
   let card: WhatsNewDeck.Card
 
-  @State private var enabled = false
+  private var optIn: Binding<Bool> {
+    Binding(
+      get: { AppSettings.shared.telemetryOptIn ?? false },
+      set: { AppSettings.shared.telemetryOptIn = $0 })
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 12) {
         CardView(card: card, moreLabel: "See what's sent")
 
-        Toggle(isOn: $enabled) {
+        Toggle(isOn: optIn) {
           Text(verbatim: card.title)
         }
         .labelsHidden()
