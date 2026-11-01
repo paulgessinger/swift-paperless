@@ -519,6 +519,7 @@ private struct ReleaseNotesBareView: View {
         }
       }
     }
+    .tipJarLinks()
   }
 }
 

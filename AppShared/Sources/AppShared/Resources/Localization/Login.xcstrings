@@ -2772,6 +2772,138 @@
         }
       }
     },
+    "onboardingFindText" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: feature description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter by tags, correspondents, document types, and more."
+          }
+        }
+      }
+    },
+    "onboardingFindTitle" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: feature title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find anything"
+          }
+        }
+      }
+    },
+    "onboardingGetStarted" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: button that continues to the server connection screen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get started"
+          }
+        }
+      }
+    },
+    "onboardingPrivacyText" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: privacy feature description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your login details and documents only ever go to your own server."
+          }
+        }
+      }
+    },
+    "onboardingPrivacyTitle" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: privacy feature title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stays on your server"
+          }
+        }
+      }
+    },
+    "onboardingScanText" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: feature description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture documents with the camera, or share files from other apps."
+          }
+        }
+      }
+    },
+    "onboardingScanTitle" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: feature title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan and upload"
+          }
+        }
+      }
+    },
+    "onboardingServerText" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: explains that a server is required",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+          }
+        }
+      }
+    },
+    "onboardingServerTitle" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: feature title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bring your own server"
+          }
+        }
+      }
+    },
+    "onboardingSubtitle" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A native app for your Paperless-ngx server."
+          }
+        }
+      }
+    },
+    "onboardingTitle" : {
+      "comment" : "Onboarding, shown on the first launch before connecting to a server: page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to Swift Paperless"
+          }
+        }
+      }
+    },
     "otp" : {
       "extractionState" : "manual",
       "localizations" : {
