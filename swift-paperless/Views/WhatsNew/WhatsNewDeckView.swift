@@ -3,11 +3,9 @@ import AppViews
 import MarkdownUI
 import SwiftUI
 
-// Prototype: only reachable from the debug menu, so chrome text stays hardcoded
-// English and the telemetry toggle isn't wired to anything.
-
 struct WhatsNewDeckView: View {
   let deck: WhatsNewDeck
+  var finishLabel = String(localized: .app(.done))
   let onDismiss: () -> Void
 
   @State private var page = 0
@@ -34,7 +32,7 @@ struct WhatsNewDeckView: View {
             Button {
               onDismiss()
             } label: {
-              Text(verbatim: "Skip")
+              Text(.app(.skip))
             }
           }
         }
@@ -45,14 +43,16 @@ struct WhatsNewDeckView: View {
 
   private var footer: some View {
     VStack(spacing: 12) {
-      HStack(spacing: 8) {
-        ForEach(deck.pages.indices, id: \.self) { index in
-          Circle()
-            .fill(index == page ? Color.accentColor : Color.secondary.opacity(0.3))
-            .frame(width: 7, height: 7)
+      if deck.pages.count > 1 {
+        HStack(spacing: 8) {
+          ForEach(deck.pages.indices, id: \.self) { index in
+            Circle()
+              .fill(index == page ? Color.accentColor : Color.secondary.opacity(0.3))
+              .frame(width: 7, height: 7)
+          }
         }
+        .accessibilityHidden(true)
       }
-      .accessibilityHidden(true)
 
       Button {
         if isLastPage {
@@ -61,7 +61,7 @@ struct WhatsNewDeckView: View {
           withAnimation { page += 1 }
         }
       } label: {
-        Text(verbatim: isLastPage ? "Done" : "Next")
+        Text(verbatim: isLastPage ? finishLabel : String(localized: .app(.next)))
           .font(.headline)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 6)
@@ -96,7 +96,7 @@ private struct PageView: View {
           ForEach(page.blocks.indices, id: \.self) { index in
             switch page.blocks[index] {
             case .card(let card):
-              CardView(card: card, moreLabel: "Learn more")
+              CardView(card: card, moreLabel: String(localized: .app(.learnMore)))
             case .tip(let card):
               TipBlock(card: card)
             case .telemetry(let card):
@@ -177,7 +177,7 @@ private struct TipBlock: View {
 
   var body: some View {
     VStack(spacing: 14) {
-      CardView(card: card, moreLabel: "Learn more")
+      CardView(card: card, moreLabel: String(localized: .app(.learnMore)))
       TipJarQuickOptions()
     }
     .padding()
@@ -185,6 +185,8 @@ private struct TipBlock: View {
   }
 }
 
+/// Placeholder: not connected to anything yet, so only sample decks use it and
+/// its text stays out of the string catalogs.
 private struct TelemetryBlock: View {
   let card: WhatsNewDeck.Card
 

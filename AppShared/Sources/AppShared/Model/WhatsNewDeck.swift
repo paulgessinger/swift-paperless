@@ -7,6 +7,12 @@ public struct WhatsNewDeck: Decodable, Equatable, Sendable {
     public let subtitle: String?
     public let blocks: [Block]
 
+    public init(title: String, subtitle: String? = nil, blocks: [Block]) {
+      self.title = title
+      self.subtitle = subtitle
+      self.blocks = blocks
+    }
+
     private enum CodingKeys: String, CodingKey {
       case title, subtitle, blocks
     }
@@ -27,6 +33,16 @@ public struct WhatsNewDeck: Decodable, Equatable, Sendable {
     public let text: String
     /// Markdown shown when the reader asks for more.
     public let detail: String?
+
+    public init(
+      icon: String, tint: String? = nil, title: String, text: String, detail: String? = nil
+    ) {
+      self.icon = icon
+      self.tint = tint
+      self.title = title
+      self.text = text
+      self.detail = detail
+    }
   }
 
   public enum Block: Equatable, Sendable {
@@ -59,6 +75,11 @@ public struct WhatsNewDeck: Decodable, Equatable, Sendable {
 
   public let version: String
   public let pages: [Page]
+
+  public init(version: String, pages: [Page]) {
+    self.version = version
+    self.pages = pages
+  }
 
   public init(json: Data) throws {
     self = try JSONDecoder().decode(Self.self, from: json)

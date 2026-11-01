@@ -41,6 +41,10 @@ struct MainView: View {
 
   @State private var releaseNotesModel = ReleaseNotesViewModel()
 
+  /// A new user sees onboarding ahead of the login screen rather than release
+  /// notes after it. Installs that already have a server skip it.
+  @State private var showOnboarding: Bool
+
   @StateObject private var biometricLockManager: BiometricLockManager
 
   // Per-scene routing state. Owning this here (instead of a global
@@ -54,6 +58,9 @@ struct MainView: View {
     // Route network byte counts into the persisted transfer meter.
     TransferStatistics.install()
     self.stack = stack
+    _showOnboarding = State(
+      initialValue: AppSettings.shared.lastAppVersion == nil
+        && stack.connectionManager.connection == nil)
     let errorController = ErrorController()
     errorController.installConnectivityPolicy(networkMonitor: stack.networkMonitor)
     _errorController = StateObject(wrappedValue: errorController)
@@ -316,9 +323,21 @@ struct MainView: View {
     .environment(networkMonitor)
 
     .fullScreenCover(isPresented: $showLoginScreen) {
-      LoginView(connectionManager: manager)
-        .environmentObject(errorController)
-        .interactiveDismissDisabled()
+      Group {
+        if showOnboarding {
+          WhatsNewDeckView(
+            deck: .onboarding, finishLabel: String(localized: .login(.onboardingGetStarted))
+          ) {
+            releaseNotesModel.showReleaseNotes = false
+            withAnimation { showOnboarding = false }
+          }
+          .transition(.opacity)
+        } else {
+          LoginView(connectionManager: manager)
+            .environmentObject(errorController)
+        }
+      }
+      .interactiveDismissDisabled()
     }
 
     // Only one sheet can be presented from a given view at a time. When the
@@ -342,7 +361,11 @@ struct MainView: View {
       }
     }
 
-    .fullScreenCover(isPresented: $releaseNotesModel.showReleaseNotes) {
+    .fullScreenCover(
+      isPresented: Binding(
+        get: { releaseNotesModel.showReleaseNotes && !showOnboarding },
+        set: { releaseNotesModel.showReleaseNotes = $0 })
+    ) {
       ReleaseNotesCoverView(releaseNotesModel: $releaseNotesModel)
     }
 
