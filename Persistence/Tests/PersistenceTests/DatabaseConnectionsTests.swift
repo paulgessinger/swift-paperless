@@ -126,19 +126,6 @@ struct DatabaseConnectionsTests {
     #expect(fetched.friendlyName == stored.friendlyName)
   }
 
-  @Test("default upload tags round-trip in order, per server")
-  func defaultUploadTagsRoundTrip() throws {
-    let database = try makeDatabase()
-    var first = record(friendlyName: "First")
-    first.defaultUploadTags = [7, 3, 12]
-    let second = record(friendlyName: "Second")
-    try database.upsertConnection(first)
-    try database.upsertConnection(second)
-
-    #expect(try database.connection(id: first.id)?.defaultUploadTags == [7, 3, 12])
-    #expect(try database.connection(id: second.id)?.defaultUploadTags == [])
-  }
-
   // MARK: - Error wrapping
 
   @Test("a failed operation surfaces as DatabaseError.operationFailed")

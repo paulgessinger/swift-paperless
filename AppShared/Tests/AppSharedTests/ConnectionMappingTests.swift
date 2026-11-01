@@ -26,15 +26,6 @@ struct ConnectionMappingTests {
     #expect(StoredConnection(record: record).knownVersions == versions)
   }
 
-  @Test("default upload tags survive a round trip through the record")
-  func defaultUploadTagsRoundTrip() {
-    var stored = Self.stored(knownVersions: nil)
-    stored.defaultUploadTags = [7, 3]
-    let record = stored.toRecord(needsAuth: false)
-    #expect(record.defaultUploadTags == [7, 3])
-    #expect(StoredConnection(record: record).defaultUploadTags == [7, 3])
-  }
-
   @Test("an unseeded server maps to empty columns and back")
   func unseededRoundTrip() {
     let record = Self.stored(knownVersions: nil).toRecord(needsAuth: false)

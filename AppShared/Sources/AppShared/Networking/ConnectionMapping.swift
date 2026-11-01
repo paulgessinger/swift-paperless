@@ -37,8 +37,7 @@ extension StoredConnection {
         ?? .recentlyBrowsed,
       syncOverCellular: record.syncOverCellular,
       knownVersions: Self.knownVersions(
-        apiVersion: record.apiVersion, backendVersion: record.backendVersion),
-      defaultUploadTags: record.defaultUploadTags)
+        apiVersion: record.apiVersion, backendVersion: record.backendVersion))
   }
 
   /// Both columns or nothing: a half-known pair can't seed a repository.
@@ -74,8 +73,7 @@ extension StoredConnection {
       offlineBrowsingMode: offlineBrowsingMode.rawValue,
       syncOverCellular: syncOverCellular,
       apiVersion: storableVersions?.apiVersion,
-      backendVersion: storableVersions?.backendVersion,
-      defaultUploadTags: defaultUploadTags)
+      backendVersion: storableVersions?.backendVersion)
   }
 
   /// The known versions as their columns, or `nil` for an API version the

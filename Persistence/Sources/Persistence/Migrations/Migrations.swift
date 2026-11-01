@@ -131,8 +131,8 @@ enum Migrations {
       try V20_KeepSavedViewsOffline.run(db)
     }
 
-    migrator.registerMigration("v21_add_default_upload_tags") { db in
-      try V21_AddDefaultUploadTags.run(db)
+    migrator.registerMigration("v21_create_default_upload_tag") { db in
+      try V21_CreateDefaultUploadTag.run(db)
     }
 
     return migrator

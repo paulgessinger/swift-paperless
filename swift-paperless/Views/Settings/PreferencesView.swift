@@ -10,7 +10,8 @@ struct PreferencesView: View {
 
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
   @Environment(DocumentStore.self) private var store
-  @Environment(ConnectionManager.self) private var connectionManager
+
+  @State private var uploadDefaults: UploadDefaults?
 
   var body: some View {
     Form {
@@ -70,13 +71,12 @@ struct PreferencesView: View {
         Text(.settings(.filterConfiguration))
       }
 
-      if let serverID = store.activeServerID {
+      if let uploadDefaults {
         Section {
           NavigationLink {
-            DefaultUploadTagsView(serverID: serverID)
+            DefaultUploadTagsView(defaults: uploadDefaults)
           } label: {
-            let tags = (connectionManager.connections[serverID]?.defaultUploadTags ?? [])
-              .compactMap { store.tags[$0] }
+            let tags = uploadDefaults.tags.compactMap { store.tags[$0] }
             VStack(alignment: .leading, spacing: 8) {
               Text(.settings(.defaultUploadTags))
               if tags.isEmpty {
@@ -94,6 +94,10 @@ struct PreferencesView: View {
           Text(.settings(.defaultUploadTagsDescription))
         }
       }
+    }
+    .task(id: store.activeServerID) {
+      guard uploadDefaults?.serverID != store.activeServerID else { return }
+      uploadDefaults = await store.loadUploadDefaults()
     }
     .navigationTitle(Text(.settings(.preferences)))
     .navigationBarTitleDisplayMode(.inline)

@@ -137,10 +137,6 @@ public struct CreateDocumentView: View {
   @State private var status = Status.none
   @State private var isAsnValid = true
 
-  // The server whose defaults `document.tags` started from. `.task` runs again
-  // whenever a picker is popped, which must not overwrite what was picked there.
-  @State private var defaultTagsServerID: UUID?
-
   @AppStorage("IncludeDocumentCreatedDate", store: .group)
   private var includeCreatedDate = true
 
@@ -175,7 +171,7 @@ public struct CreateDocumentView: View {
   public func upload() async {
     do {
       var upload = document
-      upload.tags = store.knownTags(document.tags)
+      upload.tags = UploadDefaults.existingTags(document.tags, in: store.tags)
       try await store.create(document: upload, file: sourceUrl, filename: filename)
     } catch {
       errorController.push(mutationError: error)
@@ -203,18 +199,17 @@ public struct CreateDocumentView: View {
 
   /// Preselects the upload defaults of the server the store is on, which is
   /// the one this document goes to.
-  private func applyDefaultTags() {
-    guard let id = store.activeServerID, id != defaultTagsServerID else { return }
-    defaultTagsServerID = id
-    document.tags = connectionManager.connections[id]?.defaultUploadTags ?? []
+  private func applyDefaultTags() async {
+    let serverID = store.activeServerID
+    let defaults = await store.loadUploadDefaults()
+    guard store.activeServerID == serverID else { return }
+    document.tags = defaults?.tags ?? []
   }
 
   private func resetDocument() {
     document.asn = nil
     document.documentType = nil
     document.correspondent = nil
-    document.tags = []
-    defaultTagsServerID = nil
     document.storagePath = nil
     document.created = includeCreatedDate ? .now : nil
   }
@@ -456,7 +451,6 @@ public struct CreateDocumentView: View {
         }
       }
       .task {
-        applyDefaultTags()
         do {
           try await store.sync()
         } catch {
@@ -468,8 +462,6 @@ public struct CreateDocumentView: View {
         switch event {
         case .repositoryWillChange:
           resetDocument()
-        case .repositoryChanged:
-          applyDefaultTags()
         default: break
         }
       }
@@ -479,7 +471,11 @@ public struct CreateDocumentView: View {
         includeCreatedDate = document.created != nil
       }
     }
-
+    // On the stack, not its content: there it runs again whenever a picker is
+    // popped, which must not overwrite what was picked.
+    .onChange(of: store.activeServerID, initial: true) {
+      Task { await applyDefaultTags() }
+    }
   }
 }
 

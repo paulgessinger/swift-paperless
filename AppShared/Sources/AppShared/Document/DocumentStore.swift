@@ -124,6 +124,13 @@ public final class DocumentStore: Sendable {
     return OfflineStatus(database: backend.database, serverID: backend.serverID)
   }
 
+  /// The active server's upload defaults; `nil` without a server, or if they
+  /// can't be read.
+  public func loadUploadDefaults() async -> UploadDefaults? {
+    guard let backend = session?.backend else { return nil }
+    return await UploadDefaults.load(database: backend.database, serverID: backend.serverID)
+  }
+
   /// The active server's documents downloading on the background session.
   public var libraryFilesInFlight: Int {
     guard let session, let downloader = registry?.fileDownloader else { return 0 }
@@ -1179,14 +1186,6 @@ extension DocumentStore {
     }
 
     return currentUser?.canDelete(document) ?? false
-  }
-
-  /// `ids` without the tags this server does not have, which would fail an
-  /// upload: a default tag can be deleted after it was picked. Unchanged while
-  /// no tags are loaded, when there is nothing to tell them apart with.
-  public func knownTags(_ ids: [UInt]) -> [UInt] {
-    guard !tags.isEmpty else { return ids }
-    return ids.filter { tags[$0] != nil }
   }
 
   /// All ancestor tag ids of `id` (excluding `id` itself), walking up the
