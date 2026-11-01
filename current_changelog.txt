@@ -69,3 +69,4 @@
 - Task results and error messages show up again on Paperless-ngx v3, including files rejected as duplicates
 - Documents with duplicates now say so: on Paperless-ngx v3 a document that shares its file content with others shows them in its details, and you can open them from there
 - New "Duplicates" filter for documents with or without duplicates, on Paperless-ngx v3.2 and later
+- The app now recovers as soon as a VPN such as Tailscale connects, including one started by a Shortcuts automation when the app opens: failed loads retry on their own, and requests no longer sit waiting on a connection that stopped working

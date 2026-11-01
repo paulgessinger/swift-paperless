@@ -410,8 +410,10 @@ struct MainView: View {
         Logger.shared.notice("App goes to background")
         biometricLockManager.lockIfEnabled()
         TransferStatistics.shared.persist()
+        networkMonitor.didEnterBackground()
 
       case .active:
+        networkMonitor.willEnterForeground()
         store?.startTaskPolling()
 
         Logger.shared.notice("App becomes active")
@@ -437,6 +439,16 @@ struct MainView: View {
 
       default:
         break
+      }
+    }
+
+    // Only a sync that failed: a healthy one has nothing to gain from a new route.
+    .onChange(of: networkMonitor.routeChangeCount) { _, _ in
+      guard !initialDisplay, scenePhase == .active, let store, !store.syncFailures.isEmpty
+      else { return }
+      Task {
+        try? await store.sync()
+        await store.fillIfEnabled(phases: activePhases)
       }
     }
 
