@@ -8644,6 +8644,18 @@
         }
       }
     },
+    "learnMore" : {
+      "comment" : "Link to more detail about a feature",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn more"
+          }
+        }
+      }
+    },
     "loading" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9064,6 +9076,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İsim"
+          }
+        }
+      }
+    },
+    "next" : {
+      "comment" : "Button that moves to the next page of a paged presentation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
           }
         }
       }
@@ -13908,6 +13932,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Doküman özelliklerini göster"
+          }
+        }
+      }
+    },
+    "skip" : {
+      "comment" : "Button that closes a paged presentation before its last page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
           }
         }
       }

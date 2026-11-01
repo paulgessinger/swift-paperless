@@ -25,6 +25,7 @@ struct DebugMenuView: View {
   @State private var reclaimResult: ReclaimResult?
   @State private var isReclaiming = false
   @State private var showWhatsNewDeck = false
+  @State private var showOnboarding = false
 
   /// Outcome of the legacy-storage export, reported in an alert rather than
   /// through `ErrorController` so it stays visible above the settings sheet.
@@ -167,6 +168,23 @@ struct DebugMenuView: View {
         .fullScreenCover(isPresented: $showWhatsNewDeck) {
           WhatsNewDeckView(deck: .sample) {
             showWhatsNewDeck = false
+          }
+        }
+
+        Button {
+          showOnboarding = true
+        } label: {
+          Label {
+            Text(verbatim: "Show onboarding")
+          } icon: {
+            Image(systemName: "hand.wave")
+          }
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+          WhatsNewDeckView(
+            deck: .onboarding, finishLabel: String(localized: .login(.onboardingGetStarted))
+          ) {
+            showOnboarding = false
           }
         }
       }
