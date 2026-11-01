@@ -20,7 +20,6 @@ venv
 scripts/frames
 .cache/swpngx
 
-/vendor
 /build
 
 # Xcode auto-extracts untabled string literals into the default "Localizable"

@@ -1,8 +1,3 @@
-# Homebrew's Ruby is keg-only (not on PATH by default). fastlane's gems are
-# installed under it, so put it first for every recipe — otherwise `bundle`
-# resolves to the EOL system Ruby 2.6 and fails to find the gems.
-export PATH := '/opt/homebrew/opt/ruby/bin:' + env_var('PATH')
-
 default_port := '8000'
 
 zensical := "uv run --with-requirements docs/requirements.txt zensical"
@@ -123,7 +118,7 @@ test: (_test_swift "Common") (_test_swift "DataModel") (_test_swift "Networking"
 
 lint-format:
   find . -name '*.swift' \
-    -not -path '*/.git/*' -not -path '*/.build/*' -not -path '*/vendor/*' -not -path "*/.agents/*" \
+    -not -path '*/.git/*' -not -path '*/.build/*' -not -path "*/.agents/*" \
     | parallel swift-format format --in-place {}
 
 lint-whitespace:

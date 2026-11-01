@@ -92,8 +92,7 @@ a newer pending dispatch may replace an older pending dispatch. Local
 `just beta-ci` uploads are outside that lock, so avoid running them alongside CI.
 
 If upload succeeds but tagging fails, recover the tag using the instruction in
-the CI log rather than uploading the same build again. Avoid mixing the old
-Fastlane/prerelease-triggered pipeline with the shared pipeline for a candidate.
+the CI log rather than uploading the same build again.
 
 The CI branch filters include `develop/**` and `release/**`. Existing maintenance
 branches retain their own validation workflows until those are updated.

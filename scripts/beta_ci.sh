@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
-# Build, sign, and upload a TestFlight beta — a fastlane-free replacement for the
-# Fastfile `beta_ci` lane. It uses plain xcodebuild for archive/export with the
-# explicitly installed App Store signing assets (so no `match`) and `asc` (App
-# Store Connect CLI, `brew install asc`) for the upload.
+# Build, sign, and upload a TestFlight beta. It uses plain xcodebuild for
+# archive/export with the explicitly installed App Store signing assets and `asc`
+# (App Store Connect CLI, `brew install asc`) for the upload.
 #
 # The build number is assigned here, not committed: it comes from App Store
 # Connect (`asc builds next-build-number`) and is written into Version.xcconfig
@@ -65,7 +64,7 @@ while [ $# -gt 0 ]; do
       esac
       shift
       ;;
-    -h|--help)   sed -n '2,30p' "$0"; exit 0 ;;
+    -h|--help)   sed -n '2,28p' "$0"; exit 0 ;;
     *) echo "error: unknown argument '$1'" >&2; exit 2 ;;
   esac
   shift
@@ -115,8 +114,8 @@ cleanup() {
 trap cleanup EXIT
 
 # --- credentials -----------------------------------------------------------
-# asc reads ASC_* env vars; bridge fastlane's names so one set of secrets works
-# both locally and in CI.
+# asc reads ASC_* env vars; bridge the APP_STORE_CONNECT_* names so one set of
+# secrets works both locally and in CI.
 [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}" ]   && export ASC_KEY_ID="${ASC_KEY_ID:-$APP_STORE_CONNECT_API_KEY_ID}"
 [ -n "${APP_STORE_CONNECT_ISSUER_ID:-}" ]    && export ASC_ISSUER_ID="${ASC_ISSUER_ID:-$APP_STORE_CONNECT_ISSUER_ID}"
 [ -n "${APP_STORE_CONNECT_KEY_FILEPATH:-}" ] && export ASC_PRIVATE_KEY_PATH="${ASC_PRIVATE_KEY_PATH:-$APP_STORE_CONNECT_KEY_FILEPATH}"
@@ -169,9 +168,9 @@ fi
 # --- App Store provisioning profiles ---------------------------------------
 # Manual signing (ExportOptions.plist) needs the App Store profiles installed on
 # this machine. Resolve each by name via `asc`, download it, and drop it into the
-# provisioning-profile search dirs (named by its UUID, as Xcode expects). This
-# replaces the profiles `match` used to sync from a git repo. Skipped when asc is
-# unavailable — export then relies on whatever profiles are already installed.
+# provisioning-profile search dirs (named by its UUID, as Xcode expects). Skipped
+# when asc is unavailable — export then relies on whatever profiles are already
+# installed.
 install_appstore_profile() {
   local name="$1" id uuid tmp plist d
   id="$(asc profiles list --profile-type IOS_APP_STORE --output json 2>/dev/null \

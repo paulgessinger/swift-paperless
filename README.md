@@ -71,9 +71,9 @@ If you have any questions or need support create an issue on [GitHub](https://gi
 <!-- --8<-- [start:maintenance] -->
 ## Maintenance
 
-Automation lives in the [`scripts/`](scripts/) package (`swpngx`) and
-[`fastlane/`](fastlane/). Run `swpngx` via `uv run --project scripts swpngx …`
-from the repo root (or install the package so `swpngx` is on your `PATH`).
+Automation lives in the [`scripts/`](scripts/) package (`swpngx`). Run `swpngx`
+via `uv run --project scripts swpngx …` from the repo root (or install the package
+so `swpngx` is on your `PATH`).
 
 Device ids, simulator names, bezel PNGs, and framing geometry are defined once in
 [`screenshot_devices.toml`](screenshot_devices.toml). [`screenshots.toml`](screenshots.toml)
@@ -222,9 +222,6 @@ Connect API key as TestFlight (`APP_STORE_CONNECT_API_KEY_ID`,
 
 PNG screenshots under `fastlane/screenshots/` are gitignored; generate them locally
 before upload.
-
-There is also `bundle exec fastlane screenshots` (`snapshot` + [`fastlane/Snapfile`](fastlane/Snapfile)),
-a UI-test-based path that is separate from the `swpngx` workflow above.
 
 ### Panorama montage
 
