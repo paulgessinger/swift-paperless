@@ -65,14 +65,6 @@ struct FilterStateTest {
     #expect(restored.remaining.isEmpty)
   }
 
-  @Test("Clearing the duplicates filter compares equal to never setting it")
-  func duplicatesClearedEqualsUnset() {
-    var state = FilterState.empty
-    state.duplicates = .with
-    state.duplicates = .any
-    #expect(state == FilterState.empty)
-  }
-
   @Test("No duplicates filter generates no rule")
   func duplicatesAny() {
     let state = FilterState.empty
@@ -86,9 +78,17 @@ struct FilterStateTest {
     var stored = try #require(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(FilterState.empty))
         as? [String: Any])
-    stored["storedDuplicates"] = nil
+    stored["duplicates"] = nil
     let data = try JSONSerialization.data(withJSONObject: stored)
     #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == .any)
+  }
+
+  @Test("A stored duplicates filter survives encoding")
+  func duplicatesEncoded() throws {
+    var state = FilterState.empty
+    state.duplicates = .without
+    let data = try JSONEncoder().encode(state)
+    #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == .without)
   }
 
   // - MARK: FilterRule to FilterState

@@ -230,14 +230,7 @@ public struct FilterState: Equatable, Codable, Sendable {
     case without
   }
 
-  // Optional so filters stored before this existed still decode. `.any` stays
-  // `nil`, so a cleared filter compares equal to one that never set it.
-  private var storedDuplicates: DuplicatesFilter?
-
-  public var duplicates: DuplicatesFilter {
-    get { storedDuplicates ?? .any }
-    set { storedDuplicates = newValue == .any ? nil : newValue }
-  }
+  public var duplicates: DuplicatesFilter = .any
 
   public init(
     correspondent: Filter,
@@ -451,5 +444,15 @@ extension FilterState.DateFilter.Range: RawRepresentable {
     case .previousYear:
       return "previous year"
     }
+  }
+}
+
+// The synthesized decoder picks this overload, so a filter stored before
+// `duplicates` existed still decodes instead of being reset.
+extension KeyedDecodingContainer {
+  fileprivate func decode(
+    _ type: FilterState.DuplicatesFilter.Type, forKey key: Key
+  ) throws -> FilterState.DuplicatesFilter {
+    try decodeIfPresent(type, forKey: key) ?? .any
   }
 }
