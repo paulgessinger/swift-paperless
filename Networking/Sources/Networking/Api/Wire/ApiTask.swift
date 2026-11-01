@@ -50,6 +50,42 @@ struct ApiTaskV10: Codable, Sendable {
     var filename: String?
   }
 
+  // `result_data` is a free-form JSON object whose keys depend on the task, so
+  // a key of an unexpected type is treated as absent rather than failing the
+  // whole task list.
+  struct ResultData: Codable, Sendable {
+    var document_id: UInt?
+    var reason: String?
+    var duplicate_of: UInt?
+    var error_message: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case document_id, reason, duplicate_of, error_message
+    }
+
+    init(from decoder: any Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      document_id = try? container.decodeIfPresent(UInt.self, forKey: .document_id)
+      reason = try? container.decodeIfPresent(String.self, forKey: .reason)
+      duplicate_of = try? container.decodeIfPresent(UInt.self, forKey: .duplicate_of)
+      error_message = try? container.decodeIfPresent(String.self, forKey: .error_message)
+    }
+
+    // Same precedence and wording as the backend's v9 `result` field.
+    var message: String? {
+      if let document_id {
+        return "Success. New document id \(document_id) created"
+      }
+      if let reason {
+        return reason
+      }
+      if let duplicate_of {
+        return "Not consuming: It is a duplicate of document #\(duplicate_of)"
+      }
+      return error_message
+    }
+  }
+
   var id: UInt
   var task_id: UUID
   var task_type: String
@@ -57,7 +93,7 @@ struct ApiTaskV10: Codable, Sendable {
   var status: String
   var date_created: Date?
   var date_done: Date?
-  var result_message: String?
+  var result_data: ResultData?
   var input_data: InputData?
   var related_document_ids: [UInt]
   var acknowledged: Bool
@@ -76,10 +112,10 @@ extension ApiTaskV10 {
       dateDone: date_done,
       type: trigger_source,
       status: normalizedStatus,
-      result: result_message,
+      result: result_data?.message,
       acknowledged: acknowledged,
       relatedDocument: related_document_ids.first.map(String.init),
-      duplicateDocumentId: parseDuplicateDocumentId(from: result_message)
+      duplicateDocumentId: result_data?.duplicate_of
     )
   }
 }

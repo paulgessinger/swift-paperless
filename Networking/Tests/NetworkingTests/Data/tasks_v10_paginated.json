@@ -29,7 +29,6 @@
             "result_data": {
                 "document_id": 29
             },
-            "result_message": "Success. New document id 29 created",
             "related_document_ids": [
                 29
             ],
@@ -60,7 +59,6 @@
                 }
             },
             "result_data": null,
-            "result_message": null,
             "related_document_ids": [],
             "acknowledged": false,
             "owner": 4
