@@ -61,6 +61,8 @@ extension FilterState {
         handleAsnGtRule(rule)
       case .asnLt:
         handleAsnLtRule(rule)
+      case .hasDuplicates:
+        handleHasDuplicatesRule(rule)
       default:
         remaining.append(rule)
       }
@@ -591,6 +593,17 @@ extension FilterState {
     case .any:
       asn = value ? .isNull : .isNotNull
     }
+  }
+
+  private mutating func handleHasDuplicatesRule(_ rule: FilterRule) {
+    guard case .boolean(let value) = rule.value else {
+      Logger.dataModel.error(
+        "Invalid value \(String(describing: rule.value)) for rule type \(String(describing: rule.ruleType), privacy: .public)"
+      )
+      remaining.append(rule)
+      return
+    }
+    duplicates = value
   }
 
   private mutating func handleAsnGtRule(_ rule: FilterRule) {

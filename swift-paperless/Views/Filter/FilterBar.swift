@@ -772,6 +772,30 @@ struct FilterBar: View {
     .backport.glassEffect(.regular.interactive())
   }
 
+  private var duplicatesMenu: some View {
+    @Bindable var filterModel = filterModel
+    return Menu {
+      Picker(selection: $filterModel.filterState.duplicates) {
+        Text(.app(.commonFilterAny)).tag(Bool?.none)
+        Text(.app(.filterWithDuplicates)).tag(Bool?.some(true))
+        Text(.app(.filterWithoutDuplicates)).tag(Bool?.some(false))
+      } label: {
+        EmptyView()
+      }
+      .pickerStyle(.inline)
+    } label: {
+      Pill(active: filterModel.filterState.duplicates != nil) {
+        switch filterModel.filterState.duplicates {
+        case .none: Text(.documentMetadata(.duplicates))
+        case .some(true): Text(.app(.filterWithDuplicates))
+        case .some(false): Text(.app(.filterWithoutDuplicates))
+        }
+      }
+      .transaction { $0.animation = nil }
+    }
+    .backport.glassEffect(.regular.interactive())
+  }
+
   private var ownerElement: some View {
     Pill(active: filterModel.filterState.owner != .any) {
       switch filterModel.filterState.owner {
@@ -954,12 +978,10 @@ struct FilterBar: View {
       }
     case .duplicates:
       if store.repository.supports(feature: .hasDuplicatesFilter) {
-        Element(
-          label: { Text(.documentMetadata(.duplicates)) },
-          active: filterModel.filterState.hasDuplicatesOnly,
-          action: { filterModel.filterState.hasDuplicatesOnly.toggle() },
-          chevron: false
-        )
+        duplicatesMenu
+          .onTapGesture {
+            Haptics.shared.impact(style: .light)
+          }
       }
     }
   }

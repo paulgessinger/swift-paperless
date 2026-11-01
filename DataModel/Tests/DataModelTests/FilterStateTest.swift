@@ -46,33 +46,37 @@ extension FilterState {
 
 @Suite
 struct FilterStateTest {
-  @Test("The duplicates filter counts as a rule and survives a round trip")
-  func hasDuplicatesOnly() throws {
+  @Test("The duplicates filter round-trips each state through rules", arguments: [true, false])
+  func duplicatesRoundTrip(value: Bool) throws {
     var state = FilterState.empty
-    #expect(!state.hasDuplicatesOnly)
-
-    state.hasDuplicatesOnly = true
-    #expect(state.hasDuplicatesOnly)
+    state.duplicates = value
     #expect(state.ruleCount == 1)
 
-    let rules = state.rules(for: .tantivy)
-    #expect(rules.filter { $0.ruleType == .hasDuplicates }.count == 1)
-    var restored = FilterState.empty
-    restored.populateWith(rules: rules)
-    #expect(restored.hasDuplicatesOnly)
+    let rule = try #require(FilterRule(ruleType: .hasDuplicates, value: .boolean(value: value)))
+    #expect(state.rules(for: .tantivy) == [rule])
 
-    state.hasDuplicatesOnly = false
-    #expect(state.remaining.isEmpty)
-    #expect(state.ruleCount == 0)
+    var restored = FilterState.empty
+    restored.populateWith(rules: [rule])
+    #expect(restored.duplicates == value)
+    #expect(restored.remaining.isEmpty)
   }
 
-  @Test("A saved view asking for no duplicates isn't read as the filter")
-  func hasDuplicatesFalse() throws {
-    var state = FilterState.empty
-    let rule = try #require(FilterRule(ruleType: .hasDuplicates, value: .boolean(value: false)))
-    state.populateWith(rules: [rule])
-    #expect(!state.hasDuplicatesOnly)
-    #expect(state.rules(for: .tantivy).contains(rule))
+  @Test("No duplicates filter generates no rule")
+  func duplicatesAny() {
+    let state = FilterState.empty
+    #expect(state.duplicates == nil)
+    #expect(state.ruleCount == 0)
+    #expect(state.rules(for: .tantivy).isEmpty)
+  }
+
+  @Test("A filter stored before the duplicates field still decodes")
+  func duplicatesAbsentFromStoredFilter() throws {
+    var stored = try #require(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(FilterState.empty))
+        as? [String: Any])
+    stored["duplicates"] = nil
+    let data = try JSONSerialization.data(withJSONObject: stored)
+    #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == nil)
   }
 
   // - MARK: FilterRule to FilterState

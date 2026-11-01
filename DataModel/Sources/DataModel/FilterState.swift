@@ -224,20 +224,10 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public var date: DateFilter = .init()
 
-  /// Limits the list to documents with duplicates. This is a rule in
-  /// ``remaining`` rather than a stored field, so it needs nothing beyond what
-  /// a saved view carrying the rule already does.
-  public var hasDuplicatesOnly: Bool {
-    get {
-      remaining.contains { $0.ruleType == .hasDuplicates && $0.value == .boolean(value: true) }
-    }
-    set {
-      remaining.removeAll { $0.ruleType == .hasDuplicates }
-      if newValue, let rule = FilterRule(ruleType: .hasDuplicates, value: .boolean(value: true)) {
-        remaining.append(rule)
-      }
-    }
-  }
+  /// Whether documents must have duplicates (`true`) or none (`false`). `nil`
+  /// doesn't filter on duplicates, and generates no rule. Optional as well so
+  /// that filters stored before this existed still decode.
+  public var duplicates: Bool?
 
   public init(
     correspondent: Filter,
@@ -363,7 +353,7 @@ public struct FilterState: Equatable, Codable, Sendable {
     if date.isActive {
       result += 1
     }
-    if hasDuplicatesOnly {
+    if duplicates != nil {
       result += 1
     }
 
