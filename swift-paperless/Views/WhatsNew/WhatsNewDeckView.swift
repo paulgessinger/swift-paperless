@@ -223,7 +223,7 @@ private struct DetailView: View {
 
   var body: some View {
     ScrollView {
-      Markdown(card.detail ?? "", baseURL: ReleaseNotesViewModel.baseUrl)
+      Markdown(card.detail ?? "", baseURL: DocumentationLinks.releaseNotes)
         .frame(maxWidth: 540, alignment: .leading)
         .padding()
         .frame(maxWidth: .infinity)

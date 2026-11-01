@@ -3,7 +3,7 @@ import Foundation
 /// The public tip link. Browsers get the landing page; the app shows the tip
 /// jar instead, so release notes can use the same link everywhere.
 public enum TipJarLink {
-  public static let url = URL(string: "https://swift-paperless.app/tip")!
+  public static let url = DocumentationLinks.baseUrl.appending(path: "tip")
 
   public static func matches(_ candidate: URL) -> Bool {
     guard let components = URLComponents(url: candidate, resolvingAgainstBaseURL: true) else {
