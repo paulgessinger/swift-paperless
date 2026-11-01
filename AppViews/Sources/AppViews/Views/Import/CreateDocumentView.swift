@@ -361,7 +361,7 @@ public struct CreateDocumentView: View {
             }
 
             NavigationLink(destination: {
-              DocumentTagEditView(document: $document)
+              TagSelectionView(tags: $document.tags)
                 .navigationTitle(Text(.app(.tags)))
             }) {
               if document.tags.isEmpty {
