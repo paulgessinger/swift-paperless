@@ -22,10 +22,13 @@ public enum ScannerClient {
   /// How long a whole scan may take before we give up on it.
   ///
   /// Generous, because an ADF stack at 600 dpi legitimately takes minutes. It
-  /// exists to bound SwiftESCL 4.1.1's 503 retry loop — whose counter is
-  /// compared but never incremented, so a scanner stuck on 503 keeps the page
-  /// loop alive indefinitely — not to police slow hardware.
+  /// It is a backstop against a scanner that never finishes a page and never
+  /// errors, not a way to police slow hardware. Hitting it cancels the scan,
+  /// which releases the job on the device.
   public static let scanTimeout: Duration = .seconds(300)
+
+  /// How many 503s in a row to tolerate before giving up on a page.
+  private static let maxBusyRetries = 3
 
   private static func make(_ ref: ScannerRef) throws -> EsclScanner {
     try EsclScanner(
@@ -118,26 +121,85 @@ public enum ScannerClient {
       let settings = request.esclSettings(
         version: ref.esclVersion ?? "2.0", supportedModes: supportedModes)
 
-      // The library hands the closure a non-`Sendable` `Progress`; only the
-      // fraction escapes it. Yielding into the stream keeps the updates ordered,
-      // which a `Task { @MainActor in ... }` per callback would not.
-      let pages = try await scanner.performScan(settings) { report, _ in
-        progress?.yield(report.fractionCompleted)
-      }
+      // The page loop is ours rather than `performScan`'s, because the job has
+      // to be released on every exit and `performScan` cannot do that: its only
+      // cancellation check sits at the top of its loop, so a cancellation that
+      // lands while it is awaiting a page throws straight past it. Its retry
+      // counter is also compared but never incremented, so a scanner answering
+      // 503 keeps it alive indefinitely.
+      let jobId = try await scanner.startJob(settings)
+      Logger.scanning.info("Started scan job")
 
-      guard !pages.isEmpty else {
-        Logger.scanning.warning("Scan job completed but returned no documents")
-        throw ScanError.noPages
-      }
+      do {
+        var pages: [Data] = []
+        var retries = 0
 
-      Logger.scanning.info("Scan returned \(pages.count) document(s)")
-      return pages
+        while true {
+          try Task.checkCancellation()
+
+          do {
+            // The library hands the closure a non-`Sendable` `Progress`; only
+            // the fraction escapes it. Yielding into the stream keeps the
+            // updates ordered, which a `Task { @MainActor in ... }` per
+            // callback would not.
+            pages.append(
+              try await scanner.getNextDocument(for: jobId) { report, _ in
+                progress?.yield(report.fractionCompleted)
+              })
+            retries = 0
+          } catch ScannerRepresentationError.notFound {
+            // eSCL signals "no more documents" with a 404 on NextDocument.
+            break
+          } catch ScannerRepresentationError.serviceUnavailable
+            where retries < maxBusyRetries
+          {
+            // Some scanners answer 503 between the pages of one job.
+            retries += 1
+            try await Task.sleep(for: .seconds(1))
+          }
+        }
+
+        guard !pages.isEmpty else {
+          Logger.scanning.warning("Scan job completed but returned no documents")
+          throw ScanError.noPages
+        }
+
+        Logger.scanning.info("Scan returned \(pages.count) document(s)")
+        return pages
+      } catch {
+        // Cancelled, timed out, or the transport failed: the scanner is still
+        // holding the job, and will keep feeding paper and refuse the next one
+        // until its own timeout expires. Hand it back.
+        await release(jobId, of: ref)
+        throw error
+      }
     } catch {
       throw mapped(error)
     }
   }
 
-  fileprivate static func mapped(_ error: any Error) -> any Error {
+  /// Tells the scanner to drop a job we are not going to finish.
+  ///
+  /// Detached on purpose: this runs *because* the surrounding task was
+  /// cancelled, and an inherited cancellation would abort the request before it
+  /// reached the device. It builds its own scanner for the same reason ``run``
+  /// does — an `EsclScanner` cannot cross into another task.
+  ///
+  /// `EsclScanner.cancelJob` is deliberately not used. It GETs the job URI,
+  /// which reads the job; eSCL cancels one with `DELETE`.
+  private static func release(_ jobId: String, of ref: ScannerRef) async {
+    await Task.detached {
+      do {
+        try await make(ref)
+          .sendRequestAndIgnoreResponse(method: "DELETE", endPoint: .scanJob(jobId))
+        Logger.scanning.info("Released the scan job")
+      } catch {
+        Logger.scanning.warning("Could not release the scan job: \(String(describing: error))")
+      }
+    }.value
+  }
+
+  static func mapped(_ error: any Error) -> any Error {
     if let error = error as? ScanError { return error }
 
     switch error {
@@ -161,6 +223,10 @@ public enum ScannerClient {
       return ScanError.malformedDocument
     case is CancellationError:
       return error
+    case let error as URLError where error.code == .cancelled:
+      // What a cancelled URLSession request throws. Reporting it as a dead
+      // scanner would put an error alert on top of a scan the user stopped.
+      return CancellationError()
     case let error as URLError where error.code == .timedOut:
       return ScanError.timedOut
     case is URLError:
