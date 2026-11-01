@@ -35,6 +35,16 @@ struct DatabaseSchemaTests {
     }
   }
 
+  @Test("v21 keys default_upload_tag by server and tag")
+  func v21CreatesDefaultUploadTag() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(Set(try db.columns(in: "default_upload_tag").map(\.name)) == ["server_id", "tag_id"])
+      let primaryKey = try db.primaryKey("default_upload_tag")
+      #expect(primaryKey.columns == ["server_id", "tag_id"])
+    }
+  }
+
   @Test("v6 drops the document projection columns and the query_order document FK")
   func v6DropsProjection() throws {
     let database = try Database.inMemory()

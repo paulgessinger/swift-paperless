@@ -65,3 +65,4 @@
 - New "Keep offline" action on documents: a kept document's PDF is downloaded right away and stays on the device whatever the offline browsing mode, is never removed by the storage budget, the list trim or switching back to "Recently browsed", and follows new versions from the server. The new "Kept offline" view in the saved view selector lists them, and the Offline & Sync screen shows how many of their files are on the device
 - Keeping a document or saved view offline now downloads it and its text right away on any connection, including cellular data and Low Data Mode. Keeping a saved view on such a connection says so before you confirm
 - Importing several files at once no longer closes before the last file, and a later import in the same session no longer closes after its first file
+- New per-server "Default upload tags" setting in Preferences: the chosen tags are preselected when uploading a document, including from the share sheet

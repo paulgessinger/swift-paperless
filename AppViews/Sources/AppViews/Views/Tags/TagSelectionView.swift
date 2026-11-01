@@ -13,14 +13,14 @@ import SwiftUI
 // - MARK: TagFilterView
 
 // - MARK: TagEditView
-public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
+public struct TagSelectionView: View {
   @Environment(DocumentStore.self) private var store
   @EnvironmentObject private var errorController: ErrorController
 
-  @Binding public var document: D
+  @Binding public var tags: [UInt]
 
-  public init(document: Binding<D>) {
-    self._document = document
+  public init(tags: Binding<[UInt]>) {
+    self._tags = tags
   }
 
   @State private var searchText = ""
@@ -32,14 +32,14 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
     @EnvironmentObject private var errorController: ErrorController
     @Environment(\.dismiss) private var dismiss
 
-    @Binding var document: D
+    @Binding var tags: [UInt]
 
     public var body: some View {
       TagEditView<ProtoTag>(onSave: { value in
         Task {
           do {
             let tag = try await store.create(tag: value)
-            document.tags.append(tag.id)
+            tags.append(tag.id)
             dismiss()
           } catch {
             errorController.push(mutationError: error)
@@ -66,7 +66,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
   }
 
   private func tagFilter(tag: Tag) -> Bool {
-    if document.tags.contains(tag.id) { return false }
+    if tags.contains(tag.id) { return false }
     if searchText.isEmpty { return true }
     if tag.name.range(of: searchText, options: .caseInsensitive) != nil {
       return true
@@ -112,16 +112,16 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
   private func addTag(_ id: UInt) {
     // Mirror backend behavior: implicitly attach all ancestors.
     let toAdd = [id] + store.tagAncestors(of: id)
-    let existing = Set(document.tags)
+    let existing = Set(tags)
     let new = toAdd.filter { !existing.contains($0) }
     guard !new.isEmpty else { return }
-    document.tags.append(contentsOf: new)
+    tags.append(contentsOf: new)
   }
 
   private func removeTag(_ id: UInt) {
     // Mirror backend behavior: detach every descendant of `id` as well.
     let toRemove = store.tagDescendants(of: id).union([id])
-    document.tags.removeAll { toRemove.contains($0) }
+    tags.removeAll { toRemove.contains($0) }
   }
 
   @ViewBuilder
@@ -166,7 +166,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
         NoPermissionsView()
       } else {
         Section {
-          ForEach(document.tags, id: \.self) { id in
+          ForEach(tags, id: \.self) { id in
             let tag = store.tags[id]
             Button(action: {
               withAnimation {
@@ -182,7 +182,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
               }
             }
           }
-          if document.tags.isEmpty {
+          if tags.isEmpty {
             Text(.app(.none))
           }
         } header: {
@@ -228,7 +228,7 @@ public struct DocumentTagEditView<D>: View where D: DocumentProtocol {
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         NavigationLink {
-          CreateTag(document: $document)
+          CreateTag(tags: $tags)
         } label: {
           Label(String(localized: .app(.tagAdd)), systemImage: "plus")
         }

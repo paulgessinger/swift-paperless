@@ -170,7 +170,9 @@ public struct CreateDocumentView: View {
 
   public func upload() async {
     do {
-      try await store.create(document: document, file: sourceUrl, filename: filename)
+      var upload = document
+      upload.tags = UploadDefaults.existingTags(document.tags, in: store.tags)
+      try await store.create(document: upload, file: sourceUrl, filename: filename)
     } catch {
       errorController.push(mutationError: error)
       status = .error
@@ -195,11 +197,19 @@ public struct CreateDocumentView: View {
     callback()
   }
 
+  /// Preselects the upload defaults of the server the store is on, which is
+  /// the one this document goes to.
+  private func applyDefaultTags() async {
+    let serverID = store.activeServerID
+    let defaults = await store.loadUploadDefaults()
+    guard store.activeServerID == serverID else { return }
+    document.tags = defaults?.tags ?? []
+  }
+
   private func resetDocument() {
     document.asn = nil
     document.documentType = nil
     document.correspondent = nil
-    document.tags = []
     document.storagePath = nil
     document.created = includeCreatedDate ? .now : nil
   }
@@ -361,13 +371,14 @@ public struct CreateDocumentView: View {
             }
 
             NavigationLink(destination: {
-              DocumentTagEditView(document: $document)
+              TagSelectionView(tags: $document.tags)
                 .navigationTitle(Text(.app(.tags)))
             }) {
-              if document.tags.isEmpty {
+              let tags = document.tags.compactMap { store.tags[$0] }
+              if tags.isEmpty {
                 Text(.app(.createDocumentNoTags))
               } else {
-                TagsView(tags: document.tags.compactMap { store.tags[$0] })
+                TagsView(tags: tags)
                   .contentShape(Rectangle())
               }
             }
@@ -460,7 +471,11 @@ public struct CreateDocumentView: View {
         includeCreatedDate = document.created != nil
       }
     }
-
+    // On the stack, not its content: there it runs again whenever a picker is
+    // popped, which must not overwrite what was picked.
+    .onChange(of: store.activeServerID, initial: true) {
+      Task { await applyDefaultTags() }
+    }
   }
 }
 

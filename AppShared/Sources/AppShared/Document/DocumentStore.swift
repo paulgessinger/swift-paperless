@@ -124,6 +124,13 @@ public final class DocumentStore: Sendable {
     return OfflineStatus(database: backend.database, serverID: backend.serverID)
   }
 
+  /// The active server's upload defaults; `nil` without a server, or if they
+  /// can't be read.
+  public func loadUploadDefaults() async -> UploadDefaults? {
+    guard let backend = session?.backend else { return nil }
+    return await UploadDefaults.load(database: backend.database, serverID: backend.serverID)
+  }
+
   /// The active server's documents downloading on the background session.
   public var libraryFilesInFlight: Int {
     guard let session, let downloader = registry?.fileDownloader else { return 0 }

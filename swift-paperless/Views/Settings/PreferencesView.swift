@@ -11,6 +11,8 @@ struct PreferencesView: View {
   @EnvironmentObject private var biometricLockManager: BiometricLockManager
   @Environment(DocumentStore.self) private var store
 
+  @State private var uploadDefaults: UploadDefaults?
+
   var body: some View {
     Form {
       Section {
@@ -68,6 +70,34 @@ struct PreferencesView: View {
       } label: {
         Text(.settings(.filterConfiguration))
       }
+
+      if let uploadDefaults {
+        Section {
+          NavigationLink {
+            DefaultUploadTagsView(defaults: uploadDefaults)
+          } label: {
+            let tags = uploadDefaults.tags.compactMap { store.tags[$0] }
+            VStack(alignment: .leading, spacing: 8) {
+              Text(.settings(.defaultUploadTags))
+              if tags.isEmpty {
+                Text(.app(.createDocumentNoTags))
+                  .foregroundStyle(.secondary)
+              } else {
+                TagsView(tags: tags)
+              }
+            }
+            .contentShape(Rectangle())
+          }
+        } header: {
+          Text(.settings(.upload))
+        } footer: {
+          Text(.settings(.defaultUploadTagsDescription))
+        }
+      }
+    }
+    .task(id: store.activeServerID) {
+      guard uploadDefaults?.serverID != store.activeServerID else { return }
+      uploadDefaults = await store.loadUploadDefaults()
     }
     .navigationTitle(Text(.settings(.preferences)))
     .navigationBarTitleDisplayMode(.inline)
