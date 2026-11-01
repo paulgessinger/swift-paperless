@@ -174,8 +174,9 @@ public enum AppStackHolder {
   /// cached so a transient failure does not outlive its cause.
   private static var cached: AppStack?
 
-  /// The process's suspension controller. It outlives a failed or reset stack,
-  /// and the app attaches it to its lifecycle at launch.
+  /// The process's suspension controller. It outlives a failed or reset stack.
+  /// The app attaches it to its lifecycle at launch, the Share Extension
+  /// through ``ExtensionDatabaseLifecycle``.
   public static let suspension = DatabaseSuspensionController()
 
   /// The process's stack, opening the app-group database on first call. Throws

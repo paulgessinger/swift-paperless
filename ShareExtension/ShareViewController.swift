@@ -26,6 +26,7 @@ class ShareViewController: UIViewController {
     let shareView = ShareView(
       attachmentManager: attachmentManager,
       callback: {
+        ExtensionDatabaseLifecycle.shared.didDisappear()
         self.extensionContext!.completeRequest(returningItems: nil, completionHandler: nil)
       })
 
@@ -50,8 +51,19 @@ class ShareViewController: UIViewController {
     }
   }
 
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    ExtensionDatabaseLifecycle.shared.willAppear()
+  }
+
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
+  }
+
+  // Covers a sheet swiped away, which never reaches `completeRequest`.
+  override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    ExtensionDatabaseLifecycle.shared.didDisappear()
   }
 
   override public func viewDidLayoutSubviews() {

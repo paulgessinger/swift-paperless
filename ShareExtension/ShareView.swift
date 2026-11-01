@@ -68,7 +68,11 @@ struct ShareView: View {
         // server's session owns that assembly (see `DocumentStore.activate`), so
         // the extension can't drift from the app's layering.
         do {
-          try await store.activate(connection: stored)
+          // Building the session's repository applies the first-build cap, a
+          // write outside the sync steps, which count themselves.
+          try await AppStackHolder.suspension.performBackgroundWork {
+            try await store.activate(connection: stored)
+          }
         } catch {
           Logger.api.error("Could not build repository for active connection: \(error)")
           return
