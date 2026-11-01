@@ -5,13 +5,47 @@ configurable application source ref:
 
 ```sh
 just release                              # source: main
-just release --ref release/1.10           # source: maintenance branch
-just release --ref develop/v1.10.3        # existing branch names also work
-just release --ref release/1.10 --dry-run # CI archive/export, no upload or tag
+just release --ref release/v1.10           # source: release branch
+just release --ref release/v1.10 --dry-run # CI archive/export, no upload or tag
 ```
 
 `just beta` is an alias for the same command. App Store submission remains a
 separate manual step.
+
+## Branching model
+
+`main` is the trunk: all development lands there and regular betas build from
+it. Each minor version gets one `release/vX.Y` branch, and individual versions
+are tags on it (`vX.Y.Z`).
+
+There is no long-lived production branch. Release branches are never merged
+back, so they can be left behind once the next minor ships.
+
+### Cutting a minor release
+
+1. Create `release/vX.Y` from `main` when the release freezes.
+2. On `main`, bump `MARKETING_VERSION` to the next version and empty
+   `current_changelog.txt`. Development carries on without a freeze.
+3. Build release candidates with `just release --ref release/vX.Y`.
+4. Tag the build you submit to the App Store as `vX.Y.Z`.
+
+Keep the gap between minor releases short. Hide large unfinished work behind a
+flag in `swift-paperless/FeatureFlags.swift` so `main` stays releasable.
+
+### Patch releases
+
+If `main` is releasable, ship the next minor instead of a patch. Otherwise, use
+the existing `release/vX.Y`:
+
+1. Land the fix on `main` first, then cherry-pick it to the release branch and
+   name the `main` commit in the message (`git cherry-pick -x` adds this).
+   Commit directly to the release branch only when the affected code no longer
+   exists on `main`.
+2. Add the changelog bullet on both branches.
+3. Set the new patch version on the release branch and build from it.
+
+Keep patch releases to fixes and work tied to an outside deadline, such as
+support for a new OS or device.
 
 ## What CI does
 
@@ -61,9 +95,7 @@ If upload succeeds but tagging fails, recover the tag using the instruction in
 the CI log rather than uploading the same build again. Avoid mixing the old
 Fastlane/prerelease-triggered pipeline with the shared pipeline for a candidate.
 
-Use `main` for development and one maintenance branch such as `release/1.10`
-while supporting an older version; individual versions remain tags. The CI
-branch filters include `develop/**` and `release/**`. Existing maintenance
+The CI branch filters include `develop/**` and `release/**`. Existing maintenance
 branches retain their own validation workflows until those are updated.
 
 ## Testing
