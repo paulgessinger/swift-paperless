@@ -50,7 +50,7 @@ next-build:
   @scripts/next_build_number.sh
 
 # Build, sign, and upload to TestFlight through CI, then tag the uploaded build.
-# Example: just release --ref release/1.10 --dry-run
+# Example: just release --ref release/v1.10 --dry-run
 # Tooling runs from main; --ref selects application source (defaults to main).
 alias beta := release
 [positional-arguments]

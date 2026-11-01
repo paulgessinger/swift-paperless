@@ -91,7 +91,7 @@ A beta is cut entirely on CI — no commit, no tag, no local build:
 
 ```console
 just beta                      # from origin/main
-just beta --ref develop/v1.12  # from another branch
+just beta --ref release/v1.12  # from a release branch
 just beta --dry-run            # CI builds and exports, uploads nothing
 ```
 
