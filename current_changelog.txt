@@ -66,3 +66,6 @@
 - Keeping a document or saved view offline now downloads it and its text right away on any connection, including cellular data and Low Data Mode. Keeping a saved view on such a connection says so before you confirm
 - Importing several files at once no longer closes before the last file, and a later import in the same session no longer closes after its first file
 - New per-server "Default upload tags" setting in Preferences: the chosen tags are preselected when uploading a document, including from the share sheet
+- Task results and error messages show up again on Paperless-ngx v3, including files rejected as duplicates
+- Documents with duplicates now say so: on Paperless-ngx v3 a document that shares its file content with others shows them in its details, and you can open them from there
+- New "Duplicates" filter for documents with or without duplicates, on Paperless-ngx v3.2 and later

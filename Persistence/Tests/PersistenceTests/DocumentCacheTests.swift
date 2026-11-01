@@ -107,6 +107,19 @@ struct DocumentCacheTests {
     #expect(try await database.queryStatus(queryKey: key, serverID: server).totalCount == 4)
   }
 
+  @Test("duplicates are not cached, so a cached document reports them as unknown")
+  func duplicatesAreNotCached() async throws {
+    let server = UUID()
+    let database = try database(server)
+
+    var document = doc(1, "A")
+    document.duplicates = [DocumentDuplicate(id: 2, title: "B")]
+    try await database.upsertDocument(document, serverID: server)
+
+    let cached = try #require(try await database.document(serverID: server, id: 1))
+    #expect(cached.duplicates == nil)
+  }
+
   @Test("a document repeated across a page boundary is placed only once")
   func overlappingPageDoesNotDuplicate() async throws {
     let server = UUID()

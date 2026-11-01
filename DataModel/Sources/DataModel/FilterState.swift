@@ -224,6 +224,14 @@ public struct FilterState: Equatable, Codable, Sendable {
 
   public var date: DateFilter = .init()
 
+  public enum DuplicatesFilter: Equatable, Codable, Sendable {
+    case any
+    case with
+    case without
+  }
+
+  public var duplicates: DuplicatesFilter = .any
+
   public init(
     correspondent: Filter,
     documentType: Filter,
@@ -348,6 +356,9 @@ public struct FilterState: Equatable, Codable, Sendable {
     if date.isActive {
       result += 1
     }
+    if duplicates != .any {
+      result += 1
+    }
 
     return result
   }
@@ -433,5 +444,15 @@ extension FilterState.DateFilter.Range: RawRepresentable {
     case .previousYear:
       return "previous year"
     }
+  }
+}
+
+// The synthesized decoder picks this overload, so a filter stored before
+// `duplicates` existed still decodes instead of being reset.
+extension KeyedDecodingContainer {
+  fileprivate func decode(
+    _ type: FilterState.DuplicatesFilter.Type, forKey key: Key
+  ) throws -> FilterState.DuplicatesFilter {
+    try decodeIfPresent(type, forKey: key) ?? .any
   }
 }

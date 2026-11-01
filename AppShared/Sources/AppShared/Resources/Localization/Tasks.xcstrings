@@ -691,6 +691,18 @@
         }
       }
     },
+    "resultDocumentCreated" : {
+      "comment" : "Result of a finished task that created a document; the argument is the document's ID",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Created document #%@"
+          }
+        }
+      }
+    },
     "status" : {
       "extractionState" : "manual",
       "localizations" : {

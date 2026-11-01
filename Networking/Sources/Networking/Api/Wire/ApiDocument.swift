@@ -39,6 +39,8 @@ public struct ApiDocument: Codable, Sendable {
   var custom_fields: CustomFieldRawEntryList?
   // Read-only on the wire; absent on backends predating multi-version support.
   var versions: [ApiDocumentVersion]?
+  // Absent before 3.0. `[]` on every response except a single-document GET.
+  var duplicate_documents: [ApiDocumentDuplicate]?
   var permissions: Permissions?
   // Full on the detail endpoint, truncated on lists. Not part of the domain
   // model: the text lives in the content store.
@@ -67,7 +69,20 @@ extension ApiDocument {
       versions: versions?.map(\.domain) ?? []
     )
     doc.permissions = permissions
+    doc.duplicates = duplicate_documents?.map(\.domain)
     return doc
+  }
+}
+
+struct ApiDocumentDuplicate: Codable, Sendable {
+  var id: UInt
+  var title: String
+  var deleted_at: Date?
+}
+
+extension ApiDocumentDuplicate {
+  var domain: DocumentDuplicate {
+    DocumentDuplicate(id: id, title: title, deletedAt: deleted_at)
   }
 }
 

@@ -772,6 +772,30 @@ struct FilterBar: View {
     .backport.glassEffect(.regular.interactive())
   }
 
+  private var duplicatesMenu: some View {
+    @Bindable var filterModel = filterModel
+    return Menu {
+      Picker(selection: $filterModel.filterState.duplicates) {
+        Text(.app(.commonFilterAny)).tag(FilterState.DuplicatesFilter.any)
+        Text(.app(.filterWithDuplicates)).tag(FilterState.DuplicatesFilter.with)
+        Text(.app(.filterWithoutDuplicates)).tag(FilterState.DuplicatesFilter.without)
+      } label: {
+        EmptyView()
+      }
+      .pickerStyle(.inline)
+    } label: {
+      Pill(active: filterModel.filterState.duplicates != .any) {
+        switch filterModel.filterState.duplicates {
+        case .any: Text(.documentMetadata(.duplicates))
+        case .with: Text(.app(.filterWithDuplicates))
+        case .without: Text(.app(.filterWithoutDuplicates))
+        }
+      }
+      .transaction { $0.animation = nil }
+    }
+    .backport.glassEffect(.regular.interactive())
+  }
+
   private var ownerElement: some View {
     Pill(active: filterModel.filterState.owner != .any) {
       switch filterModel.filterState.owner {
@@ -951,6 +975,13 @@ struct FilterBar: View {
       ) {
         DateFilterView(query: $filterModel.filterState.date)
           .backport.navigationTransitionZoom(sourceID: TransitionKeys.date, in: transition)
+      }
+    case .duplicates:
+      if store.repository.supports(feature: .hasDuplicatesFilter) {
+        duplicatesMenu
+          .onTapGesture {
+            Haptics.shared.impact(style: .light)
+          }
       }
     }
   }

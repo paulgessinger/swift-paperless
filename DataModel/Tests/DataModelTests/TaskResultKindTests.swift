@@ -27,6 +27,28 @@ struct PaperlessTaskResultKindTests {
     #expect(task.resultKind == .duplicate(fileName: task.taskFileName))
   }
 
+  @Test("v10 reports a duplicate by id alone, with no result text")
+  func duplicateWithoutResult() {
+    let task = PaperlessTask(
+      id: 1, taskId: .init(), taskFileName: "form.pdf",
+      type: "web_ui", status: .FAILURE,
+      acknowledged: false,
+      duplicateDocumentId: 28)
+
+    #expect(task.resultKind == .duplicate(fileName: "form.pdf"))
+  }
+
+  @Test
+  func createdDocument() {
+    let task = PaperlessTask(
+      id: 1, taskId: .init(),
+      type: "web_ui", status: .SUCCESS,
+      acknowledged: false,
+      createdDocumentId: 29)
+
+    #expect(task.resultKind == .created(documentId: 29))
+  }
+
   @Test
   func emptyWhenResultIsNil() throws {
     let task = PaperlessTask(

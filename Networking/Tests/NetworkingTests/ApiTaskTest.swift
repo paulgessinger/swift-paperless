@@ -77,7 +77,9 @@ struct ApiTaskTest {
         #require(tasks[0].dateDone),
         datetime(year: 2026, month: 4, day: 18, hour: 8, minute: 46, second: 58.981436, tz: tz)))
     #expect(tasks[0].status == TaskStatus.SUCCESS)
-    #expect(tasks[0].result == "Success. New document id 29 created")
+    #expect(tasks[0].result == nil)
+    #expect(tasks[0].createdDocumentId == 29)
+    #expect(tasks[0].resultKind == .created(documentId: 29))
     #expect(tasks[0].acknowledged == false)
     #expect(tasks[0].relatedDocument == "29")
     #expect(tasks[0].isActive == false)
@@ -90,6 +92,40 @@ struct ApiTaskTest {
     #expect(tasks[1].result == nil)
     #expect(tasks[1].relatedDocument == nil)
     #expect(tasks[1].isActive == true)
+  }
+
+  @Test("v10 tasks derive their result from result_data")
+  func testDecodingV10ResultData() throws {
+    let data = try #require(testData("Data/tasks_v10_results.json"))
+    let tasks = try decoder.decode([ApiTaskV10].self, from: data).map(\.domain)
+
+    let duplicate = tasks[0]
+    #expect(duplicate.status == TaskStatus.FAILURE)
+    #expect(duplicate.duplicateDocumentId == 28)
+    #expect(duplicate.relatedDocument == "28")
+    #expect(duplicate.result == nil)
+    #expect(duplicate.resultKind == .duplicate(fileName: "form.pdf"))
+
+    let failed = tasks[1]
+    #expect(failed.status == TaskStatus.FAILURE)
+    #expect(failed.result == "form.pdf: Error occurred while consuming document")
+    #expect(failed.duplicateDocumentId == nil)
+
+    #expect(tasks[2].result == "Barcode splitting complete!")
+  }
+
+  @Test("A result_data key of an unexpected type does not fail the decode")
+  func testDecodingV10ForeignResultData() throws {
+    let data = Data(
+      """
+      {"id": 1, "task_id": "07dd974d-be9e-4a2d-9be2-0cbe183a2069",
+       "task_type": "sanity_check", "trigger_source": "scheduled", "status": "success",
+       "result_data": {"reason": {"nested": true}, "document_id": "a"},
+       "related_document_ids": [], "acknowledged": false}
+      """.utf8)
+    let task = try decoder.decode(ApiTaskV10.self, from: data).domain
+    #expect(task.result == nil)
+    #expect(task.status == TaskStatus.SUCCESS)
   }
 
   @Test(arguments: [

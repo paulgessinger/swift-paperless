@@ -16,6 +16,33 @@ private let decoder = makeDecoder(tz: tz)
 
 @Suite
 struct ApiDocumentTest {
+  private func decode(duplicates: Any?) throws -> Document {
+    let data = try #require(testData("Data/Document/full.json"))
+    var json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    json["duplicate_documents"] = duplicates
+    let patched = try JSONSerialization.data(withJSONObject: json)
+    return try decoder.decode(ApiDocument.self, from: patched).domain
+  }
+
+  @Test("Duplicates decode, including a trashed one")
+  func testDecodeDuplicates() throws {
+    let document = try decode(duplicates: [
+      ["id": 28, "title": "Statement", "deleted_at": NSNull()],
+      ["id": 12, "title": "Scan", "deleted_at": "2026-04-18T07:46:56.306241Z"],
+    ])
+
+    let duplicates = try #require(document.duplicates)
+    #expect(duplicates.map(\.id) == [28, 12])
+    #expect(duplicates[0].title == "Statement")
+    #expect(duplicates[0].deletedAt == nil)
+    #expect(duplicates[1].deletedAt != nil)
+  }
+
+  @Test("Duplicates are unknown on a backend without the field")
+  func testDecodeDuplicatesAbsent() throws {
+    #expect(try decode(duplicates: nil).duplicates == nil)
+  }
+
   @Test
   func testDecodeNonNil() throws {
     let data = try #require(testData("Data/Document/full.json"))

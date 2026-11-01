@@ -1,0 +1,82 @@
+[
+    {
+        "id": 3,
+        "task_id": "07dd974d-be9e-4a2d-9be2-0cbe183a2069",
+        "task_type": "consume_file",
+        "task_type_display": "Consume File",
+        "trigger_source": "web_ui",
+        "trigger_source_display": "Web UI",
+        "status": "failure",
+        "status_display": "Failure",
+        "date_created": "2026-04-18T07:46:56.306241Z",
+        "date_started": "2026-04-18T07:46:56.313031Z",
+        "date_done": "2026-04-18T07:46:58.981436Z",
+        "duration_seconds": 2.668405,
+        "wait_time_seconds": 0.00679,
+        "input_data": {
+            "filename": "form.pdf",
+            "mime_type": "application/pdf"
+        },
+        "result_data": {
+            "duplicate_of": 28,
+            "duplicate_in_trash": false
+        },
+        "related_document_ids": [
+            28
+        ],
+        "acknowledged": false,
+        "owner": 4
+    },
+    {
+        "id": 2,
+        "task_id": "f15a52a7-5af2-4944-b8b7-5be1a5231096",
+        "task_type": "consume_file",
+        "task_type_display": "Consume File",
+        "trigger_source": "web_ui",
+        "trigger_source_display": "Web UI",
+        "status": "failure",
+        "status_display": "Failure",
+        "date_created": "2026-04-18T07:46:17.804764Z",
+        "date_started": "2026-04-18T07:46:18.804764Z",
+        "date_done": "2026-04-18T07:46:19.804764Z",
+        "duration_seconds": 1.0,
+        "wait_time_seconds": 1.0,
+        "input_data": {
+            "filename": "form.pdf",
+            "mime_type": "application/pdf"
+        },
+        "result_data": {
+            "error_type": "ConsumerError",
+            "error_message": "form.pdf: Error occurred while consuming document",
+            "traceback": "Traceback (most recent call last): ..."
+        },
+        "related_document_ids": [],
+        "acknowledged": false,
+        "owner": 4
+    },
+    {
+        "id": 1,
+        "task_id": "9e5a52a7-5af2-4944-b8b7-5be1a5231096",
+        "task_type": "consume_file",
+        "task_type_display": "Consume File",
+        "trigger_source": "folder_consume",
+        "trigger_source_display": "Folder Consume",
+        "status": "success",
+        "status_display": "Success",
+        "date_created": "2026-04-18T07:46:17.804764Z",
+        "date_started": "2026-04-18T07:46:18.804764Z",
+        "date_done": "2026-04-18T07:46:19.804764Z",
+        "duration_seconds": 1.0,
+        "wait_time_seconds": 1.0,
+        "input_data": {
+            "filename": "scan.pdf",
+            "mime_type": "application/pdf"
+        },
+        "result_data": {
+            "reason": "Barcode splitting complete!"
+        },
+        "related_document_ids": [],
+        "acknowledged": false,
+        "owner": null
+    }
+]

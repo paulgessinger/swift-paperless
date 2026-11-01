@@ -7890,6 +7890,30 @@
         }
       }
     },
+    "filterWithDuplicates" : {
+      "comment" : "Document filter option: only documents that have duplicates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With duplicates"
+          }
+        }
+      }
+    },
+    "filterWithoutDuplicates" : {
+      "comment" : "Document filter option: only documents that have no duplicates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No duplicates"
+          }
+        }
+      }
+    },
     "group" : {
       "extractionState" : "manual",
       "localizations" : {

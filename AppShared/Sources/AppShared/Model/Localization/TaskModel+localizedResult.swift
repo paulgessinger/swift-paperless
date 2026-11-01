@@ -15,6 +15,8 @@ extension PaperlessTask {
     case .duplicate(let fileName):
       String(
         localized: .tasks(.errorDuplicate(fileName ?? String(localized: .tasks(.unknownFileName)))))
+    case .created(let id):
+      String(localized: .tasks(.resultDocumentCreated(String(id))))
     case .raw(let message):
       message
     }

@@ -151,7 +151,7 @@ struct TaskDetailView: View {
             Text(task.status.name)
           }
 
-          if let result = task.result {
+          if let result = task.localizedResult {
             Divider()
             VStack(alignment: .leading) {
               Text(.tasks(.result))

@@ -86,6 +86,7 @@ extension FilterState {
     result += ownerRules
     result += customFieldRules
     result += asnRules
+    result += duplicatesRules
     result += dateBetweenRules
     return result
   }
@@ -271,6 +272,14 @@ extension FilterState {
   private var customFieldRules: [FilterRule] {
     guard customField != .any else { return [] }
     return [FilterRule(ruleType: .customFieldsQuery, value: .customFieldQuery(customField))!]
+  }
+
+  private var duplicatesRules: [FilterRule] {
+    switch duplicates {
+    case .any: return []
+    case .with: return [FilterRule(ruleType: .hasDuplicates, value: .boolean(value: true))!]
+    case .without: return [FilterRule(ruleType: .hasDuplicates, value: .boolean(value: false))!]
+    }
   }
 
   private var asnRules: [FilterRule] {

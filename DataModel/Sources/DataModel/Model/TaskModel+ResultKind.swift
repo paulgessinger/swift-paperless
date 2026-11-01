@@ -17,15 +17,20 @@ extension PaperlessTask {
     /// task's `taskFileName` if set, otherwise `nil` (the display layer fills in
     /// a localized placeholder).
     case duplicate(fileName: String?)
+    /// The task created a document.
+    case created(documentId: UInt)
     /// A raw result string with no specialized handling.
     case raw(String)
   }
 
   public var resultKind: ResultKind {
-    guard let result else { return .empty }
     if duplicateDocumentId != nil {
       return .duplicate(fileName: taskFileName)
     }
+    if let createdDocumentId {
+      return .created(documentId: createdDocumentId)
+    }
+    guard let result else { return .empty }
     return .raw(result)
   }
 }

@@ -80,6 +80,19 @@ public struct DocumentVersion: Identifiable, Equatable, Sendable, Hashable {
   }
 }
 
+public struct DocumentDuplicate: Identifiable, Equatable, Hashable, Sendable {
+  public var id: UInt
+  public var title: String
+  /// Set when the duplicate is in the trash.
+  public var deletedAt: Date?
+
+  public init(id: UInt, title: String, deletedAt: Date? = nil) {
+    self.id = id
+    self.title = title
+    self.deletedAt = deletedAt
+  }
+}
+
 public struct Document: Identifiable, Equatable, Hashable, Sendable {
   public var id: UInt
   public var title: String
@@ -124,6 +137,11 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
 
   // The API wants this extra key for writing perms
   public var setPermissions: Permissions?
+
+  // Other documents with the same file content that the user can view. Only a
+  // single-document fetch fills this in, and it is not cached: `nil` means
+  // unknown, not "no duplicates".
+  public var duplicates: [DocumentDuplicate]?
 
   public init(
     id: UInt,

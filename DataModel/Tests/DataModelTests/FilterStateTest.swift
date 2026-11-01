@@ -46,6 +46,51 @@ extension FilterState {
 
 @Suite
 struct FilterStateTest {
+  @Test(
+    "The duplicates filter round-trips each state through rules",
+    arguments: [
+      (FilterState.DuplicatesFilter.with, true), (FilterState.DuplicatesFilter.without, false),
+    ])
+  func duplicatesRoundTrip(filter: FilterState.DuplicatesFilter, value: Bool) throws {
+    var state = FilterState.empty
+    state.duplicates = filter
+    #expect(state.ruleCount == 1)
+
+    let rule = try #require(FilterRule(ruleType: .hasDuplicates, value: .boolean(value: value)))
+    #expect(state.rules(for: .tantivy) == [rule])
+
+    var restored = FilterState.empty
+    restored.populateWith(rules: [rule])
+    #expect(restored.duplicates == filter)
+    #expect(restored.remaining.isEmpty)
+  }
+
+  @Test("No duplicates filter generates no rule")
+  func duplicatesAny() {
+    let state = FilterState.empty
+    #expect(state.duplicates == .any)
+    #expect(state.ruleCount == 0)
+    #expect(state.rules(for: .tantivy).isEmpty)
+  }
+
+  @Test("A filter stored before the duplicates field still decodes")
+  func duplicatesAbsentFromStoredFilter() throws {
+    var stored = try #require(
+      JSONSerialization.jsonObject(with: JSONEncoder().encode(FilterState.empty))
+        as? [String: Any])
+    stored["duplicates"] = nil
+    let data = try JSONSerialization.data(withJSONObject: stored)
+    #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == .any)
+  }
+
+  @Test("A stored duplicates filter survives encoding")
+  func duplicatesEncoded() throws {
+    var state = FilterState.empty
+    state.duplicates = .without
+    let data = try JSONEncoder().encode(state)
+    #expect(try JSONDecoder().decode(FilterState.self, from: data).duplicates == .without)
+  }
+
   // - MARK: FilterRule to FilterState
 
   @Test("Search mode conversion between FilterRuleType and FilterState.SearchMode")
