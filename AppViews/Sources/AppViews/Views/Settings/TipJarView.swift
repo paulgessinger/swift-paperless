@@ -147,17 +147,7 @@ public struct TipJarView: View {
       await store.loadProducts()
     }
 
-    .alert(
-      unwrapping: $store.alert,
-      title: { alert in
-        Text(alert.title)
-      },
-      actions: { alert in
-        Button(.app(.ok)) { store.alert = nil }
-      },
-      message: { alert in
-        Text(alert.message)
-      })
+    .tipJarAlert($store.alert)
   }
 
   @ViewBuilder
@@ -222,6 +212,67 @@ public struct TipJarView: View {
       .animation(.default, value: store.purchasingProductID)
     }
     .disabled(store.purchasingProductID != nil)
+  }
+}
+
+/// One-tap tip buttons for embedding outside of the tip jar screen.
+public struct TipJarQuickOptions: View {
+  public init() {}
+
+  @State private var store = TipJarStore()
+
+  private var products: [(TipJarStore.ProductID, Product)] {
+    guard case .loaded(let products) = store.loadState else { return [] }
+    return TipJarStore.ProductID.allCases.compactMap { id in
+      products[id].map { (id, $0) }
+    }
+  }
+
+  public var body: some View {
+    HStack(spacing: 8) {
+      ForEach(products, id: \.0) { id, product in
+        Button {
+          Task { await store.purchase(product) }
+        } label: {
+          VStack(spacing: 2) {
+            Text(id.emoji)
+            if store.purchasingProductID == product.id {
+              ProgressView()
+            } else {
+              Text(product.displayPrice)
+                .font(.footnote)
+                .fontWeight(.semibold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            }
+          }
+          .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .disabled(store.purchasingProductID != nil)
+      }
+    }
+    .frame(minHeight: 52)
+    .task {
+      await store.loadProducts()
+    }
+    .tipJarAlert($store.alert)
+  }
+}
+
+extension View {
+  fileprivate func tipJarAlert(_ alert: Binding<TipJarStore.TipJarAlert?>) -> some View {
+    self.alert(
+      unwrapping: alert,
+      title: { alert in
+        Text(alert.title)
+      },
+      actions: { _ in
+        Button(.app(.ok)) { alert.wrappedValue = nil }
+      },
+      message: { alert in
+        Text(alert.message)
+      })
   }
 }
 
