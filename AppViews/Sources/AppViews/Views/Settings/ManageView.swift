@@ -29,11 +29,11 @@ public protocol ManagerModel: Sendable {
   @MainActor
   func load() -> [Element]
 
-  /// Optional hierarchical view of `load()`. Return `nil` for a flat list.
+  /// Optional hierarchical view of `elements`. Return `nil` for a flat list.
   /// When non-nil, `ManageView` renders an outline; the flattened set must
-  /// match `load()` so search and delete keep working.
+  /// match `elements` so search and delete keep working.
   @MainActor
-  func hierarchy() -> [HierarchyNode<Element>]?
+  func hierarchy(of elements: [Element]) -> [HierarchyNode<Element>]?
 
   func update(_ element: Element) async throws
   func create(_ element: ProtoElement) async throws -> Element
@@ -45,7 +45,7 @@ public protocol ManagerModel: Sendable {
 
 extension ManagerModel {
   @MainActor
-  public func hierarchy() -> [HierarchyNode<Element>]? { nil }
+  public func hierarchy(of elements: [Element]) -> [HierarchyNode<Element>]? { nil }
 }
 
 public protocol RowViewProtocol: View {
@@ -161,7 +161,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
       if let model {
         withAnimation {
           elements = model.load()
-          hierarchy = model.hierarchy()
+          hierarchy = model.hierarchy(of: elements)
         }
       }
     } catch {
@@ -196,29 +196,34 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
   private func reloadElements() {
     guard let model else { return }
     elements = model.load()
-    hierarchy = model.hierarchy()
+    hierarchy = model.hierarchy(of: elements)
   }
 
-  private func deleteRow(at offsets: IndexSet) {
-    for (i, element) in elements.enumerated() {
-      guard offsets.contains(i) else { continue }
-      Task {
-        do {
-          try await model?.delete(element)
-        } catch {
-          Logger.shared.error("Error deleting element: \(error)")
-          errorController.push(mutationError: error)
-        }
+  /// Deletes `targets` in order. Rows leave the list only once their delete
+  /// succeeds; a failed delete keeps its row and shows the error toast.
+  private func delete(_ targets: [Element], model: Manager.Model) async {
+    var deleted = Set<Element.ID>()
+    for element in targets {
+      do {
+        try await model.delete(element)
+        deleted.insert(element.id)
+      } catch {
+        Logger.shared.error("Error deleting element: \(error)")
+        errorController.push(mutationError: error)
       }
     }
-    elements.remove(atOffsets: offsets)
-    hierarchy = model?.hierarchy()
+    guard !deleted.isEmpty else { return }
+
+    // `load()` can still return a deleted element here: the projection receives
+    // the delete on a later main-actor hop than the one resuming this task.
+    withAnimation {
+      elements.removeAll { deleted.contains($0.id) }
+      hierarchy = model.hierarchy(of: elements)
+    }
   }
 
   @ViewBuilder
-  private func elementLink(
-    _ element: Element, model: Manager.Model, swipeDelete: Bool = false
-  ) -> some View {
+  private func elementLink(_ element: Element, model: Manager.Model) -> some View {
     NavigationLink {
       Edit(model: model, element: element) { element in
         guard model.permissions.test(.change) else {
@@ -239,20 +244,16 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
       Manager.RowView(element: element)
     }
     .swipeActions(edge: .trailing) {
-      if swipeDelete && test(.delete) {
-        Button(role: .destructive) {
-          Task {
-            do {
-              try await model.delete(element)
-              await MainActor.run { reloadElements() }
-            } catch {
-              Logger.shared.error("Error deleting element: \(error)")
-              errorController.push(mutationError: error)
-            }
-          }
+      if test(.delete) {
+        // Not `role: .destructive`: `List` hides a row when its destructive action
+        // runs and doesn't bring it back unless the view updates, which a failed
+        // delete doesn't cause. This action also replaces the `onDelete` swipe.
+        Button {
+          Task { await delete([element], model: model) }
         } label: {
           Label(String(localized: .app(.delete)), systemImage: "trash")
         }
+        .tint(.red)
       }
     }
   }
@@ -268,15 +269,19 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
           noElementsView
         } else if useHierarchy, let hierarchy {
           OutlineGroup(hierarchy, children: \.children) { node in
-            elementLink(node.element, model: model, swipeDelete: true)
+            elementLink(node.element, model: model)
           }
         } else {
           if !displayElements.isEmpty {
             ForEach(displayElements, id: \.self) { element in
               elementLink(element, model: model)
             }
+            // Provides the edit mode delete controls.
             .if(test(.delete)) {
-              $0.onDelete(perform: deleteRow)
+              $0.onDelete { offsets in
+                let targets = offsets.map { displayElements[$0] }
+                Task { await delete(targets, model: model) }
+              }
             }
           }
         }
@@ -325,7 +330,7 @@ public struct ManageView<Manager>: View where Manager: ManagerProtocol {
       if model == nil {
         model = Manager.Model(store: store)
         elements = model!.load()
-        hierarchy = model!.hierarchy()
+        hierarchy = model!.hierarchy(of: elements)
       }
     }
   }

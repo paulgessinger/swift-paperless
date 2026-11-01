@@ -69,3 +69,5 @@
 - Task results and error messages show up again on Paperless-ngx v3, including files rejected as duplicates
 - Documents with duplicates now say so: on Paperless-ngx v3 a document that shares its file content with others shows them in its details, and you can open them from there
 - New "Duplicates" filter for documents with or without duplicates, on Paperless-ngx v3.2 and later
+- Items in the Settings lists and Trash now stay in place until a delete succeeds, so a failed delete no longer hides them
+- Swipe-to-delete in a searched Settings list now deletes the item you swiped

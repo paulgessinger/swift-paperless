@@ -24,10 +24,6 @@ public struct TrashView: View {
   @State private var selection = Set<UInt>()
   @State private var showDeleteConfirmation: Bool = false
 
-  private func deleteDocuments(at offsets: IndexSet) {
-    deleteDocuments(ids: Set(offsets.compactMap { documents[$0].id }))
-  }
-
   private func deleteDocuments(ids: Set<UInt>) {
     Task {
       do {
@@ -81,9 +77,14 @@ public struct TrashView: View {
               }
               .tint(.accentColor)
             }
-        }
-        .onDelete { offsets in
-          deleteDocuments(ids: Set(offsets.compactMap { documents[$0].id }))
+            .swipeActions(edge: .trailing) {
+              // Not `role: .destructive`, see `ManageView`: a failed delete has to
+              // leave the row visible.
+              Button(.app(.delete), systemImage: "trash") {
+                deleteDocuments(ids: [doc.id])
+              }
+              .tint(.red)
+            }
         }
       }
     }
