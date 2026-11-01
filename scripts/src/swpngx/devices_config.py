@@ -20,7 +20,7 @@ class ScreenshotDevice(BaseModel):
     bezel_pack: str
     bezel: str
     asc_display_type: str
-    frames_dir: Path = Path("fastlane/screenshots/frames")
+    frames_dir: Path = Path("store/screenshots/frames")
     target_size: tuple[int, int]
     offset: tuple[int, int]
     post_offset: tuple[int, int] = (0, 0)
@@ -51,13 +51,13 @@ class ScreenshotDevice(BaseModel):
 
 
 class ScreenshotDevicesFile(BaseModel):
-    frames_dir: Path = Path("fastlane/screenshots/frames")
+    frames_dir: Path = Path("store/screenshots/frames")
     devices: list[ScreenshotDevice]
 
 
 def load_screenshot_devices(path: Path) -> ScreenshotDevicesFile:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
-    frames_dir = Path(data.pop("frames_dir", "fastlane/screenshots/frames"))
+    frames_dir = Path(data.pop("frames_dir", "store/screenshots/frames"))
     raw_devices = data.pop("device", data.pop("devices", []))
     if data:
         unknown = ", ".join(sorted(data))

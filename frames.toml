@@ -1,7 +1,7 @@
-input_folder = "fastlane/screenshots"
-output_folder = "fastlane/screenshots/framed"
-string_catalog = "fastlane/screenshots/Screenshots.xcstrings"
-font_file = "fastlane/screenshots/OpenSans-VariableFont_wdth,wght.ttf"
+input_folder = "store/screenshots"
+output_folder = "store/screenshots/framed"
+string_catalog = "store/screenshots/Screenshots.xcstrings"
+font_file = "store/screenshots/OpenSans-VariableFont_wdth,wght.ttf"
 
 # Device ids, simulators, bezels, and framing geometry: screenshot_devices.toml
 devices = "screenshot_devices.toml"

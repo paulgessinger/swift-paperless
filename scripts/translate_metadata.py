@@ -8,7 +8,7 @@
 # ]
 # ///
 """
-Translate fastlane metadata and StoreKit files using the llm library.
+Translate App Store metadata and StoreKit files using the llm library.
 
 Usage:
     uv run translate_metadata.py [OPTIONS]
@@ -43,7 +43,7 @@ except ImportError:
 
 
 # Configuration
-METADATA_DIR = Path(__file__).parent.parent / "fastlane" / "metadata"
+METADATA_DIR = Path(__file__).parent.parent / "store" / "metadata"
 SOURCE_DIR = METADATA_DIR / "default"
 STOREKIT_FILE = Path(__file__).parent.parent / "swift-paperless" / "Testing.storekit"
 
@@ -75,7 +75,7 @@ DEFAULT_TARGET_LANGUAGES = {
     "tr": "Turkish",
 }
 
-# Mapping from fastlane locale codes to StoreKit locale codes
+# Mapping from App Store locale codes to StoreKit locale codes
 STOREKIT_LOCALE_MAP = {
     "de-DE": "de",
     "fr-FR": "fr",
@@ -90,7 +90,7 @@ STOREKIT_LOCALE_MAP = {
 DEFAULT_MODEL = "gpt-oss-20b-mlx"
 
 app = typer.Typer(
-    help="Translate fastlane metadata using llm",
+    help="Translate App Store metadata using llm",
     rich_markup_mode="rich",
     no_args_is_help=False,
 )
@@ -333,8 +333,8 @@ def translate_storekit(
         # Get existing locales
         existing_locales = {loc.get("locale") for loc in localizations}
 
-        for fastlane_code, language_name in target_languages.items():
-            storekit_locale = STOREKIT_LOCALE_MAP.get(fastlane_code)
+        for metadata_code, language_name in target_languages.items():
+            storekit_locale = STOREKIT_LOCALE_MAP.get(metadata_code)
             if not storekit_locale:
                 continue
 
@@ -481,7 +481,7 @@ def translate(
         ),
     ] = False,
 ) -> None:
-    """Translate fastlane metadata files to target languages."""
+    """Translate App Store metadata files to target languages."""
     # Check source directory
     if not SOURCE_DIR.exists():
         rprint(
@@ -675,7 +675,7 @@ def storekit_cmd(
 def main(
     ctx: typer.Context,
 ) -> None:
-    """Translate fastlane metadata and StoreKit files using llm."""
+    """Translate App Store metadata and StoreKit files using llm."""
     if ctx.invoked_subcommand is None:
         # Default to translate command
         ctx.invoke(translate)

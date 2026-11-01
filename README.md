@@ -142,14 +142,14 @@ uv run --project scripts swpngx capture setup --random-tags 1000 --random-corres
 uv run --project scripts swpngx capture capture
 ```
 
-Writes files like `fastlane/screenshots/en-US/iPhone_17_Pro_Max-01_documents.png`
+Writes files like `store/screenshots/en-US/iPhone_17_Pro_Max-01_documents.png`
 (the prefix is the device `id` from `screenshot_devices.toml`). Tear down the backend
 with `uv run --project scripts swpngx capture teardown`.
 
 **2. Install device bezels** from [Apple Design Resources](https://developer.apple.com/design/resources/)
 (Product Bezels). Each `[[device]]` in [`screenshot_devices.toml`](screenshot_devices.toml)
 names a `bezel_pack` from [`bezel_packs.toml`](bezel_packs.toml) and the PNG filename
-to install under `fastlane/screenshots/frames/`:
+to install under `store/screenshots/frames/`:
 
 ```console
 # Use DMGs you already downloaded (e.g. from ~/Downloads):
@@ -172,12 +172,12 @@ Requires macOS (`hdiutil`). Apple’s DMG license prompt is accepted automatical
 uv run --project scripts swpngx frame
 ```
 
-Reads `fastlane/screenshots/<locale>/`, composites device bezels and localized
-titles (from [`fastlane/screenshots/Screenshots.xcstrings`](fastlane/screenshots/Screenshots.xcstrings)),
-and writes `fastlane/screenshots/framed/<locale>/*-framed.png`. Device names in
+Reads `store/screenshots/<locale>/`, composites device bezels and localized
+titles (from [`store/screenshots/Screenshots.xcstrings`](store/screenshots/Screenshots.xcstrings)),
+and writes `store/screenshots/framed/<locale>/*-framed.png`. Device names in
 filenames must match device `id` in `screenshot_devices.toml`.
 
-The framing font (Open Sans) is not in git (`fastlane/.gitignore` ignores `*.ttf`).
+The framing font (Open Sans) is not in git (`store/.gitignore` ignores `*.ttf`).
 `swpngx frame` downloads it automatically from [Google Fonts](https://fonts.google.com/specimen/Open+Sans)
 via [`fonts.toml`](fonts.toml), or you can prefetch:
 
@@ -202,17 +202,17 @@ just deliver-metadata   # metadata only (What's New, description, …)
 
 `just deliver` runs `swpngx deliver` for `MARKETING_VERSION` from
 `Config/Shared/Version.xcconfig`, creating that App Store version if it does not
-exist yet. It reads metadata from `fastlane/metadata/`, sets the copyright and
+exist yet. It reads metadata from `store/metadata/`, sets the copyright and
 categories, and replaces all screenshots of each device in
 [`screenshot_devices.toml`](screenshot_devices.toml) that has framed PNGs. No IPA
 is uploaded; TestFlight builds go through `just beta` separately. `just
 deliver-preview` also validates locally, then shows the changes against App Store
 Connect once the version exists.
 
-`fastlane/metadata/default/` applies to every locale, including `en-US`, unless
+`store/metadata/default/` applies to every locale, including `en-US`, unless
 the locale directory overrides a file.
 
-**What's New** is edited only in `fastlane/metadata/default/release_notes.txt`
+**What's New** is edited only in `store/metadata/default/release_notes.txt`
 and applies to every locale.
 
 Authentication uses the `asc auth login` credentials, or the same App Store
@@ -220,7 +220,7 @@ Connect API key as TestFlight (`APP_STORE_CONNECT_API_KEY_ID`,
 `APP_STORE_CONNECT_ISSUER_ID`, and `APP_STORE_CONNECT_KEY_FILEPATH` or
 `APP_STORE_CONNECT_KEY_CONTENT`).
 
-PNG screenshots under `fastlane/screenshots/` are gitignored; generate them locally
+PNG screenshots under `store/screenshots/` are gitignored; generate them locally
 before upload.
 
 ### Panorama montage
@@ -228,7 +228,7 @@ before upload.
 Concatenate framed screenshots (adjust the glob for your device name):
 
 ```console
-montage fastlane/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
+montage store/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
     -tile 4x1 -geometry +20+0 panorama.png
 ```
 

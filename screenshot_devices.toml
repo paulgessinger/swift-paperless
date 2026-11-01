@@ -8,7 +8,7 @@
 # Keep `id` stable when changing simulators; update `simulator_name` and `bezel`
 # when moving to new hardware generations.
 
-frames_dir = "fastlane/screenshots/frames"
+frames_dir = "store/screenshots/frames"
 
 [[device]]
 id = "iPad_Pro_13_M5"

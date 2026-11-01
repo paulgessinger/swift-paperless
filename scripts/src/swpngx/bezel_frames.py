@@ -249,7 +249,7 @@ def download_frames(
         machine = platform.system()
         console.log(
             f"[red]This command requires macOS (found {machine}). "
-            "Mount the DMG manually and copy PNGs into fastlane/screenshots/frames/."
+            "Mount the DMG manually and copy PNGs into store/screenshots/frames/."
         )
         raise typer.Exit(1)
 

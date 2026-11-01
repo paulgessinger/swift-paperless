@@ -196,10 +196,10 @@ def main(
     ],
     metadata_dir: Annotated[
         Path, typer.Option(help="Path to the metadata directory")
-    ] = Path("fastlane/metadata"),
+    ] = Path("store/metadata"),
     screenshots_dir: Annotated[
         Path, typer.Option(help="Path to the framed screenshots directory")
-    ] = Path("fastlane/screenshots/framed"),
+    ] = Path("store/screenshots/framed"),
     devices_file: Annotated[
         Path, typer.Option(help="Path to screenshot_devices.toml")
     ] = Path("screenshot_devices.toml"),
