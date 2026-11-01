@@ -70,20 +70,6 @@ struct ApiTaskV10: Codable, Sendable {
       duplicate_of = try? container.decodeIfPresent(UInt.self, forKey: .duplicate_of)
       error_message = try? container.decodeIfPresent(String.self, forKey: .error_message)
     }
-
-    // Same precedence and wording as the backend's v9 `result` field.
-    var message: String? {
-      if let document_id {
-        return "Success. New document id \(document_id) created"
-      }
-      if let reason {
-        return reason
-      }
-      if let duplicate_of {
-        return "Not consuming: It is a duplicate of document #\(duplicate_of)"
-      }
-      return error_message
-    }
   }
 
   var id: UInt
@@ -112,10 +98,13 @@ extension ApiTaskV10 {
       dateDone: date_done,
       type: trigger_source,
       status: normalizedStatus,
-      result: result_data?.message,
+      // Only the server's own text: a created document or a duplicate has an
+      // id instead, and the display layer words those.
+      result: result_data?.reason ?? result_data?.error_message,
       acknowledged: acknowledged,
       relatedDocument: related_document_ids.first.map(String.init),
-      duplicateDocumentId: result_data?.duplicate_of
+      duplicateDocumentId: result_data?.duplicate_of,
+      createdDocumentId: result_data?.document_id
     )
   }
 }

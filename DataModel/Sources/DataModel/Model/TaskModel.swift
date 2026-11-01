@@ -39,6 +39,7 @@ public struct PaperlessTask: Model, Identifiable, Hashable, Sendable {
   public var acknowledged: Bool
   public var relatedDocument: String?
   public var duplicateDocumentId: UInt?
+  public var createdDocumentId: UInt?
 
   public init(
     id: UInt,
@@ -52,7 +53,8 @@ public struct PaperlessTask: Model, Identifiable, Hashable, Sendable {
     result: String? = nil,
     acknowledged: Bool,
     relatedDocument: String? = nil,
-    duplicateDocumentId: UInt? = nil
+    duplicateDocumentId: UInt? = nil,
+    createdDocumentId: UInt? = nil
   ) {
     self.id = id
     self.taskId = taskId
@@ -66,6 +68,7 @@ public struct PaperlessTask: Model, Identifiable, Hashable, Sendable {
     self.acknowledged = acknowledged
     self.relatedDocument = relatedDocument
     self.duplicateDocumentId = duplicateDocumentId
+    self.createdDocumentId = createdDocumentId
   }
 
   public var isActive: Bool {

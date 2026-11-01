@@ -77,7 +77,9 @@ struct ApiTaskTest {
         #require(tasks[0].dateDone),
         datetime(year: 2026, month: 4, day: 18, hour: 8, minute: 46, second: 58.981436, tz: tz)))
     #expect(tasks[0].status == TaskStatus.SUCCESS)
-    #expect(tasks[0].result == "Success. New document id 29 created")
+    #expect(tasks[0].result == nil)
+    #expect(tasks[0].createdDocumentId == 29)
+    #expect(tasks[0].resultKind == .created(documentId: 29))
     #expect(tasks[0].acknowledged == false)
     #expect(tasks[0].relatedDocument == "29")
     #expect(tasks[0].isActive == false)
@@ -101,7 +103,7 @@ struct ApiTaskTest {
     #expect(duplicate.status == TaskStatus.FAILURE)
     #expect(duplicate.duplicateDocumentId == 28)
     #expect(duplicate.relatedDocument == "28")
-    #expect(duplicate.result == "Not consuming: It is a duplicate of document #28")
+    #expect(duplicate.result == nil)
     #expect(duplicate.resultKind == .duplicate(fileName: "form.pdf"))
 
     let failed = tasks[1]
