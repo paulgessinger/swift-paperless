@@ -26,6 +26,14 @@ extension WhatsNewDeck {
           icon: "lock.shield",
           title: String(localized: .login(.onboardingPrivacyTitle)),
           text: String(localized: .login(.onboardingPrivacyText)))),
+      .telemetry(
+        Card(
+          icon: "chart.bar",
+          title: "Share anonymous usage",
+          text: "Optional, and off unless you turn it on.",
+          detail:
+            "Placeholder: the description of what is sent gets written with the telemetry implementation."
+        )),
     ]
 
     return WhatsNewDeck(
