@@ -10,12 +10,12 @@ import Foundation
 enum AppFeatures {
   case tipJar
   case autoFocusSearchInDetailSheets
-  /// The opt-in UI only runs in debug simulator builds until telemetry exists
-  /// and the privacy policy describes it.
+  /// The opt-in UI only runs in debug builds until telemetry exists and the
+  /// privacy policy describes it.
   case telemetry
 
-  private static var isDebugSimulator: Bool {
-    #if DEBUG && targetEnvironment(simulator)
+  private static var isDebug: Bool {
+    #if DEBUG
       true
     #else
       false
@@ -26,7 +26,7 @@ enum AppFeatures {
     return switch feature {
     case .tipJar: true
     case .autoFocusSearchInDetailSheets: false
-    case .telemetry: isDebugSimulator
+    case .telemetry: isDebug
     }
   }
 }
