@@ -127,6 +127,41 @@ read) and, for TestFlight, run `just set-test-notes <build>`.
 [`changelog.txt`](changelog.txt) is an offline copy of the per-build notes,
 regenerated from the releases with `just changelog-archive`.
 
+### What's New decks
+
+The paged What's New screen for a version is written as YAML front matter at the
+top of its release note, `docs/release_notes/v<version>.md`. The docs build
+turns each one into `whats_new/<version>.json` on the site, which the app
+fetches; a note without a `whats_new` key publishes nothing.
+
+```yaml
+---
+whats_new:
+  pages:
+    - title: What's new in 1.11
+      subtitle: Tags          # optional
+      blocks:
+        - type: card          # card, tip (adds tip buttons) or telemetry
+          icon: tag           # SF Symbol name
+          tint: teal          # optional: blue, indigo, orange, pink, purple, red, teal
+          title: Nested tags
+          text: Support for hierarchical tags.
+          detail: |           # optional Markdown for "Learn more"
+            Tags can now have parents. ![Tag tree](../assets/tags.png)
+---
+```
+
+Relative links and images in `detail` resolve against
+`https://swift-paperless.app/release_notes/`. Check a deck before pushing with:
+
+```console
+uv run scripts/whats_new.py build docs/release_notes site/whats_new
+```
+
+The command stops with the file and field of the first mistake it finds. GitHub
+release bodies are copied from these notes, so leave the front matter out when
+copying.
+
 ### App Store screenshots
 
 **1. Capture** raw simulator PNGs (config: [`screenshots.toml`](screenshots.toml)):

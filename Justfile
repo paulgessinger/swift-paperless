@@ -10,6 +10,7 @@ docs:
   rm -f site/requirements.in site/requirements.txt
   mkdir -p site/release_notes/md
   cp docs/release_notes/*.md site/release_notes/md
+  uv run scripts/whats_new.py build docs/release_notes site/whats_new
 
 version_xcconfig := 'Config/Shared/Version.xcconfig'
 
