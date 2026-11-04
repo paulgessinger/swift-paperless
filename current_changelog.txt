@@ -71,3 +71,6 @@
 - New "Duplicates" filter for documents with or without duplicates, on Paperless-ngx v3.2 and later
 - Items in the Settings lists and Trash now stay in place until a delete succeeds, so a failed delete no longer hides them
 - Swipe-to-delete in a searched Settings list now deletes the item you swiped
+- New installs start with a short welcome page before the login screen, explaining that the app needs your own Paperless-ngx server
+- What's New can now show a paged overview of a release, with an icon and a short description per feature and more detail on request; versions without one keep showing the release notes
+- A "Leave a tip" link in the release notes now opens the tip jar in the app
