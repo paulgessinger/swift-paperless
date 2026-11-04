@@ -1,3 +1,4 @@
+import Common
 import Foundation
 import Testing
 
@@ -81,5 +82,50 @@ struct TipJarLinkTests {
   ])
   func ignoresOtherLinks(_ value: String) throws {
     #expect(!TipJarLink.matches(try #require(URL(string: value))))
+  }
+}
+
+@Suite
+struct PublishedWhatsNewDeckTests {
+  private let version = Version("1.11.0")!
+
+  private func fetch(status: Int, body: String) -> WhatsNewDeck.Fetch {
+    { request in
+      let response = HTTPURLResponse(
+        url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+      return (Data(body.utf8), response)
+    }
+  }
+
+  @Test
+  func requestsTheVersionsFile() {
+    #expect(
+      DocumentationLinks.whatsNew(for: version).absoluteString
+        == "https://swift-paperless.app/whats_new/1.11.0.json")
+  }
+
+  @Test
+  func loadsAMatchingDeck() async {
+    let body = #"{"version": "1.11.0", "pages": [{"title": "Page", "blocks": []}]}"#
+    let deck = await WhatsNewDeck.published(for: version, fetch: fetch(status: 200, body: body))
+    #expect(deck?.pages.first?.title == "Page")
+  }
+
+  @Test(arguments: [
+    (404, "Not found"),
+    (200, #"{"version": "1.10.0", "pages": []}"#),
+    (200, "not json"),
+  ])
+  func fallsBackWithoutAUsableDeck(status: Int, body: String) async {
+    #expect(
+      await WhatsNewDeck.published(for: version, fetch: fetch(status: status, body: body)) == nil)
+  }
+
+  @Test
+  func fallsBackWhenOffline() async {
+    let deck = await WhatsNewDeck.published(for: version) { _ in
+      throw URLError(.notConnectedToInternet)
+    }
+    #expect(deck == nil)
   }
 }
