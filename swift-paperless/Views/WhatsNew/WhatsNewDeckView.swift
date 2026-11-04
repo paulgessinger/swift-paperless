@@ -42,14 +42,17 @@ struct WhatsNewDeckView: View {
     Button {
       onDismiss()
     } label: {
+      // The bare word is too small a target once it's out of the toolbar.
       Text(.app(.skip))
+        .padding(.vertical, 10)
+        .padding(.trailing, 24)
+        .contentShape(Rectangle())
     }
     .opacity(isLastPage ? 0 : 1)
     .disabled(isLastPage)
     .animation(.default, value: isLastPage)
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal)
-    .padding(.vertical, 8)
   }
 
   private var footer: some View {
