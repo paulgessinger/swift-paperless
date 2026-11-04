@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 24.01.26.
 //
 
+import AppShared
 import Foundation
 
 enum AppFeatures {
@@ -14,19 +15,11 @@ enum AppFeatures {
   /// privacy policy describes it.
   case telemetry
 
-  private static var isDebug: Bool {
-    #if DEBUG
-      true
-    #else
-      false
-    #endif
-  }
-
   static func enabled(_ feature: Self) -> Bool {
     return switch feature {
     case .tipJar: true
     case .autoFocusSearchInDetailSheets: false
-    case .telemetry: isDebug
+    case .telemetry: Bundle.isDebug
     }
   }
 }
