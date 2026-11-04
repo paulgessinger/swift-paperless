@@ -1,5 +1,6 @@
 import AppShared
 import AppViews
+import Common
 import MarkdownUI
 import SwiftUI
 
@@ -329,3 +330,36 @@ extension WhatsNewDeck {
 #Preview {
   WhatsNewDeckView(deck: .sample) {}
 }
+
+#if DEBUG
+  /// The newest deck `scripts/whats_new.py` wrote into the repo's `site/whats_new`.
+  private func generatedDeck() -> WhatsNewDeck? {
+    let directory = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()  // WhatsNew
+      .deletingLastPathComponent()  // Views
+      .deletingLastPathComponent()  // swift-paperless
+      .deletingLastPathComponent()
+      .appending(path: "site/whats_new")
+    let files =
+      (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil))
+      ?? []
+    let newest =
+      files
+      .compactMap { file in
+        Version(file.deletingPathExtension().lastPathComponent).map { ($0, file) }
+      }
+      .max { $0.0 < $1.0 }
+    return newest.flatMap { try? WhatsNewDeck(json: Data(contentsOf: $0.1)) }
+  }
+
+  #Preview("Generated") {
+    if let deck = generatedDeck() {
+      WhatsNewDeckView(deck: deck) {}
+    } else {
+      Text(
+        verbatim: "Run `uv run scripts/whats_new.py build docs/release_notes site/whats_new` first."
+      )
+      .padding()
+    }
+  }
+#endif
