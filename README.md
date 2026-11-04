@@ -142,7 +142,7 @@ whats_new:
       subtitle: Tags          # optional
       blocks:
         - type: card          # card, tip (adds tip buttons) or telemetry
-          icon: tag           # SF Symbol name
+          icon: tag           # any SF Symbol name, e.g. ladybug for a fixes card
           tint: teal          # optional: blue, indigo, orange, pink, purple, red, teal
           title: Nested tags
           text: Support for hierarchical tags.
@@ -158,9 +158,9 @@ Relative links and images in `detail` resolve against
 uv run scripts/whats_new.py build docs/release_notes site/whats_new
 ```
 
-The command stops with the file and field of the first mistake it finds. GitHub
-release bodies are copied from these notes, so leave the front matter out when
-copying.
+If a deck has a mistake, this command and the docs build both stop and name the
+file and field. When copying a release note into its GitHub release, leave out
+the front matter block: it is only for the app.
 
 ### App Store screenshots
 
