@@ -31,9 +31,7 @@ extension WhatsNewDeck {
           icon: "chart.bar",
           title: "Share anonymous usage",
           text: "Optional, and off unless you turn it on.",
-          detail:
-            "Placeholder: the description of what is sent gets written with the telemetry implementation."
-        )),
+          detail: TelemetrySettingsView.explanation)),
     ]
 
     return WhatsNewDeck(

@@ -118,14 +118,11 @@ struct SettingsView: View {
       }
 
       if AppFeatures.enabled(.telemetry) {
-        Toggle(
-          isOn: Binding(
-            get: { AppSettings.shared.telemetryOptIn ?? false },
-            set: { AppSettings.shared.telemetryOptIn = $0 })
-        ) {
-          // Placeholder until telemetry exists, so not in the catalogs yet.
+        NavigationLink {
+          TelemetrySettingsView()
+        } label: {
           Label {
-            Text(verbatim: "Share anonymous usage")
+            Text(verbatim: TelemetrySettingsView.title)
           } icon: {
             Image(systemName: "chart.bar.fill")
           }

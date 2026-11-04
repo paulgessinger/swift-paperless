@@ -206,18 +206,14 @@ private struct TipBlock: View {
 private struct TelemetryBlock: View {
   let card: WhatsNewDeck.Card
 
-  private var optIn: Binding<Bool> {
-    Binding(
-      get: { AppSettings.shared.telemetryOptIn ?? false },
-      set: { AppSettings.shared.telemetryOptIn = $0 })
-  }
+  @Bindable private var appSettings = AppSettings.shared
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 12) {
         CardView(card: card, moreLabel: "See what's sent")
 
-        Toggle(isOn: optIn) {
+        Toggle(isOn: Binding($appSettings.telemetryOptIn, default: false)) {
           Text(verbatim: card.title)
         }
         .labelsHidden()
