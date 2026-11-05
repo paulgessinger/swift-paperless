@@ -114,7 +114,8 @@ struct DocumentStoreTests {
     try await waitUntil(
       { status.keptOfflineViewProgress[view.id]?.totalDocuments == 1 },
       "the status never saw the view")
-    #expect(status.keptOfflineFileProgress.totalDocuments == 1)
+    try await waitUntil(
+      { status.keptOfflineFileProgress.totalDocuments == 1 }, "the status never saw the member")
 
     try await harness.store.setKeptOffline(savedView: view, false)
     try await waitUntil(
