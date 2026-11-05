@@ -35,10 +35,12 @@ public struct WhatsNewDeck: Decodable, Equatable, Sendable {
     public let detail: String?
     /// Picture shown above the card; relative paths resolve like links in `detail`.
     public let image: String?
+    /// Whether the image gets a shadow, for one that should stand off the page.
+    public let imageShadow: Bool
 
     public init(
       icon: String, tint: String? = nil, title: String, text: String, detail: String? = nil,
-      image: String? = nil
+      image: String? = nil, imageShadow: Bool = false
     ) {
       self.icon = icon
       self.tint = tint
@@ -46,6 +48,23 @@ public struct WhatsNewDeck: Decodable, Equatable, Sendable {
       self.text = text
       self.detail = detail
       self.image = image
+      self.imageShadow = imageShadow
+    }
+
+    private enum CodingKeys: String, CodingKey {
+      case icon, tint, title, text, detail, image
+      case imageShadow = "image_shadow"
+    }
+
+    public init(from decoder: any Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      icon = try container.decode(String.self, forKey: .icon)
+      tint = try container.decodeIfPresent(String.self, forKey: .tint)
+      title = try container.decode(String.self, forKey: .title)
+      text = try container.decode(String.self, forKey: .text)
+      detail = try container.decodeIfPresent(String.self, forKey: .detail)
+      image = try container.decodeIfPresent(String.self, forKey: .image)
+      imageShadow = try container.decodeIfPresent(Bool.self, forKey: .imageShadow) ?? false
     }
   }
 

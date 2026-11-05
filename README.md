@@ -147,6 +147,7 @@ whats_new:
           title: Nested tags
           text: Support for hierarchical tags.
           image: ../assets/tags.png  # optional picture above the card
+          image_shadow: true         # optional; a glow in dark mode. Needs transparent corners
           detail: |           # optional Markdown for "Learn more"
             Tags can now have parents. ![Tag tree](../assets/tags.png)
 ---

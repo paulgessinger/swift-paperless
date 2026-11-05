@@ -75,6 +75,20 @@ struct WhatsNewDeckTests {
       ])
   }
 
+  @Test func imageShadowDefaultsToOff() throws {
+    let result = try deck(
+      blocks: """
+        {"type": "card", \(card), "image": "a.png", "image_shadow": true},
+        {"type": "card", \(card), "image": "a.png"}
+        """)
+
+    let shadows = try #require(result.pages.first).blocks.map { block in
+      guard case .card(let card) = block else { return Bool?.none }
+      return card.imageShadow
+    }
+    #expect(shadows == [true, false])
+  }
+
   @Test func rejectsCardWithoutRequiredFields() {
     #expect(throws: DecodingError.self) {
       try deck(blocks: #"{"type": "card", "icon": "tag"}"#)

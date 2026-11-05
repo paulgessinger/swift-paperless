@@ -151,3 +151,24 @@ def test_snapshot_sees_changed_and_new_files(tmp_path: Path) -> None:
     (tmp_path / "assets").mkdir()
     (tmp_path / "assets" / "icon.png").write_bytes(b"png")
     assert whats_new.snapshot(tmp_path) != before
+
+
+def test_image_shadow_is_a_flag_on_an_image(tmp_path: Path) -> None:
+    (tmp_path / "icon.png").write_bytes(b"png")
+    shadow = "          image: icon.png\n          image_shadow: true\n"
+    note = NOTE.replace("          tint: teal\n", "          tint: teal\n" + shadow, 1)
+    write(tmp_path, "v1.11.0.md", note)
+    block = whats_new.decks(tmp_path)["1.11.0"]["pages"][0]["blocks"][0]
+    assert block["image_shadow"] is True
+
+    write(
+        tmp_path,
+        "v1.11.0.md",
+        note.replace("image_shadow: true", "image_shadow: yes please"),
+    )
+    with pytest.raises(whats_new.DeckError, match="true or false"):
+        whats_new.decks(tmp_path)
+
+    write(tmp_path, "v1.11.0.md", note.replace("          image: icon.png\n", ""))
+    with pytest.raises(whats_new.DeckError, match="needs an image"):
+        whats_new.decks(tmp_path)

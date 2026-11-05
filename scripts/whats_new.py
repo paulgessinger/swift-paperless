@@ -50,6 +50,7 @@ BLOCK_TYPES = {"card", "tip", "telemetry"}
 TINTS = {"blue", "indigo", "orange", "pink", "purple", "red", "teal"}
 CARD_REQUIRED = ("icon", "title", "text")
 CARD_OPTIONAL = ("tint", "detail", "image")
+CARD_FLAGS = ("image_shadow",)
 
 
 class DeckError(Exception):
@@ -74,17 +75,17 @@ def _string(value: Any, where: str) -> str:
     return value
 
 
-def _block(raw: Any, where: str, notes: Path) -> dict[str, str]:
+def _block(raw: Any, where: str, notes: Path) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise DeckError(f"{where} must be a mapping")
     kind = raw.get("type")
     if kind not in BLOCK_TYPES:
         raise DeckError(f"{where}.type must be one of {sorted(BLOCK_TYPES)}")
-    unknown = set(raw) - {"type", *CARD_REQUIRED, *CARD_OPTIONAL}
+    unknown = set(raw) - {"type", *CARD_REQUIRED, *CARD_OPTIONAL, *CARD_FLAGS}
     if unknown:
         raise DeckError(f"{where} has unknown keys {sorted(unknown)}")
 
-    block = {"type": kind}
+    block: dict[str, Any] = {"type": kind}
     for key in CARD_REQUIRED:
         block[key] = _string(raw.get(key), f"{where}.{key}")
     for key in CARD_OPTIONAL:
@@ -94,6 +95,13 @@ def _block(raw: Any, where: str, notes: Path) -> dict[str, str]:
         raise DeckError(f"{where}.tint must be one of {sorted(TINTS)}")
     if "image" in block:
         _check_image(block["image"], f"{where}.image", notes)
+    for key in CARD_FLAGS:
+        if key in raw:
+            if not isinstance(raw[key], bool):
+                raise DeckError(f"{where}.{key} must be true or false")
+            block[key] = raw[key]
+    if "image_shadow" in block and "image" not in block:
+        raise DeckError(f"{where}.image_shadow needs an image")
     return block
 
 

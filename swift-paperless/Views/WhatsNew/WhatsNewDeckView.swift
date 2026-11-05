@@ -188,7 +188,7 @@ private struct CardView: View {
   var body: some View {
     VStack(spacing: 14) {
       if let url = card.imageURL(relativeTo: baseURL) {
-        CardImage(url: url)
+        CardImage(url: url, shadow: card.imageShadow)
       }
       row
     }
@@ -224,8 +224,17 @@ private struct CardView: View {
 private struct CardImage: View {
   let url: URL
   var height: CGFloat = 140
+  var shadow = false
 
   @State private var failed = false
+  @Environment(\.colorScheme) private var colorScheme
+
+  /// A drop shadow vanishes on a dark page, so dark mode gets a faint glow
+  /// that follows the image's outline instead.
+  private var shadowColor: Color {
+    guard shadow else { return .clear }
+    return colorScheme == .dark ? .white.opacity(0.18) : .black.opacity(0.22)
+  }
 
   var body: some View {
     if !failed {
@@ -235,6 +244,9 @@ private struct CardImage: View {
           image
             .resizable()
             .scaledToFit()
+            .shadow(
+              color: shadowColor, radius: colorScheme == .dark ? 14 : 10,
+              y: colorScheme == .dark ? 0 : 6)
         case .failure:
           Color.clear.onAppear { failed = true }
         default:
@@ -313,7 +325,7 @@ private struct DetailView: View {
   private var header: some View {
     VStack(spacing: 12) {
       if let url = card.imageURL(relativeTo: baseURL) {
-        CardImage(url: url, height: 120)
+        CardImage(url: url, height: 120, shadow: card.imageShadow)
       } else {
         IconTile(card: card, size: 72)
       }
