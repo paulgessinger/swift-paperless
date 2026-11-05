@@ -133,3 +133,21 @@ def test_absolute_images_must_be_https(tmp_path: Path, image: str, ok: bool) -> 
     else:
         with pytest.raises(whats_new.DeckError, match="https URL"):
             whats_new.decks(tmp_path)
+
+
+def test_invalid_deck_writes_nothing(tmp_path: Path) -> None:
+    notes, output = tmp_path / "notes", tmp_path / "site"
+    notes.mkdir()
+    write(notes, "v1.11.0.md", NOTE.replace("type: card", "type: banner", 1))
+    with pytest.raises(whats_new.DeckError):
+        whats_new.write_decks(notes, output)
+    assert not output.exists()
+
+
+def test_snapshot_sees_changed_and_new_files(tmp_path: Path) -> None:
+    write(tmp_path, "v1.11.0.md", NOTE)
+    before = whats_new.snapshot(tmp_path)
+
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "icon.png").write_bytes(b"png")
+    assert whats_new.snapshot(tmp_path) != before

@@ -12,6 +12,10 @@ docs:
   cp docs/release_notes/*.md site/release_notes/md
   uv run scripts/whats_new.py build docs/release_notes site/whats_new
 
+# Rebuild site/whats_new on every release note change, for the "Generated" preview.
+whats-new-watch:
+  uv run scripts/whats_new.py watch docs/release_notes site/whats_new
+
 version_xcconfig := 'Config/Shared/Version.xcconfig'
 
 # Generate swift-paperless.xcodeproj from project.yml (it is gitignored).

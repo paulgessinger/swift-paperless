@@ -467,33 +467,68 @@ extension WhatsNewDeck {
     .deletingLastPathComponent()  // swift-paperless
     .deletingLastPathComponent()
 
-  /// The newest deck `scripts/whats_new.py` wrote into the repo's `site/whats_new`.
-  private func generatedDeck() -> WhatsNewDeck? {
+  /// The newest deck file `scripts/whats_new.py` wrote into the repo's `site/whats_new`.
+  private func generatedDeckFile() -> URL? {
     let directory = repoRoot.appending(path: "site/whats_new")
     let files =
       (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil))
       ?? []
-    let newest =
+    return
       files
       .compactMap { file in
         Version(file.deletingPathExtension().lastPathComponent).map { ($0, file) }
       }
-      .max { $0.0 < $1.0 }
-    return newest.flatMap { try? WhatsNewDeck(json: Data(contentsOf: $0.1)) }
+      .max { $0.0 < $1.0 }?.1
+  }
+
+  /// Reloads whenever the deck file changes, so `just whats-new-watch` makes
+  /// edits to the release note show up live.
+  private struct GeneratedDeckPreview: View {
+    @State private var deck: WhatsNewDeck?
+    @State private var error: String?
+    @State private var loaded: (url: URL, modified: Date)?
+
+    var body: some View {
+      Group {
+        if let deck {
+          // Images in the repo, which may not be on the site yet.
+          WhatsNewDeckView(deck: deck) {}
+            .environment(
+              \.whatsNewBaseURL,
+              repoRoot.appending(path: "docs/release_notes/", directoryHint: .isDirectory))
+        } else {
+          Text(
+            verbatim: error
+              ?? "Run `just whats-new-watch`, or `uv run scripts/whats_new.py build docs/release_notes site/whats_new`."
+          )
+          .padding()
+        }
+      }
+      .task {
+        while !Task.isCancelled {
+          reloadIfChanged()
+          try? await Task.sleep(for: .seconds(1))
+        }
+      }
+    }
+
+    private func reloadIfChanged() {
+      guard let url = generatedDeckFile(),
+        let modified = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+          .contentModificationDate,
+        loaded?.url != url || loaded?.modified != modified
+      else { return }
+      loaded = (url, modified)
+      do {
+        deck = try WhatsNewDeck(json: Data(contentsOf: url))
+        error = nil
+      } catch {
+        self.error = "Could not load \(url.lastPathComponent): \(error)"
+      }
+    }
   }
 
   #Preview("Generated") {
-    if let deck = generatedDeck() {
-      // Images in the repo, which may not be on the site yet.
-      WhatsNewDeckView(deck: deck) {}
-        .environment(
-          \.whatsNewBaseURL,
-          repoRoot.appending(path: "docs/release_notes/", directoryHint: .isDirectory))
-    } else {
-      Text(
-        verbatim: "Run `uv run scripts/whats_new.py build docs/release_notes site/whats_new` first."
-      )
-      .padding()
-    }
+    GeneratedDeckPreview()
   }
 #endif

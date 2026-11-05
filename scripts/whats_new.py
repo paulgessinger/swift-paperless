@@ -28,6 +28,7 @@ from the file name, so a deck can't be published under the wrong release.
 
 import json
 import re
+import time
 from urllib.parse import urlparse
 from pathlib import Path
 from typing import Annotated, Any
@@ -150,6 +151,22 @@ def decks(notes: Path) -> dict[str, dict[str, Any]]:
     return found
 
 
+def write_decks(notes: Path, output: Path) -> int:
+    """Writes every deck, or raises before writing any if one is invalid."""
+    found = decks(notes)
+    output.mkdir(parents=True, exist_ok=True)
+    for version, content in found.items():
+        (output / f"{version}.json").write_text(
+            json.dumps(content, ensure_ascii=False, indent=2) + "\n"
+        )
+    return len(found)
+
+
+def snapshot(root: Path) -> dict[Path, float]:
+    """Modification times of every file under `root`."""
+    return {path: path.stat().st_mtime for path in root.rglob("*") if path.is_file()}
+
+
 @app.command()
 def build(
     notes: Annotated[Path, typer.Argument(help="Directory of vX.Y.Z.md release notes")],
@@ -159,17 +176,45 @@ def build(
 ) -> None:
     """Write a deck JSON file for each release note that has one."""
     try:
-        found = decks(notes)
+        count = write_decks(notes, output)
     except DeckError as error:
         typer.echo(f"error: {error}", err=True)
         raise typer.Exit(1)
+    typer.echo(f"Wrote {count} What's New deck(s) to {output}")
 
-    output.mkdir(parents=True, exist_ok=True)
-    for version, content in found.items():
-        (output / f"{version}.json").write_text(
-            json.dumps(content, ensure_ascii=False, indent=2) + "\n"
-        )
-    typer.echo(f"Wrote {len(found)} What's New deck(s) to {output}")
+
+@app.command()
+def watch(
+    notes: Annotated[Path, typer.Argument(help="Directory of vX.Y.Z.md release notes")],
+    output: Annotated[
+        Path, typer.Argument(help="Directory to write <version>.json into")
+    ],
+    interval: Annotated[
+        float, typer.Option(help="Seconds between checks for changes")
+    ] = 0.5,
+) -> None:
+    """Rebuild the decks whenever anything next to the release notes changes.
+
+    Watches the notes' parent directory too, so a changed image counts. An
+    invalid deck is reported and the previous JSON stays in place.
+    """
+    root = notes.resolve().parent
+    seen: dict[Path, float] | None = None
+    typer.echo(f"Watching {root} (Ctrl-C to stop)")
+    try:
+        while True:
+            current = snapshot(root)
+            if current != seen:
+                seen = current
+                stamp = time.strftime("%H:%M:%S")
+                try:
+                    count = write_decks(notes, output)
+                    typer.echo(f"{stamp} wrote {count} deck(s) to {output}")
+                except DeckError as error:
+                    typer.echo(f"{stamp} error: {error}", err=True)
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
