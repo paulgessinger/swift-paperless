@@ -129,16 +129,9 @@ private struct PageView: View {
   }
 }
 
-private struct IconTile: View {
-  let card: WhatsNewDeck.Card
-
-  /// The symbol comes from published content and may be newer than this OS.
-  private var symbol: String {
-    UIImage(systemName: card.icon) == nil ? "sparkles" : card.icon
-  }
-
-  private var tint: Color {
-    switch card.tint {
+extension WhatsNewDeck.Card {
+  fileprivate var tintColor: Color {
+    switch tint {
     case "blue": .blue
     case "indigo": .indigo
     case "orange": .orange
@@ -150,12 +143,33 @@ private struct IconTile: View {
     }
   }
 
+  /// Inline Markdown, so a card's line can carry a link. Trimmed because a
+  /// YAML block scalar ends in a newline.
+  fileprivate var attributedText: AttributedString {
+    let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    return
+      (try? AttributedString(
+        markdown: text,
+        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+      ?? AttributedString(text)
+  }
+}
+
+private struct IconTile: View {
+  let card: WhatsNewDeck.Card
+  var size: CGFloat = 44
+
+  /// The symbol comes from published content and may be newer than this OS.
+  private var symbol: String {
+    UIImage(systemName: card.icon) == nil ? "sparkles" : card.icon
+  }
+
   var body: some View {
     Image(systemName: symbol)
-      .font(.title2)
-      .foregroundStyle(tint)
-      .frame(width: 44, height: 44)
-      .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 11))
+      .font(.system(size: size * 0.5))
+      .foregroundStyle(card.tintColor)
+      .frame(width: size, height: size)
+      .background(card.tintColor.opacity(0.15), in: RoundedRectangle(cornerRadius: size / 4))
       .accessibilityHidden(true)
   }
 }
@@ -180,7 +194,7 @@ private struct CardView: View {
       VStack(alignment: .leading, spacing: 3) {
         Text(verbatim: card.title)
           .font(.headline)
-        Text(verbatim: card.text)
+        Text(card.attributedText)
           .font(.subheadline)
           .foregroundStyle(.secondary)
         if card.detail != nil {
@@ -202,6 +216,7 @@ private struct CardView: View {
 /// image can't be loaded: the card still reads fine without it.
 private struct CardImage: View {
   let url: URL
+  var height: CGFloat = 140
 
   @State private var failed = false
 
@@ -220,7 +235,7 @@ private struct CardImage: View {
         }
       }
       .frame(maxWidth: .infinity)
-      .frame(height: 140)
+      .frame(height: height)
       .accessibilityHidden(true)
     }
   }
@@ -271,13 +286,81 @@ private struct DetailView: View {
 
   var body: some View {
     ScrollView {
-      Markdown(card.detail ?? "", baseURL: DocumentationLinks.releaseNotes)
-        .frame(maxWidth: 540, alignment: .leading)
-        .padding()
-        .frame(maxWidth: .infinity)
+      VStack(spacing: 24) {
+        header
+        Divider()
+        Markdown(card.detail ?? "", baseURL: DocumentationLinks.releaseNotes)
+          .markdownTheme(.whatsNew(tint: card.tintColor))
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .frame(maxWidth: 540)
+      .padding()
+      .frame(maxWidth: .infinity)
     }
-    .navigationTitle(Text(verbatim: card.title))
     .navigationBarTitleDisplayMode(.inline)
+  }
+
+  /// Repeats the card, so the screen reads as the card opened up.
+  private var header: some View {
+    VStack(spacing: 12) {
+      if let url = card.imageURL {
+        CardImage(url: url, height: 120)
+      } else {
+        IconTile(card: card, size: 72)
+      }
+      Text(verbatim: card.title)
+        .font(.title)
+        .bold()
+      Text(card.attributedText)
+        .font(.title3)
+        .foregroundStyle(.secondary)
+    }
+    .multilineTextAlignment(.center)
+    .padding(.top, 8)
+  }
+}
+
+extension Theme {
+  /// Roomier than `.basic`, with headings and links in the card's tint and
+  /// block quotes drawn as callouts.
+  @MainActor
+  fileprivate static func whatsNew(tint: Color) -> Theme {
+    Theme.basic
+      .link {
+        ForegroundColor(tint)
+      }
+      .heading3 { configuration in
+        configuration.label
+          .markdownMargin(top: .rem(1.5), bottom: .rem(0.5))
+          .markdownTextStyle {
+            FontWeight(.semibold)
+            FontSize(.em(1.15))
+            ForegroundColor(tint)
+          }
+      }
+      .paragraph { configuration in
+        configuration.label
+          .fixedSize(horizontal: false, vertical: true)
+          .relativeLineSpacing(.em(0.25))
+          .markdownMargin(top: .zero, bottom: .em(1))
+      }
+      .listItem { configuration in
+        configuration.label
+          .markdownMargin(top: .em(0.4))
+      }
+      .blockquote { configuration in
+        configuration.label
+          .relativeLineSpacing(.em(0.2))
+          .padding(14)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+          .markdownMargin(top: .zero, bottom: .em(1))
+      }
+      .image { configuration in
+        configuration.label
+          .clipShape(RoundedRectangle(cornerRadius: 12))
+          .markdownMargin(top: .em(0.5), bottom: .em(1))
+      }
   }
 }
 
