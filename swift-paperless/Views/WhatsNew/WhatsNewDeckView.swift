@@ -4,6 +4,11 @@ import Common
 import MarkdownUI
 import SwiftUI
 
+extension EnvironmentValues {
+  /// What relative images and links in a deck resolve against.
+  @Entry var whatsNewBaseURL: URL = DocumentationLinks.releaseNotes
+}
+
 struct WhatsNewDeckView: View {
   let deck: WhatsNewDeck
   var finishLabel = String(localized: .app(.done))
@@ -178,9 +183,11 @@ private struct CardView: View {
   let card: WhatsNewDeck.Card
   let moreLabel: String
 
+  @Environment(\.whatsNewBaseURL) private var baseURL
+
   var body: some View {
     VStack(spacing: 14) {
-      if let url = card.imageURL {
+      if let url = card.imageURL(relativeTo: baseURL) {
         CardImage(url: url)
       }
       row
@@ -284,12 +291,14 @@ private struct TelemetryBlock: View {
 private struct DetailView: View {
   let card: WhatsNewDeck.Card
 
+  @Environment(\.whatsNewBaseURL) private var baseURL
+
   var body: some View {
     ScrollView {
       VStack(spacing: 24) {
         header
         Divider()
-        Markdown(card.detail ?? "", baseURL: DocumentationLinks.releaseNotes)
+        Markdown(card.detail ?? "", baseURL: baseURL)
           .markdownTheme(.whatsNew(tint: card.tintColor))
           .frame(maxWidth: .infinity, alignment: .leading)
       }
@@ -303,7 +312,7 @@ private struct DetailView: View {
   /// Repeats the card, so the screen reads as the card opened up.
   private var header: some View {
     VStack(spacing: 12) {
-      if let url = card.imageURL {
+      if let url = card.imageURL(relativeTo: baseURL) {
         CardImage(url: url, height: 120)
       } else {
         IconTile(card: card, size: 72)
@@ -452,14 +461,15 @@ extension WhatsNewDeck {
 }
 
 #if DEBUG
+  private let repoRoot = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()  // WhatsNew
+    .deletingLastPathComponent()  // Views
+    .deletingLastPathComponent()  // swift-paperless
+    .deletingLastPathComponent()
+
   /// The newest deck `scripts/whats_new.py` wrote into the repo's `site/whats_new`.
   private func generatedDeck() -> WhatsNewDeck? {
-    let directory = URL(fileURLWithPath: #filePath)
-      .deletingLastPathComponent()  // WhatsNew
-      .deletingLastPathComponent()  // Views
-      .deletingLastPathComponent()  // swift-paperless
-      .deletingLastPathComponent()
-      .appending(path: "site/whats_new")
+    let directory = repoRoot.appending(path: "site/whats_new")
     let files =
       (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil))
       ?? []
@@ -474,7 +484,11 @@ extension WhatsNewDeck {
 
   #Preview("Generated") {
     if let deck = generatedDeck() {
+      // Images in the repo, which may not be on the site yet.
       WhatsNewDeckView(deck: deck) {}
+        .environment(
+          \.whatsNewBaseURL,
+          repoRoot.appending(path: "docs/release_notes/", directoryHint: .isDirectory))
     } else {
       Text(
         verbatim: "Run `uv run scripts/whats_new.py build docs/release_notes site/whats_new` first."

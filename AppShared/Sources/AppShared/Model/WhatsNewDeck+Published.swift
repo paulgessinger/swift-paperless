@@ -10,8 +10,8 @@ extension DocumentationLinks {
 }
 
 extension WhatsNewDeck.Card {
-  public var imageURL: URL? {
-    image.flatMap { URL(string: $0, relativeTo: DocumentationLinks.releaseNotes)?.absoluteURL }
+  public func imageURL(relativeTo base: URL = DocumentationLinks.releaseNotes) -> URL? {
+    image.flatMap { URL(string: $0, relativeTo: base)?.absoluteURL }
   }
 }
 

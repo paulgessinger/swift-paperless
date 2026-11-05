@@ -65,7 +65,7 @@ struct WhatsNewDeckTests {
 
     let urls = try #require(result.pages.first).blocks.map { block in
       guard case .card(let card) = block else { return URL?.none }
-      return card.imageURL
+      return card.imageURL()
     }
     #expect(
       urls == [
