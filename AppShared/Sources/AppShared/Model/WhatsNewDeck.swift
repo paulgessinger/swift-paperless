@@ -33,15 +33,19 @@ public struct WhatsNewDeck: Decodable, Equatable, Sendable {
     public let text: String
     /// Markdown shown when the reader asks for more.
     public let detail: String?
+    /// Picture shown above the card; relative paths resolve like links in `detail`.
+    public let image: String?
 
     public init(
-      icon: String, tint: String? = nil, title: String, text: String, detail: String? = nil
+      icon: String, tint: String? = nil, title: String, text: String, detail: String? = nil,
+      image: String? = nil
     ) {
       self.icon = icon
       self.tint = tint
       self.title = title
       self.text = text
       self.detail = detail
+      self.image = image
     }
   }
 

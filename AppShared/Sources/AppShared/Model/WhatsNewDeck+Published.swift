@@ -9,6 +9,12 @@ extension DocumentationLinks {
   }
 }
 
+extension WhatsNewDeck.Card {
+  public var imageURL: URL? {
+    image.flatMap { URL(string: $0, relativeTo: DocumentationLinks.releaseNotes)?.absoluteURL }
+  }
+}
+
 extension WhatsNewDeck {
   public typealias Fetch = @Sendable (URLRequest) async throws -> (Data, URLResponse)
 

@@ -165,6 +165,15 @@ private struct CardView: View {
   let moreLabel: String
 
   var body: some View {
+    VStack(spacing: 14) {
+      if let url = card.imageURL {
+        CardImage(url: url)
+      }
+      row
+    }
+  }
+
+  private var row: some View {
     HStack(alignment: .top, spacing: 14) {
       IconTile(card: card)
 
@@ -185,6 +194,34 @@ private struct CardView: View {
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
+    }
+  }
+}
+
+/// Holds its height while loading so the page doesn't jump, and collapses if the
+/// image can't be loaded: the card still reads fine without it.
+private struct CardImage: View {
+  let url: URL
+
+  @State private var failed = false
+
+  var body: some View {
+    if !failed {
+      AsyncImage(url: url) { phase in
+        switch phase {
+        case .success(let image):
+          image
+            .resizable()
+            .scaledToFit()
+        case .failure:
+          Color.clear.onAppear { failed = true }
+        default:
+          ProgressView()
+        }
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: 140)
+      .accessibilityHidden(true)
     }
   }
 }

@@ -97,3 +97,39 @@ def test_unclosed_front_matter_is_an_error(tmp_path: Path) -> None:
     write(tmp_path, "v1.11.0.md", "---\nwhats_new:\n  pages: []\n# v1.11.0\n")
     with pytest.raises(whats_new.DeckError, match="not closed"):
         whats_new.decks(tmp_path)
+
+
+def with_image(image: str) -> str:
+    return NOTE.replace(
+        "          tint: teal\n", f"          tint: teal\n          image: {image}\n", 1
+    )
+
+
+def test_relative_image_must_exist_next_to_the_notes(tmp_path: Path) -> None:
+    notes = tmp_path / "release_notes"
+    notes.mkdir()
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "icon.png").write_bytes(b"png")
+    write(notes, "v1.11.0.md", with_image("../assets/icon.png"))
+
+    block = whats_new.decks(notes)["1.11.0"]["pages"][0]["blocks"][0]
+    assert block["image"] == "../assets/icon.png"
+
+    write(notes, "v1.11.0.md", with_image("../assets/missing.png"))
+    with pytest.raises(
+        whats_new.DeckError, match=r"blocks\[0\]\.image .* does not exist"
+    ):
+        whats_new.decks(notes)
+
+
+@pytest.mark.parametrize(
+    "image, ok",
+    [("https://example.com/icon.png", True), ("http://example.com/icon.png", False)],
+)
+def test_absolute_images_must_be_https(tmp_path: Path, image: str, ok: bool) -> None:
+    write(tmp_path, "v1.11.0.md", with_image(image))
+    if ok:
+        whats_new.decks(tmp_path)
+    else:
+        with pytest.raises(whats_new.DeckError, match="https URL"):
+            whats_new.decks(tmp_path)

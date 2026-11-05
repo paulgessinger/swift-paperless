@@ -55,6 +55,26 @@ struct WhatsNewDeckTests {
     #expect(try #require(deck(blocks: "").pages.first).subtitle == nil)
   }
 
+  @Test func resolvesImagesAgainstTheReleaseNotes() throws {
+    let result = try deck(
+      blocks: """
+        {"type": "card", \(card), "image": "../assets/app_icon.png"},
+        {"type": "card", \(card), "image": "https://example.com/a.png"},
+        {"type": "card", \(card)}
+        """)
+
+    let urls = try #require(result.pages.first).blocks.map { block in
+      guard case .card(let card) = block else { return URL?.none }
+      return card.imageURL
+    }
+    #expect(
+      urls == [
+        URL(string: "https://swift-paperless.app/assets/app_icon.png"),
+        URL(string: "https://example.com/a.png"),
+        nil,
+      ])
+  }
+
   @Test func rejectsCardWithoutRequiredFields() {
     #expect(throws: DecodingError.self) {
       try deck(blocks: #"{"type": "card", "icon": "tag"}"#)

@@ -28,6 +28,7 @@ from the file name, so a deck can't be published under the wrong release.
 
 import json
 import re
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -47,7 +48,7 @@ BLOCK_TYPES = {"card", "tip", "telemetry"}
 # Must match the tints `IconTile` maps in WhatsNewDeckView.swift.
 TINTS = {"blue", "indigo", "orange", "pink", "purple", "red", "teal"}
 CARD_REQUIRED = ("icon", "title", "text")
-CARD_OPTIONAL = ("tint", "detail")
+CARD_OPTIONAL = ("tint", "detail", "image")
 
 
 class DeckError(Exception):
@@ -72,7 +73,7 @@ def _string(value: Any, where: str) -> str:
     return value
 
 
-def _block(raw: Any, where: str) -> dict[str, str]:
+def _block(raw: Any, where: str, notes: Path) -> dict[str, str]:
     if not isinstance(raw, dict):
         raise DeckError(f"{where} must be a mapping")
     kind = raw.get("type")
@@ -90,10 +91,24 @@ def _block(raw: Any, where: str) -> dict[str, str]:
             block[key] = _string(raw[key], f"{where}.{key}")
     if "tint" in block and block["tint"] not in TINTS:
         raise DeckError(f"{where}.tint must be one of {sorted(TINTS)}")
+    if "image" in block:
+        _check_image(block["image"], f"{where}.image", notes)
     return block
 
 
-def deck(raw: Any, version: str) -> dict[str, Any]:
+def _check_image(image: str, where: str, notes: Path) -> None:
+    """A relative image resolves against the release notes directory, as on the site."""
+    url = urlparse(image)
+    if url.scheme:
+        if url.scheme != "https":
+            raise DeckError(f"{where} must be a relative path or an https URL")
+        return
+    path = (notes / url.path).resolve()
+    if not path.is_file():
+        raise DeckError(f"{where} {image!r} does not exist at {path}")
+
+
+def deck(raw: Any, version: str, notes: Path) -> dict[str, Any]:
     if not isinstance(raw, dict) or not isinstance(raw.get("pages"), list):
         raise DeckError("whats_new.pages must be a list")
     if not raw["pages"]:
@@ -111,7 +126,8 @@ def deck(raw: Any, version: str) -> dict[str, Any]:
         if "subtitle" in page:
             out["subtitle"] = _string(page["subtitle"], f"{where}.subtitle")
         out["blocks"] = [
-            _block(block, f"{where}.blocks[{i}]") for i, block in enumerate(blocks)
+            _block(block, f"{where}.blocks[{i}]", notes)
+            for i, block in enumerate(blocks)
         ]
         pages.append(out)
 
@@ -128,7 +144,7 @@ def decks(notes: Path) -> dict[str, dict[str, Any]]:
         try:
             raw = front_matter(path.read_text()).get("whats_new")
             if raw is not None:
-                found[match[1]] = deck(raw, match[1])
+                found[match[1]] = deck(raw, match[1], notes)
         except (DeckError, yaml.YAMLError) as error:
             raise DeckError(f"{path}: {error}") from error
     return found
