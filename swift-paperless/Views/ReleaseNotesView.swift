@@ -55,6 +55,10 @@ class ReleaseNotesViewModel {
 
   private(set) var hiddenNewerBuilds: HiddenNewerBuilds?
 
+  /// The version's What's New deck, shown before the release notes when one is
+  /// published.
+  private(set) var deck: WhatsNewDeck?
+
   let appVersion: AppVersion?
   let appConfiguration: AppConfiguration?
 
@@ -63,18 +67,37 @@ class ReleaseNotesViewModel {
     self.appConfiguration = appConfiguration ?? Bundle.main.appConfiguration
 
     Task { @MainActor in
-      switch (AppSettings.shared.lastAppVersion, appVersion) {
+      let last = AppSettings.shared.lastAppVersion
+      switch (last, appVersion) {
       case (.none, .none), (.some(_), .none):
         // Current is somehow nil, not sure what to do
         break
-      case (.none, .some(_)):
+      case (.none, .some(let current)):
         // Last is nil but have current, probably initial install
-        showReleaseNotes = true
+        await show(current, after: last)
       case (.some(let last), .some(let current)):
         if current != last {
-          showReleaseNotes = true
+          await show(current, after: last)
         }
       }
+    }
+  }
+
+  private func show(_ current: AppVersion, after last: AppVersion?) async {
+    // A new build of the same version only gets its build notes.
+    if last?.version != current.version {
+      deck = await WhatsNewDeck.published(for: current.version)
+    }
+    showReleaseNotes = true
+  }
+
+  /// App Store builds are done after the deck; the others go on to their build
+  /// notes.
+  func finishDeck() {
+    if appConfiguration == .AppStore {
+      showReleaseNotes = false
+    } else {
+      withAnimation { deck = nil }
     }
   }
 
@@ -519,6 +542,7 @@ private struct ReleaseNotesBareView: View {
         }
       }
     }
+    .tipJarLinks()
   }
 }
 
@@ -526,11 +550,17 @@ struct ReleaseNotesCoverView: View {
   @Binding var releaseNotesModel: ReleaseNotesViewModel
 
   var body: some View {
-    ReleaseNotesBareView(model: $releaseNotesModel, showDismissButton: true)
-      .task {
-        await releaseNotesModel.loadReleaseNotes()
+    if let deck = releaseNotesModel.deck {
+      WhatsNewDeckView(deck: deck) {
+        releaseNotesModel.finishDeck()
       }
-
+      .transition(.opacity)
+    } else {
+      ReleaseNotesBareView(model: $releaseNotesModel, showDismissButton: true)
+        .task {
+          await releaseNotesModel.loadReleaseNotes()
+        }
+    }
   }
 }
 

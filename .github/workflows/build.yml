@@ -164,8 +164,7 @@ jobs:
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           enable-cache: false
-      - run: uv run --no-project --with pytest==8.4.2 python -m pytest scripts/tests/test_release.py
-      - run: uv run --project scripts --with pytest==8.4.2 python -m pytest scripts/tests/test_deliver.py
+      - run: uv run --project scripts pytest scripts/tests
 
   # The only check branch protection requires. The other job names embed matrix
   # values (iOS/Xcode/runner versions) that change with every toolchain bump;

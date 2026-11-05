@@ -33,6 +33,12 @@ extension SettingKey {
     .init("filterBarConfiguration", default: .default)
   }
 
+  /// Whether the user opted in to sharing usage data, or `nil` until they've
+  /// been asked.
+  public static var telemetryOptIn: SettingKey<Bool?> {
+    .init("telemetryOptIn", default: nil)
+  }
+
   /// The version this install last launched, which drives the release-notes
   /// sheet. Per-install by definition.
   public static var currentAppVersion: SettingKey<AppVersion?> {

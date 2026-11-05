@@ -117,6 +117,18 @@ struct SettingsView: View {
         }
       }
 
+      if AppFeatures.enabled(.telemetry) {
+        NavigationLink {
+          TelemetrySettingsView()
+        } label: {
+          Label {
+            Text(verbatim: TelemetrySettingsView.title)
+          } icon: {
+            Image(systemName: "chart.bar.fill")
+          }
+        }
+      }
+
       NavigationLink {
         LibrariesView()
       } label: {
