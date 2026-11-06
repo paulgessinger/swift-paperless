@@ -36,6 +36,13 @@ class ShareViewController: UIViewController {
     }
     addChild(childView)
     container.addSubview(childView.view)
+    childView.view.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      childView.view.topAnchor.constraint(equalTo: container.topAnchor),
+      childView.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+      childView.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+      childView.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+    ])
     childView.didMove(toParent: self)
 
     Logger.shared.notice("Receiving shared items")
@@ -64,18 +71,5 @@ class ShareViewController: UIViewController {
   override func viewDidDisappear(_ animated: Bool) {
     super.viewDidDisappear(animated)
     ExtensionDatabaseLifecycle.shared.didDisappear()
-  }
-
-  override public func viewDidLayoutSubviews() {
-    // offset is empirical and probably wrong
-    let offset: CGFloat =
-      if traitCollection.horizontalSizeClass == .regular {
-        40
-      } else {
-        80
-      }
-    childView?.view.frame = CGRect(
-      x: container.bounds.origin.x, y: container.bounds.origin.y, width: container.bounds.width,
-      height: container.bounds.height + offset)
   }
 }
