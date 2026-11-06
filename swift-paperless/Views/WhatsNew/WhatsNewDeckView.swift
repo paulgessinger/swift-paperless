@@ -479,9 +479,12 @@ extension WhatsNewDeck {
     .deletingLastPathComponent()  // swift-paperless
     .deletingLastPathComponent()
 
-  /// The newest deck file `scripts/whats_new.py` wrote into the repo's `site/whats_new`.
+  /// `just whats-new-serve` serves `docs/` here, laid out like the site.
+  private let docsServer = URL(string: "http://localhost:5006/")!
+
+  /// The newest deck `just whats-new-watch` wrote into the repo's `docs/whats_new`.
   private func generatedDeckFile() -> URL? {
-    let directory = repoRoot.appending(path: "site/whats_new")
+    let directory = repoRoot.appending(path: "docs/whats_new")
     let files =
       (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil))
       ?? []
@@ -493,8 +496,9 @@ extension WhatsNewDeck {
       .max { $0.0 < $1.0 }?.1
   }
 
-  /// Reloads whenever the deck file changes, so `just whats-new-watch` makes
-  /// edits to the release note show up live.
+  /// Reloads whenever the deck file changes, so `just whats-new-serve` makes
+  /// edits to the release note show up live. Images come from that server,
+  /// which resolves them the way the site does.
   private struct GeneratedDeckPreview: View {
     @State private var deck: WhatsNewDeck?
     @State private var error: String?
@@ -503,15 +507,12 @@ extension WhatsNewDeck {
     var body: some View {
       Group {
         if let deck {
-          // Images in the repo, which may not be on the site yet.
           WhatsNewDeckView(deck: deck) {}
-            .environment(
-              \.whatsNewBaseURL,
-              repoRoot.appending(path: "docs/release_notes/", directoryHint: .isDirectory))
+            .environment(\.whatsNewBaseURL, docsServer.appending(path: "release_notes/"))
         } else {
           Text(
             verbatim: error
-              ?? "Run `just whats-new-watch`, or `uv run scripts/whats_new.py build docs/release_notes site/whats_new`."
+              ?? "Run `just whats-new-serve`."
           )
           .padding()
         }

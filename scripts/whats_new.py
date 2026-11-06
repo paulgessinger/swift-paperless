@@ -49,6 +49,7 @@ BLOCK_TYPES = {"card", "tip", "telemetry"}
 # Must match the tints `IconTile` maps in WhatsNewDeckView.swift.
 TINTS = {"blue", "indigo", "orange", "pink", "purple", "red", "teal"}
 CARD_REQUIRED = ("icon", "title", "text")
+MARKDOWN_IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)\s>]+)")
 CARD_OPTIONAL = ("tint", "detail", "image")
 CARD_FLAGS = ("image_shadow",)
 
@@ -95,6 +96,8 @@ def _block(raw: Any, where: str, notes: Path) -> dict[str, Any]:
         raise DeckError(f"{where}.tint must be one of {sorted(TINTS)}")
     if "image" in block:
         _check_image(block["image"], f"{where}.image", notes)
+    for image in MARKDOWN_IMAGE.findall(block.get("detail", "")):
+        _check_image(image, f"{where}.detail image", notes)
     for key in CARD_FLAGS:
         if key in raw:
             if not isinstance(raw[key], bool):
@@ -164,15 +167,21 @@ def write_decks(notes: Path, output: Path) -> int:
     found = decks(notes)
     output.mkdir(parents=True, exist_ok=True)
     for version, content in found.items():
-        (output / f"{version}.json").write_text(
-            json.dumps(content, ensure_ascii=False, indent=2) + "\n"
-        )
+        file = output / f"{version}.json"
+        text = json.dumps(content, ensure_ascii=False, indent=2) + "\n"
+        # Leaves unchanged decks alone, so a docs server doesn't rebuild.
+        if not file.is_file() or file.read_text() != text:
+            file.write_text(text)
     return len(found)
 
 
-def snapshot(root: Path) -> dict[Path, float]:
-    """Modification times of every file under `root`."""
-    return {path: path.stat().st_mtime for path in root.rglob("*") if path.is_file()}
+def snapshot(root: Path, exclude: Path | None = None) -> dict[Path, float]:
+    """Modification times of every file under `root`, outside `exclude`."""
+    return {
+        path: path.stat().st_mtime
+        for path in root.rglob("*")
+        if path.is_file() and not (exclude and path.is_relative_to(exclude))
+    }
 
 
 @app.command()
@@ -211,7 +220,7 @@ def watch(
     typer.echo(f"Watching {root} (Ctrl-C to stop)")
     try:
         while True:
-            current = snapshot(root)
+            current = snapshot(root, exclude=output.resolve())
             if current != seen:
                 seen = current
                 stamp = time.strftime("%H:%M:%S")

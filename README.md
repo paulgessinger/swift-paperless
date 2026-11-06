@@ -163,9 +163,11 @@ uv run scripts/whats_new.py build docs/release_notes site/whats_new
 ```
 
 If a deck has a mistake, this command and the docs build both stop and name the
-file and field. While editing, run `just whats-new-watch` and open the
-"Generated" preview in `WhatsNewDeckView.swift`: the watcher rebuilds on every
-save and the preview reloads within a second, with images from `docs/`. When copying a release note into its GitHub release, leave out
+file and field. While editing, run `just whats-new-serve` and open the
+"Generated" preview in `WhatsNewDeckView.swift`: it rebuilds the deck into
+`docs/whats_new/` on every save, the preview reloads within a second, and
+images load from the local docs server on port 5006, as they would from the
+site. When copying a release note into its GitHub release, leave out
 the front matter block: it is only for the app.
 
 ### App Store screenshots

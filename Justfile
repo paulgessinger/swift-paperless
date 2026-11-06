@@ -1,4 +1,4 @@
-default_port := '8000'
+default_port := '5006'
 
 zensical := "uv run --with-requirements docs/requirements.txt zensical"
 
@@ -12,9 +12,17 @@ docs:
   cp docs/release_notes/*.md site/release_notes/md
   uv run scripts/whats_new.py build docs/release_notes site/whats_new
 
-# Rebuild site/whats_new on every release note change, for the "Generated" preview.
+# Rebuild docs/whats_new (gitignored) on every release note change.
 whats-new-watch:
-  uv run scripts/whats_new.py watch docs/release_notes site/whats_new
+  uv run scripts/whats_new.py watch docs/release_notes docs/whats_new
+
+# Serve the docs with live decks, for the "Generated" What's New preview.
+whats-new-serve port=default_port:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  uv run scripts/whats_new.py watch docs/release_notes docs/whats_new &
+  trap 'kill $!' EXIT
+  {{zensical}} serve -a localhost:{{port}}
 
 version_xcconfig := 'Config/Shared/Version.xcconfig'
 

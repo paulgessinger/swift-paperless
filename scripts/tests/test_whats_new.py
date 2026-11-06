@@ -1,6 +1,7 @@
 """Tests for publishing What's New decks from release note front matter."""
 
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -122,6 +123,23 @@ def test_relative_image_must_exist_next_to_the_notes(tmp_path: Path) -> None:
         whats_new.decks(notes)
 
 
+def test_detail_images_are_checked(tmp_path: Path) -> None:
+    def note(image: str) -> str:
+        return NOTE.replace(
+            "Tags can now have **parents**.\n",
+            f"Tags can now have **parents**.\n\n            ![Tags]({image})\n",
+            1,
+        )
+
+    (tmp_path / "tags.png").write_bytes(b"png")
+    write(tmp_path, "v1.11.0.md", note("tags.png"))
+    whats_new.decks(tmp_path)
+
+    write(tmp_path, "v1.11.0.md", note("missing.png"))
+    with pytest.raises(whats_new.DeckError, match=r"detail image .* does not exist"):
+        whats_new.decks(tmp_path)
+
+
 @pytest.mark.parametrize(
     "image, ok",
     [("https://example.com/icon.png", True), ("http://example.com/icon.png", False)],
@@ -172,3 +190,23 @@ def test_image_shadow_is_a_flag_on_an_image(tmp_path: Path) -> None:
     write(tmp_path, "v1.11.0.md", note.replace("          image: icon.png\n", ""))
     with pytest.raises(whats_new.DeckError, match="needs an image"):
         whats_new.decks(tmp_path)
+
+
+def test_snapshot_skips_the_output_directory(tmp_path: Path) -> None:
+    (tmp_path / "whats_new").mkdir()
+    (tmp_path / "whats_new" / "1.11.0.json").write_text("{}")
+    (tmp_path / "v1.11.0.md").write_text("notes")
+    assert set(whats_new.snapshot(tmp_path, exclude=tmp_path / "whats_new")) == {
+        tmp_path / "v1.11.0.md"
+    }
+
+
+def test_unchanged_decks_are_not_rewritten(tmp_path: Path) -> None:
+    notes, output = tmp_path / "notes", tmp_path / "out"
+    notes.mkdir()
+    write(notes, "v1.11.0.md", NOTE)
+    whats_new.write_decks(notes, output)
+    deck = output / "1.11.0.json"
+    os.utime(deck, (0, 0))
+    whats_new.write_decks(notes, output)
+    assert deck.stat().st_mtime == 0
