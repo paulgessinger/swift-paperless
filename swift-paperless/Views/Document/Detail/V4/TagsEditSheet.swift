@@ -348,3 +348,58 @@ struct TagsEditSheet: View {
     }
   }
 }
+
+private struct TagsEditSheetPreviewHelper: View {
+  @State private var store = DocumentStore.preview(TransientRepository())
+  @StateObject private var errorController = ErrorController()
+  @State private var viewModel: DocumentDetailModel?
+
+  // Tag names from #754; the last one is wider than an iPhone sheet.
+  private static let tags: [(String, Color)] = [
+    ("Amélioration de l'habitation", .blue),
+    ("Détecteurs de fumée", .blue),
+    ("Toiture", .gray),
+    ("Quincaillerie", .blue),
+    ("Avantages gouvernementaux", .blue),
+    ("Construction", .pink),
+    ("Crédit d'impôt pour personnes handicapées", .blue),
+    ("Taxes", .yellow),
+    ("Crédit d'impôt pour la solidarité et frais médicaux admissibles", .green),
+  ]
+
+  var body: some View {
+    Color.clear
+      .sheet(isPresented: .constant(viewModel != nil)) {
+        if let viewModel {
+          TagsEditSheet(viewModel: viewModel)
+        }
+      }
+      .environment(store)
+      .environmentObject(errorController)
+      .task {
+        do {
+          let repository = store.previewRepository(as: TransientRepository.self)
+          repository.addUser(User(id: 1, isSuperUser: true, username: "preview", groups: []))
+          try repository.login(userId: 1)
+
+          var ids: [UInt] = []
+          for (name, color) in Self.tags {
+            ids.append(
+              try await store.repository.create(tag: ProtoTag(name: name, color: color.hex)).id)
+          }
+          try await store.sync()
+
+          let document = Document(
+            id: 1, title: "Preview document", created: .now,
+            tags: Array(ids.prefix(4)), added: .now, modified: .now)
+          viewModel = DocumentDetailModel(store: store, connection: nil, document: document)
+        } catch {
+          print(error)
+        }
+      }
+  }
+}
+
+#Preview("Long tag names") {
+  TagsEditSheetPreviewHelper()
+}
