@@ -480,8 +480,12 @@ struct DocumentList: View {
       guard viewModel.hasFailedFill, scenePhase == .active else { return }
       for seconds in [3, 6, 12, 24, 48] {
         guard (try? await Task.sleep(for: .seconds(seconds))) != nil else { return }
-        await viewModel.retryIfFailed()
-        if !store.syncFailures.isEmpty { try? await store.sync() }
+        // Unstructured: the retry clears the failure, which changes this task's
+        // id, and SwiftUI's cancellation would otherwise abort the retry itself.
+        await Task {
+          await viewModel.retryIfFailed()
+          if !store.syncFailures.isEmpty { try? await store.sync() }
+        }.value
       }
     }
 
