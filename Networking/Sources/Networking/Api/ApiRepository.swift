@@ -551,7 +551,7 @@ public class ApiRepository {
         // attempt stranded on the path a VPN just replaced; a second attempt
         // opens a fresh one.
         Logger.networking.notice(
-          "Retrying \(request.httpMethod ?? "GET", privacy: .public) \(sanitizedUrl, privacy: .public) once after \(String(describing: error), privacy: .public)"
+          "Retrying \(request.httpMethod ?? "GET", privacy: .public) \(sanitizedUrl, privacy: .public) once after \(Self.sanitizedError(error, url: url), privacy: .public)"
         )
         await connections.refresh()
         result = try await load()
