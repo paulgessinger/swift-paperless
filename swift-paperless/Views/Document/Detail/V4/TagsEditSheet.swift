@@ -209,7 +209,6 @@ struct TagsEditSheet: View {
                             .font(.caption2)
                             .fontWeight(.bold)
                         }
-                        .fixedSize()
                         .matchedGeometryEffect(id: tagId, in: tagNamespace)
                       }
                       .buttonStyle(.plain)
@@ -227,7 +226,6 @@ struct TagsEditSheet: View {
                       add(tag.id)
                     } label: {
                       TagView(tag: tag)
-                        .fixedSize()
                     }
                     .buttonStyle(.plain)
                   }
@@ -248,7 +246,6 @@ struct TagsEditSheet: View {
                     CustomSectionRow {
                       HStack {
                         TagView(tag: entry.tag)
-                          .fixedSize()
                           .matchedGeometryEffect(id: entry.tag.id, in: tagNamespace)
                         Spacer()
                         Image(systemName: "plus.circle.fill")
