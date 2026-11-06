@@ -468,6 +468,16 @@ struct MainView: View {
       }
     }
 
+    // Only a sync that failed: a healthy one has nothing to gain from a new route.
+    .onChange(of: networkMonitor.routeChangeCount) { _, _ in
+      guard !initialDisplay, scenePhase == .active, let store, !store.syncFailures.isEmpty
+      else { return }
+      Task {
+        try? await store.sync()
+        await store.fillIfEnabled(phases: activePhases)
+      }
+    }
+
     .onOpenURL(perform: handleUrlOpen)
     .environment(routeManager)
     .appOverlays(
