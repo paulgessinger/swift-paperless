@@ -30,8 +30,18 @@ PANORAMA_SCREEN_BOX = (94, 650, 1266, 2868)
 DETAIL_PAGE_BOX = (215, 365, 955, 1335)
 
 
-def _open(page: Page, scene: Path) -> dict:
-    page.goto(scene.resolve().as_uri())
+CanvasOption = Annotated[
+    str | None,
+    typer.Option(help="Canvas WxH for scenes that adapt to their size, e.g. 5244x2950"),
+]
+
+
+def _open(page: Page, scene: Path, canvas: str | None = None) -> dict:
+    url = scene.resolve().as_uri()
+    if canvas:
+        w, h = canvas.split("x")
+        url += f"?w={w}&h={h}"
+    page.goto(url)
     page.wait_for_load_state("networkidle")
     page.evaluate("document.fonts.ready")
     return page.evaluate("window.__scene")
@@ -72,13 +82,14 @@ def video(
         str, typer.Option(help='Output WxH, e.g. 886x1920 (6.9" App Preview)')
     ] = "886x1920",
     fps: Annotated[int, typer.Option()] = 30,
+    canvas: CanvasOption = None,
 ) -> None:
     """Render the full timeline to an H.264 MP4 with a silent stereo track."""
     out_w, out_h = (int(v) for v in size.split("x"))
     with sync_playwright() as p:
         browser = p.chromium.launch()
         probe = browser.new_page()
-        meta = _open(probe, scene)
+        meta = _open(probe, scene, canvas)
         probe.close()
 
         # Render at a scale where the canvas covers the output; ffmpeg crops the rest.
@@ -87,7 +98,7 @@ def video(
             viewport={"width": meta["width"], "height": meta["height"]},
             device_scale_factor=scale,
         )
-        _open(page, scene)
+        _open(page, scene, canvas)
 
         frames = round(meta["duration"] * fps)
         ffmpeg = subprocess.Popen(
@@ -144,17 +155,19 @@ def still(
     scene: Annotated[Path, typer.Argument(help="Scene HTML file")],
     at: Annotated[list[float], typer.Option("--at", help="Time(s) in seconds")],
     output_dir: Annotated[Path, typer.Option("-o", "--output-dir")] = Path("."),
+    canvas: CanvasOption = None,
 ) -> None:
     """Render full-resolution PNG stills at the given times (e.g. App Store screenshots)."""
     output_dir.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        meta = _open(page, scene)
+        meta = _open(page, scene, canvas)
         page.set_viewport_size({"width": meta["width"], "height": meta["height"]})
         for t in at:
             _seek(page, t)
-            path = output_dir / f"{scene.stem}_{t:05.2f}s.png"
+            suffix = f"_{canvas}" if canvas else ""
+            path = output_dir / f"{scene.stem}{suffix}_{t:05.2f}s.png"
             page.screenshot(path=path)
             typer.echo(f"wrote {path}")
         browser.close()

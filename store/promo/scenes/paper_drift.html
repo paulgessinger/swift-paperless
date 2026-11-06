@@ -1,9 +1,13 @@
 <!doctype html>
 <!--
-  "Paper drift": ambient, seamlessly looping header for the App Store
-  product page (3840×1646). Every animation repeats on a period that divides
-  the 16 s loop, so frame 0 and frame 16 s are identical.
+  "Paper drift": ambient, seamless loop for the App Store header and search
+  results assets. Every animation repeats on a period that divides the 16 s
+  loop, so frame 0 and frame 16 s are identical.
 
+  The scene is laid out on a 1646-unit-tall "world" scaled to the canvas
+  height, so only its width changes with the aspect ratio.
+
+  ?w=<px>&h=<px> sets the canvas (default 3840×1646).
   ?t=<seconds> freezes the scene at that time.
   Run `render.py prepare` first to cut the phone screens into assets/.
 -->
@@ -13,7 +17,7 @@
 <title>Paper drift</title>
 <style>
   html, body { margin: 0; background: #f4efe4; }
-  svg { display: block; width: 3840px; height: 1646px; }
+  svg { display: block; }
 
   /* Papers ride left → right across the canvas once per period */
   .drift { animation: drift var(--dur) linear var(--delay) infinite; }
@@ -31,14 +35,7 @@
   /* Ribbon undulates (8 s alternate = 16 s cycle) */
   #ribbon { animation: ribbon 8s ease-in-out infinite alternate; }
   #ribbon-hi { animation: ribbon-hi 8s ease-in-out infinite alternate; }
-  @keyframes ribbon {
-    from { d: path("M -300 1180 C 900 760, 1900 1560, 4140 960"); }
-    to   { d: path("M -300 1020 C 1100 1480, 2300 700, 4140 1140"); }
-  }
-  @keyframes ribbon-hi {
-    from { d: path("M -300 1010 C 900 590, 1900 1390, 4140 790"); }
-    to   { d: path("M -300 850 C 1100 1310, 2300 530, 4140 970"); }
-  }
+  /* @keyframes ribbon / ribbon-hi are generated below for the world width */
 
   /* Phone floats (4 s alternate = 8 s cycle) */
   #phone-bob { animation: bob 4s ease-in-out infinite alternate; }
@@ -49,7 +46,7 @@
 </style>
 </head>
 <body>
-<svg viewBox="0 0 3840 1646" xmlns="http://www.w3.org/2000/svg">
+<svg id="canvas" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="grain" x="0" y="0" width="100%" height="100%">
       <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4"/>
@@ -92,21 +89,20 @@
     </g>
   </defs>
 
-  <rect width="3840" height="1646" fill="#f4efe4"/>
-  <rect width="3840" height="1646" filter="url(#grain)"/>
+  <rect id="bg" width="100%" height="100%" fill="#f4efe4"/>
+  <rect id="grain-layer" width="100%" height="100%" filter="url(#grain)"/>
 
+  <g id="world">
   <g id="layer-far"></g>
 
-  <path id="ribbon-hi" fill="none" stroke="#2e7d32" stroke-width="44" opacity="0.5"
-        d="M -300 1010 C 900 590, 1900 1390, 4140 790"/>
-  <path id="ribbon" fill="none" stroke="#17541f" stroke-width="300"
-        d="M -300 1180 C 900 760, 1900 1560, 4140 960"/>
+  <path id="ribbon-hi" fill="none" stroke="#2e7d32" stroke-width="44" opacity="0.5"/>
+  <path id="ribbon" fill="none" stroke="#17541f" stroke-width="300"/>
 
   <g id="layer-mid"></g>
 
   <!-- Phone, tilted, rising from the bottom edge right of centre -->
   <g id="phone-bob">
-    <g transform="translate(2560 230) rotate(-7) scale(.72) translate(-660 -980)">
+    <g id="phone-place">
       <rect x="52" y="980" width="1216" height="2440" rx="180" fill="#1b1d1b" filter="url(#phone-shadow)"/>
       <rect x="55" y="983" width="1210" height="2434" rx="177" fill="none" stroke="#9aa09a" stroke-width="6"/>
       <rect x="74" y="1002" width="1172" height="2400" rx="158" fill="#f6f6f6"/>
@@ -115,11 +111,42 @@
   </g>
 
   <g id="layer-near"></g>
+  </g>
 </svg>
 <script src="papers.js"></script>
 <script>
   const LOOP = 16;
-  window.__scene = { duration: LOOP, width: 3840, height: 1646 };
+  const params = new URLSearchParams(location.search);
+  const W = parseInt(params.get("w") ?? "3840");
+  const H = parseInt(params.get("h") ?? "1646");
+  window.__scene = { duration: LOOP, width: W, height: H };
+
+  // World: 1646 units tall, as wide as the aspect ratio needs.
+  const WORLD_H = 1646;
+  const k = H / WORLD_H;
+  const WW = W / k;
+  const fx = x => (x / 3840) * WW; // x positions designed on the 3840-wide layout
+
+  const svg = document.getElementById("canvas");
+  svg.setAttribute("width", W);
+  svg.setAttribute("height", H);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  document.getElementById("world").setAttribute("transform", `scale(${k})`);
+  document.getElementById("phone-place").setAttribute(
+    "transform", `translate(${fx(2560)} 230) rotate(-7) scale(.72) translate(-660 -980)`);
+
+  const ribbon = (y, c1, c2, y2, x1, x2) =>
+    `path("M -300 ${y} C ${fx(x1)} ${c1}, ${fx(x2)} ${c2}, ${WW + 300} ${y2}")`;
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    @keyframes ribbon {
+      from { d: ${ribbon(1180, 760, 1560, 960, 900, 1900)}; }
+      to   { d: ${ribbon(1020, 1480, 700, 1140, 1100, 2300)}; }
+    }
+    @keyframes ribbon-hi {
+      from { d: ${ribbon(1010, 590, 1390, 790, 900, 1900)}; }
+      to   { d: ${ribbon(850, 1310, 530, 970, 1100, 2300)}; }
+    }
+  </style>`);
 
   // Deterministic layout: same seed, same scene.
   let seed = 7;
@@ -143,7 +170,9 @@
 
   for (const layer of layers) {
     const parent = document.getElementById(layer.id);
-    for (let i = 0; i < layer.count; i++) {
+    // Keep the same density on narrower canvases.
+    const count = Math.max(1, Math.round(layer.count * WW / 3840));
+    for (let i = 0; i < count; i++) {
       const kind = layer.kinds[i % layer.kinds.length];
       const isPill = kind.startsWith("pill");
       const s = between(...layer.scale) * (isPill ? 1.4 : 1);
@@ -151,14 +180,16 @@
       const r0 = between(-30, 30);
       const spin = between(25, 60) * (rand() < 0.5 ? -1 : 1);
       const reach = 500 * s + 80; // half-diagonal, so it is fully off-canvas
-      const offset = (i + between(-0.25, 0.25)) / layer.count;
+      // Wrapped into [0, 1): a positive delay would leave the paper
+      // untransformed at the origin until its animation starts.
+      const offset = ((((i + between(-0.25, 0.25)) / count) % 1) + 1) % 1;
 
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "drift");
       g.setAttribute("filter", `url(#${isPill ? "shadow-pill" : layer.filter})`);
       g.style.cssText = `
         --dur: ${layer.period}s; --delay: ${(-offset * layer.period).toFixed(3)}s; --s: ${s.toFixed(3)};
-        --x0: ${-reach}px; --x1: ${3840 + reach}px;
+        --x0: ${-reach}px; --x1: ${(WW + reach).toFixed(0)}px;
         --y0: ${y0.toFixed(0)}px; --y1: ${(y0 - between(80, 220)).toFixed(0)}px;
         --r0: ${r0.toFixed(1)}deg; --r1: ${(r0 + (isPill ? spin / 4 : spin)).toFixed(1)}deg;
         --sway-delay: ${(-between(0, 8)).toFixed(2)}s;`;
@@ -167,7 +198,7 @@
     }
   }
 
-  const t = new URLSearchParams(location.search).get("t");
+  const t = params.get("t");
   if (t !== null) {
     for (const a of document.getAnimations()) { a.pause(); a.currentTime = parseFloat(t) * 1000; }
   }
