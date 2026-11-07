@@ -173,5 +173,49 @@ def still(
         browser.close()
 
 
+# Capture prefix (swpngx device id) and scene layout for each framed device.
+SCREENSHOT_DEVICES = {"iPhone_18_Pro_Max": "iphone", "iPad_Pro_13_M5": "ipad"}
+
+
+@app.command()
+def screenshots(
+    captures: Annotated[
+        Path, typer.Option(help="Folder of `swpngx capture` PNGs for one locale")
+    ] = ASSETS_DIR
+    / "captures"
+    / "en-US",
+    output_dir: Annotated[Path, typer.Option("-o", "--output-dir")] = PROMO_DIR
+    / "out"
+    / "screenshots",
+) -> None:
+    """Frame captured screens in the promo style at App Store screenshot sizes."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    scene = PROMO_DIR / "scenes" / "screenshot.html"
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        for prefix, layout in SCREENSHOT_DEVICES.items():
+            for capture in sorted(captures.glob(f"{prefix}-*.png")):
+                slide = int(capture.stem.split("-")[1][:2])
+                with Image.open(capture) as screen:
+                    ratio = screen.height / screen.width
+                page.goto(
+                    f"{scene.resolve().as_uri()}?device={layout}&slide={slide}"
+                    f"&ar={ratio:.5f}&img={capture.resolve().as_uri()}"
+                )
+                page.wait_for_load_state("networkidle")
+                meta = page.evaluate("window.__scene")
+                page.set_viewport_size(
+                    {"width": meta["width"], "height": meta["height"]}
+                )
+                path = output_dir / capture.name
+                page.screenshot(path=path)
+                # App Store Connect rejects screenshots with an alpha channel.
+                with Image.open(path) as framed:
+                    framed.convert("RGB").save(path)
+                typer.echo(f"wrote {path}")
+        browser.close()
+
+
 if __name__ == "__main__":
     app()
