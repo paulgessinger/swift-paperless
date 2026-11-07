@@ -9,6 +9,12 @@ extension DocumentationLinks {
   }
 }
 
+extension WhatsNewDeck.Card {
+  public func imageURL(relativeTo base: URL = DocumentationLinks.releaseNotes) -> URL? {
+    image.flatMap { URL(string: $0, relativeTo: base)?.absoluteURL }
+  }
+}
+
 extension WhatsNewDeck {
   public typealias Fetch = @Sendable (URLRequest) async throws -> (Data, URLResponse)
 

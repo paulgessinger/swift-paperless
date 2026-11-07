@@ -1,6 +1,7 @@
 """Tests for publishing What's New decks from release note front matter."""
 
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -97,3 +98,115 @@ def test_unclosed_front_matter_is_an_error(tmp_path: Path) -> None:
     write(tmp_path, "v1.11.0.md", "---\nwhats_new:\n  pages: []\n# v1.11.0\n")
     with pytest.raises(whats_new.DeckError, match="not closed"):
         whats_new.decks(tmp_path)
+
+
+def with_image(image: str) -> str:
+    return NOTE.replace(
+        "          tint: teal\n", f"          tint: teal\n          image: {image}\n", 1
+    )
+
+
+def test_relative_image_must_exist_next_to_the_notes(tmp_path: Path) -> None:
+    notes = tmp_path / "release_notes"
+    notes.mkdir()
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "icon.png").write_bytes(b"png")
+    write(notes, "v1.11.0.md", with_image("../assets/icon.png"))
+
+    block = whats_new.decks(notes)["1.11.0"]["pages"][0]["blocks"][0]
+    assert block["image"] == "../assets/icon.png"
+
+    write(notes, "v1.11.0.md", with_image("../assets/missing.png"))
+    with pytest.raises(
+        whats_new.DeckError, match=r"blocks\[0\]\.image .* does not exist"
+    ):
+        whats_new.decks(notes)
+
+
+def test_detail_images_are_checked(tmp_path: Path) -> None:
+    def note(image: str) -> str:
+        return NOTE.replace(
+            "Tags can now have **parents**.\n",
+            f"Tags can now have **parents**.\n\n            ![Tags]({image})\n",
+            1,
+        )
+
+    (tmp_path / "tags.png").write_bytes(b"png")
+    write(tmp_path, "v1.11.0.md", note("tags.png"))
+    whats_new.decks(tmp_path)
+
+    write(tmp_path, "v1.11.0.md", note("missing.png"))
+    with pytest.raises(whats_new.DeckError, match=r"detail image .* does not exist"):
+        whats_new.decks(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "image, ok",
+    [("https://example.com/icon.png", True), ("http://example.com/icon.png", False)],
+)
+def test_absolute_images_must_be_https(tmp_path: Path, image: str, ok: bool) -> None:
+    write(tmp_path, "v1.11.0.md", with_image(image))
+    if ok:
+        whats_new.decks(tmp_path)
+    else:
+        with pytest.raises(whats_new.DeckError, match="https URL"):
+            whats_new.decks(tmp_path)
+
+
+def test_invalid_deck_writes_nothing(tmp_path: Path) -> None:
+    notes, output = tmp_path / "notes", tmp_path / "site"
+    notes.mkdir()
+    write(notes, "v1.11.0.md", NOTE.replace("type: card", "type: banner", 1))
+    with pytest.raises(whats_new.DeckError):
+        whats_new.write_decks(notes, output)
+    assert not output.exists()
+
+
+def test_snapshot_sees_changed_and_new_files(tmp_path: Path) -> None:
+    write(tmp_path, "v1.11.0.md", NOTE)
+    before = whats_new.snapshot(tmp_path)
+
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "icon.png").write_bytes(b"png")
+    assert whats_new.snapshot(tmp_path) != before
+
+
+def test_image_shadow_is_a_flag_on_an_image(tmp_path: Path) -> None:
+    (tmp_path / "icon.png").write_bytes(b"png")
+    shadow = "          image: icon.png\n          image_shadow: true\n"
+    note = NOTE.replace("          tint: teal\n", "          tint: teal\n" + shadow, 1)
+    write(tmp_path, "v1.11.0.md", note)
+    block = whats_new.decks(tmp_path)["1.11.0"]["pages"][0]["blocks"][0]
+    assert block["image_shadow"] is True
+
+    write(
+        tmp_path,
+        "v1.11.0.md",
+        note.replace("image_shadow: true", "image_shadow: yes please"),
+    )
+    with pytest.raises(whats_new.DeckError, match="true or false"):
+        whats_new.decks(tmp_path)
+
+    write(tmp_path, "v1.11.0.md", note.replace("          image: icon.png\n", ""))
+    with pytest.raises(whats_new.DeckError, match="needs an image"):
+        whats_new.decks(tmp_path)
+
+
+def test_snapshot_skips_the_output_directory(tmp_path: Path) -> None:
+    (tmp_path / "whats_new").mkdir()
+    (tmp_path / "whats_new" / "1.11.0.json").write_text("{}")
+    (tmp_path / "v1.11.0.md").write_text("notes")
+    assert set(whats_new.snapshot(tmp_path, exclude=tmp_path / "whats_new")) == {
+        tmp_path / "v1.11.0.md"
+    }
+
+
+def test_unchanged_decks_are_not_rewritten(tmp_path: Path) -> None:
+    notes, output = tmp_path / "notes", tmp_path / "out"
+    notes.mkdir()
+    write(notes, "v1.11.0.md", NOTE)
+    whats_new.write_decks(notes, output)
+    deck = output / "1.11.0.json"
+    os.utime(deck, (0, 0))
+    whats_new.write_decks(notes, output)
+    assert deck.stat().st_mtime == 0
