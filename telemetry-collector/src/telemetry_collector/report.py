@@ -80,6 +80,9 @@ class Counts:
             return self.data.get(day, {}).get(ping, {}).get(PINGS_FIELD, {}).get(PINGS_VALUE, 0)
         return self.values(ping, PINGS_FIELD).get(PINGS_VALUE, 0)
 
+    def pings_in(self, ping: str, start: str, end: str) -> int:
+        return self.values(ping, PINGS_FIELD, start, end).get(PINGS_VALUE, 0)
+
     def daily_pings(self, ping: str, days: list[str]) -> list[int]:
         return [self.pings(ping, d) for d in days]
 
@@ -135,6 +138,20 @@ def feature_stats(
         buckets = counts.values("feature", f"feature:{name}", start, end)
         available = counts.values("feature", f"available:{name}", start, end).get("true", 0)
         out.append(FeatureStat(name, sum(buckets.values()), available, buckets))
+    return out
+
+
+def daily_feature_ratios(counts: Counts, features: list[str], days: list[str]) -> dict[str, list[float | None]]:
+    """Per feature, used/available install-days for each day (None where it was not available)."""
+    out: dict[str, list[float | None]] = {}
+    for name in features:
+        series: list[float | None] = []
+        for day in days:
+            pings = counts.data.get(day, {}).get("feature", {})
+            used = sum(pings.get(f"feature:{name}", {}).values())
+            available = pings.get(f"available:{name}", {}).get("true", 0)
+            series.append(used / available if available else None)
+        out[name] = series
     return out
 
 

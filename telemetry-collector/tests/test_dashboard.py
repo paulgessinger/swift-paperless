@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import subprocess
 import sys
 import time
@@ -18,6 +19,7 @@ from pydantic import ValidationError
 
 from telemetry_collector.config import DashboardSettings
 from telemetry_collector.dashboard import SESSION_COOKIE, create_dashboard_app
+from telemetry_collector.schema import load_schema
 
 ISSUER = "https://id.example.test"
 CLIENT_ID = "dash"
@@ -160,8 +162,8 @@ def test_every_route_requires_auth(make_dashboard):
     client = make_dashboard()
     public = {"/login", "/auth/callback", "/logout"}
     protected = [r.path for r in client.app.routes if getattr(r, "path", None) not in public]
-    assert protected == ["/"]
-    for path in protected:
+    assert protected == ["/", "/static/{name:path}"]
+    for path in ("/", "/static/dashboard.css", "/static/vendor/chartjs/chart.umd.min.js", "/static/nope.js"):
         r = client.get(path, params={"channel": "testflight"})
         assert r.status_code == 303
         assert r.headers["location"].startswith("/login?next=")
@@ -360,10 +362,89 @@ def test_collector_role_does_not_load_dashboard_dependencies(tmp_path):
         "import sys\n"
         "from telemetry_collector import serve\n"
         "serve._app()\n"
-        "heavy = {'authlib', 'joserfc', 'cryptography', 'httpx', 'itsdangerous', 'typer'}\n"
+        "heavy = {'authlib', 'joserfc', 'cryptography', 'httpx', 'itsdangerous', 'typer', 'jinja2'}\n"
         "print(','.join(sorted({m.split('.')[0] for m in sys.modules} & heavy)))\n"
     )
     env = {"TELEMETRY_ROLE": "collector", "TELEMETRY_DB_PATH": str(tmp_path / "t.sqlite3"), "PATH": ""}
     # S603: fixed interpreter and code string, no untrusted input.
     out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=True)  # noqa: S603
     assert out.stdout.strip() == ""
+
+
+# -------------------------------------------------------------- rendering
+
+
+def test_static_files_only_for_signed_in_users(make_dashboard, provider):
+    client = make_dashboard()
+    assert client.get("/static/dashboard.js").status_code == 303
+    sign_in(client, provider)
+    for name, media_type in (
+        ("dashboard.js", "text/javascript"),
+        ("dashboard.css", "text/css"),
+        ("vendor/chartjs/chart.umd.min.js", "text/javascript"),
+    ):
+        r = client.get(f"/static/{name}")
+        assert r.status_code == 200
+        assert r.headers["content-type"].startswith(media_type)
+        assert r.headers["cache-control"] == "private, max-age=31536000, immutable"
+    assert client.get("/static/../config.py").status_code == 404
+    assert client.get("/static/missing.js").status_code == 404
+    # Pages are never cached.
+    assert client.get("/").headers["cache-control"] == "no-store"
+
+
+def test_page_references_versioned_assets_and_no_inline_code(make_dashboard, provider, seeded_db):
+    client = make_dashboard()
+    sign_in(client, provider)
+    html = client.get("/").text
+    assert re.search(r'<script src="/static/vendor/chartjs/chart\.umd\.min\.js\?v=[0-9a-f]{12}" defer>', html)
+    assert re.search(r'<link rel="stylesheet" href="/static/dashboard\.css\?v=[0-9a-f]{12}">', html)
+    # Every <script> either loads a file or is the JSON data block; no inline styles.
+    for tag in re.findall(r"<script[^>]*>", html):
+        assert 'src="/static/' in tag or 'type="application/json"' in tag
+    assert "style=" not in html and "<style" not in html
+    block = re.search(r'<script type="application/json" id="chart-data">(.*?)</script>', html, re.S)
+    assert block is not None
+    data = json.loads(block[1])
+    assert len(data["days"]) == 30 and len(data["active"]) == 30
+    assert [r["name"] for r in data["ratios"]] == list(load_schema().features)
+
+
+def test_csp_is_strict(make_dashboard, provider, seeded_db):
+    client = make_dashboard()
+    for response in (client.get("/login"), client.get("/")):
+        csp = response.headers["content-security-policy"]
+        assert "unsafe" not in csp
+        directives = dict(d.strip().split(" ", 1) for d in csp.split(";"))
+        assert directives == {
+            "default-src": "'none'",
+            "script-src": "'self'",
+            "style-src": "'self'",
+            "base-uri": "'none'",
+            "form-action": "'self'",
+            "frame-ancestors": "'none'",
+        }
+
+
+def test_values_are_autoescaped(make_dashboard, provider, seeded_db):
+    import sqlite3
+
+    conn = sqlite3.connect(seeded_db)
+    with conn:
+        conn.execute(
+            "INSERT INTO counters VALUES ('2026-11-07', 'appstore', 'health', 'lang', '<script>alert(1)</script>', 3)"
+        )
+    conn.close()
+    client = make_dashboard()
+    sign_in(client, provider)
+    html = client.get("/", params={"channel": "appstore"}).text
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+    assert "<script>alert(1)" not in html
+
+
+def test_empty_database_page(make_dashboard, provider):
+    client = make_dashboard()
+    sign_in(client, provider)
+    html = client.get("/").text
+    assert "No database yet." in html
+    assert "chart.umd.min.js" not in html

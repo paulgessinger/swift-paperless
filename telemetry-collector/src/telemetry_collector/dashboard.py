@@ -11,10 +11,13 @@ start-up checks.
 
 from __future__ import annotations
 
+import hashlib
 import logging
+import mimetypes
 import time
 from collections.abc import Callable
-from html import escape
+from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -24,6 +27,7 @@ from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, RedirectResponse
+from jinja2 import Environment, PackageLoader, StrictUndefined
 from joserfc.errors import JoseError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
@@ -34,6 +38,7 @@ from .report import (
     UNKNOWN,
     Counts,
     completion_pairs,
+    daily_feature_ratios,
     day_range,
     distribution,
     feature_stats,
@@ -65,14 +70,51 @@ class _LoginRequired(Exception):
     pass
 
 
+CSP = (
+    "default-src 'none'; script-src 'self'; style-src 'self'; "
+    "base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+)
 SECURITY_HEADERS = {
-    "Content-Security-Policy": (
-        "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
-    ),
+    "Content-Security-Policy": CSP,
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
-    "Cache-Control": "no-store",
 }
+# Static URLs carry a content hash, so they can be cached until the content changes.
+STATIC_CACHE = "private, max-age=31536000, immutable"
+
+
+@dataclass(frozen=True)
+class StaticFile:
+    path: Path
+    media_type: str
+    version: str
+
+
+def _static_files() -> dict[str, StaticFile]:
+    """Every file under the package's static/ directory, keyed by its relative path."""
+    root = Path(str(files(__package__ or "telemetry_collector") / "static"))
+    out = {}
+    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+        # Cache-busting fingerprint, not a security measure.
+        version = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+        media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        if path.suffix == ".js":
+            media_type = "text/javascript"
+        out[path.relative_to(root).as_posix()] = StaticFile(path, media_type, version)
+    return out
+
+
+def _templates(static: dict[str, StaticFile]) -> Environment:
+    env = Environment(
+        loader=PackageLoader("telemetry_collector", "templates"),
+        autoescape=True,
+        undefined=StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    env.globals["static_url"] = lambda name: f"/static/{name}?v={static[name].version}"
+    env.filters["pct"] = _pct
+    return env
 
 
 def create_dashboard_app(
@@ -85,6 +127,11 @@ def create_dashboard_app(
     channels = [c for c in schema.channels if c != "dev" or settings.dev]
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    static = _static_files()
+    templates = _templates(static)
+
+    def render(name: str, status: int = 200, **context: Any) -> HTMLResponse:
+        return HTMLResponse(templates.get_template(name).render(**context), status)
 
     oauth = OAuth()
     if settings.auth_enabled:
@@ -113,6 +160,7 @@ def create_dashboard_app(
     async def _headers(request: Request, call_next: Callable[..., Any]) -> Response:
         response = await call_next(request)
         response.headers.update(SECURITY_HEADERS)
+        response.headers.setdefault("Cache-Control", "no-store")
         return response
 
     @app.exception_handler(_LoginRequired)
@@ -143,9 +191,7 @@ def create_dashboard_app(
         return session_user
 
     def failure(status: int, message: str) -> HTMLResponse:
-        return HTMLResponse(
-            _page("Sign-in failed", f"<p>{escape(message)}</p><p><a href='/login'>Try again</a></p>"), status
-        )
+        return render("message.html", status, title="Sign-in failed", message=message, link_text="Try again")
 
     async def check_issuer() -> None:
         # Discovery §4.3: the advertised issuer must equal the configured one;
@@ -200,7 +246,7 @@ def create_dashboard_app(
     async def logout(request: Request) -> Response:
         if settings.auth_enabled:
             request.session.clear()
-        return HTMLResponse(_page("Signed out", "<p>Signed out.</p><p><a href='/login'>Sign in again</a></p>"))
+        return render("message.html", title="Signed out", message="Signed out.", link_text="Sign in again")
 
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request, channel: str = "appstore", days: str = "30") -> HTMLResponse:
@@ -208,213 +254,114 @@ def create_dashboard_app(
         if channel not in channels:
             channel = channels[0]
         n_days = int(days) if days.isdigit() and int(days) in RANGES else 30
-        return HTMLResponse(_dashboard(settings.db_path, schema, channels, channel, n_days, who))
+        context = dashboard_context(settings.db_path, schema, channel, n_days)
+        return render(
+            "index.html",
+            channels=channels,
+            channel=channel,
+            days=n_days,
+            ranges=RANGES,
+            signed_in_as=str(who.get("email") or who.get("sub", "")),
+            **context,
+        )
+
+    @app.get("/static/{name:path}")
+    def static_file(request: Request, name: str) -> Response:
+        user(request)
+        entry = static.get(name)
+        if entry is None:
+            return Response(status_code=404)
+        return Response(entry.path.read_bytes(), media_type=entry.media_type, headers={"Cache-Control": STATIC_CACHE})
 
     return app
 
 
-# ---------------------------------------------------------------- rendering
-
-CSS = """
-:root{--bg:#f7f7f5;--card:#fff;--fg:#1d1d1f;--muted:#6e6e73;--line:#e3e3e0;--accent:#2f6fde;--warn:#b25000;--bar:#2f6fde}
-@media (prefers-color-scheme:dark){:root{--bg:#141416;--card:#1e1e21;--fg:#ececee;--muted:#9a9aa1;--line:#2e2e33;
-  --accent:#6f9cf0;--warn:#f0a050;--bar:#6f9cf0}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);
-  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-main{max-width:1100px;margin:0 auto;padding:16px}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
-h1{font-size:20px;margin:0}h2{font-size:15px;margin:0 0 10px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg a{padding:5px 12px;color:var(--fg);text-decoration:none;border-right:1px solid var(--line)}
-.seg a:last-child{border-right:0}
-.seg a.on{background:var(--accent);color:#fff}
-.muted{color:var(--muted)}.warn{color:var(--warn)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
-.big{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-bottom:12px}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500}
-td.n{text-align:right;white-space:nowrap}.hbar>span:last-child{white-space:nowrap;min-width:84px;text-align:right}
-.hbar{display:grid;grid-template-columns:minmax(70px,auto) 1fr auto;gap:8px;align-items:center;margin:3px 0}
-.hbar .t{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
-.hbar .t span{display:block;height:100%;background:var(--bar)}
-.hbar.unknown .t span{background:var(--muted)}
-svg text{fill:var(--muted);font-size:11px}
-form{margin:0}
-button{font:inherit;background:none;border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:4px 10px;
-  cursor:pointer}
-"""
-
-
-def _page(title: str, body: str) -> str:
-    return (
-        "<!doctype html><html lang='en'><head><meta charset='utf-8'>"
-        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"<title>{escape(title)}</title><style>{CSS}</style></head><body><main>{body}</main></body></html>"
-    )
+# ---------------------------------------------------------------- view data
 
 
 def _pct(n: float | None) -> str:
     return "–" if n is None else f"{n:.0%}"
 
 
-def _bar_chart(days: list[str], values: list[int], flagged: set[str]) -> str:
-    width, height, pad_l, pad_b, pad_t = 720, 180, 34, 20, 8
-    top = max(values + [1])
-    slot = (width - pad_l) / max(len(days), 1)
-    bar_w = max(slot * 0.75, 1)
-    parts = [f"<svg viewBox='0 0 {width} {height}' width='100%' role='img' aria-label='Daily active installs'>"]
-    inner = height - pad_b - pad_t
-    for frac in (0, 0.5, 1):
-        y = pad_t + inner * (1 - frac)
-        parts.append(f"<line x1='{pad_l}' x2='{width}' y1='{y:.1f}' y2='{y:.1f}' stroke='var(--line)'/>")
-        parts.append(f"<text x='{pad_l - 4}' y='{y + 4:.1f}' text-anchor='end'>{round(top * frac)}</text>")
-    for i, (day, v) in enumerate(zip(days, values, strict=True)):
-        h = inner * v / top
-        x = pad_l + i * slot + (slot - bar_w) / 2
-        color = "var(--warn)" if day in flagged else "var(--bar)"
-        parts.append(
-            f"<rect x='{x:.1f}' y='{pad_t + inner - h:.1f}' width='{bar_w:.1f}' height='{h:.1f}' "
-            f"rx='1.5' fill='{color}'>"
-            f"<title>{escape(day)}: {v}</title></rect>"
-        )
-    for i in sorted({0, len(days) // 2, len(days) - 1}):
-        x = pad_l + i * slot + slot / 2
-        parts.append(f"<text x='{x:.1f}' y='{height - 5}' text-anchor='middle'>{escape(days[i][5:])}</text>")
-    parts.append("</svg>")
-    return "".join(parts)
-
-
-def _hbars(values: dict[str, int], total: int) -> str:
-    if not values:
-        return "<p class='muted'>No data.</p>"
-    rows = []
+def _share_rows(values: dict[str, int], total: int) -> list[dict[str, Any]]:
+    """Distribution rows sorted by count, with the derived unknown row last."""
     known = sorted(((v, n) for v, n in values.items() if v != UNKNOWN), key=lambda x: (-x[1], x[0]))
     if UNKNOWN in values:
         known.append((UNKNOWN, values[UNKNOWN]))
-    for value, n in known:
-        share = n / total if total else 0
-        cls = "hbar unknown" if value == UNKNOWN else "hbar"
-        label = f"<i>{UNKNOWN}</i>" if value == UNKNOWN else escape(value)
-        rows.append(
-            f"<div class='{cls}'><span>{label}</span>"
-            f"<div class='t'><span style='width:{share * 100:.1f}%'></span></div>"
-            f"<span class='muted'>{n} · {_pct(share)}</span></div>"
-        )
-    return "".join(rows)
+    return [{"value": v, "count": n, "share": n / total if total else 0.0, "unknown": v == UNKNOWN} for v, n in known]
 
 
-def _dashboard(db_path: Path, schema: Schema, channels: list[str], channel: str, days: int, who: dict[str, Any]) -> str:
-    signed_in_as = str(who.get("email") or who.get("sub", ""))
-    nav_channels = "".join(
-        f"<a class='{'on' if c == channel else ''}' href='/?{urlencode({'channel': c, 'days': days})}'>{escape(c)}</a>"
-        for c in channels
-    )
-    nav_days = "".join(
-        f"<a class='{'on' if d == days else ''}' href='/?{urlencode({'channel': channel, 'days': d})}'>{d}d</a>"
-        for d in RANGES
-    )
-    header = (
-        "<header><h1>Swift Paperless telemetry</h1>"
-        f"<div class='seg'>{nav_channels}</div><div class='seg'>{nav_days}</div>"
-        f"<form method='post' action='/logout'><span class='muted'>{escape(signed_in_as)}</span> "
-        "<button type='submit'>Sign out</button></form></header>"
-    )
+def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) -> dict[str, Any]:
+    """Plain data for index.html; `end` is None when there is nothing to show yet."""
     if not db_path.exists():
-        return _page("Telemetry", header + "<p class='muted'>No database yet.</p>")
+        return {"end": None, "empty_reason": "No database yet."}
     conn = open_readonly(db_path)
     try:
         end = latest_day(conn)
         if end is None:
-            return _page("Telemetry", header + "<p class='muted'>No data yet.</p>")
+            return {"end": None, "empty_reason": "No data yet."}
         window = day_range(end, days)
         start = window[0]
         counts = Counts(conn, channel, day_range(end, max(days, MAU_WINDOW_DAYS))[0], end)
     finally:
         conn.close()
 
+    features = list(schema.features)
     daily = counts.daily_pings("health", window)
-    health_total = counts.values("health", "_pings", start, end).get("total", 0)
+    health_total = counts.pings_in("health", start, end)
     flagged = {d for d, _, _ in implausible_days(counts) if d >= start}
     age_today = distribution(counts, schema, "install_age", end, end)
-    avg = health_total / days
-
-    cards = (
-        "<div class='cards'>"
-        f"<div class='card'><div class='muted'>Daily active · {escape(end)}</div><div class='big'>{daily[-1]}</div>"
-        f"<div class='muted'>avg {avg:.1f}/day over {days}d</div></div>"
-        "<div class='card'><div class='muted'>MAU estimate · 30d</div>"
-        f"<div class='big'>{mau_estimate(counts, end):.0f}</div>"
-        "<div class='muted'>Σ 1/midpoint(active_days_30)</div></div>"
-        f"<div class='card'><div class='muted'>Installs &lt;7 days old · {escape(end)}</div>"
-        f"<div class='big'>{age_today.get('<7d', 0)}</div>"
-        f"<div class='muted'>&lt;30d: {age_today.get('<30d', 0)}</div></div>"
-        f"<div class='card'><div class='muted'>Feature pings · {escape(end)}</div>"
-        f"<div class='big'>{counts.pings('feature', end)}</div>"
-        f"<div class='muted'>{len(flagged)} implausible day(s) in range</div></div>"
-        "</div>"
-    )
-    chart = (
-        f"<div class='card' style='margin-bottom:12px'><h2>Daily active installs (health pings), last {days} days</h2>"
-        f"{_bar_chart(window, daily, flagged)}"
-        + (f"<p class='warn'>Highlighted: feature pings exceed {1.5}× health pings.</p>" if flagged else "")
-        + "</div>"
-    )
-
-    feature_rows = []
-    for s in feature_stats(counts, list(schema.features), start, end):
-        breakdown = " / ".join(str(s.buckets.get(b, 0)) for b in schema.count_buckets)
-        flag = (
-            "<span class='warn'>no use in range</span>"
-            if s.unused
-            else ("<span class='muted'>not available</span>" if not s.available else "")
-        )
-        feature_rows.append(
-            f"<tr><td>{escape(s.name)}</td><td class='n'>{s.used}</td><td class='n'>{s.available}</td>"
-            f"<td class='n'>{_pct(s.ratio)}</td><td class='n muted'>{breakdown}</td><td>{flag}</td></tr>"
-        )
-    features = (
-        f"<div class='card'><h2>Features · install-days, last {days} days</h2><table>"
-        "<tr><th>Feature</th><th class='n'>Used</th><th class='n'>Available</th><th class='n'>Ratio</th>"
-        f"<th class='n'>{escape(' / '.join(schema.count_buckets))}</th><th></th></tr>"
-        + "".join(feature_rows)
-        + "</table></div>"
-    )
-
-    stats = {s.name: s for s in feature_stats(counts, list(schema.features), start, end)}
-    pair_rows = "".join(
-        f"<tr><td>{escape(a)} → {escape(b)}</td><td class='n'>{stats[a].used}</td><td class='n'>{stats[b].used}</td>"
-        f"<td class='n'>{_pct(stats[b].used / stats[a].used if stats[a].used else None)}</td></tr>"
-        for a, b in completion_pairs(list(schema.features))
-    )
+    stats = feature_stats(counts, features, start, end)
+    by_name = {s.name: s for s in stats}
     errors = counts.values("health", "errors", start, end)
-    error_rows = "".join(
-        f"<tr><td>{escape(e)}</td><td class='n'>{errors.get(e, 0)}</td>"
-        f"<td class='n'>{_pct(errors.get(e, 0) / health_total if health_total else None)}</td></tr>"
-        for e in sorted(schema.errors, key=lambda e: -errors.get(e, 0))
-    )
-    side = (
-        "<div class='card'><h2>Completion (install-days)</h2><table><tr><th>Pair</th><th class='n'>Started</th>"
-        f"<th class='n'>Done</th><th class='n'>Rate</th></tr>{pair_rows}</table>"
-        "<p class='muted'>Ratio of marginals; not a per-install funnel.</p>"
-        "<h2 style='margin-top:16px'>Error classes</h2><table><tr><th>Error</th><th class='n'>Install-days</th>"
-        f"<th class='n'>of health</th></tr>{error_rows}</table></div>"
-    )
 
-    env_cards = "".join(
-        f"<div class='card'><h2>{escape(f)}</h2>"
-        f"{_hbars(distribution(counts, schema, f, start, end), health_total)}</div>"
-        for f in schema.environment_fields
-    )
-    body = (
-        header + f"<p class='muted'>Data through {escape(end)} "
-        "(UTC; the latest day may be partial, and the collector writes in batches). "
-        f"Channel <b>{escape(channel)}</b>. Counts are install-days from opted-in users.</p>"
-        + cards
-        + chart
-        + f"<div class='grid'>{features}{side}</div>"
-        + f"<h2>Environment · health pings, last {days} days</h2><div class='grid'>{env_cards}</div>"
-    )
-    return _page("Telemetry", body)
+    return {
+        "end": end,
+        "cards": {
+            "daily_active": daily[-1],
+            "daily_avg": health_total / days,
+            "mau": mau_estimate(counts, end),
+            "new_7d": age_today.get("<7d", 0),
+            "new_30d": age_today.get("<30d", 0),
+            "feature_pings": counts.pings("feature", end),
+            "flagged_days": len(flagged),
+        },
+        "count_buckets": list(schema.count_buckets),
+        "features": [
+            {
+                "name": s.name,
+                "used": s.used,
+                "available": s.available,
+                "ratio": s.ratio,
+                "buckets": [s.buckets.get(b, 0) for b in schema.count_buckets],
+                "unused": s.unused,
+            }
+            for s in stats
+        ],
+        "pairs": [
+            {
+                "started": a,
+                "done": b,
+                "started_n": by_name[a].used,
+                "done_n": by_name[b].used,
+                "rate": by_name[b].used / by_name[a].used if by_name[a].used else None,
+            }
+            for a, b in completion_pairs(features)
+        ],
+        "errors": [
+            {"name": e, "count": errors.get(e, 0), "share": errors.get(e, 0) / health_total if health_total else None}
+            for e in sorted(schema.errors, key=lambda e: -errors.get(e, 0))
+        ],
+        "environment": [
+            {"field": f, "rows": _share_rows(distribution(counts, schema, f, start, end), health_total)}
+            for f in schema.environment_fields
+        ],
+        # Read by static/dashboard.js from a JSON data block.
+        "chart": {
+            "days": window,
+            "active": daily,
+            "flagged": [d in flagged for d in window],
+            # A list, not a dict: tojson sorts keys, and the legend should follow schema order.
+            "ratios": [{"name": n, "values": v} for n, v in daily_feature_ratios(counts, features, window).items()],
+        },
+    }

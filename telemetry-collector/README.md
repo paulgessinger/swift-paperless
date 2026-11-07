@@ -206,6 +206,35 @@ writes.
 The dashboard opens the database read-only (`mode=ro`) on each request. SQLite
 WAL readers still need the `-shm` file, so the storage mount stays read-write.
 
+### Rendering
+
+Pages are Jinja2 templates (`src/telemetry_collector/templates/`) with
+autoescaping on. Python only builds plain data for them.
+
+The two charts use Chart.js: daily active installs, and each feature's
+used/available ratio per day. The chart data is a JSON data block
+(`<script type="application/json">`), read by `static/dashboard.js`. The
+channel and range switches are plain links.
+
+The Content-Security-Policy is `default-src 'none'; script-src 'self';
+style-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'`.
+There is no inline script or style, and no `unsafe-*` source.
+
+Static files are served by the dashboard app only, behind sign-in. Their URLs
+carry a content hash (`?v=…`), so they are sent with
+`Cache-Control: private, max-age=31536000, immutable`. Pages are `no-store`.
+
+**Vendored Chart.js:**
+
+- Version 4.6.1, UMD build `dist/chart.umd.min.js`, from the npm package
+  <https://www.npmjs.com/package/chart.js/v/4.6.1>, fetched with
+  `npm pack chart.js@4.6.1`.
+- The tarball's integrity matched the registry's `dist.integrity`
+  (`sha512-hJyniucsFmq//EvXYvJ6c6mahPoI3kaxdjVH8awTaJ/fDNWeSqqqArixMJWkWNN6fcYvPU3HneSANFNYtRi61g==`).
+- File SHA-256: `87364cc2b2a76a6684929e7d6b80b18a897794db38400caff1fcf1791c6925d2`.
+- Stored unmodified at `static/vendor/chartjs/` with its `LICENSE.md` (MIT).
+- To update: repeat with the new version and replace both files.
+
 ### Authentication
 
 The dashboard uses the OIDC authorization code flow with PKCE (S256), as a
@@ -340,10 +369,11 @@ start but does not wait until the address is assigned.
 
 ### Resources
 
-Idle RSS of the dashboard process is about 66 MB (Linux container, with
-Authlib, cryptography and httpx loaded). The collector process stays at about
-53 MB, because the collector role never imports the dashboard's dependencies;
-a test checks this. The image is about 60 MB of content. A 90-day page renders in a few milliseconds
+Idle RSS of the dashboard process is about 69 MB (Linux container, with
+Authlib, cryptography, httpx and Jinja2 loaded), and about 72 MB after
+rendering pages. The collector process stays at about 53 MB, because the
+collector role never imports the dashboard's dependencies; a test checks this.
+The image is about 61 MB of content. A 90-day page renders in a few milliseconds
 from about 45 days of seeded data. To cap it:
 `dokku resource:limit --memory 128m telemetry-dashboard`.
 
