@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "channels": [
+    "appstore",
+    "testflight",
+    "dev"
+  ],
+  "buckets": {
+    "count": [
+      "1",
+      "2-9",
+      "10+"
+    ],
+    "docs": [
+      "<1k",
+      "1k-10k",
+      "10k+"
+    ],
+    "servers": [
+      "1",
+      "2+"
+    ],
+    "active_days_30": [
+      "1",
+      "2-7",
+      "8-20",
+      "21+"
+    ],
+    "install_age": [
+      "<7d",
+      "<30d",
+      "<1y",
+      "1y+",
+      "existing"
+    ]
+  },
+  "device": [
+    "iPhone",
+    "iPad"
+  ],
+  "auth": [
+    "token",
+    "password",
+    "sso",
+    "none"
+  ],
+  "features": [
+    "saved_view",
+    "search",
+    "filter",
+    "document_edit",
+    "document_share",
+    "scan_started",
+    "scan_uploaded",
+    "import_started",
+    "import_uploaded",
+    "notes"
+  ],
+  "errors": [
+    "tls",
+    "auth",
+    "timeout",
+    "unreachable",
+    "backend_too_old",
+    "other"
+  ]
+}
