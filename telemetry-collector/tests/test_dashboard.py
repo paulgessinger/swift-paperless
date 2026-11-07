@@ -10,12 +10,14 @@ from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
-from conftest import feature_payload, health_payload
+from conftest import by_field, feature_payload, health_payload
 from fastapi.testclient import TestClient
 from joserfc import jwt
 from joserfc.jwk import RSAKey
+from pydantic import ValidationError
 
-from telemetry_collector.dashboard import SESSION_COOKIE, DashboardSettings, create_dashboard_app
+from telemetry_collector.config import DashboardSettings
+from telemetry_collector.dashboard import SESSION_COOKIE, create_dashboard_app
 
 ISSUER = "https://id.example.test"
 CLIENT_ID = "dash"
@@ -78,7 +80,7 @@ def settings(db_path, **overrides) -> DashboardSettings:
         allowed_emails=frozenset({"owner@example.test"}),
     )
     values.update(overrides)
-    return DashboardSettings(**values)
+    return by_field(DashboardSettings, **values)
 
 
 @pytest.fixture
@@ -311,7 +313,7 @@ def test_open_redirect_blocked(make_dashboard, provider, target):
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"auth": False},  # auth off outside dev mode
+        {"auth": "off"},  # auth off outside dev mode
         {"session_secret": "short"},
         {"client_secret": ""},
         {"allowed_emails": frozenset()},
@@ -319,12 +321,12 @@ def test_open_redirect_blocked(make_dashboard, provider, target):
     ],
 )
 def test_settings_refused(db_path, overrides):
-    with pytest.raises(ValueError):
-        create_dashboard_app(settings(db_path, **overrides))
+    with pytest.raises(ValidationError):
+        settings(db_path, **overrides)
 
 
 def test_auth_off_in_dev_mode(db_path, seeded_db):
-    app = create_dashboard_app(DashboardSettings(db_path=db_path, dev=True, auth=False))
+    app = create_dashboard_app(by_field(DashboardSettings, db_path=db_path, dev=True, auth="off"))
     client = TestClient(app, base_url="https://dash.example.test")
     assert client.get("/").status_code == 200
 
@@ -333,7 +335,7 @@ def test_auth_off_in_dev_mode(db_path, seeded_db):
 
 
 def test_dashboard_never_writes(db_path):
-    app = create_dashboard_app(DashboardSettings(db_path=db_path, dev=True, auth=False))
+    app = create_dashboard_app(by_field(DashboardSettings, db_path=db_path, dev=True, auth="off"))
     client = TestClient(app, base_url="https://dash.example.test")
     assert "No database yet" in client.get("/").text
     assert not db_path.exists()

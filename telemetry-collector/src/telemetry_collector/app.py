@@ -16,7 +16,7 @@ from pydantic import BaseModel, ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import metrics
-from .config import Settings
+from .config import MAX_BODY_BYTES, Settings
 from .schema import Schema, load_schema
 from .store import CounterStore, connect, utc_today
 
@@ -44,8 +44,6 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
     unknown = settings.channels - set(schema.channels)
     if unknown:
         raise ValueError(f"channels not in schema: {sorted(unknown)}")
-    if "dev" in settings.channels and not settings.dev:
-        raise ValueError("the dev channel is only accepted in dev mode")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
@@ -80,7 +78,7 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
 
     async def ingest(request: Request, ping: str, model: type[BaseModel]) -> Response:
         try:
-            body = await _read_capped(request, settings.max_body_bytes)
+            body = await _read_capped(request, MAX_BODY_BYTES)
         except _BodyTooLarge:
             metrics.REQUESTS.labels(ping, "too_large").inc()
             return Response(status_code=413)

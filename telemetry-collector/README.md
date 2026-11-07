@@ -53,6 +53,12 @@ TELEMETRY_ROLE=dashboard TELEMETRY_DEV=1 DASHBOARD_AUTH=off \
 
 The `dev` channel is refused at startup unless `TELEMETRY_DEV` is set.
 
+Settings are read with pydantic-settings (`config.py`), from these exact
+variable names only. There is no `.env` file support, so a stray file is never
+picked up. Lists are comma-separated. An invalid value (e.g.
+`TELEMETRY_BATCH_SIZE=twenty` or `TELEMETRY_DEV=maybe`) stops start-up with an
+error naming the variable.
+
 ## API behaviour
 
 - `204` on success, with an empty body.
@@ -158,7 +164,7 @@ dokku proxy:build-config telemetry
 
 ### Resources
 
-Measured idle RSS of the collector process: about 52 MB (Linux container,
+Measured idle RSS of the collector process: about 53 MB (Linux container,
 `/proc/1/status`), about 37 MiB cgroup memory per `docker stats`. To cap it:
 `dokku resource:limit --memory 128m telemetry`.
 
@@ -336,7 +342,7 @@ start but does not wait until the address is assigned.
 
 Idle RSS of the dashboard process is about 66 MB (Linux container, with
 Authlib, cryptography and httpx loaded). The collector process stays at about
-51 MB, because the collector role never imports the dashboard's dependencies;
+53 MB, because the collector role never imports the dashboard's dependencies;
 a test checks this. The image is about 60 MB of content. A 90-day page renders in a few milliseconds
 from about 45 days of seeded data. To cap it:
 `dokku resource:limit --memory 128m telemetry-dashboard`.

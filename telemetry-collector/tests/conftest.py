@@ -10,7 +10,21 @@ import pytest
 from fastapi.testclient import TestClient
 
 from telemetry_collector.app import create_app
-from telemetry_collector.config import Settings
+from telemetry_collector.config import DashboardSettings, Settings
+
+ENV_NAMES = {alias for cls in (Settings, DashboardSettings) for f in cls.model_fields.values() if (alias := f.alias)}
+
+
+@pytest.fixture(autouse=True)
+def _clean_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep the developer's shell environment out of settings built in tests."""
+    for name in ENV_NAMES:
+        monkeypatch.delenv(name, raising=False)
+
+
+def by_field[T: Settings | DashboardSettings](cls: type[T], **fields: Any) -> T:
+    """Build settings from field names (the classes only accept env var names)."""
+    return cls(**{cls.model_fields[name].alias or name: value for name, value in fields.items()})
 
 
 class Clock:
@@ -81,7 +95,7 @@ def clock() -> Clock:
 def make_client(db_path: Path, clock: Clock) -> Callable[..., AbstractContextManager[TestClient]]:
     @contextmanager
     def factory(**kwargs: Any) -> Generator[TestClient]:
-        settings = Settings(db_path=db_path, **kwargs)
+        settings = by_field(Settings, db_path=db_path, **kwargs)
         with TestClient(create_app(settings, today=clock), raise_server_exceptions=True) as client:
             yield client
 

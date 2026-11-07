@@ -12,10 +12,8 @@ start-up checks.
 from __future__ import annotations
 
 import logging
-import os
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -30,6 +28,7 @@ from joserfc.errors import JoseError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
+from .config import DashboardSettings
 from .report import (
     MAU_WINDOW_DAYS,
     UNKNOWN,
@@ -55,90 +54,11 @@ SCOPES = "openid email profile groups"
 SIGN_IN_ERRORS = (OAuthError, JoseError, KeyError, ValueError)
 
 
-def _split(value: str | None) -> frozenset[str]:
-    return frozenset(v.strip() for v in (value or "").split(",") if v.strip())
-
-
 def safe_next(target: str | None) -> str:
     """Only same-site absolute paths; anything else (//host, scheme, backslash) becomes /."""
     if not target or not target.startswith("/") or target.startswith("//") or "\\" in target:
         return "/"
     return target
-
-
-@dataclass(frozen=True)
-class DashboardSettings:
-    db_path: Path
-    schema_path: Path | None = None
-    dev: bool = False
-    auth: bool = True
-    issuer: str = ""
-    client_id: str = ""
-    client_secret: str = ""
-    redirect_uri: str = ""
-    session_secret: str = ""
-    allowed_subjects: frozenset[str] = field(default_factory=frozenset)
-    allowed_emails: frozenset[str] = field(default_factory=frozenset)
-    required_group: str = ""
-
-    @classmethod
-    def from_env(cls) -> DashboardSettings:
-        schema = os.environ.get("TELEMETRY_SCHEMA_PATH")
-        return cls(
-            db_path=Path(os.environ.get("TELEMETRY_DB_PATH", "telemetry.sqlite3")),
-            schema_path=Path(schema) if schema else None,
-            dev=os.environ.get("TELEMETRY_DEV", "").lower() in ("1", "true", "yes", "on"),
-            auth=os.environ.get("DASHBOARD_AUTH", "oidc") != "off",
-            issuer=os.environ.get("OIDC_ISSUER", ""),
-            client_id=os.environ.get("OIDC_CLIENT_ID", ""),
-            client_secret=os.environ.get("OIDC_CLIENT_SECRET", ""),
-            redirect_uri=os.environ.get("OIDC_REDIRECT_URI", ""),
-            session_secret=os.environ.get("DASHBOARD_SESSION_SECRET", ""),
-            allowed_subjects=_split(os.environ.get("OIDC_ALLOWED_SUBJECTS")),
-            allowed_emails=_split(os.environ.get("OIDC_ALLOWED_EMAILS")),
-            required_group=os.environ.get("OIDC_REQUIRED_GROUP", "").strip(),
-        )
-
-    def validate(self) -> None:
-        if not self.auth:
-            if not self.dev:
-                raise ValueError("DASHBOARD_AUTH=off is only allowed with TELEMETRY_DEV=1")
-            return
-        missing = [
-            name
-            for name, value in (
-                ("OIDC_ISSUER", self.issuer),
-                ("OIDC_CLIENT_ID", self.client_id),
-                ("OIDC_CLIENT_SECRET", self.client_secret),
-                ("OIDC_REDIRECT_URI", self.redirect_uri),
-            )
-            if not value
-        ]
-        if missing:
-            raise ValueError(f"missing settings: {', '.join(missing)}")
-        if len(self.session_secret) < 32:
-            raise ValueError("DASHBOARD_SESSION_SECRET must be at least 32 characters")
-        if not (self.allowed_subjects or self.allowed_emails or self.required_group):
-            raise ValueError("set OIDC_ALLOWED_SUBJECTS, OIDC_ALLOWED_EMAILS and/or OIDC_REQUIRED_GROUP")
-        if not self.redirect_uri.startswith("https://") and not self.dev:
-            raise ValueError("OIDC_REDIRECT_URI must be https")
-
-    def authorized(self, claims: dict[str, Any]) -> bool:
-        """Every configured constraint must hold: group membership, and the subject or verified-email allow-list."""
-        if self.required_group:
-            groups = claims.get("groups")
-            if not isinstance(groups, list) or self.required_group not in groups:
-                return False
-        if self.allowed_subjects or self.allowed_emails:
-            email = claims.get("email")
-            email_ok = (
-                isinstance(email, str)
-                and claims.get("email_verified") is True
-                and email.lower() in {e.lower() for e in self.allowed_emails}
-            )
-            if claims.get("sub") not in self.allowed_subjects and not email_ok:
-                return False
-        return True
 
 
 class _LoginRequired(Exception):
@@ -161,28 +81,27 @@ def create_dashboard_app(
     clock: Callable[[], float] = time.time,
 ) -> FastAPI:
     """`transport` replaces the HTTP transport to the identity provider (tests)."""
-    settings.validate()
     schema = load_schema(settings.schema_path)
     channels = [c for c in schema.channels if c != "dev" or settings.dev]
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
     oauth = OAuth()
-    if settings.auth:
+    if settings.auth_enabled:
         client_kwargs: dict[str, Any] = {"scope": SCOPES, "code_challenge_method": "S256"}
         if transport is not None:
             client_kwargs["transport"] = transport
         oauth.register(
             "oidc",
             client_id=settings.client_id,
-            client_secret=settings.client_secret,
+            client_secret=settings.client_secret.get_secret_value(),
             server_metadata_url=settings.issuer.rstrip("/") + "/.well-known/openid-configuration",
             client_kwargs=client_kwargs,
         )
         # Holds the login transaction (Authlib's state/nonce/PKCE data) and, after sign-in, the user.
         app.add_middleware(
             SessionMiddleware,
-            secret_key=settings.session_secret,
+            secret_key=settings.session_secret.get_secret_value(),
             session_cookie=SESSION_COOKIE,
             max_age=SESSION_TTL,
             path="/",
@@ -210,7 +129,7 @@ def create_dashboard_app(
         return Response(status_code=exc.status_code)
 
     def user(request: Request) -> dict[str, Any]:
-        if not settings.auth:
+        if not settings.auth_enabled:
             return {"sub": "dev mode (auth off)"}
         session_user = request.session.get("user")
         # The cookie's own max_age is enforced by the browser only; this bounds a replayed cookie too.
@@ -237,7 +156,7 @@ def create_dashboard_app(
 
     @app.get("/login")
     async def login(request: Request, next: str = "/") -> Response:
-        if not settings.auth:
+        if not settings.auth_enabled:
             return RedirectResponse("/", status_code=303)
         request.session.clear()
         try:
@@ -251,7 +170,7 @@ def create_dashboard_app(
 
     @app.get("/auth/callback")
     async def callback(request: Request) -> Response:
-        if not settings.auth:
+        if not settings.auth_enabled:
             return RedirectResponse("/", status_code=303)
         try:
             await check_issuer()
@@ -279,7 +198,7 @@ def create_dashboard_app(
 
     @app.post("/logout")
     async def logout(request: Request) -> Response:
-        if settings.auth:
+        if settings.auth_enabled:
             request.session.clear()
         return HTMLResponse(_page("Signed out", "<p>Signed out.</p><p><a href='/login'>Sign in again</a></p>"))
 

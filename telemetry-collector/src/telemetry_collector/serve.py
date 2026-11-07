@@ -12,9 +12,10 @@ from fastapi import FastAPI
 def _app() -> FastAPI:
     role = os.environ.get("TELEMETRY_ROLE", "collector")
     if role == "dashboard":
-        from .dashboard import DashboardSettings, create_dashboard_app
+        from .config import DashboardSettings
+        from .dashboard import create_dashboard_app
 
-        return create_dashboard_app(DashboardSettings.from_env())
+        return create_dashboard_app(DashboardSettings())
     if role != "collector":
         raise SystemExit(f"unknown TELEMETRY_ROLE: {role}")
 
@@ -27,7 +28,7 @@ def _app() -> FastAPI:
         from prometheus_client import start_http_server
 
         start_http_server(int(metrics_port), addr=os.environ.get("METRICS_HOST", "127.0.0.1"))
-    return create_app(Settings.from_env())
+    return create_app(Settings())
 
 
 def main() -> None:
