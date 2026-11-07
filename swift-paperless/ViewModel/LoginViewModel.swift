@@ -40,6 +40,16 @@ enum CredentialMode: Equatable, Hashable, CaseIterable {
     return String(localized: res)
   }
 
+  /// The method stored with a connection signed in this way.
+  var authMethod: ConnectionAuthMethod {
+    switch self {
+    case .usernameAndPassword: .password
+    case .token: .token
+    case .oidc: .sso
+    case .none: .none
+    }
+  }
+
   var description: Text {
     switch self {
     case .usernameAndPassword:
@@ -64,7 +74,16 @@ enum CredentialState: Equatable {
 @MainActor
 @Observable
 class LoginViewModel {
-  var loginState = LoginState.empty
+  var loginState = LoginState.empty {
+    didSet {
+      // The URL is checked while it's typed, so only errors that need a real
+      // server to answer are recorded: an unknown host may be a half-typed one.
+      guard case .error(let error) = loginState, let telemetry = error.telemetryError,
+        telemetry == .tls || telemetry == .backendTooOld
+      else { return }
+      TelemetryService.record(telemetry)
+    }
+  }
 
   var extraHeaders: [Connection.HeaderValue] = []
 
@@ -86,7 +105,13 @@ class LoginViewModel {
   var scheme = Scheme.https
 
   var credentialMode = CredentialMode.usernameAndPassword
-  var credentialState = CredentialState.none
+  var credentialState = CredentialState.none {
+    didSet {
+      guard case .error(let error) = credentialState, let telemetry = error.telemetryError
+      else { return }
+      TelemetryService.record(telemetry)
+    }
+  }
 
   // Display OTP input field
   var otpEnabled = false
@@ -760,7 +785,8 @@ class LoginViewModel {
       friendlyName: friendlyName,
       offlineBrowsingMode: .initial,
       // Seeds the new server's repository, so its first activation needs no probe.
-      knownVersions: repository.versions)
+      knownVersions: repository.versions,
+      authMethod: credentialMode.authMethod)
     if let token = connection.token {
       Logger.api.info("Have token for connection, storing")
       do throws(Keychain.KeychainError) {

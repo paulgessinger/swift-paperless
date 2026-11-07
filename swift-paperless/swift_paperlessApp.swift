@@ -244,6 +244,14 @@ struct MainView: View {
     }
   }
 
+  /// Sends the day's telemetry pings once this scene is active on a server.
+  private func reportTelemetry() {
+    guard scenePhase == .active, storeReady, let store else { return }
+    TelemetryService.current?.appBecameActive { [manager] in
+      await TelemetryEnvironment.current(store: store, connectionManager: manager)
+    }
+  }
+
   private func observeFriendlyName(on store: DocumentStore) {
     // Forwards the server's PAPERLESS_APP_TITLE (settings.appTitle) to the
     // active connection. The nil-guard drops resets from store.clear() so
@@ -397,6 +405,7 @@ struct MainView: View {
       Logger.shared.notice("Checking login status")
       await refreshConnection()
       initialDisplay = false
+      reportTelemetry()
 
       // Begin observing the server table for newly-added servers, and warm every
       // inactive server's cache (the active server was just synced above).
@@ -421,6 +430,7 @@ struct MainView: View {
       case .connectionChange:
         Task {
           await refreshConnection()
+          reportTelemetry()
           // The just-deactivated server is now inactive: sweep it (and the rest).
           await syncEngine.syncInactiveServers()
         }
@@ -455,6 +465,7 @@ struct MainView: View {
               await store.fillIfEnabled(phases: activePhases)
             }
           }
+          reportTelemetry()
           // Warm the inactive servers alongside the active refresh.
           Task {
             await syncEngine.syncInactiveServers()
@@ -478,6 +489,16 @@ struct MainView: View {
       }
     }
 
+    .onChange(of: AppSettings.shared.telemetryOptIn) {
+      TelemetryService.current?.consentDidChange(hasConnection: !manager.connections.isEmpty)
+    }
+
+    .onChange(of: manager.needsAuthIds) { old, new in
+      if let active = manager.activeConnectionId, new.contains(active), !old.contains(active) {
+        TelemetryService.record(.auth)
+      }
+    }
+
     .onOpenURL(perform: handleUrlOpen)
     .environment(routeManager)
     .appOverlays(
@@ -492,6 +513,13 @@ struct MainView: View {
 struct swift_paperlessApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   @State private var bootstrap = DatabaseBootstrap()
+
+  init() {
+    TelemetryService.install(
+      .production(isConsented: {
+        AppFeatures.enabled(.telemetry) && AppSettings.shared.telemetryOptIn == true
+      }))
+  }
 
   var body: some Scene {
     WindowGroup {

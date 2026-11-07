@@ -11,8 +11,8 @@ import Foundation
 enum AppFeatures {
   case tipJar
   case autoFocusSearchInDetailSheets
-  /// The opt-in UI only runs in debug builds until telemetry exists and the
-  /// privacy policy describes it.
+  /// Telemetry and its opt-in UI only run in debug builds until the privacy
+  /// policy describes it.
   case telemetry
   case networkScanner
 

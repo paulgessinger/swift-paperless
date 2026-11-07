@@ -67,3 +67,16 @@ extension LoginError {
     }
   }
 }
+
+extension LoginError {
+  /// The telemetry class of this failure. A malformed URL or a pending
+  /// one-time code says nothing about the setup.
+  var telemetryError: TelemetryError? {
+    switch self {
+    case .invalidUrl, .otpRequired: nil
+    case .invalidLogin, .invalidToken: .auth
+    case .other: .other
+    case .request(let error): TelemetryError(classifying: error)
+    }
+  }
+}

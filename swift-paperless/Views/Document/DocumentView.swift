@@ -102,6 +102,8 @@ struct DocumentView: View {
   @State private var showCreateModal = false
 
   @StateObject private var importModel = DocumentImportModel()
+  /// What a successful upload from the create sheet counts as.
+  @State private var uploadFeature: TelemetryFeature?
 
   @State private var logoutRequested = false
 
@@ -121,6 +123,7 @@ struct DocumentView: View {
   }
 
   private func createCallback() {
+    if let uploadFeature { TelemetryService.record(uploadFeature) }
     importModel.pop()
     if importModel.done {
       showCreateModal = false
@@ -333,6 +336,7 @@ struct DocumentView: View {
           }
 
           Button {
+            TelemetryService.record(.importStarted)
             showFileImporter = true
           } label: {
             Label(
@@ -340,6 +344,7 @@ struct DocumentView: View {
           }
 
           Button {
+            TelemetryService.record(.importStarted)
             showPhotosPicker = true
           } label: {
             Label(String(localized: .app(.importPhotos)), systemImage: "photo")
@@ -745,6 +750,7 @@ struct DocumentView: View {
             showFileImporter = false
             await importModel.importFile(
               result: urls, isSecurityScoped: true, errorController: errorController)
+            uploadFeature = .importUploaded
             showCreateModal = true
           case .failure(let failure):
             errorController.push(error: failure)
@@ -752,6 +758,11 @@ struct DocumentView: View {
         }
       }
     )
+
+    // Here rather than at the button, so the scan quick action counts too.
+    .onChange(of: showDocumentScanner) { _, shown in
+      if shown { TelemetryService.record(.scanStarted) }
+    }
 
     .fullScreenCover(isPresented: $showDocumentScanner) {
       DocumentScannerView(
@@ -763,6 +774,7 @@ struct DocumentView: View {
               showDocumentScanner = false
               await importModel.importFile(
                 result: urls, isSecurityScoped: false, errorController: errorController)
+              uploadFeature = .scanUploaded
               showCreateModal = true
             case .failure(let failure):
               errorController.push(error: failure)
@@ -787,6 +799,7 @@ struct DocumentView: View {
       isPresented: $showCreateModal,
       onDismiss: {
         importModel.reset()
+        uploadFeature = nil
       }
     ) {
       DocumentModelWrapper(
@@ -818,6 +831,7 @@ struct DocumentView: View {
           await importModel.importFile(
             result: [url], isSecurityScoped: false, errorController: errorController)
           selectedPhotos = []
+          uploadFeature = .importUploaded
           showCreateModal = true
         } catch {
           Logger.shared.error("Got error when creating PDF from photos: \(error)")

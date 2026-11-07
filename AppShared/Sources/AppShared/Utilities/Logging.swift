@@ -23,4 +23,6 @@ extension Logger {
     subsystem: subsystem, category: "Migration")
   public static let biometric = Logger(
     subsystem: subsystem, category: "Biometric")
+  public static let telemetry = Logger(
+    subsystem: subsystem, category: "Telemetry")
 }
