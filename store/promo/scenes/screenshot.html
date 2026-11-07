@@ -1,0 +1,142 @@
+<!doctype html>
+<!--
+  Framed App Store screenshot in the promo style: paper background, green
+  ribbon, a phone or tablet frame around a captured screen, and loose papers
+  and tag pills around it.
+
+  ?device=iphone|ipad   layout (canvas 1320×2868 or 2064×2752)
+  ?slide=1..4           headline and decoration set
+  ?img=<path>           captured screen, relative to this file
+  ?ar=<h/w>             aspect ratio of the captured screen
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Screenshot</title>
+<style>
+  html, body { margin: 0; background: #f4efe4; }
+  svg { display: block; }
+  text { font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; }
+</style>
+</head>
+<body>
+<svg id="canvas" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.2  0 0 0 0.09 0"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#2b2414" flood-opacity="0.22"/>
+    </filter>
+    <!-- Pills are short, so the shadow needs a taller region than the papers' -->
+    <filter id="shadow-pill" x="-40%" y="-80%" width="180%" height="320%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#2b2414" flood-opacity="0.22"/>
+    </filter>
+    <filter id="device-shadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="40" stdDeviation="50" flood-color="#14251a" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#f4efe4"/>
+  <rect width="100%" height="100%" filter="url(#grain)"/>
+  <g id="scene"></g>
+</svg>
+<script src="papers.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const device = params.get("device") ?? "iphone";
+  const slide = parseInt(params.get("slide") ?? "1");
+  const img = params.get("img") ?? "";
+  const ar = parseFloat(params.get("ar") ?? "2.1727");
+
+  // Sizes are in canvas pixels; `u` scales shared artwork (papers, pills).
+  const LAYOUTS = {
+    iphone: { W: 1320, H: 2868, u: 1, pad: 100, h1: 128, lh: 138, sub: 50, headY: 240,
+              screenW: 1000, screenY: 640, bezel: 26, radius: 125, ribbonY: 1560 },
+    ipad:   { W: 2064, H: 2752, u: 1.35, pad: 150, h1: 150, lh: 162, sub: 60, headY: 250,
+              screenW: 1560, screenY: 600, bezel: 40, radius: 52, ribbonY: 1500 },
+  };
+  const L = LAYOUTS[device];
+  window.__scene = { duration: 0, width: L.W, height: L.H };
+
+  const PILLS = {
+    Inbox:             ["#ead0ef", "#8e3fa3", "#5e1f70"],
+    Bank:              ["#c9cdf8", "#3f4ed0", "#262c8a"],
+    "Travel Document": ["#c4e6c4", "#2e7d32", "#17541f"],
+    Important:         ["#f8cccc", "#c62828", "#7f1515"],
+  };
+
+  // Headline lines; the accent part of line two is drawn in green.
+  // Decorations per device: [kind, x, y (fractions of the canvas), rotation,
+  // scale, layer]. Front pills sit over parts of the screen that carry little.
+  const SLIDES = {
+    1: { lines: ["Your Paperless,", "in your ", "pocket."], sub: "A native iOS app for Paperless-ngx",
+         deco: {
+           iphone: [["letter", .07, .55, -14, .75, "back"], ["invoice", .94, .40, 12, .7, "back"],
+                    ["Inbox", .14, .935, -8, 1, "front"]],
+           ipad:   [["letter", .06, .55, -14, .75, "back"], ["invoice", .95, .40, 12, .7, "back"],
+                    ["Inbox", .80, .93, 8, 1, "front"]] } },
+    2: { lines: ["Find anything,", "in ", "seconds."], sub: "Filter by tag, type, correspondent and more",
+         deco: {
+           iphone: [["receipt", .95, .62, 14, .75, "back"], ["Bank", .22, .84, -10, 1, "front"],
+                    ["Travel Document", .70, .925, 6, 1, "front"]],
+           ipad:   [["receipt", .96, .62, 14, .75, "back"], ["Bank", .56, .50, -10, 1, "front"],
+                    ["Travel Document", .72, .92, 6, 1, "front"]] } },
+    3: { lines: ["Read and share,", "", "anywhere."], sub: "Preview PDFs and send them to any app",
+         deco: {
+           iphone: [["letter", .06, .44, -10, .8, "back"], ["receipt", .95, .74, 10, .7, "back"],
+                    ["Important", .84, .51, 8, 1, "front"]],
+           ipad:   [["letter", .05, .44, -10, .8, "back"], ["receipt", .96, .74, 10, .7, "back"],
+                    ["Important", .55, .66, -6, 1, "front"]] } },
+    4: { lines: ["Keep it tidy,", "", "on the go."], sub: "Edit tags, dates and correspondents",
+         deco: {
+           iphone: [["invoice", .07, .70, -8, .75, "back"], ["letter", .94, .45, 10, .7, "back"],
+                    ["Important", .76, .955, 6, 1, "front"]],
+           ipad:   [["invoice", .06, .70, -8, .75, "back"], ["letter", .95, .45, 10, .7, "back"],
+                    ["Important", .56, .80, -6, 1, "front"]] } },
+  };
+  const S = SLIDES[slide];
+
+  const svg = document.getElementById("canvas");
+  svg.setAttribute("width", L.W);
+  svg.setAttribute("height", L.H);
+  svg.setAttribute("viewBox", `0 0 ${L.W} ${L.H}`);
+
+  const pill = (label) => {
+    const [fill, stroke, ink] = PILLS[label];
+    const w = 60 + label.length * 38;
+    return `<rect x="${-w / 2}" y="-62" width="${w}" height="124" rx="62" fill="${fill}" stroke="${stroke}" stroke-width="6"/>
+      <text x="0" y="24" font-size="68" font-weight="600" fill="${ink}" text-anchor="middle">${label}</text>`;
+  };
+  const decorations = (layer) => S.deco[device].filter(d => d[5] === layer).map(([kind, x, y, r, s]) => {
+    const isPill = kind in PILLS;
+    const body = isPill ? pill(kind) : `<use href="#sym-${kind}"/>`;
+    return `<g transform="translate(${x * L.W} ${y * L.H}) rotate(${r}) scale(${s * L.u})"
+               filter="url(#${isPill ? "shadow-pill" : "shadow"})">${body}</g>`;
+  }).join("");
+
+  const { W, H, u } = L;
+  const ribbon = (dy, width, color, opacity) =>
+    `<path d="M -120 ${L.ribbonY - 170 * u + dy} C ${W * .23} ${L.ribbonY - 440 * u + dy}, ${W * .65} ${L.ribbonY + 220 * u + dy}, ${W + 120} ${L.ribbonY - 120 * u + dy}"
+       fill="none" stroke="${color}" stroke-width="${width}" opacity="${opacity}"/>`;
+
+  const sw = L.screenW, sh = sw * ar, sx = (W - sw) / 2, sy = L.screenY, b = L.bezel;
+  document.getElementById("scene").innerHTML = `
+    ${ribbon(0, 260 * u, "#17541f", 1)}
+    ${ribbon(-160 * u, 40 * u, "#2e7d32", .55)}
+
+    <text x="${L.pad}" y="${L.headY}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3">${S.lines[0]}</text>
+    <text x="${L.pad}" y="${L.headY + L.lh}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3">${S.lines[1]}<tspan fill="#17541f">${S.lines[2]}</tspan></text>
+    <text x="${L.pad + 4}" y="${L.headY + L.lh + L.sub * 1.7}" font-size="${L.sub}" font-weight="500" fill="#5d6b5f">${S.sub}</text>
+
+    ${decorations("back")}
+
+    <clipPath id="screen-clip"><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" rx="${L.radius}"/></clipPath>
+    <rect x="${sx - b}" y="${sy - b}" width="${sw + 2 * b}" height="${sh + 2 * b}" rx="${L.radius + b}" fill="#1b1d1b" filter="url(#device-shadow)"/>
+    <rect x="${sx - b + 3}" y="${sy - b + 3}" width="${sw + 2 * b - 6}" height="${sh + 2 * b - 6}" rx="${L.radius + b - 3}" fill="none" stroke="#9aa09a" stroke-width="6"/>
+    <image href="${img}" x="${sx}" y="${sy}" width="${sw}" height="${sh}" clip-path="url(#screen-clip)" preserveAspectRatio="xMidYMid slice"/>
+
+    ${decorations("front")}`;
+</script>
+</body>
+</html>
