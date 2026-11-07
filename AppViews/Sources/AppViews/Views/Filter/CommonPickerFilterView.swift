@@ -280,6 +280,7 @@ where
   @Binding public var document: D
 
   @StateObject private var searchDebounce = DebounceObject(delay: 0.1)
+  @State private var isSearching = false
 
   @Environment(\.dismiss) private var dismiss
 
@@ -343,6 +344,9 @@ where
         // set new value
         document[keyPath: Element.documentPath(D.self)] = value
 
+        // An active search can otherwise survive the pop, leaving the
+        // search bar and keyboard up on the previous screen (#730).
+        isSearching = false
         dismiss()
       }) {
         Text(label)
@@ -421,7 +425,10 @@ where
     .animation(.spring, value: permissions)
     .animation(.spring, value: document)
 
-    .searchable(text: $searchDebounce.text, placement: .navigationBarDrawer(displayMode: .always))
+    .searchable(
+      text: $searchDebounce.text, isPresented: $isSearching,
+      placement: .navigationBarDrawer(displayMode: .always)
+    )
 
     .refreshable {
       await Task {
