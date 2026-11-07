@@ -144,8 +144,6 @@ struct ShareView: View {
                   title: createTitle
                 )
                 .id(url)
-                // @FIXME: Gives a white band at the bottom, not ideal
-                .padding(.bottom, 40)
                 .environment(store)
                 .environmentObject(errorController)
                 .environment(connectionManager)
