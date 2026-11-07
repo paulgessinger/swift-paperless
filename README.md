@@ -222,7 +222,7 @@ headlines and `video_end` in `headlines.toml`. It writes
 `store/previews/<App Store locale>/paper_to_pixels.mp4`; a locale takes two to
 three minutes.
 
-**Review** with `just screenshots-preview`, which serves the framed screenshots
+**Review** with `just screenshots-preview`, which serves the app previews, framed screenshots
 and the metadata for every locale.
 
 **Upload** metadata and framed screenshots with [`asc`](https://github.com/rorkai/App-Store-Connect-CLI)

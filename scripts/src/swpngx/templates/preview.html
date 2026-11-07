@@ -154,6 +154,19 @@
         .screenshot-label span {
             color: #86868b;
         }
+        .previews-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .preview-item video {
+            width: 280px;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            background: #f5f5f7;
+        }
         .no-data {
             color: #86868b;
             font-style: italic;
@@ -203,7 +216,7 @@
             {% endfor %}
         </div>
 
-        {% for locale in locales %}
+        {% for locale in locales %}{% set first_locale = loop.first %}
         <div class="locale-panel" data-locale="{{ locale.code }}" style="display: {{ 'block' if loop.first else 'none' }}">
             <h2>Metadata</h2>
             <div class="metadata-section">
@@ -218,6 +231,17 @@
                 <p class="no-data">No metadata available</p>
                 {% endif %}
             </div>
+            {% if locale.previews %}
+            <h2>App Preview</h2>
+            <div class="previews-grid">
+                {% for preview in locale.previews %}
+                <div class="preview-item">
+                    <video data-src="{{ preview }}"{% if first_locale %} src="{{ preview }}"{% endif %} controls muted playsinline preload="metadata"></video>
+                    <div class="screenshot-label"><span>{{ preview.split('/')[-1] }}</span></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             <h2>Screenshots</h2>
             <div class="screenshots-grid">
                 {% if locale.screenshots %}
@@ -254,6 +278,17 @@
                 btn.classList.add('active');
 
                 // Show corresponding panel
+                // Attach only the shown locale's videos: each attached video
+                // holds a connection, and browsers allow six per host.
+                document.querySelectorAll('.locale-panel video').forEach(video => {
+                    if (video.closest('.locale-panel').dataset.locale === locale) {
+                        if (!video.getAttribute('src')) video.src = video.dataset.src;
+                    } else if (video.getAttribute('src')) {
+                        video.pause();
+                        video.removeAttribute('src');
+                        video.load();
+                    }
+                });
                 document.querySelectorAll('.locale-panel').forEach(panel => {
                     panel.style.display = panel.dataset.locale === locale ? 'block' : 'none';
                 });

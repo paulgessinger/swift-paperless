@@ -63,6 +63,7 @@ class LocaleData:
     display_name: str
     metadata: list[MetadataItem]
     screenshots: list[Screenshot]
+    previews: list[str]
 
 
 def load_app_title(metadata_dir: Path, default_locale: str = "default") -> str:
@@ -184,6 +185,14 @@ def get_screenshots(
     return screenshots
 
 
+def get_previews(previews_dir: Path, locale: str) -> list[str]:
+    """Page-relative paths of a locale's app preview videos."""
+    return [
+        f"previews/{locale}/{path.name}"
+        for path in sorted((previews_dir / locale).glob("*.mp4"))
+    ]
+
+
 def get_display_name(locale: str) -> str:
     """Get a user-friendly display name for a locale."""
     # Map of locale codes to friendly names
@@ -235,6 +244,7 @@ def generate_html(
     output_dir: Path,
     default_locale: str = "default",
     embed_images: bool = False,
+    previews_dir: Path | None = None,
 ) -> Path:
     """Generate the HTML preview file."""
     locales = get_locales(metadata_dir, screenshots_dir, default_locale)
@@ -252,6 +262,13 @@ def generate_html(
         if output_screenshots.exists():
             shutil.rmtree(output_screenshots)
         shutil.copytree(screenshots_dir, output_screenshots)
+
+    # Videos are always linked, never embedded.
+    if previews_dir is not None and previews_dir.exists():
+        output_previews = output_dir / "previews"
+        if output_previews.exists():
+            shutil.rmtree(output_previews)
+        shutil.copytree(previews_dir, output_previews)
 
     # Build locale data
     fallback_metadata_dir = metadata_dir / default_locale
@@ -276,6 +293,7 @@ def generate_html(
                 display_name=get_display_name(locale),
                 metadata=metadata,
                 screenshots=screenshots,
+                previews=(get_previews(previews_dir, locale) if previews_dir else []),
             )
         )
 
@@ -302,13 +320,18 @@ class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         pass  # Suppress logging
 
 
+class PreviewServer(socketserver.ThreadingTCPServer):
+    # Threaded, so video range requests do not block each other.
+    daemon_threads = True
+    allow_reuse_address = True
+
+
 def serve_directory(directory: Path, port: int) -> socketserver.TCPServer:
     """Start an HTTP server serving the given directory."""
     handler = lambda *args, **kwargs: QuietHTTPRequestHandler(
         *args, directory=str(directory), **kwargs
     )
-    server = socketserver.TCPServer(("", port), handler)
-    return server
+    return PreviewServer(("", port), handler)
 
 
 def main(
@@ -328,6 +351,13 @@ def main(
             help="Path to framed screenshots directory",
         ),
     ] = Path("store/screenshots/framed"),
+    previews_dir: Annotated[
+        Path,
+        typer.Option(
+            "--previews-dir",
+            help="Path to rendered app preview videos",
+        ),
+    ] = Path("store/previews"),
     port: Annotated[
         int,
         typer.Option(
@@ -359,10 +389,11 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """Generate and serve an HTML preview of metadata and screenshots."""
+    """Generate and serve an HTML preview of metadata, screenshots and app previews."""
     # Resolve paths
     metadata_dir = metadata_dir.resolve()
     screenshots_dir = screenshots_dir.resolve()
+    previews_dir = previews_dir.resolve()
 
     if not metadata_dir.exists() and not screenshots_dir.exists():
         console.log(
@@ -382,10 +413,13 @@ def main(
     console.log("[blue]Generating preview...")
     console.log(f"  Metadata: {metadata_dir}")
     console.log(f"  Screenshots: {screenshots_dir}")
+    console.log(f"  Previews: {previews_dir}")
     console.log(f"  Output: {output_dir}")
 
     # Generate HTML
-    html_file = generate_html(metadata_dir, screenshots_dir, output_dir)
+    html_file = generate_html(
+        metadata_dir, screenshots_dir, output_dir, previews_dir=previews_dir
+    )
     console.log(f"[green]Generated: {html_file}")
 
     if no_serve:
