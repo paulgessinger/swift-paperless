@@ -17,6 +17,7 @@ import http.server
 import re
 import shutil
 import socketserver
+import sys
 import tempfile
 import threading
 import webbrowser
@@ -350,17 +351,76 @@ def generate_html(
     return output_file
 
 
+BYTE_RANGE = re.compile(r"bytes=(\d*)-(\d*)$")
+
+
 class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    """HTTP request handler that suppresses log output."""
+    """Silent file handler that answers single byte-range requests, so
+    browsers can fetch and seek videos without downloading them whole."""
+
+    _remaining: int | None = None
 
     def log_message(self, format, *args):
-        pass  # Suppress logging
+        pass
+
+    def end_headers(self):
+        if self._remaining is None:
+            self.send_header("Accept-Ranges", "bytes")
+        super().end_headers()
+
+    def send_head(self):
+        self._remaining = None
+        match = BYTE_RANGE.match(self.headers.get("Range", "").strip())
+        path = Path(self.translate_path(self.path))
+        if not match or not path.is_file() or match.groups() == ("", ""):
+            return super().send_head()
+
+        size = path.stat().st_size
+        first, last = match.groups()
+        if first:
+            start = int(first)
+            end = min(int(last), size - 1) if last else size - 1
+        else:
+            start, end = max(size - int(last), 0), size - 1
+        if start > end:
+            self.send_response(http.HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
+            self.send_header("Content-Range", f"bytes */{size}")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return None
+
+        file = path.open("rb")
+        file.seek(start)
+        self._remaining = end - start + 1
+        self.send_response(http.HTTPStatus.PARTIAL_CONTENT)
+        self.send_header("Content-Type", self.guess_type(str(path)))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(self._remaining))
+        self.end_headers()
+        return file
+
+    def copyfile(self, source, outputfile):
+        if self._remaining is None:
+            return super().copyfile(source, outputfile)
+        while self._remaining > 0:
+            chunk = source.read(min(self._remaining, 1 << 16))
+            if not chunk:
+                break
+            outputfile.write(chunk)
+            self._remaining -= len(chunk)
 
 
 class PreviewServer(socketserver.ThreadingTCPServer):
     # Threaded, so video range requests do not block each other.
     daemon_threads = True
     allow_reuse_address = True
+
+    def handle_error(self, request, client_address):
+        # Browsers drop video connections when they seek or switch tabs.
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
+            return
+        super().handle_error(request, client_address)
 
 
 def serve_directory(directory: Path, port: int) -> socketserver.TCPServer:
