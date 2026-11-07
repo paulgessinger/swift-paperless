@@ -10,8 +10,7 @@ locales = [
 ]
 output_dir = "store/screenshots"
 bundle_id = "com.paulgessinger.swift-paperless"
-launch_wait = 2.0
-url_wait = 2.0
+launch_wait = 4.0
 status_bar_time = "2007-01-09T09:41:00.000+01:00"
 status_bar_cellular_bars = 4
 appearance = "light"
@@ -41,21 +40,31 @@ udid = "A3F4F32C-F6E6-40EA-8D31-5872BF41EC04"
 device = "iPad_Pro_13_M5"
 udid = "CF576856-083F-4B83-B938-677D83B4B5AB"
 
+# Each screen is a fresh launch that routes through `urls` (x-paperless deep
+# links, see DataModel/Route.swift); `device_urls` overrides them per device.
+
 [[steps]]
 name = "documents"
-wait = 2.0
+# On iPad, open a document so the detail column isn't empty.
+device_urls = { iPad_Pro_13_M5 = ["x-paperless://v1/document/3"] }
 
 [[steps]]
 name = "filter_tags"
-url = "x-paperless://v1/open_filter/tags"
-post_url = "x-paperless://v1/close_filter"
+urls = ["x-paperless://v1/open_filter/tags"]
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3",
+    "x-paperless://v1/open_filter/tags",
+] }
 
 [[steps]]
 name = "document_view"
-url = "x-paperless://v1/document/3?edit=0"
-wait = 4.0
+urls = ["x-paperless://v1/document/3"]
+device_urls = { iPad_Pro_13_M5 = ["x-paperless://v1/document/3?edit=1"] }
 
 [[steps]]
 name = "document_edit"
-url = "x-paperless://v1/document/3?edit=1"
-wait = 4.0
+urls = ["x-paperless://v1/document/3?edit=tags"]
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3?edit=1",
+    "x-paperless://v1/document/3?edit=tags",
+] }
