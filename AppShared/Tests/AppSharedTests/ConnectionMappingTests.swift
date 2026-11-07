@@ -50,4 +50,23 @@ struct ConnectionMappingTests {
     #expect(record.apiVersion == nil)
     #expect(record.backendVersion == nil)
   }
+
+  @Test("the sign-in method survives a round trip, and an unrecorded one stays nil")
+  func authMethodRoundTrip() {
+    for method in ConnectionAuthMethod.allCases {
+      var stored = Self.stored(knownVersions: nil)
+      stored.authMethod = method
+      let record = stored.toRecord(needsAuth: false)
+      #expect(record.authMethod == method.rawValue)
+      #expect(StoredConnection(record: record).authMethod == method)
+    }
+
+    let unrecorded = Self.stored(knownVersions: nil).toRecord(needsAuth: false)
+    #expect(unrecorded.authMethod == nil)
+    #expect(StoredConnection(record: unrecorded).authMethod == nil)
+
+    var unknown = unrecorded
+    unknown.authMethod = "passkey"
+    #expect(StoredConnection(record: unknown).authMethod == nil)
+  }
 }

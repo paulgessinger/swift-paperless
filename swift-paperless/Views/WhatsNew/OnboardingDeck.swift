@@ -30,7 +30,7 @@ extension WhatsNewDeck {
         Card(
           icon: "chart.bar",
           title: "Share anonymous usage",
-          text: "Optional, and off unless you turn it on.",
+          text: "Help decide what gets built next. Nothing identifies you or your documents.",
           detail: TelemetrySettingsView.explanation)),
     ]
 
