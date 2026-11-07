@@ -146,20 +146,28 @@ whats_new:
           tint: teal          # optional: blue, indigo, orange, pink, purple, red, teal
           title: Nested tags
           text: Support for hierarchical tags.
+          image: ../assets/tags.png  # optional picture above the card
+          image_shadow: true         # optional; a glow in dark mode. Needs transparent corners
           detail: |           # optional Markdown for "Learn more"
             Tags can now have parents. ![Tag tree](../assets/tags.png)
 ---
 ```
 
-Relative links and images in `detail` resolve against
-`https://swift-paperless.app/release_notes/`. Check a deck before pushing with:
+Relative links and images in `detail`, and a card's `image`, resolve against
+`https://swift-paperless.app/release_notes/`, so an image in `docs/assets/` is
+`../assets/<name>`. An `image` has to exist in the docs; the check below
+fails if it doesn't. Check a deck before pushing with:
 
 ```console
 uv run scripts/whats_new.py build docs/release_notes site/whats_new
 ```
 
 If a deck has a mistake, this command and the docs build both stop and name the
-file and field. When copying a release note into its GitHub release, leave out
+file and field. While editing, run `just whats-new-serve` and open the
+"Generated" preview in `WhatsNewDeckView.swift`: it rebuilds the deck into
+`docs/whats_new/` on every save, the preview reloads within a second, and
+images load from the local docs server on port 5006, as they would from the
+site. When copying a release note into its GitHub release, leave out
 the front matter block: it is only for the app.
 
 ### App Store screenshots

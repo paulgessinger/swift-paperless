@@ -29,3 +29,6 @@ Localizable.xcstrings
 
 # Rendered promo videos (store/promo/render.py)
 /*.mp4
+
+# Decks written by `just whats-new-watch`
+docs/whats_new/

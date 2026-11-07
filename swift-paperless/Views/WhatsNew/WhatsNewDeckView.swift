@@ -4,6 +4,11 @@ import Common
 import MarkdownUI
 import SwiftUI
 
+extension EnvironmentValues {
+  /// What relative images and links in a deck resolve against.
+  @Entry var whatsNewBaseURL: URL = DocumentationLinks.releaseNotes
+}
+
 struct WhatsNewDeckView: View {
   let deck: WhatsNewDeck
   var finishLabel = String(localized: .app(.done))
@@ -129,16 +134,9 @@ private struct PageView: View {
   }
 }
 
-private struct IconTile: View {
-  let card: WhatsNewDeck.Card
-
-  /// The symbol comes from published content and may be newer than this OS.
-  private var symbol: String {
-    UIImage(systemName: card.icon) == nil ? "sparkles" : card.icon
-  }
-
-  private var tint: Color {
-    switch card.tint {
+extension WhatsNewDeck.Card {
+  fileprivate var tintColor: Color {
+    switch tint {
     case "blue": .blue
     case "indigo": .indigo
     case "orange": .orange
@@ -150,12 +148,43 @@ private struct IconTile: View {
     }
   }
 
+  /// Inline Markdown, so a card's line can carry a link. Trimmed because a
+  /// YAML block scalar ends in a newline. Links are made absolute, because
+  /// the system can't open a URL that only carries its base.
+  fileprivate func attributedText(relativeTo baseURL: URL) -> AttributedString {
+    let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard
+      var result = try? AttributedString(
+        markdown: text,
+        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace),
+        baseURL: baseURL)
+    else {
+      return AttributedString(text)
+    }
+    for (link, range) in result.runs[\.link] {
+      if let link {
+        result[range].link = link.absoluteURL
+      }
+    }
+    return result
+  }
+}
+
+private struct IconTile: View {
+  let card: WhatsNewDeck.Card
+  var size: CGFloat = 44
+
+  /// The symbol comes from published content and may be newer than this OS.
+  private var symbol: String {
+    UIImage(systemName: card.icon) == nil ? "sparkles" : card.icon
+  }
+
   var body: some View {
     Image(systemName: symbol)
-      .font(.title2)
-      .foregroundStyle(tint)
-      .frame(width: 44, height: 44)
-      .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 11))
+      .font(.system(size: size * 0.5))
+      .foregroundStyle(card.tintColor)
+      .frame(width: size, height: size)
+      .background(card.tintColor.opacity(0.15), in: RoundedRectangle(cornerRadius: size / 4))
       .accessibilityHidden(true)
   }
 }
@@ -164,14 +193,25 @@ private struct CardView: View {
   let card: WhatsNewDeck.Card
   let moreLabel: String
 
+  @Environment(\.whatsNewBaseURL) private var baseURL
+
   var body: some View {
+    VStack(spacing: 14) {
+      if let url = card.imageURL(relativeTo: baseURL) {
+        CardImage(url: url, shadow: card.imageShadow)
+      }
+      row
+    }
+  }
+
+  private var row: some View {
     HStack(alignment: .top, spacing: 14) {
       IconTile(card: card)
 
       VStack(alignment: .leading, spacing: 3) {
         Text(verbatim: card.title)
           .font(.headline)
-        Text(verbatim: card.text)
+        Text(card.attributedText(relativeTo: baseURL))
           .font(.subheadline)
           .foregroundStyle(.secondary)
         if card.detail != nil {
@@ -185,6 +225,47 @@ private struct CardView: View {
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
+    }
+  }
+}
+
+/// Holds its height while loading so the page doesn't jump, and collapses if the
+/// image can't be loaded: the card still reads fine without it.
+private struct CardImage: View {
+  let url: URL
+  var height: CGFloat = 140
+  var shadow = false
+
+  @State private var failed = false
+  @Environment(\.colorScheme) private var colorScheme
+
+  /// A drop shadow vanishes on a dark page, so dark mode gets a faint glow
+  /// that follows the image's outline instead.
+  private var shadowColor: Color {
+    guard shadow else { return .clear }
+    return colorScheme == .dark ? .white.opacity(0.18) : .black.opacity(0.22)
+  }
+
+  var body: some View {
+    if !failed {
+      AsyncImage(url: url) { phase in
+        switch phase {
+        case .success(let image):
+          image
+            .resizable()
+            .scaledToFit()
+            .shadow(
+              color: shadowColor, radius: colorScheme == .dark ? 14 : 10,
+              y: colorScheme == .dark ? 0 : 6)
+        case .failure:
+          Color.clear.onAppear { failed = true }
+        default:
+          ProgressView()
+        }
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: height)
+      .accessibilityHidden(true)
     }
   }
 }
@@ -232,15 +313,85 @@ private struct TelemetryBlock: View {
 private struct DetailView: View {
   let card: WhatsNewDeck.Card
 
+  @Environment(\.whatsNewBaseURL) private var baseURL
+
   var body: some View {
     ScrollView {
-      Markdown(card.detail ?? "", baseURL: DocumentationLinks.releaseNotes)
-        .frame(maxWidth: 540, alignment: .leading)
-        .padding()
-        .frame(maxWidth: .infinity)
+      VStack(spacing: 24) {
+        header
+        Divider()
+        Markdown(card.detail ?? "", baseURL: baseURL)
+          .markdownTheme(.whatsNew(tint: card.tintColor))
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .frame(maxWidth: 540)
+      .padding()
+      .frame(maxWidth: .infinity)
     }
-    .navigationTitle(Text(verbatim: card.title))
     .navigationBarTitleDisplayMode(.inline)
+  }
+
+  /// Repeats the card, so the screen reads as the card opened up.
+  private var header: some View {
+    VStack(spacing: 12) {
+      if let url = card.imageURL(relativeTo: baseURL) {
+        CardImage(url: url, height: 120, shadow: card.imageShadow)
+      } else {
+        IconTile(card: card, size: 72)
+      }
+      Text(verbatim: card.title)
+        .font(.title)
+        .bold()
+      Text(card.attributedText(relativeTo: baseURL))
+        .font(.title3)
+        .foregroundStyle(.secondary)
+    }
+    .multilineTextAlignment(.center)
+    .padding(.top, 8)
+  }
+}
+
+extension Theme {
+  /// Roomier than `.basic`, with headings and links in the card's tint and
+  /// block quotes drawn as callouts.
+  @MainActor
+  fileprivate static func whatsNew(tint: Color) -> Theme {
+    Theme.basic
+      .link {
+        ForegroundColor(tint)
+      }
+      .heading3 { configuration in
+        configuration.label
+          .markdownMargin(top: .rem(1.5), bottom: .rem(0.5))
+          .markdownTextStyle {
+            FontWeight(.semibold)
+            FontSize(.em(1.15))
+            ForegroundColor(tint)
+          }
+      }
+      .paragraph { configuration in
+        configuration.label
+          .fixedSize(horizontal: false, vertical: true)
+          .relativeLineSpacing(.em(0.25))
+          .markdownMargin(top: .zero, bottom: .em(1))
+      }
+      .listItem { configuration in
+        configuration.label
+          .markdownMargin(top: .em(0.4))
+      }
+      .blockquote { configuration in
+        configuration.label
+          .relativeLineSpacing(.em(0.2))
+          .padding(14)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+          .markdownMargin(top: .zero, bottom: .em(1))
+      }
+      .image { configuration in
+        configuration.label
+          .clipShape(RoundedRectangle(cornerRadius: 12))
+          .markdownMargin(top: .em(0.5), bottom: .em(1))
+      }
   }
 }
 
@@ -332,34 +483,75 @@ extension WhatsNewDeck {
 }
 
 #if DEBUG
-  /// The newest deck `scripts/whats_new.py` wrote into the repo's `site/whats_new`.
-  private func generatedDeck() -> WhatsNewDeck? {
-    let directory = URL(fileURLWithPath: #filePath)
-      .deletingLastPathComponent()  // WhatsNew
-      .deletingLastPathComponent()  // Views
-      .deletingLastPathComponent()  // swift-paperless
-      .deletingLastPathComponent()
-      .appending(path: "site/whats_new")
+  private let repoRoot = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()  // WhatsNew
+    .deletingLastPathComponent()  // Views
+    .deletingLastPathComponent()  // swift-paperless
+    .deletingLastPathComponent()
+
+  /// `just whats-new-serve` serves `docs/` here, laid out like the site.
+  private let docsServer = URL(string: "http://localhost:5006/")!
+
+  /// The newest deck `just whats-new-watch` wrote into the repo's `docs/whats_new`.
+  private func generatedDeckFile() -> URL? {
+    let directory = repoRoot.appending(path: "docs/whats_new")
     let files =
       (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil))
       ?? []
-    let newest =
+    return
       files
       .compactMap { file in
         Version(file.deletingPathExtension().lastPathComponent).map { ($0, file) }
       }
-      .max { $0.0 < $1.0 }
-    return newest.flatMap { try? WhatsNewDeck(json: Data(contentsOf: $0.1)) }
+      .max { $0.0 < $1.0 }?.1
+  }
+
+  /// Reloads whenever the deck file changes, so `just whats-new-serve` makes
+  /// edits to the release note show up live. Images come from that server,
+  /// which resolves them the way the site does.
+  private struct GeneratedDeckPreview: View {
+    @State private var deck: WhatsNewDeck?
+    @State private var error: String?
+    @State private var loaded: (url: URL, modified: Date)?
+
+    var body: some View {
+      Group {
+        if let deck {
+          WhatsNewDeckView(deck: deck) {}
+            .environment(\.whatsNewBaseURL, docsServer.appending(path: "release_notes/"))
+        } else {
+          Text(
+            verbatim: error
+              ?? "Run `just whats-new-serve`."
+          )
+          .padding()
+        }
+      }
+      .task {
+        while !Task.isCancelled {
+          reloadIfChanged()
+          try? await Task.sleep(for: .seconds(1))
+        }
+      }
+    }
+
+    private func reloadIfChanged() {
+      guard let url = generatedDeckFile(),
+        let modified = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+          .contentModificationDate,
+        loaded?.url != url || loaded?.modified != modified
+      else { return }
+      loaded = (url, modified)
+      do {
+        deck = try WhatsNewDeck(json: Data(contentsOf: url))
+        error = nil
+      } catch {
+        self.error = "Could not load \(url.lastPathComponent): \(error)"
+      }
+    }
   }
 
   #Preview("Generated") {
-    if let deck = generatedDeck() {
-      WhatsNewDeckView(deck: deck) {}
-    } else {
-      Text(
-        verbatim: "Run `uv run scripts/whats_new.py build docs/release_notes site/whats_new` first."
-      )
-      .padding()
-    }
+    GeneratedDeckPreview()
   }
 #endif
