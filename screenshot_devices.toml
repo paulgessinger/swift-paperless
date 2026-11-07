@@ -24,8 +24,8 @@ mask_margin = 10
 
 # iPhone screenshots use Pro Max only; App Store Connect scales for smaller phones.
 [[device]]
-id = "iPhone_17_Pro_Max"
-simulator_name = "iPhone 17 Pro Max"
+id = "iPhone_18_Pro_Max"
+simulator_name = "iPhone 18 Pro Max"
 bezel_pack = "iphone_17"
 bezel = "iPhone 17 Pro Max - Silver - Portrait.png"
 asc_display_type = "IPHONE_67"
