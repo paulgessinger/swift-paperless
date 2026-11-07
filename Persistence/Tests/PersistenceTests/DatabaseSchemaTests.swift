@@ -16,6 +16,7 @@ struct DatabaseSchemaTests {
         names == [
           "id", "url", "friendly_name", "identity", "user", "extra_headers", "needs_auth",
           "offline_browsing_mode", "sync_over_cellular", "api_version", "backend_version",
+          "auth_method",
         ])
 
       // Added by V8 on an existing table, so it needs a default for every row
@@ -448,6 +449,34 @@ struct DatabaseSchemaTests {
         try Row.fetchOne(db, sql: "SELECT api_version, backend_version FROM server"))
       #expect(row["api_version"] as Int? == nil)
       #expect(row["backend_version"] as String? == nil)
+    }
+  }
+
+  @Test("v22 adds a nullable auth method and leaves existing rows without one")
+  func v22AddServerAuthMethod() throws {
+    let server = UUID()
+    let queue = try DatabaseQueue()
+    var migrator = Migrations.migrator(legacyConnectionsUserDefaults: nil)
+    try migrator.migrate(queue, upTo: "v21_create_default_upload_tag")
+    try queue.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO server (id, url, user, extra_headers, needs_auth, offline_browsing_mode)
+          VALUES (?, 'https://example.com/api/', '{"id":1,"isSuperUser":true,"username":"a","groups":[]}', '[]', 0, 'recentlyBrowsed')
+          """, arguments: [server])
+    }
+    migrator.eraseDatabaseOnSchemaChange = false
+    try migrator.migrate(queue)
+
+    try queue.write { db in
+      let column = try #require(try db.columns(in: "server").first { $0.name == "auth_method" })
+      #expect(!column.isNotNull)
+
+      var record = try #require(try ConnectionRecord.fetchOne(db, key: server))
+      #expect(record.authMethod == nil)
+      record.authMethod = "sso"
+      try record.update(db)
+      #expect(try ConnectionRecord.fetchOne(db, key: server)?.authMethod == "sso")
     }
   }
 
