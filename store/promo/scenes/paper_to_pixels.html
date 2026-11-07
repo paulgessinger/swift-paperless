@@ -1,0 +1,310 @@
+<!doctype html>
+<!--
+  "Paper → pixels" hero scene. Canvas is the 6.9" App Store screenshot size
+  (1320×2868). Timeline is driven by CSS animations so `swpngx promo` can seek
+  every animation to an exact time per frame.
+
+  ?t=<seconds> freezes the scene at that time (use for stills).
+  Run `swpngx promo prepare` first to cut the phone screens into assets/.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Paper to pixels</title>
+<style>
+  :root {
+    --paper: #f4efe4;
+    --ink: #12331a;
+    --green: #17541f;
+    --green-2: #2e7d32;
+    --muted: #5d6b5f;
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    /* Long, soft deceleration for paper settling onto the desk */
+    --ease-settle: cubic-bezier(.25, .9, .3, 1);
+  }
+  html, body { margin: 0; background: var(--paper); }
+  svg { display: block; width: 1320px; height: 2868px; }
+  text { font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; }
+
+  .anim { animation-fill-mode: both; animation-iteration-count: 1; }
+
+  /* Headline */
+  #headline { animation: rise 0.9s var(--ease-out) 0.1s both, lift-out 0.45s ease-in 7.0s forwards; }
+  #subhead  { animation: rise 0.9s var(--ease-out) 0.35s both, lift-out 0.45s ease-in 7.05s forwards; }
+  #headline2 { animation: rise 0.8s var(--ease-out) 7.45s both, lift-out 0.45s ease-in 10.2s forwards; }
+  #subhead2  { animation: rise 0.8s var(--ease-out) 7.6s both, lift-out 0.45s ease-in 10.25s forwards; }
+  #headline3 { animation: rise 0.8s var(--ease-out) 10.65s both, lift-out 0.45s ease-in 13.5s forwards; }
+  #subhead3  { animation: rise 0.8s var(--ease-out) 10.8s both, lift-out 0.45s ease-in 13.55s forwards; }
+  @keyframes lift-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-36px); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Ribbon draws in behind the phone */
+  #ribbon { stroke-dasharray: 2200; animation: draw 1.4s var(--ease-in-out) 0.3s both; }
+  #ribbon-hi { stroke-dasharray: 2200; animation: draw 1.4s var(--ease-in-out) 0.45s both; }
+  /* End card: the ribbon slides down to sit under the badge */
+  #ribbons { animation: ribbon-down 1.3s var(--ease-in-out) 13.7s forwards; }
+  @keyframes ribbon-down { from { transform: translateY(0); } to { transform: translateY(1060px); } }
+  @keyframes draw { from { stroke-dashoffset: 2200; } to { stroke-dashoffset: 0; } }
+
+  /* Phone slides up */
+  #phone { animation: phone-in 1.1s var(--ease-out) 0.2s both, phone-out 0.8s cubic-bezier(.5, 0, .75, 0) 13.6s forwards; }
+  @keyframes phone-out {
+    from { transform: translateY(0); }
+    to   { transform: translateY(2200px); }
+  }
+  @keyframes phone-in {
+    from { transform: translateY(520px); }
+    to   { transform: translateY(0); }
+  }
+
+  /* Placeholder thumbnails vanish when the paper lands */
+  #slot1 { animation: fade-out 0.25s linear 4.05s both; }
+  #slot2 { animation: fade-out 0.25s linear 4.45s both; }
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+  /* Landing pulse */
+  .pulse { opacity: 0; transform-box: fill-box; transform-origin: center; animation-fill-mode: forwards !important; }
+  #pulse1 { animation: pulse 0.7s var(--ease-out) 4.05s both; }
+  #pulse2 { animation: pulse 0.7s var(--ease-out) 4.45s both; }
+  #pulse3 { animation: pulse 0.7s var(--ease-out) 3.75s both; }
+  @keyframes pulse {
+    0%   { opacity: 0.9; transform: scale(0.9); }
+    100% { opacity: 0;   transform: scale(1.25); }
+  }
+
+  /* Papers: drop in tumbling, hover, then file themselves into the list.
+     Each <g> is drawn centred on the origin; keyframes carry the canvas
+     position, so translate → rotate → scale reads left to right. */
+  #paper-letter { animation: letter 7s linear both; }
+  @keyframes letter {
+    0%      { transform: translate(300px, -420px) rotate(-38deg) scale(.75); animation-timing-function: var(--ease-settle); }
+    44%     { transform: translate(262px, 784px) rotate(-8deg) scale(.75); animation-timing-function: var(--ease-in-out); }
+    58%     { transform: translate(325.4px, 1777.2px) rotate(0deg) scale(.657); opacity: 1; }
+    61%, 100% { transform: translate(325.4px, 1777.2px) rotate(0deg) scale(.657); opacity: 0; }
+  }
+  #paper-invoice { animation: invoice 7s linear both; }
+  @keyframes invoice {
+    0%, 4%  { transform: translate(760px, -460px) rotate(24deg) scale(.68); animation-timing-function: var(--ease-settle); }
+    48%     { transform: translate(682px, 712px) rotate(2deg) scale(.68); animation-timing-function: var(--ease-in-out); }
+    63.5%   { transform: translate(325.4px, 2301.8px) rotate(0deg) scale(.657); opacity: 1; }
+    66.5%, 100% { transform: translate(325.4px, 2301.8px) rotate(0deg) scale(.657); opacity: 0; }
+  }
+  #paper-receipt { animation: receipt 7s linear both; }
+  @keyframes receipt {
+    0%, 8%  { transform: translate(1150px, -520px) rotate(40deg) scale(.8); animation-timing-function: var(--ease-settle); }
+    42%     { transform: translate(1082px, 752px) rotate(9deg) scale(.8); animation-timing-function: var(--ease-in-out); }
+    53.5%   { transform: translate(1070px, 1212px) rotate(0deg) scale(.04); opacity: 1; }
+    54.5%, 100% { transform: translate(1070px, 1212px) rotate(0deg) scale(.04); opacity: 0; }
+  }
+
+  /* Tag callouts pop out of the phone */
+  .tag { opacity: 0; }
+  #tag-bank   { animation: tag-bank 0.8s var(--ease-out) 5.0s both, tag-bank-file 0.8s var(--ease-in-out) 7.0s forwards; }
+  #tag-travel { animation: tag-travel 0.8s var(--ease-out) 5.25s both, tag-travel-file 0.8s var(--ease-in-out) 7.12s forwards; }
+  /* …and file themselves into the Tags filter chip */
+  @keyframes tag-bank-file {
+    from { opacity: 1; transform: translate(960px, 690px) scale(1) rotate(-6deg); }
+    80%  { opacity: 1; }
+    to   { opacity: 0; transform: translate(404px, 1463px) scale(.15) rotate(0deg); }
+  }
+  @keyframes tag-travel-file {
+    from { opacity: 1; transform: translate(560px, 820px) scale(1) rotate(3deg); }
+    80%  { opacity: 1; }
+    to   { opacity: 0; transform: translate(404px, 1463px) scale(.15) rotate(0deg); }
+  }
+
+  /* Beat 2: the Tags filter sheet slides up, Bank gets ticked, sheet closes */
+  #chip-pulse  { animation: pulse 0.7s var(--ease-out) 7.85s both; }
+  #filter-layer { animation: sheet-up 0.7s var(--ease-out) 8.15s both, sheet-down 0.5s ease-in 9.9s forwards; }
+  #sheet-dim { opacity: 0; animation: dim-in 0.6s ease-out 8.15s forwards, dim-out 0.5s ease-in 9.9s forwards; }
+  @keyframes dim-in  { from { opacity: 0; } to { opacity: .22; } }
+  @keyframes dim-out { from { opacity: .22; } to { opacity: 0; } }
+  @keyframes sheet-up   { from { transform: translateY(2300px); } to { transform: translateY(0); } }
+  @keyframes sheet-down { from { transform: translateY(0); } to { transform: translateY(2300px); } }
+  .ripple { opacity: 0; transform-box: fill-box; transform-origin: center; }
+  #bank-ripple { animation: ripple 0.6s var(--ease-out) 9.1s forwards; }
+  #row-ripple  { animation: ripple 0.6s var(--ease-out) 10.5s forwards; }
+  @keyframes ripple {
+    from { opacity: 0.35; transform: scale(.3); }
+    to   { opacity: 0;    transform: scale(1.6); }
+  }
+  .pop { opacity: 0; transform-box: fill-box; transform-origin: center; }
+  #bank-check { animation: pop 0.45s var(--ease-out) 9.2s both; }
+  @keyframes pop {
+    0%   { opacity: 0; transform: scale(.4); }
+    70%  { opacity: 1; transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* Beat 3: tap the first row, detail view pushes in */
+  #list-layer   { animation: push-out 0.6s cubic-bezier(.2, .9, .3, 1) 10.75s forwards; }
+  #detail-layer { animation: push-in 0.6s cubic-bezier(.2, .9, .3, 1) 10.75s both; }
+  @keyframes push-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-350px); opacity: .5; } }
+  @keyframes push-in  { from { transform: translateX(1172px); } to { transform: translateX(0); } }
+
+  /* …and the page lifts back out of the screen as paper */
+  #lift-page { opacity: 0; animation: page-lift 1.1s var(--ease-settle) 11.7s forwards, page-drop 0.8s cubic-bezier(.5, 0, .75, 0) 13.55s forwards; }
+  @keyframes page-lift {
+    from { opacity: 1; transform: translate(659px, 1750px) rotate(0deg) scale(1); }
+    to   { opacity: 1; transform: translate(730px, 960px) rotate(-5deg) scale(1); }
+  }
+  @keyframes page-drop {
+    from { opacity: 1; transform: translate(730px, 960px) rotate(-5deg) scale(1); }
+    to   { opacity: 1; transform: translate(800px, 3400px) rotate(14deg) scale(1); }
+  }
+
+  /* Beat 4: end card */
+  #end-icon  { animation: pop 0.6s var(--ease-out) 14.3s both; }
+  #end-title { animation: rise 0.8s var(--ease-out) 14.55s both; }
+  #end-sub   { animation: rise 0.8s var(--ease-out) 14.7s both; }
+  @keyframes tag-bank {
+    from { opacity: 0; transform: translate(581px, 2000px) scale(.4); }
+    to   { opacity: 1; transform: translate(960px, 690px) scale(1) rotate(-6deg); }
+  }
+  @keyframes tag-travel {
+    from { opacity: 0; transform: translate(828px, 2000px) scale(.4); }
+    to   { opacity: 1; transform: translate(560px, 820px) scale(1) rotate(3deg); }
+  }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1320 2868" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.2  0 0 0 0.09 0"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#2b2414" flood-opacity="0.22"/>
+    </filter>
+    <!-- Pills are short, so the shadow needs a taller region than the papers' -->
+    <filter id="shadow-pill" x="-40%" y="-80%" width="180%" height="320%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#2b2414" flood-opacity="0.22"/>
+    </filter>
+    <filter id="phone-shadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="40" stdDeviation="50" flood-color="#14251a" flood-opacity="0.35"/>
+    </filter>
+    <clipPath id="sheet-clip">
+      <rect x="74" y="1166" width="1172" height="2300" rx="56"/>
+    </clipPath>
+    <clipPath id="screen-clip">
+      <rect x="74" y="1002" width="1172" height="2400" rx="158"/>
+    </clipPath>
+
+  </defs>
+
+  <!-- Paper background -->
+  <rect width="1320" height="2868" fill="#f4efe4"/>
+  <rect width="1320" height="2868" filter="url(#grain)"/>
+
+  <!-- Ribbon -->
+  <g id="ribbons">
+  <path id="ribbon" d="M -120 1330 C 300 1060, 860 1720, 1460 1380" fill="none" stroke="#17541f" stroke-width="260" stroke-linecap="butt"/>
+  <path id="ribbon-hi" d="M -120 1170 C 300 900, 860 1560, 1460 1220" fill="none" stroke="#2e7d32" stroke-width="40" opacity="0.55"/>
+  </g>
+
+  <!-- Headline -->
+  <g id="headline">
+    <text x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Your Paperless,</text>
+    <text x="100" y="378" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">in your <tspan fill="#17541f">pocket.</tspan></text>
+  </g>
+  <g id="subhead">
+    <text x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">A native iOS app for Paperless-ngx</text>
+  </g>
+  <g id="headline2">
+    <text x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Find anything,</text>
+    <text x="100" y="378" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">in <tspan fill="#17541f">seconds.</tspan></text>
+  </g>
+  <g id="subhead2">
+    <text x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">Filter by tag, type, correspondent and more</text>
+  </g>
+  <g id="headline3">
+    <text x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Read and share,</text>
+    <text x="100" y="378" font-size="128" font-weight="800" fill="#17541f" letter-spacing="-3">anywhere.</text>
+  </g>
+  <g id="subhead3">
+    <text x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">Preview PDFs and send them to any app</text>
+  </g>
+
+  <!-- Phone -->
+  <g id="phone">
+  <g transform="translate(92.3 157) scale(.86)">
+    <rect x="52" y="980" width="1216" height="2440" rx="180" fill="#1b1d1b" filter="url(#phone-shadow)"/>
+    <rect x="55" y="983" width="1210" height="2434" rx="177" fill="none" stroke="#9aa09a" stroke-width="6"/>
+    <rect x="74" y="1002" width="1172" height="2400" rx="158" fill="#f6f6f6"/>
+    <g clip-path="url(#screen-clip)">
+      <g id="list-layer">
+        <image href="../assets/screen_list.png" x="74" y="1002" width="1172" height="2218"/>
+        <!-- Empty thumbnail slots, filled by the landing papers -->
+        <rect id="slot1" x="111" y="1657" width="321" height="455" rx="18" fill="#fff" stroke="#e2e2e2" stroke-width="3"/>
+        <rect id="slot2" x="111" y="2267" width="321" height="455" rx="18" fill="#fff" stroke="#e2e2e2" stroke-width="3"/>
+        <rect id="pulse1" class="pulse" x="111" y="1657" width="321" height="455" rx="18" fill="none" stroke="#2e7d32" stroke-width="10"/>
+        <rect id="pulse2" class="pulse" x="111" y="2267" width="321" height="455" rx="18" fill="none" stroke="#2e7d32" stroke-width="10"/>
+        <circle id="pulse3" class="pulse" cx="1137" cy="1227" r="70" fill="none" stroke="#2e7d32" stroke-width="10"/>
+        <rect id="chip-pulse" class="pulse" x="255" y="1463" width="219" height="113" rx="56" fill="none" stroke="#2e7d32" stroke-width="10"/>
+        <circle id="row-ripple" class="ripple" cx="674" cy="1882" r="120" fill="#17541f"/>
+      </g>
+      <rect id="sheet-dim" x="74" y="1002" width="1172" height="2400" fill="#000"/>
+      <g id="filter-layer">
+        <image href="../assets/screen_filter.png" x="74" y="1002" width="1172" height="2218" clip-path="url(#sheet-clip)"/>
+        <circle id="bank-ripple" class="ripple" cx="650" cy="2188" r="140" fill="#17541f"/>
+        <g id="bank-check" class="pop">
+          <circle cx="1114" cy="2188" r="30" fill="#17541f"/>
+          <path d="M1100 2189 l10 10 l18 -20" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </g>
+      <image id="detail-layer" href="../assets/screen_detail.png" x="74" y="1002" width="1172" height="2218"/>
+    </g>
+  </g>
+  </g>
+
+  <!-- Papers -->
+  <g id="paper-invoice" filter="url(#shadow)"><use href="#sym-invoice"/></g>
+  <g id="paper-letter" filter="url(#shadow)"><use href="#sym-letter"/></g>
+  <g id="paper-receipt" filter="url(#shadow)"><use href="#sym-receipt"/></g>
+
+  <!-- Preview page lifting out of the detail view -->
+  <g id="lift-page" filter="url(#shadow)">
+    <rect x="-318" y="-417" width="636" height="834" rx="10" fill="#fff"/>
+    <image href="../assets/preview_page.png" x="-318" y="-417" width="636" height="834"/>
+  </g>
+
+  <!-- End card -->
+  <defs>
+    <clipPath id="icon-clip"><rect x="510" y="1100" width="300" height="300" rx="68"/></clipPath>
+    <linearGradient id="icon-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ececec"/></linearGradient>
+  </defs>
+  <g id="end-icon" class="pop">
+    <rect x="510" y="1100" width="300" height="300" rx="68" fill="url(#icon-bg)" filter="url(#shadow)"/>
+    <image href="../../../swift-paperless/AppIcon.icon/Assets/SwiffPaperless.svg" x="510" y="1100" width="300" height="300" clip-path="url(#icon-clip)"/>
+  </g>
+  <g id="end-title"><text x="660" y="1600" font-size="124" font-weight="800" fill="#12331a" letter-spacing="-3" text-anchor="middle">Swift Paperless</text></g>
+  <g id="end-sub"><text x="660" y="1685" font-size="50" font-weight="500" fill="#5d6b5f" text-anchor="middle">The Paperless-ngx app for iPhone and iPad</text></g>
+
+  <!-- Tag callouts (drawn centred on origin) -->
+  <g id="tag-bank" class="tag" filter="url(#shadow-pill)">
+    <rect x="-150" y="-62" width="300" height="124" rx="62" fill="#c9cdf8" stroke="#3f4ed0" stroke-width="6"/>
+    <text x="0" y="24" font-size="68" font-weight="600" fill="#262c8a" text-anchor="middle">Bank</text>
+  </g>
+  <g id="tag-travel" class="tag" filter="url(#shadow-pill)">
+    <rect x="-300" y="-62" width="600" height="124" rx="62" fill="#c4e6c4" stroke="#2e7d32" stroke-width="6"/>
+    <text x="0" y="24" font-size="68" font-weight="600" fill="#17541f" text-anchor="middle">Travel Document</text>
+  </g>
+</svg>
+<script src="papers.js"></script>
+<script>
+  window.__scene = { duration: 17, width: 1320, height: 2868 };
+  const t = new URLSearchParams(location.search).get("t");
+  if (t !== null) {
+    for (const a of document.getAnimations()) { a.pause(); a.currentTime = parseFloat(t) * 1000; }
+  }
+</script>
+</body>
+</html>

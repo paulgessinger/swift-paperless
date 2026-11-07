@@ -172,69 +172,52 @@ the front matter block: it is only for the app.
 
 ### App Store screenshots
 
-**1. Capture** raw simulator PNGs (config: [`screenshots.toml`](screenshots.toml)):
+The whole pipeline runs locally with `just`; nothing needs fastlane.
 
 ```console
-uv run --project scripts swpngx capture setup
-# Or pin the screenshot backend:
-uv run --project scripts swpngx capture setup --pngx-tag 2.19.4
-# Or add random tags for UI stress testing:
-uv run --project scripts swpngx capture setup --random-tags 1000
-# Or add multiple random metadata types:
-uv run --project scripts swpngx capture setup --random-tags 1000 --random-correspondents 500 --random-document-types 250
-uv run --project scripts swpngx capture capture
+just demo-reset            # Paperless-ngx in Docker, seeded with the fixture PDFs
+just screenshots           # build, capture every locale, frame
+just screenshots-preview   # review in the browser
+just deliver-preview       # dry run against App Store Connect
+just deliver               # upload metadata and screenshots
 ```
 
-Writes files like `store/screenshots/en-US/iPhone_17_Pro_Max-01_documents.png`
-(the prefix is the device `id` from `screenshot_devices.toml`). Tear down the backend
-with `uv run --project scripts swpngx capture teardown`.
+**1. Demo backend.** `just demo-up` starts Paperless-ngx on port 9988 and
+uploads the PDFs in `Preview PDFs/`; `just demo-reset` wipes it first, so it
+holds only those documents (setup is not idempotent). Pin the image with
+`uv run --project scripts swpngx capture setup --pngx-tag 2.19.4`, or add
+`--random-tags 1000` (and `--random-correspondents`, `--random-document-types`)
+for UI stress testing. `just demo-down` removes it.
 
-**2. Install device bezels** from [Apple Design Resources](https://developer.apple.com/design/resources/)
-(Product Bezels). Each `[[device]]` in [`screenshot_devices.toml`](screenshot_devices.toml)
-names a `bezel_pack` from [`bezel_packs.toml`](bezel_packs.toml) and the PNG filename
-to install under `store/screenshots/frames/`:
+**2. Capture.** `swpngx capture capture` (config:
+[`screenshots.toml`](screenshots.toml)) builds the app, reinstalls it on each
+simulator, and takes one screenshot per step and locale. Every step is a fresh
+launch in preview mode that routes through its `urls` (x-paperless deep links,
+see `DataModel/Sources/DataModel/Route.swift`; `device_urls` overrides them per
+device), so no taps or link prompts are involved. It writes files like
+`store/screenshots/en-US/iPhone_18_Pro_Max-01_documents.png`; the prefix is
+the device `id` from [`screenshot_devices.toml`](screenshot_devices.toml).
+Simulator UDIDs in `screenshots.toml` are per machine.
 
-```console
-# Use DMGs you already downloaded (e.g. from ~/Downloads):
-uv run --project scripts swpngx frames download --dmg-dir ~/Downloads
+**3. Frame.** `swpngx promo screenshots` draws each capture in a device frame
+on the promo background with a headline from
+[`store/promo/headlines.toml`](store/promo/headlines.toml), and writes
+`store/screenshots/framed/<App Store locale>/*-framed.png` at 1320 × 2868
+(iPhone) and 2064 × 2752 (iPad). The scene is
+`store/promo/scenes/screenshot.html`; long headlines shrink to fit. It renders
+with Playwright's Chromium (`uv run --project scripts playwright install
+chromium` once).
 
-# Or let swpngx download from Apple into ~/Library/Caches/swpngx/bezels:
-uv run --project scripts swpngx frames download
+`swpngx frame` is the older framer: Apple device bezels and titles from
+[`store/screenshots/Screenshots.xcstrings`](store/screenshots/Screenshots.xcstrings)
+(config: [`frames.toml`](frames.toml); bezels via `swpngx frames download`,
+font via `swpngx fonts download`). It writes the same file names, so either can
+feed `just deliver`.
 
-# Only the iPhone 17 pack, with one DMG path:
-uv run --project scripts swpngx frames download --pack iphone_17 \
-  --dmg-path ~/Downloads/Bezel-iPhone-17.dmg
-```
+**Review** with `just screenshots-preview`, which serves the framed screenshots
+and the metadata for every locale.
 
-Requires macOS (`hdiutil`). Apple’s DMG license prompt is accepted automatically
-(`Y`); you must comply with the [Apple Design Resources license](https://developer.apple.com/design/resources/).
-
-**3. Frame** screenshots for the App Store (config: [`frames.toml`](frames.toml)):
-
-```console
-uv run --project scripts swpngx frame
-```
-
-Reads `store/screenshots/<locale>/`, composites device bezels and localized
-titles (from [`store/screenshots/Screenshots.xcstrings`](store/screenshots/Screenshots.xcstrings)),
-and writes `store/screenshots/framed/<locale>/*-framed.png`. Device names in
-filenames must match device `id` in `screenshot_devices.toml`.
-
-The framing font (Open Sans) is not in git (`store/.gitignore` ignores `*.ttf`).
-`swpngx frame` downloads it automatically from [Google Fonts](https://fonts.google.com/specimen/Open+Sans)
-via [`fonts.toml`](fonts.toml), or you can prefetch:
-
-```console
-uv run --project scripts swpngx fonts download
-```
-
-Preview locally:
-
-```console
-uv run --project scripts swpngx preview
-```
-
-**4. Upload** metadata and framed screenshots with [`asc`](https://github.com/rorkai/App-Store-Connect-CLI)
+**Upload** metadata and framed screenshots with [`asc`](https://github.com/rorkai/App-Store-Connect-CLI)
 (`brew install asc`):
 
 ```console
@@ -271,7 +254,7 @@ before upload.
 Concatenate framed screenshots (adjust the glob for your device name):
 
 ```console
-montage store/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
+montage store/screenshots/framed/en-US/iPhone_18_Pro_Max-0*-framed.png \
     -tile 4x1 -geometry +20+0 panorama.png
 ```
 
