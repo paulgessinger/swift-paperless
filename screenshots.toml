@@ -22,7 +22,7 @@ scheme = "swift-paperless"
 project = "swift-paperless.xcodeproj"
 configuration = "Release"
 derived_data_path = ".build/DerivedData"
-app_name = "swift-paperless"
+app_name = "Paperless"
 
 [preview]
 url = "http://localhost:9988/"

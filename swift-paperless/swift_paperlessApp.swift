@@ -368,7 +368,8 @@ struct MainView: View {
 
     .fullScreenCover(
       isPresented: Binding(
-        get: { releaseNotesModel.showReleaseNotes && !showOnboarding },
+        // Preview mode drives screenshot captures, which a release notes cover would hide.
+        get: { releaseNotesModel.showReleaseNotes && !showOnboarding && !manager.previewMode },
         set: { releaseNotesModel.showReleaseNotes = $0 })
     ) {
       ReleaseNotesCoverView(releaseNotesModel: $releaseNotesModel)
