@@ -14,6 +14,7 @@ Generate an HTML preview of all metadata and screenshots for each language.
 """
 
 import http.server
+import re
 import shutil
 import socketserver
 import tempfile
@@ -64,6 +65,18 @@ class LocaleData:
     metadata: list[MetadataItem]
     screenshots: list[Screenshot]
     previews: list[str]
+
+
+@dataclass
+class PromoAsset:
+    src: str
+    name: str
+    is_video: bool
+
+
+# Rendered deliverables are named `<scene>_<width>x<height>.<ext>`; stills
+# taken at a time code carry a suffix and are skipped.
+PROMO_ASSET = re.compile(r"_\d+x\d+\.(mp4|png)$")
 
 
 def load_app_title(metadata_dir: Path, default_locale: str = "default") -> str:
@@ -193,6 +206,17 @@ def get_previews(previews_dir: Path, locale: str) -> list[str]:
     ]
 
 
+def get_promo_assets(promo_dir: Path) -> list[PromoAsset]:
+    """The header and search videos and the still, shared by all locales."""
+    return [
+        PromoAsset(
+            src=f"promo/{path.name}", name=path.name, is_video=path.suffix == ".mp4"
+        )
+        for path in sorted(promo_dir.glob("*"))
+        if PROMO_ASSET.search(path.name)
+    ]
+
+
 def get_display_name(locale: str) -> str:
     """Get a user-friendly display name for a locale."""
     # Map of locale codes to friendly names
@@ -245,6 +269,7 @@ def generate_html(
     default_locale: str = "default",
     embed_images: bool = False,
     previews_dir: Path | None = None,
+    promo_dir: Path | None = None,
 ) -> Path:
     """Generate the HTML preview file."""
     locales = get_locales(metadata_dir, screenshots_dir, default_locale)
@@ -269,6 +294,17 @@ def generate_html(
         if output_previews.exists():
             shutil.rmtree(output_previews)
         shutil.copytree(previews_dir, output_previews)
+
+    promo_assets = (
+        get_promo_assets(promo_dir) if promo_dir and promo_dir.exists() else []
+    )
+    if promo_assets:
+        output_promo = output_dir / "promo"
+        if output_promo.exists():
+            shutil.rmtree(output_promo)
+        output_promo.mkdir()
+        for asset in promo_assets:
+            shutil.copy(promo_dir / asset.name, output_promo / asset.name)
 
     # Build locale data
     fallback_metadata_dir = metadata_dir / default_locale
@@ -306,6 +342,7 @@ def generate_html(
     html_content = template.render(
         app_title=app_title,
         locales=locale_data_list,
+        promo_assets=promo_assets,
     )
 
     output_file = output_dir / "index.html"
@@ -358,6 +395,13 @@ def main(
             help="Path to rendered app preview videos",
         ),
     ] = Path("store/previews"),
+    promo_dir: Annotated[
+        Path,
+        typer.Option(
+            "--promo-dir",
+            help="Path to the rendered header and search videos",
+        ),
+    ] = Path("store/promo/out"),
     port: Annotated[
         int,
         typer.Option(
@@ -394,6 +438,7 @@ def main(
     metadata_dir = metadata_dir.resolve()
     screenshots_dir = screenshots_dir.resolve()
     previews_dir = previews_dir.resolve()
+    promo_dir = promo_dir.resolve()
 
     if not metadata_dir.exists() and not screenshots_dir.exists():
         console.log(
@@ -414,11 +459,16 @@ def main(
     console.log(f"  Metadata: {metadata_dir}")
     console.log(f"  Screenshots: {screenshots_dir}")
     console.log(f"  Previews: {previews_dir}")
+    console.log(f"  Promo: {promo_dir}")
     console.log(f"  Output: {output_dir}")
 
     # Generate HTML
     html_file = generate_html(
-        metadata_dir, screenshots_dir, output_dir, previews_dir=previews_dir
+        metadata_dir,
+        screenshots_dir,
+        output_dir,
+        previews_dir=previews_dir,
+        promo_dir=promo_dir,
     )
     console.log(f"[green]Generated: {html_file}")
 

@@ -65,13 +65,16 @@
             background: #0071e3;
             color: #fff;
         }
-        .locale-panel {
+        .locale-panel, .promo-section {
             background: #fff;
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-        .locale-panel h2 {
+        .promo-section {
+            margin-bottom: 24px;
+        }
+        .locale-panel h2, .promo-section h2 {
             font-size: 22px;
             font-weight: 600;
             margin-bottom: 16px;
@@ -167,6 +170,19 @@
             border-radius: 12px;
             background: #f5f5f7;
         }
+        .promo-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .promo-item video, .promo-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            background: #f5f5f7;
+        }
         .no-data {
             color: #86868b;
             font-style: italic;
@@ -209,6 +225,24 @@
         <header>
             <h1><span class="app-name">{{ app_title }}</span> – App Store Assets Preview</h1>
         </header>
+
+        {% if promo_assets %}
+        <section class="promo-section">
+        <h2>Header and Search Videos</h2>
+        <div class="promo-grid">
+            {% for asset in promo_assets %}
+            <div class="promo-item">
+                {% if asset.is_video %}
+                <video src="{{ asset.src }}" controls muted loop playsinline preload="metadata"></video>
+                {% else %}
+                <img src="{{ asset.src }}" alt="{{ asset.name }}" loading="lazy">
+                {% endif %}
+                <div class="screenshot-label"><span>{{ asset.name }}</span></div>
+            </div>
+            {% endfor %}
+        </div>
+        </section>
+        {% endif %}
 
         <div class="tabs">
             {% for locale in locales %}
