@@ -27,7 +27,7 @@ scripts/frames
 # App.xcstrings; this orphan only ever holds junk, so ignore it everywhere.
 Localizable.xcstrings
 
-# Rendered promo videos (store/promo/render.py)
+# Rendered promo videos (swpngx promo video)
 /*.mp4
 
 # Decks written by `just whats-new-watch`

@@ -12,6 +12,7 @@ dependencies = [
     "jinja2",
     "numpy",
     "Pillow",
+    "playwright>=1.55",
     "pydantic>=2",
     "pypaperless",
     "pyphen>=0.14",

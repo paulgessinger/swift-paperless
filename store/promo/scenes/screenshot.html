@@ -8,6 +8,9 @@
   ?slide=1..4           headline and decoration set
   ?img=<path>           captured screen, relative to this file
   ?ar=<h/w>             aspect ratio of the captured screen
+  ?line1=&line2=&accent=&sub=   headline text (see store/promo/headlines.toml)
+
+  `swpngx promo screenshots` fills these in.
 -->
 <html>
 <head>
@@ -66,36 +69,34 @@
     Important:         ["#f8cccc", "#c62828", "#7f1515"],
   };
 
-  // Headline lines; the accent part of line two is drawn in green.
   // Decorations per device: [kind, x, y (fractions of the canvas), rotation,
   // scale, layer]. Front pills sit over parts of the screen that carry little.
   const SLIDES = {
-    1: { lines: ["Your Paperless,", "in your ", "pocket."], sub: "A native iOS app for Paperless-ngx",
-         deco: {
+    1: { deco: {
            iphone: [["letter", .07, .55, -14, .75, "back"], ["invoice", .94, .40, 12, .7, "back"],
                     ["Inbox", .14, .935, -8, 1, "front"]],
            ipad:   [["letter", .06, .55, -14, .75, "back"], ["invoice", .95, .40, 12, .7, "back"],
                     ["Inbox", .80, .93, 8, 1, "front"]] } },
-    2: { lines: ["Find anything,", "in ", "seconds."], sub: "Filter by tag, type, correspondent and more",
-         deco: {
+    2: { deco: {
            iphone: [["receipt", .95, .62, 14, .75, "back"], ["Bank", .22, .84, -10, 1, "front"],
                     ["Travel Document", .70, .925, 6, 1, "front"]],
            ipad:   [["receipt", .96, .62, 14, .75, "back"], ["Bank", .56, .50, -10, 1, "front"],
                     ["Travel Document", .72, .92, 6, 1, "front"]] } },
-    3: { lines: ["Read and share,", "", "anywhere."], sub: "Preview PDFs and send them to any app",
-         deco: {
+    3: { deco: {
            iphone: [["letter", .06, .44, -10, .8, "back"], ["receipt", .95, .74, 10, .7, "back"],
                     ["Important", .84, .51, 8, 1, "front"]],
            ipad:   [["letter", .05, .44, -10, .8, "back"], ["receipt", .96, .74, 10, .7, "back"],
                     ["Important", .55, .66, -6, 1, "front"]] } },
-    4: { lines: ["Keep it tidy,", "", "on the go."], sub: "Edit tags, dates and correspondents",
-         deco: {
+    4: { deco: {
            iphone: [["invoice", .07, .70, -8, .75, "back"], ["letter", .94, .45, 10, .7, "back"],
                     ["Important", .76, .955, 6, 1, "front"]],
            ipad:   [["invoice", .06, .70, -8, .75, "back"], ["letter", .95, .45, 10, .7, "back"],
                     ["Important", .56, .80, -6, 1, "front"]] } },
   };
   const S = SLIDES[slide];
+  // Headline text comes from store/promo/headlines.toml via the query string.
+  const text = (name) => params.get(name) ?? "";
+  const esc = (value) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
   const svg = document.getElementById("canvas");
   svg.setAttribute("width", L.W);
@@ -125,9 +126,9 @@
     ${ribbon(0, 260 * u, "#17541f", 1)}
     ${ribbon(-160 * u, 40 * u, "#2e7d32", .55)}
 
-    <text x="${L.pad}" y="${L.headY}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3">${S.lines[0]}</text>
-    <text x="${L.pad}" y="${L.headY + L.lh}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3">${S.lines[1]}<tspan fill="#17541f">${S.lines[2]}</tspan></text>
-    <text x="${L.pad + 4}" y="${L.headY + L.lh + L.sub * 1.7}" font-size="${L.sub}" font-weight="500" fill="#5d6b5f">${S.sub}</text>
+    <text x="${L.pad}" y="${L.headY}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3" class="head">${esc(text("line1"))}</text>
+    <text x="${L.pad}" y="${L.headY + L.lh}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3" class="head">${esc(text("line2"))}<tspan fill="#17541f">${esc(text("accent"))}</tspan></text>
+    <text x="${L.pad + 4}" y="${L.headY + L.lh + L.sub * 1.7}" font-size="${L.sub}" font-weight="500" fill="#5d6b5f" id="sub">${esc(text("sub"))}</text>
 
     ${decorations("back")}
 
@@ -137,6 +138,18 @@
     <image href="${img}" x="${sx}" y="${sy}" width="${sw}" height="${sh}" clip-path="url(#screen-clip)" preserveAspectRatio="xMidYMid slice"/>
 
     ${decorations("front")}`;
+
+  // Shrink text that runs past the margin: both headline lines by the same
+  // factor so they stay the same size, the subtitle on its own.
+  const maxWidth = W - 2 * L.pad;
+  const fit = (nodes, size) => {
+    const widest = Math.max(...nodes.map(n => n.getComputedTextLength()));
+    if (widest > maxWidth) {
+      nodes.forEach(n => n.setAttribute("font-size", size * maxWidth / widest));
+    }
+  };
+  fit([...document.querySelectorAll(".head")], L.h1);
+  fit([document.getElementById("sub")], L.sub);
 </script>
 </body>
 </html>

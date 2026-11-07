@@ -6,6 +6,7 @@ from swpngx.devices_cli import check_devices, migrate_prefix
 from swpngx.frame import main as frame_cmd
 from swpngx.capture import app as capture_app
 from swpngx.preview import main as preview_cmd
+from swpngx.promo import app as promo_app
 
 app = typer.Typer(no_args_is_help=True, help="Swift Paperless automation CLI")
 
@@ -34,6 +35,7 @@ app.add_typer(frames_app, name="frames")
 app.add_typer(fonts_app, name="fonts")
 app.add_typer(devices_app, name="devices")
 app.add_typer(capture_app, name="capture", help="Capture screenshots from simulator")
+app.add_typer(promo_app, name="promo")
 app.command("preview", help="Preview metadata and screenshots in browser")(preview_cmd)
 app.command("deliver", help="Upload metadata and screenshots to App Store Connect")(
     deliver_cmd
