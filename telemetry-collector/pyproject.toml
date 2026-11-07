@@ -9,6 +9,7 @@ dependencies = [
     "uvicorn>=0.30",
     "typer>=0.15",
     "prometheus-client>=0.20",
+    "pydantic-settings>=2.7",
     # Dashboard only (never imported by the collector role).
     "authlib>=1.9",
     "joserfc>=1.0",

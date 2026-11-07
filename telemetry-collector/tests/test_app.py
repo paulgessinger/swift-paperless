@@ -156,11 +156,13 @@ def test_dev_channel_accepted_in_dev_mode(make_client, db_path):
 
 
 def test_dev_channel_requires_dev_mode(db_path):
-    from telemetry_collector.app import create_app
+    from conftest import by_field
+    from pydantic import ValidationError
+
     from telemetry_collector.config import Settings
 
-    with pytest.raises(ValueError):
-        create_app(Settings(db_path=db_path, channels=frozenset({"appstore", "dev"})))
+    with pytest.raises(ValidationError, match="the dev channel is only accepted in dev mode"):
+        by_field(Settings, db_path=db_path, channels=frozenset({"appstore", "dev"}))
 
 
 def test_channels_keyed_separately(client, db_path):
