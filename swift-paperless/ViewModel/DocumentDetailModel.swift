@@ -551,6 +551,7 @@ class DocumentDetailModel {
 
   func updateDocument() async throws {
     let updated = try await store.updateDocument(document)
+    TelemetryService.record(.documentEdit)
     self.document = updated
     try await loadSuggestions()
   }
