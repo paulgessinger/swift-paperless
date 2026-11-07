@@ -149,14 +149,24 @@ extension WhatsNewDeck.Card {
   }
 
   /// Inline Markdown, so a card's line can carry a link. Trimmed because a
-  /// YAML block scalar ends in a newline.
-  fileprivate var attributedText: AttributedString {
+  /// YAML block scalar ends in a newline. Links are made absolute, because
+  /// the system can't open a URL that only carries its base.
+  fileprivate func attributedText(relativeTo baseURL: URL) -> AttributedString {
     let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    return
-      (try? AttributedString(
+    guard
+      var result = try? AttributedString(
         markdown: text,
-        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
-      ?? AttributedString(text)
+        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace),
+        baseURL: baseURL)
+    else {
+      return AttributedString(text)
+    }
+    for (link, range) in result.runs[\.link] {
+      if let link {
+        result[range].link = link.absoluteURL
+      }
+    }
+    return result
   }
 }
 
@@ -201,7 +211,7 @@ private struct CardView: View {
       VStack(alignment: .leading, spacing: 3) {
         Text(verbatim: card.title)
           .font(.headline)
-        Text(card.attributedText)
+        Text(card.attributedText(relativeTo: baseURL))
           .font(.subheadline)
           .foregroundStyle(.secondary)
         if card.detail != nil {
@@ -332,7 +342,7 @@ private struct DetailView: View {
       Text(verbatim: card.title)
         .font(.title)
         .bold()
-      Text(card.attributedText)
+      Text(card.attributedText(relativeTo: baseURL))
         .font(.title3)
         .foregroundStyle(.secondary)
     }
