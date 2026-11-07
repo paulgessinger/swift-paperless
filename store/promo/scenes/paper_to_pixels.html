@@ -6,6 +6,8 @@
 
   ?t=<seconds> freezes the scene at that time (use for stills).
   Run `swpngx promo prepare` first to cut the phone screens into assets/.
+  `swpngx promo previews` passes per-locale text and screens in the query:
+  ?assets=<dir URL>&s1_line1=…&s1_line2=…&s1_accent=…&s1_sub=…&end_sub=…
 -->
 <html>
 <head>
@@ -212,25 +214,25 @@
 
   <!-- Headline -->
   <g id="headline">
-    <text x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Your Paperless,</text>
-    <text x="100" y="378" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">in your <tspan fill="#17541f">pocket.</tspan></text>
+    <text class="head" data-line="line1" data-slide="1" x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Your Paperless,</text>
+    <text class="head" data-line="line2" data-slide="1" x="100" y="378" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">in your <tspan fill="#17541f">pocket.</tspan></text>
   </g>
   <g id="subhead">
-    <text x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">A native iOS app for Paperless-ngx</text>
+    <text class="sub" data-line="sub" data-slide="1" x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">A native iOS app for Paperless-ngx</text>
   </g>
   <g id="headline2">
-    <text x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Find anything,</text>
-    <text x="100" y="378" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">in <tspan fill="#17541f">seconds.</tspan></text>
+    <text class="head" data-line="line1" data-slide="2" x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Find anything,</text>
+    <text class="head" data-line="line2" data-slide="2" x="100" y="378" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">in <tspan fill="#17541f">seconds.</tspan></text>
   </g>
   <g id="subhead2">
-    <text x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">Filter by tag, type, correspondent and more</text>
+    <text class="sub" data-line="sub" data-slide="2" x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">Filter by tag, type, correspondent and more</text>
   </g>
   <g id="headline3">
-    <text x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Read and share,</text>
-    <text x="100" y="378" font-size="128" font-weight="800" fill="#17541f" letter-spacing="-3">anywhere.</text>
+    <text class="head" data-line="line1" data-slide="3" x="100" y="240" font-size="128" font-weight="800" fill="#12331a" letter-spacing="-3">Read and share,</text>
+    <text class="head" data-line="line2" data-slide="3" x="100" y="378" font-size="128" font-weight="800" fill="#17541f" letter-spacing="-3">anywhere.</text>
   </g>
   <g id="subhead3">
-    <text x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">Preview PDFs and send them to any app</text>
+    <text class="sub" data-line="sub" data-slide="3" x="104" y="462" font-size="50" font-weight="500" fill="#5d6b5f">Preview PDFs and send them to any app</text>
   </g>
 
   <!-- Phone -->
@@ -241,7 +243,7 @@
     <rect x="74" y="1002" width="1172" height="2400" rx="158" fill="#f6f6f6"/>
     <g clip-path="url(#screen-clip)">
       <g id="list-layer">
-        <image href="../assets/screen_list.png" x="74" y="1002" width="1172" height="2218"/>
+        <image class="asset" href="../assets/screen_list.png" x="74" y="1002" width="1172" height="2218"/>
         <!-- Empty thumbnail slots, filled by the landing papers -->
         <rect id="slot1" x="111" y="1657" width="321" height="455" rx="18" fill="#fff" stroke="#e2e2e2" stroke-width="3"/>
         <rect id="slot2" x="111" y="2267" width="321" height="455" rx="18" fill="#fff" stroke="#e2e2e2" stroke-width="3"/>
@@ -253,14 +255,14 @@
       </g>
       <rect id="sheet-dim" x="74" y="1002" width="1172" height="2400" fill="#000"/>
       <g id="filter-layer">
-        <image href="../assets/screen_filter.png" x="74" y="1002" width="1172" height="2218" clip-path="url(#sheet-clip)"/>
+        <image class="asset" href="../assets/screen_filter.png" x="74" y="1002" width="1172" height="2218" clip-path="url(#sheet-clip)"/>
         <circle id="bank-ripple" class="ripple" cx="650" cy="2188" r="140" fill="#17541f"/>
         <g id="bank-check" class="pop">
           <circle cx="1114" cy="2188" r="30" fill="#17541f"/>
           <path d="M1100 2189 l10 10 l18 -20" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
         </g>
       </g>
-      <image id="detail-layer" href="../assets/screen_detail.png" x="74" y="1002" width="1172" height="2218"/>
+      <image id="detail-layer" class="asset" href="../assets/screen_detail.png" x="74" y="1002" width="1172" height="2218"/>
     </g>
   </g>
   </g>
@@ -273,7 +275,7 @@
   <!-- Preview page lifting out of the detail view -->
   <g id="lift-page" filter="url(#shadow)">
     <rect x="-318" y="-417" width="636" height="834" rx="10" fill="#fff"/>
-    <image href="../assets/preview_page.png" x="-318" y="-417" width="636" height="834"/>
+    <image class="asset" href="../assets/preview_page.png" x="-318" y="-417" width="636" height="834"/>
   </g>
 
   <!-- End card -->
@@ -286,7 +288,7 @@
     <image href="../../../swift-paperless/AppIcon.icon/Assets/SwiffPaperless.svg" x="510" y="1100" width="300" height="300" clip-path="url(#icon-clip)"/>
   </g>
   <g id="end-title"><text x="660" y="1600" font-size="124" font-weight="800" fill="#12331a" letter-spacing="-3" text-anchor="middle">Swift Paperless</text></g>
-  <g id="end-sub"><text x="660" y="1685" font-size="50" font-weight="500" fill="#5d6b5f" text-anchor="middle">The Paperless-ngx app for iPhone and iPad</text></g>
+  <g id="end-sub"><text class="sub" id="end-sub-text" x="660" y="1685" font-size="50" font-weight="500" fill="#5d6b5f" text-anchor="middle">The Paperless-ngx app for iPhone and iPad</text></g>
 
   <!-- Tag callouts (drawn centred on origin) -->
   <g id="tag-bank" class="tag" filter="url(#shadow-pill)">
@@ -301,7 +303,35 @@
 <script src="papers.js"></script>
 <script>
   window.__scene = { duration: 17, width: 1320, height: 2868 };
-  const t = new URLSearchParams(location.search).get("t");
+  const params = new URLSearchParams(location.search);
+  const assets = params.get("assets");
+  if (assets) {
+    for (const image of document.querySelectorAll("image.asset")) {
+      image.setAttribute("href", assets + "/" + image.getAttribute("href").split("/").pop());
+    }
+  }
+  const esc = (value) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  for (const node of document.querySelectorAll("[data-slide]")) {
+    const key = (name) => `s${node.dataset.slide}_${name}`;
+    if (!params.has(key("line1"))) continue;
+    node.innerHTML = node.dataset.line === "line2"
+      ? `${esc(params.get(key("line2")))}<tspan fill="#17541f">${esc(params.get(key("accent")))}</tspan>`
+      : esc(params.get(key(node.dataset.line)));
+  }
+  if (params.has("end_sub")) document.getElementById("end-sub-text").textContent = params.get("end_sub");
+
+  // Shrink text that runs past the margin: a slide's headline lines by the
+  // same factor, each subtitle on its own.
+  const maxWidth = 1320 - 2 * 100;
+  const fit = (nodes) => {
+    const widest = Math.max(...nodes.map(n => n.getComputedTextLength()));
+    if (widest > maxWidth) {
+      nodes.forEach(n => n.setAttribute("font-size", n.getAttribute("font-size") * maxWidth / widest));
+    }
+  };
+  for (const slide of [1, 2, 3]) fit([...document.querySelectorAll(`.head[data-slide="${slide}"]`)]);
+  for (const sub of document.querySelectorAll(".sub")) fit([sub]);
+  const t = params.get("t");
   if (t !== null) {
     for (const a of document.getAnimations()) { a.pause(); a.currentTime = parseFloat(t) * 1000; }
   }

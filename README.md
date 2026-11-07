@@ -177,9 +177,10 @@ The whole pipeline runs locally with `just`; nothing needs fastlane.
 ```console
 just demo-reset            # Paperless-ngx in Docker, seeded with the fixture PDFs
 just screenshots           # build, capture every locale, frame
+just previews              # render the app preview video per locale
 just screenshots-preview   # review in the browser
 just deliver-preview       # dry run against App Store Connect
-just deliver               # upload metadata and screenshots
+just deliver               # upload metadata, screenshots and previews
 ```
 
 **1. Demo backend.** `just demo-up` starts Paperless-ngx on port 9988 and
@@ -213,6 +214,13 @@ chromium` once).
 (config: [`frames.toml`](frames.toml); bezels via `swpngx frames download`,
 font via `swpngx fonts download`). It writes the same file names, so either can
 feed `just deliver`.
+
+**4. App preview.** `swpngx promo previews` renders the "Paper to pixels"
+video (`store/promo/scenes/paper_to_pixels.html`, 886 × 1920, 17 s) for each
+locale, from that locale's first three iPhone captures, the first three
+headlines and `video_end` in `headlines.toml`. It writes
+`store/previews/<App Store locale>/paper_to_pixels.mp4`; a locale takes two to
+three minutes.
 
 **Review** with `just screenshots-preview`, which serves the framed screenshots
 and the metadata for every locale.

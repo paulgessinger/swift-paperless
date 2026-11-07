@@ -1,4 +1,8 @@
-# Screenshot headlines per capture locale (the locales in screenshots.toml).
+# Screenshot and app preview text per capture locale (the locales in
+# screenshots.toml).
+#
+# The app preview video (`swpngx promo previews`) reuses slides 1-3 and ends
+# on `video_end` under the app name.
 #
 # Each slide is two headline lines and a subtitle. `accent` ends the second
 # line and is drawn in green; `line2` is the plain text before it. Lines that
@@ -6,6 +10,7 @@
 # translations (AppShared/.../App.xcstrings), e.g. the word for "tags".
 
 [en-US]
+video_end = "The Paperless-ngx app for iPhone and iPad"
 slides = [
   { line1 = "Your Paperless,", line2 = "in your ", accent = "pocket.", sub = "A native iOS app for Paperless-ngx" },
   { line1 = "Find anything,", line2 = "in ", accent = "seconds.", sub = "Filter by tag, type, correspondent and more" },
@@ -14,6 +19,7 @@ slides = [
 ]
 
 [de-DE]
+video_end = "Die Paperless-ngx-App für iPhone und iPad"
 slides = [
   { line1 = "Dein Paperless,", line2 = "immer ", accent = "dabei.", sub = "Die native iOS-App für Paperless-ngx" },
   { line1 = "Alles finden,", line2 = "in ", accent = "Sekunden.", sub = "Nach Tag, Typ, Korrespondent und mehr filtern" },
@@ -22,6 +28,7 @@ slides = [
 ]
 
 [fr-FR]
+video_end = "L’app Paperless-ngx pour iPhone et iPad"
 slides = [
   { line1 = "Votre Paperless,", line2 = "dans votre ", accent = "poche.", sub = "Une app iOS native pour Paperless-ngx" },
   { line1 = "Trouvez tout,", line2 = "en quelques ", accent = "secondes.", sub = "Filtrez par tag, type, correspondant et plus" },
@@ -30,6 +37,7 @@ slides = [
 ]
 
 [it-IT]
+video_end = "L’app Paperless-ngx per iPhone e iPad"
 slides = [
   { line1 = "Il tuo Paperless,", line2 = "sempre in ", accent = "tasca.", sub = "Un’app iOS nativa per Paperless-ngx" },
   { line1 = "Trova tutto,", line2 = "in pochi ", accent = "secondi.", sub = "Filtra per etichetta, tipologia, corrispondente e altro" },
@@ -38,6 +46,7 @@ slides = [
 ]
 
 [nl-NL]
+video_end = "De Paperless-ngx-app voor iPhone en iPad"
 slides = [
   { line1 = "Je Paperless,", line2 = "altijd ", accent = "bij de hand.", sub = "Een native iOS-app voor Paperless-ngx" },
   { line1 = "Vind alles,", line2 = "in ", accent = "seconden.", sub = "Filter op label, soort, correspondent en meer" },
@@ -46,6 +55,7 @@ slides = [
 ]
 
 [pl-PL]
+video_end = "Aplikacja Paperless-ngx na iPhone’a i iPada"
 slides = [
   { line1 = "Twój Paperless,", line2 = "zawsze ", accent = "pod ręką.", sub = "Natywna aplikacja iOS dla Paperless-ngx" },
   { line1 = "Znajdź wszystko,", line2 = "w kilka ", accent = "sekund.", sub = "Filtruj według tagów, typu, korespondenta i nie tylko" },
@@ -54,6 +64,7 @@ slides = [
 ]
 
 [da-DK]
+video_end = "Paperless-ngx-appen til iPhone og iPad"
 slides = [
   { line1 = "Dit Paperless,", line2 = "altid ", accent = "lige ved hånden.", sub = "En indbygget iOS-app til Paperless-ngx" },
   { line1 = "Find alt,", line2 = "på ", accent = "sekunder.", sub = "Filtrér efter etiket, type, korrespondent og mere" },
@@ -62,6 +73,7 @@ slides = [
 ]
 
 [tr-TR]
+video_end = "iPhone ve iPad için Paperless-ngx uygulaması"
 slides = [
   { line1 = "Paperless’ınız", line2 = "artık ", accent = "cebinizde.", sub = "Paperless-ngx için yerel bir iOS uygulaması" },
   { line1 = "Her şeyi bulun,", line2 = "", accent = "saniyeler içinde.", sub = "Etikete, türe, muhataba ve daha fazlasına göre filtreleyin" },

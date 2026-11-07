@@ -99,7 +99,7 @@ set-test-notes build version='' notes='':
 
 # Creates the App Store version if needed. Needs `asc` logged in or
 # APP_STORE_CONNECT_*.
-# Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
+# Upload metadata, framed screenshots and app previews (no IPA). Replaces them on ASC.
 deliver *args:
   uv run --project scripts swpngx deliver --version "$(just get-version)" {{args}}
 
@@ -162,6 +162,10 @@ demo-reset:
 screenshots *args:
   uv run --project scripts swpngx capture capture {{args}}
   uv run --project scripts swpngx promo screenshots
+
+# Render the localized "Paper to pixels" app preview from the iPhone captures.
+previews *args:
+  uv run --project scripts swpngx promo previews {{args}}
 
 # Review the framed screenshots and the metadata in the browser.
 screenshots-preview:

@@ -76,6 +76,17 @@ class FakeAsc:
             return {"data": self.versions}
         if args[:2] == ("versions", "create"):
             return {"data": {"id": "NEW"}}
+        if args[:2] == ("localizations", "list"):
+            return {"data": [{"id": "LOC-EN", "attributes": {"locale": "en-US"}}]}
+        if args[:2] == ("video-previews", "list"):
+            return {
+                "sets": [
+                    {
+                        "set": {"attributes": {"previewType": "IPHONE_61"}},
+                        "previews": [{"id": "PREVIEW"}],
+                    }
+                ]
+            }
         raise AssertionError(args)
 
     def commands(self) -> list[tuple[str, str]]:
@@ -83,6 +94,7 @@ class FakeAsc:
 
 
 def run(metadata: Path, screenshots: Path, devices: Path, **options) -> None:
+    options.setdefault("previews_dir", metadata.parent / "no-previews")
     deliver.main(
         version="1.11.0",
         metadata_dir=metadata,
@@ -196,3 +208,49 @@ def test_dry_run_does_not_create_a_missing_version(
 
     assert ("versions", "create") not in fake.commands()
     assert ("migrate", "import") not in fake.commands()
+
+
+@pytest.fixture
+def previews(tmp_path: Path) -> Path:
+    root = tmp_path / "previews"
+    for locale in ("en-US", "xx"):
+        (root / locale).mkdir(parents=True)
+        (root / locale / "paper_to_pixels.mp4").touch()
+    (root / "empty").mkdir()
+    return root
+
+
+def test_previews_replace_per_locale_and_set_the_poster_frame(
+    metadata, screenshots, devices, previews, monkeypatch
+):
+    fake = FakeAsc(monkeypatch, [{"id": "VERSION"}])
+
+    run(metadata, screenshots, devices, previews_dir=previews)
+
+    uploads = [c for c in fake.calls if c[:2] == ("video-previews", "upload")]
+    # Only en-US has a localization on App Store Connect; "empty" has no video.
+    assert len(uploads) == 1
+    upload = uploads[0]
+    assert upload[upload.index("--version-localization") + 1] == "LOC-EN"
+    assert upload[upload.index("--device-type") + 1] == "IPHONE_61"
+    assert "--replace" in upload and "--confirm" in upload
+    assert fake.calls[-1][:2] == ("video-previews", "set-poster-frame")
+    assert "PREVIEW" in fake.calls[-1]
+
+
+def test_previews_dry_run(metadata, screenshots, devices, previews, monkeypatch):
+    fake = FakeAsc(monkeypatch, [{"id": "VERSION"}])
+
+    run(metadata, screenshots, devices, previews_dir=previews, dry_run=True)
+
+    upload = fake.calls[fake.commands().index(("video-previews", "upload"))]
+    assert "--dry-run" in upload and "--confirm" not in upload
+    assert ("video-previews", "set-poster-frame") not in fake.commands()
+
+
+def test_skip_previews(metadata, screenshots, devices, previews, monkeypatch):
+    fake = FakeAsc(monkeypatch, [{"id": "VERSION"}])
+
+    run(metadata, screenshots, devices, previews_dir=previews, skip_previews=True)
+
+    assert ("video-previews", "upload") not in fake.commands()

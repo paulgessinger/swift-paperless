@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 
 import typer
 from PIL import Image
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Browser, Page, sync_playwright
 from rich.console import Console
 
 from swpngx.capture import load_capture_config
@@ -73,6 +73,15 @@ def _seek(page: Page, seconds: float) -> None:
     )
 
 
+def _cut_screens(screens: dict[str, Image.Image], target: Path) -> None:
+    """Write the video's phone screens (and the lifted PDF page) into target."""
+    target.mkdir(parents=True, exist_ok=True)
+    for name, screen in screens.items():
+        screen.save(target / f"screen_{name}.png")
+        if name == "detail":
+            screen.crop(DETAIL_PAGE_BOX).save(target / "preview_page.png")
+
+
 @app.command()
 def prepare(
     panorama: Annotated[Path, typer.Option(help="Framed screenshot panorama")] = Path(
@@ -80,16 +89,66 @@ def prepare(
     ),
 ) -> None:
     """Cut the phone screens the video scenes use into store/promo/assets/."""
-    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     image = Image.open(panorama).convert("RGB")
     left, top, right, bottom = PANORAMA_SCREEN_BOX
-    for index, name in PANORAMA_SCREENS:
-        offset = index * 1360
-        screen = image.crop((offset + left, top, offset + right, bottom))
-        screen.save(ASSETS_DIR / f"screen_{name}.png")
-        if name == "detail":
-            screen.crop(DETAIL_PAGE_BOX).save(ASSETS_DIR / "preview_page.png")
+    screens = {
+        name: image.crop((index * 1360 + left, top, index * 1360 + right, bottom))
+        for index, name in PANORAMA_SCREENS
+    }
+    _cut_screens(screens, ASSETS_DIR)
     console.log(f"Wrote assets to {ASSETS_DIR}")
+
+
+def _render_video(
+    browser: Browser,
+    scene: Path,
+    query: dict[str, str],
+    output: Path,
+    size: str,
+    fps: int,
+) -> None:
+    out_w, out_h = (int(v) for v in size.split("x"))
+    probe = browser.new_page()
+    meta = _open(probe, scene, query)
+    probe.close()
+
+    # Render at a scale where the canvas covers the output; ffmpeg crops the rest.
+    scale = max(out_w / meta["width"], out_h / meta["height"])
+    page = browser.new_page(
+        viewport={"width": meta["width"], "height": meta["height"]},
+        device_scale_factor=scale,
+    )
+    _open(page, scene, query)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    frames = round(meta["duration"] * fps)
+    # fmt: off
+    ffmpeg = subprocess.Popen(
+        [
+            "ffmpeg", "-y", "-loglevel", "error",
+            "-f", "image2pipe", "-framerate", str(fps), "-i", "-",
+            "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+            "-vf", f"crop={out_w}:{out_h},format=yuv420p",
+            "-c:v", "libx264", "-profile:v", "high", "-crf", "16", "-r", str(fps),
+            "-c:a", "aac", "-b:a", "256k", "-shortest",
+            "-movflags", "+faststart",
+            str(output),
+        ],
+        stdin=subprocess.PIPE,
+    )
+    # fmt: on
+    assert ffmpeg.stdin
+    for i in range(frames):
+        _seek(page, i / fps)
+        ffmpeg.stdin.write(page.screenshot(type="png"))
+        if i % fps == 0:
+            console.print(f"\r{output}: frame {i}/{frames}", end="")
+    ffmpeg.stdin.close()
+    if ffmpeg.wait() != 0:
+        raise RuntimeError(f"ffmpeg failed for {output}")
+    page.close()
+    console.print()
+    console.log(f"Wrote {output}")
 
 
 @app.command()
@@ -103,70 +162,10 @@ def video(
     canvas: CanvasOption = None,
 ) -> None:
     """Render a scene's full timeline to an H.264 MP4 with a silent stereo track."""
-    out_w, out_h = (int(v) for v in size.split("x"))
-    query = _canvas_query(canvas)
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        probe = browser.new_page()
-        meta = _open(probe, scene, query)
-        probe.close()
-
-        # Render at a scale where the canvas covers the output; ffmpeg crops the rest.
-        scale = max(out_w / meta["width"], out_h / meta["height"])
-        page = browser.new_page(
-            viewport={"width": meta["width"], "height": meta["height"]},
-            device_scale_factor=scale,
-        )
-        _open(page, scene, query)
-
-        frames = round(meta["duration"] * fps)
-        ffmpeg = subprocess.Popen(
-            [
-                "ffmpeg",
-                "-y",
-                "-loglevel",
-                "error",
-                "-f",
-                "image2pipe",
-                "-framerate",
-                str(fps),
-                "-i",
-                "-",
-                "-f",
-                "lavfi",
-                "-i",
-                "anullsrc=channel_layout=stereo:sample_rate=48000",
-                "-vf",
-                f"crop={out_w}:{out_h},format=yuv420p",
-                "-c:v",
-                "libx264",
-                "-profile:v",
-                "high",
-                "-crf",
-                "16",
-                "-r",
-                str(fps),
-                "-c:a",
-                "aac",
-                "-b:a",
-                "256k",
-                "-shortest",
-                "-movflags",
-                "+faststart",
-                str(output),
-            ],
-            stdin=subprocess.PIPE,
-        )
-        assert ffmpeg.stdin
-        for i in range(frames):
-            _seek(page, i / fps)
-            ffmpeg.stdin.write(page.screenshot(type="png"))
-            if i % fps == 0:
-                console.print(f"\rframe {i}/{frames}", end="")
-        ffmpeg.stdin.close()
-        ffmpeg.wait()
+        _render_video(browser, scene, _canvas_query(canvas), output, size, fps)
         browser.close()
-    console.log(f"Wrote {output}")
 
 
 @app.command()
@@ -195,9 +194,15 @@ def still(
         browser.close()
 
 
-def load_headlines(path: Path) -> dict[str, list[dict[str, str]]]:
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
-    return {locale: entry["slides"] for locale, entry in data.items()}
+def load_headlines(path: Path) -> dict[str, dict]:
+    return tomllib.loads(path.read_text(encoding="utf-8"))
+
+
+def _check_locales(selected: list[str], headlines: dict[str, dict]) -> None:
+    missing = [locale for locale in selected if locale not in headlines]
+    if missing:
+        console.log(f"[red]No headlines in {HEADLINES} for: {', '.join(missing)}")
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -224,10 +229,7 @@ def screenshots(
     headlines = load_headlines(HEADLINES)
     scene = SCENES_DIR / "screenshot.html"
     selected = locales or capture_config.locales
-    missing = [locale for locale in selected if locale not in headlines]
-    if missing:
-        console.log(f"[red]No headlines in {HEADLINES} for: {', '.join(missing)}")
-        raise typer.Exit(1)
+    _check_locales(selected, headlines)
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -250,7 +252,7 @@ def screenshots(
                             "slide": str(slide),
                             "ar": f"{ratio:.5f}",
                             "img": capture.resolve().as_uri(),
-                            **headlines[locale][slide - 1],
+                            **headlines[locale]["slides"][slide - 1],
                         },
                     )
                     page.set_viewport_size(
@@ -263,4 +265,71 @@ def screenshots(
                         framed.convert("RGB").save(path)
                     found += 1
             console.log(f"{locale}: framed {found} screenshots into {target}")
+        browser.close()
+
+
+# Captures (screenshots.toml steps) the preview video shows, by scene screen.
+PREVIEW_DEVICE = "iPhone_18_Pro_Max"
+PREVIEW_SCREENS = {"list": "01", "filter": "02", "detail": "03"}
+# The scene's phone screen: 1172 px wide, cut off below 2218 px.
+PREVIEW_SCREEN_SIZE = (1172, 2218)
+
+
+@app.command()
+def previews(
+    locales: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--locale", help="Capture locale(s); default: all in screenshots.toml"
+        ),
+    ] = None,
+    config: Annotated[
+        Path, typer.Option("--config", "-c", help="Screenshot capture config")
+    ] = Path("screenshots.toml"),
+    output_dir: Annotated[
+        Path, typer.Option("-o", "--output-dir", help="Where `swpngx deliver` reads")
+    ] = Path("store/previews"),
+    size: Annotated[str, typer.Option(help="Output WxH")] = "886x1920",
+    fps: Annotated[int, typer.Option()] = 30,
+) -> None:
+    """Render the "Paper to pixels" app preview for each locale.
+
+    Uses that locale's iPhone captures and headlines, and writes
+    <output-dir>/<App Store locale>/paper_to_pixels.mp4.
+    """
+    capture_config = load_capture_config(config)
+    headlines = load_headlines(HEADLINES)
+    scene = SCENES_DIR / "paper_to_pixels.html"
+    selected = locales or capture_config.locales
+    _check_locales(selected, headlines)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        for locale in selected:
+            captures = capture_config.output_dir / locale
+            screens = {}
+            for name, step in PREVIEW_SCREENS.items():
+                matches = sorted(captures.glob(f"{PREVIEW_DEVICE}-{step}_*.png"))
+                if not matches:
+                    console.log(f"[red]{locale}: no {PREVIEW_DEVICE}-{step} capture")
+                    raise typer.Exit(1)
+                with Image.open(matches[0]) as capture:
+                    width, height = PREVIEW_SCREEN_SIZE
+                    scaled = capture.convert("RGB").resize(
+                        (width, round(capture.height * width / capture.width)),
+                        Image.Resampling.LANCZOS,
+                    )
+                    screens[name] = scaled.crop((0, 0, width, height))
+            assets = ASSETS_DIR / locale
+            _cut_screens(screens, assets)
+
+            query = {"assets": assets.resolve().as_uri()}
+            for index, slide in enumerate(headlines[locale]["slides"][:3], start=1):
+                query |= {f"s{index}_{key}": value for key, value in slide.items()}
+            query["end_sub"] = headlines[locale]["video_end"]
+
+            output = (
+                output_dir / normalize_output_locale(locale) / "paper_to_pixels.mp4"
+            )
+            _render_video(browser, scene, query, output, size, fps)
         browser.close()

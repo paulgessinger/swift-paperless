@@ -32,3 +32,5 @@ docs/whats_new/
 
 # Rendered promo videos (swpngx promo video)
 /*.mp4
+# swpngx promo previews
+/store/previews/

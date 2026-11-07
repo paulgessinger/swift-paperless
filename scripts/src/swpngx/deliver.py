@@ -1,4 +1,4 @@
-"""Upload App Store metadata and framed screenshots with the `asc` CLI."""
+"""Upload App Store metadata, framed screenshots and app previews with the `asc` CLI."""
 
 from __future__ import annotations
 
@@ -23,6 +23,10 @@ PRIMARY_LOCALE = "en-US"
 DEFAULT_DIR = "default"
 REVIEW_DIR = "review_information"
 RELEASE_NOTES = "release_notes.txt"
+# The 886x1920 "Paper to pixels" preview; App Store Connect scales it to the
+# other iPhone sizes.
+PREVIEW_TYPE = "IPHONE_61"
+PREVIEW_POSTER_FRAME = "00:00:05:01"
 
 # App Store Connect category files and the `asc categories set` flag each feeds.
 CATEGORY_FLAGS = {
@@ -189,6 +193,68 @@ def upload_screenshots(
         )
 
 
+def preview_locales(previews_dir: Path) -> list[str]:
+    """Locales with at least one rendered preview video."""
+    if not previews_dir.is_dir():
+        return []
+    return sorted(
+        path.name
+        for path in previews_dir.iterdir()
+        if path.is_dir() and any(path.glob("*.mp4"))
+    )
+
+
+def upload_previews(
+    version_id: str, previews_dir: Path, locales: list[str], dry_run: bool
+) -> None:
+    localizations = {
+        entry["attributes"]["locale"]: entry["id"]
+        for entry in asc_json("localizations", "list", "--version", version_id)["data"]
+    }
+    for locale in locales:
+        localization_id = localizations.get(locale)
+        if localization_id is None:
+            console.print(f"[yellow]No {locale} localization; skipping its preview")
+            continue
+        asc(
+            "video-previews",
+            "upload",
+            "--version-localization",
+            localization_id,
+            "--path",
+            str(previews_dir / locale),
+            "--device-type",
+            PREVIEW_TYPE,
+            "--replace",
+            "--output",
+            "table",
+            "--dry-run" if dry_run else "--confirm",
+        )
+        if dry_run:
+            continue
+        uploaded = asc_json(
+            "video-previews", "list", "--version-localization", localization_id
+        )
+        for preview_set in uploaded["sets"]:
+            if preview_set["set"]["attributes"]["previewType"] != PREVIEW_TYPE:
+                continue
+            for preview in preview_set["previews"]:
+                try:
+                    asc(
+                        "video-previews",
+                        "set-poster-frame",
+                        "--id",
+                        preview["id"],
+                        "--time-code",
+                        PREVIEW_POSTER_FRAME,
+                    )
+                except subprocess.CalledProcessError:
+                    console.print(
+                        f"[yellow]{locale}: could not set the poster frame; "
+                        "set it in App Store Connect once processing finishes"
+                    )
+
+
 def main(
     version: Annotated[
         str,
@@ -203,14 +269,25 @@ def main(
     devices_file: Annotated[
         Path, typer.Option(help="Path to screenshot_devices.toml")
     ] = Path("screenshot_devices.toml"),
+    previews_dir: Annotated[
+        Path,
+        typer.Option(help="Rendered app previews, one folder per App Store locale"),
+    ] = Path("store/previews"),
     skip_screenshots: Annotated[
         bool, typer.Option(help="Upload metadata only")
+    ] = False,
+    skip_previews: Annotated[
+        bool, typer.Option(help="Leave the app preview videos alone")
     ] = False,
     dry_run: Annotated[
         bool, typer.Option(help="Show what would change without changing anything")
     ] = False,
 ) -> None:
-    """Upload metadata and framed screenshots, replacing the existing screenshots."""
+    """Upload metadata, framed screenshots and app previews.
+
+    Screenshots and previews replace what App Store Connect has for each device
+    type and locale they cover. Locales without a rendered preview keep theirs.
+    """
     if shutil.which("asc") is None:
         console.print("[red]asc not found; install it with `brew install asc`[/red]")
         raise typer.Exit(1)
@@ -223,6 +300,10 @@ def main(
         []
         if skip_screenshots
         else screenshot_display_types(screenshots_dir, devices_file)
+    )
+
+    previews = (
+        [] if skip_screenshots or skip_previews else preview_locales(previews_dir)
     )
 
     with tempfile.TemporaryDirectory(prefix="swpngx-deliver-") as tmp:
@@ -260,3 +341,5 @@ def main(
             upload_screenshots(
                 app_id, version_id, screenshots_dir, display_types, dry_run
             )
+        if previews:
+            upload_previews(version_id, previews_dir, previews, dry_run)
