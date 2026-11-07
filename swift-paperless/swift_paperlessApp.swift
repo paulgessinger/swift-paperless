@@ -152,6 +152,21 @@ struct MainView: View {
     }
   }
 
+  /// Routes each `--open-url <url>` launch argument, in order, once the store
+  /// is ready. Screenshot captures relaunch with these instead of
+  /// `simctl openurl`, which can stop at an "Open in…" prompt.
+  private func openLaunchURLs() async {
+    let arguments = ProcessInfo.processInfo.arguments
+    let urls = zip(arguments, arguments.dropFirst())
+      .filter { $0.0 == "--open-url" }
+      .compactMap { URL(string: $0.1) }
+    for url in urls {
+      // Give the previous route's navigation time to settle.
+      try? await Task.sleep(for: .seconds(1))
+      handleUrlOpen(url)
+    }
+  }
+
   /// What a proactive pass on the *active* server should run right now — asked
   /// of `SyncPlan`, the same way the inactive-server sweep asks it, so the
   /// server on screen is planned by the same rule as the ones that aren't.
@@ -470,6 +485,10 @@ struct MainView: View {
     }
 
     .onOpenURL(perform: handleUrlOpen)
+    .task(id: storeReady) {
+      guard storeReady, manager.previewMode else { return }
+      await openLaunchURLs()
+    }
     .environment(routeManager)
     .appOverlays(
       errorController: errorController,
