@@ -175,21 +175,28 @@ def still(
 
 # Capture prefix (swpngx device id) and scene layout for each framed device.
 SCREENSHOT_DEVICES = {"iPhone_18_Pro_Max": "iphone", "iPad_Pro_13_M5": "ipad"}
+# `swpngx capture` writes <dir>/<locale>/*.png; `just deliver` uploads
+# <dir>/framed/<locale>/*-framed.png.
+STORE_SCREENSHOTS = REPO_ROOT / "store" / "screenshots"
 
 
 @app.command()
 def screenshots(
-    captures: Annotated[
-        Path, typer.Option(help="Folder of `swpngx capture` PNGs for one locale")
-    ] = ASSETS_DIR
-    / "captures"
-    / "en-US",
-    output_dir: Annotated[Path, typer.Option("-o", "--output-dir")] = PROMO_DIR
-    / "out"
-    / "screenshots",
+    locale: Annotated[
+        str, typer.Option(help="Capture locale; the headlines are English only")
+    ] = "en-US",
+    captures_dir: Annotated[
+        Path, typer.Option(help="`swpngx capture` output, one folder per locale")
+    ] = STORE_SCREENSHOTS,
+    output_dir: Annotated[
+        Path, typer.Option("-o", "--output-dir", help="Where `just deliver` reads")
+    ] = STORE_SCREENSHOTS
+    / "framed",
 ) -> None:
     """Frame captured screens in the promo style at App Store screenshot sizes."""
-    output_dir.mkdir(parents=True, exist_ok=True)
+    captures = captures_dir / locale
+    target = output_dir / locale
+    target.mkdir(parents=True, exist_ok=True)
     scene = PROMO_DIR / "scenes" / "screenshot.html"
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -208,7 +215,7 @@ def screenshots(
                 page.set_viewport_size(
                     {"width": meta["width"], "height": meta["height"]}
                 )
-                path = output_dir / capture.name
+                path = target / f"{capture.stem}-framed.png"
                 page.screenshot(path=path)
                 # App Store Connect rejects screenshots with an alpha channel.
                 with Image.open(path) as framed:

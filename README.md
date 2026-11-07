@@ -185,7 +185,7 @@ uv run --project scripts swpngx capture setup --random-tags 1000 --random-corres
 uv run --project scripts swpngx capture capture
 ```
 
-Writes files like `store/screenshots/en-US/iPhone_17_Pro_Max-01_documents.png`
+Writes files like `store/screenshots/en-US/iPhone_18_Pro_Max-01_documents.png`
 (the prefix is the device `id` from `screenshot_devices.toml`). Tear down the backend
 with `uv run --project scripts swpngx capture teardown`.
 
@@ -227,6 +227,17 @@ via [`fonts.toml`](fonts.toml), or you can prefetch:
 ```console
 uv run --project scripts swpngx fonts download
 ```
+
+Or frame them in the promo style (paper background, ribbon and tag pills, as in
+the promo videos) instead, which needs no bezels or fonts:
+
+```console
+uv run store/promo/render.py screenshots
+```
+
+This reads `store/screenshots/en-US/` and writes the same
+`store/screenshots/framed/en-US/*-framed.png` files, at 1320 × 2868 for the
+iPhone and 2064 × 2752 for the iPad. The headlines are English only so far.
 
 Preview locally:
 
@@ -271,7 +282,7 @@ before upload.
 Concatenate framed screenshots (adjust the glob for your device name):
 
 ```console
-montage store/screenshots/framed/en-US/iPhone_17_Pro_Max-0*-framed.png \
+montage store/screenshots/framed/en-US/iPhone_18_Pro_Max-0*-framed.png \
     -tile 4x1 -geometry +20+0 panorama.png
 ```
 
