@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% set title = "Telemetry" %}
+
+{% macro share_bars(rows) %}
+{% for row in rows %}
+<div class="hbar{{ ' unknown' if row.unknown }}">
+  <span>{% if row.unknown %}<i>{{ row.value }}</i>{% else %}{{ row.value }}{% endif %}</span>
+  <svg class="track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+    <rect class="bg" width="100" height="10" rx="5"/><rect class="fg" width="{{ '%.1f' % (row.share * 100) }}" height="10" rx="5"/>
+  </svg>
+  <span class="muted">{{ row.count }} · {{ row.share | pct }}</span>
+</div>
+{% else %}
+<p class="muted">No data.</p>
+{% endfor %}
+{% endmacro %}
+
+{% block content %}
+<header>
+  <h1>Swift Paperless telemetry</h1>
+  <nav class="seg" aria-label="Channel">
+    {% for c in channels %}<a class="{{ 'on' if c == channel }}" href="/?channel={{ c | urlencode }}&amp;days={{ days }}">{{ c }}</a>{% endfor %}
+  </nav>
+  <nav class="seg" aria-label="Range">
+    {% for d in ranges %}<a class="{{ 'on' if d == days }}" href="/?channel={{ channel | urlencode }}&amp;days={{ d }}">{{ d }}d</a>{% endfor %}
+  </nav>
+  <form method="post" action="/logout"><span class="muted">{{ signed_in_as }}</span> <button type="submit">Sign out</button></form>
+</header>
+
+{% if end is none %}
+<p class="muted">{{ empty_reason }}</p>
+{% else %}
+<p class="muted">Data through {{ end }} (UTC; the latest day may be partial, and the collector writes in batches).
+Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
+
+<div class="cards">
+  <div class="card"><div class="muted">Daily active · {{ end }}</div><div class="big">{{ cards.daily_active }}</div>
+    <div class="muted">avg {{ '%.1f' % cards.daily_avg }}/day over {{ days }}d</div></div>
+  <div class="card"><div class="muted">MAU estimate · 30d</div><div class="big">{{ '%.0f' % cards.mau }}</div>
+    <div class="muted">Σ 1/midpoint(active_days_30)</div></div>
+  <div class="card"><div class="muted">Installs &lt;7 days old · {{ end }}</div><div class="big">{{ cards.new_7d }}</div>
+    <div class="muted">&lt;30d: {{ cards.new_30d }}</div></div>
+  <div class="card"><div class="muted">Feature pings · {{ end }}</div><div class="big">{{ cards.feature_pings }}</div>
+    <div class="muted">{{ cards.flagged_days }} implausible day(s) in range</div></div>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Daily active installs (health pings), last {{ days }} days</h2>
+    <div class="chart"><canvas id="chart-active" role="img" aria-label="Daily active installs per day"></canvas></div>
+    {% if cards.flagged_days %}<p class="warn">Highlighted: feature pings exceed 1.5× health pings.</p>{% endif %}
+  </section>
+  <section class="card">
+    <h2>Feature use / availability per day</h2>
+    <div class="chart"><canvas id="chart-ratios" role="img" aria-label="Daily used over available ratio per feature"></canvas></div>
+  </section>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Features · install-days, last {{ days }} days</h2>
+    <table>
+      <tr><th>Feature</th><th class="n">Used</th><th class="n">Available</th><th class="n">Ratio</th>
+        <th class="n">{{ count_buckets | join(' / ') }}</th><th></th></tr>
+      {% for f in features %}
+      <tr><td>{{ f.name }}</td><td class="n">{{ f.used }}</td><td class="n">{{ f.available }}</td>
+        <td class="n">{{ f.ratio | pct }}</td><td class="n muted">{{ f.buckets | join(' / ') }}</td>
+        <td>{% if f.unused %}<span class="warn">no use in range</span>{% elif not f.available %}<span class="muted">not available</span>{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+  <section class="card">
+    <h2>Completion (install-days)</h2>
+    <table>
+      <tr><th>Pair</th><th class="n">Started</th><th class="n">Done</th><th class="n">Rate</th></tr>
+      {% for p in pairs %}
+      <tr><td>{{ p.started }} → {{ p.done }}</td><td class="n">{{ p.started_n }}</td><td class="n">{{ p.done_n }}</td><td class="n">{{ p.rate | pct }}</td></tr>
+      {% endfor %}
+    </table>
+    <p class="muted">Ratio of marginals; not a per-install funnel.</p>
+    <h2 class="spaced">Error classes</h2>
+    <table>
+      <tr><th>Error</th><th class="n">Install-days</th><th class="n">of health</th></tr>
+      {% for e in errors %}
+      <tr><td>{{ e.name }}</td><td class="n">{{ e.count }}</td><td class="n">{{ e.share | pct }}</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+</div>
+
+<h2>Environment · health pings, last {{ days }} days</h2>
+<div class="grid">
+  {% for env in environment %}
+  <section class="card"><h2>{{ env.field }}</h2>{{ share_bars(env.rows) }}</section>
+  {% endfor %}
+</div>
+
+<script type="application/json" id="chart-data">{{ chart | tojson }}</script>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if end is not none %}
+<script src="{{ static_url('vendor/chartjs/chart.umd.min.js') }}" defer></script>
+<script src="{{ static_url('dashboard.js') }}" defer></script>
+{% endif %}
+{% endblock %}
