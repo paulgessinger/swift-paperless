@@ -75,4 +75,4 @@
 - What's New can now show a paged overview of a release, with an icon and a short description per feature and more detail on request; versions without one keep showing the release notes
 - A "Leave a tip" link in the release notes now opens the tip jar in the app
 - Nested tags in Settings now show delete buttons in edit mode
-- Failed loads now retry on their own when a VPN such as Tailscale connects, and keep retrying for about a minute while the list shows an error
+- Failed loads now retry on their own when a VPN such as Tailscale connects, and for about a minute after the app opens or returns to the foreground

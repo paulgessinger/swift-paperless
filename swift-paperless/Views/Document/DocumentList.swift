@@ -475,17 +475,15 @@ struct DocumentList: View {
     }
 
     // A server can become reachable with no route change to observe, so a failed
-    // load also retries on a timer for as long as it stays on screen.
-    .task(id: viewModel.hasFailedFill && scenePhase == .active) {
-      guard viewModel.hasFailedFill, scenePhase == .active else { return }
+    // load also retries on a timer after the app becomes active. Keyed on the
+    // scene phase alone: a failure clearing and recurring mid-retry must not
+    // restart the schedule, or a failing query would be refetched forever.
+    .task(id: scenePhase == .active) {
+      guard scenePhase == .active else { return }
       for seconds in [3, 6, 12, 24, 48] {
         guard (try? await Task.sleep(for: .seconds(seconds))) != nil else { return }
-        // Unstructured: the retry clears the failure, which changes this task's
-        // id, and SwiftUI's cancellation would otherwise abort the retry itself.
-        await Task {
-          await viewModel.retryIfFailed()
-          if !store.syncFailures.isEmpty { try? await store.sync() }
-        }.value
+        await viewModel.retryIfFailed()
+        if !store.syncFailures.isEmpty { try? await store.sync() }
       }
     }
 
