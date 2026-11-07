@@ -152,3 +152,17 @@ demo-up:
 
 demo-down:
   uv run --project scripts swpngx capture teardown
+
+# Fresh demo backend holding only the fixture documents (wipes its data).
+demo-reset:
+  uv run --project scripts swpngx capture setup --recreate
+
+# Needs `just demo-up`; frames into store/screenshots/framed for `just deliver`.
+# Capture and frame App Store screenshots for every locale (--skip-build reuses the last build).
+screenshots *args:
+  uv run --project scripts swpngx capture capture {{args}}
+  uv run --project scripts swpngx promo screenshots
+
+# Review the framed screenshots and the metadata in the browser.
+screenshots-preview:
+  uv run --project scripts swpngx preview
