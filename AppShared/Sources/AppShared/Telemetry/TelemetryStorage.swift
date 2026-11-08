@@ -10,9 +10,9 @@ import Foundation
 struct TelemetryStorage {
   enum Key: String, CaseIterable {
     case healthLastSent = "telemetryHealthLastSent"
-    case featureLastSent = "telemetryFeatureLastSent"
-    case pendingFeatures = "telemetryPendingFeatures"
-    case pendingErrors = "telemetryPendingErrors"
+    case featureLastReported = "telemetryFeatureLastReported"
+    case pendingFeatures = "telemetryPendingFeaturesByDay"
+    case pendingErrors = "telemetryPendingErrorsByDay"
     case activeDays = "telemetryActiveDays"
     case installStamp = "telemetryInstallStamp"
   }
@@ -20,18 +20,22 @@ struct TelemetryStorage {
   let defaults: UserDefaults
 
   func load() -> TelemetryState {
-    let features = (defaults.dictionary(forKey: Key.pendingFeatures.rawValue) as? [String: Int])?
-      .reduce(into: [TelemetryFeature: Int]()) { result, entry in
-        if let feature = TelemetryFeature(rawValue: entry.key) { result[feature] = entry.value }
+    let features =
+      (defaults.dictionary(forKey: Key.pendingFeatures.rawValue)
+      as? [String: [String: Int]])?
+      .mapValues { counts in
+        counts.reduce(into: [TelemetryFeature: Int]()) { result, entry in
+          if let feature = TelemetryFeature(rawValue: entry.key) { result[feature] = entry.value }
+        }
       }
-    let errors = defaults.stringArray(forKey: Key.pendingErrors.rawValue)?
-      .compactMap(TelemetryError.init(rawValue:))
+    let errors = (defaults.dictionary(forKey: Key.pendingErrors.rawValue) as? [String: [String]])?
+      .mapValues { Set($0.compactMap(TelemetryError.init(rawValue:))) }
 
     return TelemetryState(
       healthLastSent: defaults.string(forKey: Key.healthLastSent.rawValue),
-      featureLastSent: defaults.string(forKey: Key.featureLastSent.rawValue),
+      featureLastReported: defaults.string(forKey: Key.featureLastReported.rawValue),
       pendingFeatures: features ?? [:],
-      pendingErrors: Set(errors ?? []),
+      pendingErrors: errors ?? [:],
       activeDays: Set(defaults.stringArray(forKey: Key.activeDays.rawValue) ?? []),
       installStamp: defaults.string(forKey: Key.installStamp.rawValue)
         .flatMap(TelemetryInstallStamp.init(storedValue:)))
@@ -39,11 +43,13 @@ struct TelemetryStorage {
 
   func save(_ state: TelemetryState) {
     set(state.healthLastSent, .healthLastSent)
-    set(state.featureLastSent, .featureLastSent)
+    set(state.featureLastReported, .featureLastReported)
     set(
-      Dictionary(uniqueKeysWithValues: state.pendingFeatures.map { ($0.key.rawValue, $0.value) }),
+      state.pendingFeatures.mapValues { counts in
+        Dictionary(uniqueKeysWithValues: counts.map { ($0.key.rawValue, $0.value) })
+      },
       .pendingFeatures)
-    set(state.pendingErrors.map(\.rawValue).sorted(), .pendingErrors)
+    set(state.pendingErrors.mapValues { $0.map(\.rawValue).sorted() }, .pendingErrors)
     set(state.activeDays.sorted(), .activeDays)
     set(state.installStamp?.storedValue, .installStamp)
   }

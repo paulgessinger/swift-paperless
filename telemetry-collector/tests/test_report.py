@@ -11,6 +11,7 @@ from telemetry_collector.report import (
     Counts,
     completion_pairs,
     distribution,
+    error_shares,
     mau_estimate,
     open_readonly,
     render,
@@ -37,8 +38,8 @@ def seeded(make_client, db_path, clock):
         clock.day = "2026-11-07"
         c.post("/t/health", json=health_payload(active_days_30="2-7", auth=None, backend=None))
         c.post("/t/health", json=health_payload(active_days_30="2-7", auth="none"))
-        c.post("/t/feature", json=feature_payload())
-        c.post("/t/feature", json=feature_payload(features={}))
+        assert c.post("/t/feature", json=feature_payload(day="2026-11-06")).status_code == 204
+        assert c.post("/t/feature", json=feature_payload(day="2026-11-06", features={}, errors=None)).status_code == 204
     return db_path
 
 
@@ -48,10 +49,16 @@ def test_report(seeded):
     assert mau_estimate(counts, "2026-11-07") == 1 + 2 / 4.5
     out = render(conn, SCHEMA, days=7)
     conn.close()
+    assert "still filling in" in out.splitlines()[0]
     assert "== 2026-11-07  channel=appstore" in out
     assert "active_days_30: 2-7=2" in out
-    assert "saved_view: 1/2 (50%)" in out
-    assert "notes: 0/2 (0%)" in out
+    # Feature pings sent on 11-07 are filed under the day they report.
+    day_06 = out.split("== 2026-11-06  channel=appstore")[1].split("== 2026-11-07")[0]
+    assert "[feature] pings=2" in day_06
+    assert "errors: tls=1" in day_06
+    assert "saved_view: 1/2 (50%)" in day_06
+    assert "notes: 0/2 (0%)" in day_06
+    assert "[feature]" not in out.split("== 2026-11-07  channel=appstore")[1]
     assert "MAU estimate appstore (30 days ending 2026-11-07): 1.4" in out
 
 
@@ -100,3 +107,14 @@ def test_readonly_reader_while_collector_running(make_client, db_path):
         c.post("/t/feature", json=feature_payload())
         assert conn.execute("SELECT SUM(count) FROM counters WHERE field = '_pings'").fetchone()[0] == 2
         conn.close()
+
+
+def test_error_shares_from_feature_pings(seeded):
+    conn = open_readonly(seeded)
+    counts = Counts(conn, "appstore", "2026-11-01", "2026-11-07")
+    conn.close()
+    shares = error_shares(counts, SCHEMA)
+    assert shares[0] == ("tls", 1, 0.5)
+    assert ("timeout", 0, 0.0) in shares
+    assert {e for e, _, _ in shares} == set(SCHEMA.errors)
+    assert counts.values("health", "errors") == {}

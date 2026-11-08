@@ -3,7 +3,8 @@
 Writing each ping in its own transaction would leave the combined payload
 recoverable from the WAL or from two snapshots one ping apart. Counters are
 therefore buffered in memory and written in one transaction per `batch_size`
-pings, and before the first ping of a new UTC day. There is no time-based flush.
+pings, and before the first ping that arrives on a new UTC day. There is no
+time-based flush.
 """
 
 from __future__ import annotations
@@ -60,7 +61,9 @@ def connect(path: Path) -> sqlite3.Connection:
 class CounterStore:
     """In-memory counter buffer in front of the SQLite `counters` table.
 
-    Every buffer key carries its own day, so a flush never misattributes counts.
+    Every buffer key carries the day it is filed under, so a flush never
+    misattributes counts, and one batch can hold several days (feature pings
+    report an earlier day). The rollover flush follows the arrival day only.
     A threading lock guards the buffer and the connection. The endpoints are
     async and run on the single event-loop thread, so the lock is uncontended
     there; it keeps the class correct if it is ever called from a thread pool
@@ -88,13 +91,16 @@ class CounterStore:
     def pending_pings(self) -> int:
         return self._pings
 
-    def add(self, channel: str, ping: str, increments: Iterable[tuple[str, str]]) -> None:
-        """Buffer one ping's increments; flushes per the batching rules."""
+    def add(self, day: str, channel: str, ping: str, increments: Iterable[tuple[str, str]]) -> None:
+        """Buffer one ping's increments under `day`; flushes per the batching rules."""
         with self._lock:
-            day = self._today()
-            if self._day is not None and day != self._day and self._pings:
+            # Rollover is decided by the arrival day, not `day`: a back-dated feature
+            # ping must not flush the batch, or alternating health and feature pings
+            # would write one-ping batches.
+            arrival = self._today()
+            if self._day is not None and arrival != self._day and self._pings:
                 self._flush_locked()
-            self._day = day
+            self._day = arrival
             for field, value in increments:
                 self._buffer[(day, channel, ping, field, value)] += 1
             self._pings += 1

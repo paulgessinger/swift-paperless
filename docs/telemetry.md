@@ -36,14 +36,17 @@
 | Whether you have more than one server set up | one / more than one |
 | On how many days in the last 30 you opened the app | 1 / 2–7 / 8–20 / 21+ days |
 | Roughly how long ago you started sharing | under a week / under a month / under a year / longer |
-| Kinds of connection problems seen since the last report | for example "certificate error" or "server too old" |
 
 **Features you used**
 
-- Which features were used since the last report, and roughly how often: once, 2–9 times, 10 or more
+- Covers one past day: the last day you used the app, sent the next time you open it
+    - carries that day's date (UTC), at most 30 days back
+    - days without any use send nothing
+- Which features were used that day, and roughly how often: once, 2–9 times, 10 or more
+- Kinds of connection problems seen that day, for example "certificate error" or "server too old"
 - Includes uploads from the share extension and the Upload Document shortcut
 - Also lists which features are available to you, so an unsupported feature isn't read as unused
-- Report is still sent, empty, on days without feature use
+- Report is still sent, empty, for an active day without feature use
 - Exact reports visible in **Settings → Anonymous usage → What's sent**
 
 ## What is never sent
@@ -69,6 +72,7 @@
 ## What it reveals
 
 - Any report reveals that an install was used that day; unavoidable
+- The features report's date reveals the last day the app was used before the current one
 - TestFlight reports are counted separately from App Store ones
 - Fewer TestFlight users, so less anonymity within that group
 

@@ -11,7 +11,7 @@ from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
-from conftest import by_field, feature_payload, health_payload
+from conftest import by_field, days_before, feature_payload, health_payload
 from fastapi.testclient import TestClient
 from joserfc import jwt
 from joserfc.jwk import RSAKey
@@ -150,7 +150,9 @@ def seeded_db(make_client, db_path, clock):
                     "/t/health",
                     json=health_payload(install_age="<7d" if i == 0 else "existing", auth=None if i == 1 else "token"),
                 )
-                c.post("/t/feature", json=feature_payload())
+                errors = ["tls"] if i == 0 else ["tls", "timeout"] if i == 1 else None
+                r = c.post("/t/feature", json=feature_payload(day=days_before(day), errors=errors))
+                assert r.status_code == 204
         c.post("/t/health", json=health_payload(channel="testflight"))
     return db_path
 
@@ -448,3 +450,45 @@ def test_empty_database_page(make_dashboard, provider):
     html = client.get("/").text
     assert "No database yet." in html
     assert "chart.umd.min.js" not in html
+
+
+def test_errors_and_feature_card_use_feature_pings(seeded_db):
+    from telemetry_collector.dashboard import dashboard_context
+
+    ctx = dashboard_context(seeded_db, load_schema(), "appstore", 7)
+    assert ctx["end"] == "2026-11-07"
+    # Sent on 11-05..11-07, filed under 11-04..11-06; the card shows the day before the latest.
+    assert ctx["cards"]["feature_day"] == "2026-11-06"
+    assert ctx["cards"]["feature_pings"] == 5
+    errors = {e["name"]: (e["count"], e["share"]) for e in ctx["errors"]}
+    # 12 feature pings in range: tls in two per day, timeout in one per day.
+    assert errors["tls"] == (6, 6 / 12)
+    assert errors["timeout"] == (3, 3 / 12)
+    assert errors["auth"] == (0, 0.0)
+    assert [e["name"] for e in ctx["errors"]][:2] == ["tls", "timeout"]
+    assert ctx["chart"]["filling"] == [True] * 7
+
+
+def test_error_share_denominator_is_feature_pings(make_client, db_path, clock):
+    from telemetry_collector.dashboard import dashboard_context
+
+    with make_client(batch_size=50) as c:
+        clock.day = "2026-11-07"
+        for _ in range(4):
+            c.post("/t/health", json=health_payload())
+        c.post("/t/feature", json=feature_payload(day="2026-11-06", errors=["tls"]))
+        c.post("/t/feature", json=feature_payload(day="2026-11-06", errors=None))
+    ctx = dashboard_context(db_path, load_schema(), "appstore", 7)
+    assert {e["name"]: e["share"] for e in ctx["errors"]}["tls"] == 0.5
+
+
+def test_recent_days_marked_filling(make_dashboard, provider, seeded_db):
+    client = make_dashboard()
+    sign_in(client, provider)
+    html = client.get("/", params={"channel": "appstore", "days": "30"}).text
+    assert "still filling in" in html
+    assert "of feature pings" in html
+    block = re.search(r'<script type="application/json" id="chart-data">(.*?)</script>', html, re.S)
+    assert block is not None
+    filling = json.loads(block[1])["filling"]
+    assert filling == [False] * 23 + [True] * 7

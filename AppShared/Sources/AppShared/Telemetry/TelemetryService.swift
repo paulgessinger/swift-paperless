@@ -7,14 +7,15 @@ import Common
 import Foundation
 import os
 
-/// Records feature use and setup errors, and sends the two daily pings.
+/// Records feature use and setup errors per UTC day, and sends the two pings:
+/// health at most once per UTC day, and feature once for each completed day
+/// it reports (see ``TelemetryState/featureReportDay(now:)``).
 ///
 /// ``current`` is the production service in every process. The app and the
 /// share extension both record into the app-group defaults; only the app
-/// sends. Every entry
-/// point checks consent first, so nothing is recorded or stored before opt-in.
-/// Sends are fire-and-forget: a failed ping is dropped and tried again on the
-/// next activation of the same UTC day at most.
+/// sends. Every entry point checks consent first, so nothing is recorded or
+/// stored before opt-in. Sends are fire-and-forget: a failed ping is dropped
+/// and tried again on a later activation while it is still due.
 @MainActor
 public final class TelemetryService {
   public static let current = TelemetryService(
@@ -70,15 +71,19 @@ public final class TelemetryService {
 
   public func record(_ feature: TelemetryFeature) {
     guard isConsented() else { return }
+    let now = now()
     var state = storage.load()
-    state.pendingFeatures[feature, default: 0] += 1
+    state.pendingFeatures[TelemetryDay.string(for: now), default: [:]][feature, default: 0] += 1
+    state.prunePending(now: now)
     storage.save(state)
   }
 
   public func record(_ error: TelemetryError) {
     guard isConsented() else { return }
+    let now = now()
     var state = storage.load()
-    state.pendingErrors.insert(error)
+    state.pendingErrors[TelemetryDay.string(for: now), default: []].insert(error)
+    state.prunePending(now: now)
     storage.save(state)
   }
 
@@ -100,7 +105,7 @@ public final class TelemetryService {
   }
 
   /// Call when a scene becomes active with a connection established. Logs
-  /// today as active and sends whichever pings haven't gone out today.
+  /// today as active and sends whichever pings are due.
   /// `environment` is gathered once, only if something is due.
   public func appBecameActive(
     environment: @escaping @MainActor () async -> TelemetryEnvironment
@@ -111,6 +116,7 @@ public final class TelemetryService {
     // Opted in before this process could observe it, with a connection.
     if state.installStamp == nil { state.installStamp = .existing }
     state.activeDays = TelemetryActiveDays.recording(state.activeDays, now: now)
+    state.prunePending(now: now)
     storage.save(state)
 
     guard sendTask == nil, !dueEndpoints(state, now: now).isEmpty else { return }
@@ -120,7 +126,8 @@ public final class TelemetryService {
     }
   }
 
-  /// The pings as they would be sent right now, pretty-printed.
+  /// The pings as they would be sent right now, pretty-printed. The feature
+  /// ping is absent when no completed day is due.
   public func preview(environment: TelemetryEnvironment) -> [TelemetryEndpoint: String] {
     let state = storage.load()
     let now = now()
@@ -145,7 +152,7 @@ public final class TelemetryService {
   private func dueEndpoints(_ state: TelemetryState, now: Date) -> [TelemetryEndpoint] {
     var due: [TelemetryEndpoint] = []
     if TelemetryDay.shouldSend(lastSent: state.healthLastSent, now: now) { due.append(.health) }
-    if TelemetryDay.shouldSend(lastSent: state.featureLastSent, now: now) { due.append(.feature) }
+    if state.featureReportDay(now: now) != nil { due.append(.feature) }
     return due
   }
 
@@ -171,8 +178,10 @@ public final class TelemetryService {
     let now = now()
     let sent = storage.load()
     do {
-      let body = try TelemetryPings.encodedPing(
-        endpoint, environment: environment, state: sent, now: now)
+      guard
+        let body = try TelemetryPings.encodedPing(
+          endpoint, environment: environment, state: sent, now: now)
+      else { return }
       try await transport.send(body, to: endpoint)
     } catch {
       Logger.telemetry.info(
@@ -183,18 +192,13 @@ public final class TelemetryService {
     // An opt-out during the request has already deleted the state.
     guard isConsented() else { return }
     var state = storage.load()
-    let day = TelemetryDay.string(for: now)
     switch endpoint {
     case .health:
-      state.healthLastSent = day
-      state.pendingErrors.subtract(sent.pendingErrors)
+      state.healthLastSent = TelemetryDay.string(for: now)
     case .feature:
-      state.featureLastSent = day
-      // Keeps uses recorded while the request was in flight.
-      for (feature, count) in sent.pendingFeatures {
-        let remaining = state.pendingFeatures[feature, default: 0] - count
-        state.pendingFeatures[feature] = remaining > 0 ? remaining : nil
-      }
+      // The reported day is before `now`'s day, so uses recorded while the
+      // request was in flight land on a later day and are kept.
+      if let day = sent.featureReportDay(now: now) { state.didReport(day: day) }
     }
     storage.save(state)
   }

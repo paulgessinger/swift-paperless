@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -51,20 +52,26 @@ def health_payload(**overrides: object) -> dict[str, object]:
         "servers": "1",
         "active_days_30": "8-20",
         "install_age": "<30d",
-        "errors": ["tls"],
     }
     payload.update(overrides)
     return {k: v for k, v in payload.items() if v is not None}
 
 
+def days_before(day: str, n: int = 1) -> str:
+    return (date.fromisoformat(day) - timedelta(days=n)).isoformat()
+
+
 def feature_payload(**overrides: object) -> dict[str, object]:
+    """A feature ping for the day before the default Clock day; `None` overrides drop a field."""
     payload: dict[str, object] = {
         "channel": "appstore",
+        "day": "2026-11-06",
         "features": {"saved_view": "2-9", "scan_started": "1", "scan_uploaded": "1"},
         "available": ["saved_view", "scan_started", "scan_uploaded", "notes"],
+        "errors": ["tls"],
     }
     payload.update(overrides)
-    return payload
+    return {k: v for k, v in payload.items() if v is not None}
 
 
 def rows(db: Path) -> list[tuple[str, str, str, str, str, int]]:

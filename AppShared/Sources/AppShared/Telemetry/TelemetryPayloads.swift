@@ -23,17 +23,20 @@ public struct HealthPing: Codable, Equatable, Sendable {
   public var servers: TelemetryServersBucket
   public var active_days_30: TelemetryActiveDaysBucket
   public var install_age: TelemetryInstallAgeBucket
-  /// Sorted; `nil` rather than empty when nothing was hit.
-  public var errors: [TelemetryError]?
 }
 
-/// The body of `POST /t/feature`. Sent daily even when `features` is empty, so
-/// the ping count is a denominator.
+/// The body of `POST /t/feature`: one completed UTC day. Sent for every
+/// reported day even when `features` is empty, so the ping count is a
+/// denominator.
 public struct FeaturePing: Codable, Equatable, Sendable {
   public var channel: TelemetryChannel
+  /// The UTC day the counts belong to, `yyyy-MM-dd`.
+  public var day: String
   public var features: [TelemetryFeature: TelemetryCountBucket]
   /// Sorted in schema order.
   public var available: [TelemetryFeature]
+  /// The setup errors hit that day, in schema order; `nil` rather than empty.
+  public var errors: [TelemetryError]?
 }
 
 public enum TelemetryEndpoint: String, CaseIterable, Sendable {

@@ -16,7 +16,11 @@ def report(
     until: Annotated[str | None, typer.Option(help="Last day (yyyy-MM-dd); default: latest in DB")] = None,
     schema_path: Annotated[Path | None, typer.Option(envvar="TELEMETRY_SCHEMA_PATH", help="Schema file")] = None,
 ) -> None:
-    """Print per-day per-field counts, used/available ratios and the MAU estimate."""
+    """Print per-day per-field counts, used/available ratios and the MAU estimate.
+
+    Feature pings (including setup errors) are filed under the day they report,
+    so the latest days keep filling in.
+    """
     conn = open_readonly(db)
     try:
         typer.echo(render(conn, load_schema(schema_path), days=days, channel=channel, until=until), nl=False)
