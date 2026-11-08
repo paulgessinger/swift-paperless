@@ -40,9 +40,16 @@ public final class NetworkMonitor {
   /// facts are only meaningful together, and every consumer wants both.
   public private(set) var cost: LinkCost = .unrestricted
 
+  /// Counts changes of the route to the network while a path is in use, such as
+  /// a VPN tunnel coming up, which `isOnline` doesn't show: the device was
+  /// already online. Observe it to retry what failed on the previous route.
+  public private(set) var routeChangeCount = 0
+
   /// Whether a path has been reported. Until then `isOnline` and `cost` are
   /// defaults, not readings.
   @ObservationIgnored private var hasReportedPath = false
+
+  @ObservationIgnored private var route: [String]?
 
   @ObservationIgnored private let monitor = NWPathMonitor()
   @ObservationIgnored private let queue = DispatchQueue(label: "NetworkMonitor.queue")
@@ -55,6 +62,7 @@ public final class NetworkMonitor {
       // properties below only catch up after a hop to the main actor — too
       // late for a request failing right after the path changes.
       NetworkPathProbe.update(interfaceSatisfied: online)
+      let route = path.availableInterfaces.map(\.name) + path.gateways.map(\.debugDescription)
       let cost = LinkCost(isExpensive: path.isExpensive, isConstrained: path.isConstrained)
       Task { @MainActor [weak self] in
         guard let self else { return }
@@ -64,6 +72,11 @@ public final class NetworkMonitor {
           self.interfaceOnline = online
         }
         if self.cost != cost { self.cost = cost }
+        if let previous = self.route, previous != route {
+          Logger.shared.info("NetworkMonitor: route changed")
+          self.routeChangeCount += 1
+        }
+        self.route = route
         self.hasReportedPath = true
       }
     }
