@@ -9,49 +9,31 @@ import os
 
 /// Records feature use and setup errors, and sends the two daily pings.
 ///
-/// The app and the share extension each install one
-/// (``installProduction()``); until then the static entry points do nothing.
-/// Both record into the app-group defaults, and only the app sends. Every entry
+/// ``shared`` is the production service in every process. The app and the
+/// share extension both record into the app-group defaults; only the app
+/// sends. Every entry
 /// point checks consent first, so nothing is recorded or stored before opt-in.
 /// Sends are fire-and-forget: a failed ping is dropped and tried again on the
 /// next activation of the same UTC day at most.
 @MainActor
 public final class TelemetryService {
-  public private(set) static var current: TelemetryService?
-
-  /// Makes `service` the one the static entry points use. Later calls are
-  /// ignored.
-  public static func install(_ service: TelemetryService) {
-    guard current == nil else { return }
-    current = service
-  }
-
-  /// Telemetry and its opt-in UI only run in debug builds until the privacy
-  /// policy describes it.
-  public nonisolated static var isEnabledInThisBuild: Bool { Bundle.isDebug }
-
-  /// Installs ``production(isConsented:)``, consented by
-  /// ``AppSettings/telemetryOptIn``. Every process entry point calls it; only
-  /// the first call installs.
-  public static func installProduction() {
-    guard current == nil else { return }
-    install(
-      .production(isConsented: { isEnabledInThisBuild && AppSettings.shared.telemetryOptIn == true }
-      ))
-  }
+  public static let shared = TelemetryService(
+    isConsented: { AppFeatures.enabled(.telemetry) && AppSettings.shared.telemetryOptIn == true },
+    transport: URLSessionTelemetryTransport(
+      baseURL: TelemetryChannel(Bundle.main.appConfiguration).collectorBaseURL))
 
   public static func record(_ feature: TelemetryFeature) {
-    current?.record(feature)
+    shared.record(feature)
   }
 
   /// Records the setup-problem class of `error`, if it has one.
   public static func record(error: any Error) {
     guard let error = TelemetryError(classifying: error) else { return }
-    current?.record(error)
+    shared.record(error)
   }
 
   public static func record(_ error: TelemetryError) {
-    current?.record(error)
+    shared.record(error)
   }
 
   private let isConsented: @MainActor () -> Bool
@@ -85,15 +67,6 @@ public final class TelemetryService {
 
     // Leftovers from an opt-out this process didn't observe.
     if !isConsented() { storage.clear() }
-  }
-
-  /// The service for this build: Debug and Simulator builds send to the dev
-  /// collector, everything else to production.
-  public static func production(isConsented: @escaping @MainActor () -> Bool) -> TelemetryService {
-    let channel = TelemetryChannel(Bundle.main.appConfiguration)
-    return TelemetryService(
-      isConsented: isConsented,
-      transport: URLSessionTelemetryTransport(baseURL: channel.collectorBaseURL))
   }
 
   public func record(_ feature: TelemetryFeature) {
@@ -154,7 +127,7 @@ public final class TelemetryService {
     let now = now()
     var result: [TelemetryEndpoint: String] = [:]
     for endpoint in TelemetryEndpoint.allCases {
-      if let data = try? TelemetryAssembly.encodedPing(
+      if let data = try? TelemetryPings.encodedPing(
         endpoint, environment: environment, state: state, now: now, pretty: true)
       {
         result[endpoint] = String(decoding: data, as: UTF8.self)
@@ -199,7 +172,7 @@ public final class TelemetryService {
     let now = now()
     let sent = storage.load()
     do {
-      let body = try TelemetryAssembly.encodedPing(
+      let body = try TelemetryPings.encodedPing(
         endpoint, environment: environment, state: sent, now: now)
       try await transport.send(body, to: endpoint)
     } catch {

@@ -10,9 +10,9 @@
 import Common
 import Foundation
 
-// MARK: - Coarsening
+// MARK: - Values
 
-public enum TelemetryCoarsening {
+public enum TelemetryValues {
   /// `major.minor`, never the patch level.
   public static func osVersion(major: Int, minor: Int) -> String {
     "\(major).\(minor)"
@@ -159,7 +159,7 @@ public struct TelemetryEnvironment: Equatable, Sendable {
   public var backendVersion: String?
   public var apiVersion: UInt?
   public var documentCount: UInt?
-  public var auth: TelemetryAuth?
+  public var auth: ConnectionAuthMethod?
   public var clientCertificate: Bool
   public var customHeaders: Bool
   public var serverCount: Int
@@ -168,7 +168,7 @@ public struct TelemetryEnvironment: Equatable, Sendable {
   public init(
     channel: TelemetryChannel, appVersion: String, osMajor: Int, osMinor: Int,
     device: TelemetryDevice, localization: String, backendVersion: String? = nil,
-    apiVersion: UInt? = nil, documentCount: UInt? = nil, auth: TelemetryAuth? = nil,
+    apiVersion: UInt? = nil, documentCount: UInt? = nil, auth: ConnectionAuthMethod? = nil,
     clientCertificate: Bool = false, customHeaders: Bool = false, serverCount: Int,
     availableFeatures: [TelemetryFeature] = TelemetryFeature.allCases
   ) {
@@ -212,18 +212,18 @@ public struct TelemetryState: Equatable, Sendable {
   }
 }
 
-public enum TelemetryAssembly {
+public enum TelemetryPings {
   public static func healthPing(
     environment env: TelemetryEnvironment, state: TelemetryState, now: Date
   ) -> HealthPing {
     let errors = TelemetryError.allCases.filter(state.pendingErrors.contains)
     return HealthPing(
       channel: env.channel,
-      app: TelemetryCoarsening.appVersion(env.appVersion),
-      ios: TelemetryCoarsening.osVersion(major: env.osMajor, minor: env.osMinor),
+      app: TelemetryValues.appVersion(env.appVersion),
+      ios: TelemetryValues.osVersion(major: env.osMajor, minor: env.osMinor),
       device: env.device,
-      lang: TelemetryCoarsening.language(env.localization),
-      backend: env.backendVersion.map(TelemetryCoarsening.backendVersion),
+      lang: TelemetryValues.language(env.localization),
+      backend: env.backendVersion.map(TelemetryValues.backendVersion),
       api: env.apiVersion.flatMap { $0 > 0 ? $0 : nil },
       docs: env.documentCount.map(TelemetryDocsBucket.init(count:)),
       auth: env.auth,

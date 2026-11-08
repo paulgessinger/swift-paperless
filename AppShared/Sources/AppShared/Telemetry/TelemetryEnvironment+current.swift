@@ -28,7 +28,7 @@
         backendVersion: versions.map { $0.backendVersion.description },
         apiVersion: versions.map { min(ApiRepository.maximumApiVersion, $0.apiVersion) },
         documentCount: await store.libraryDocumentCount(),
-        auth: active?.authMethod.map(TelemetryAuth.init),
+        auth: active?.authMethod,
         clientCertificate: active?.identity != nil,
         customHeaders: !(active?.extraHeaders.isEmpty ?? true),
         serverCount: connectionManager.connections.count,

@@ -64,22 +64,6 @@ public enum TelemetryDevice: String, Codable, CaseIterable, Sendable {
   case iPad
 }
 
-public enum TelemetryAuth: String, Codable, CaseIterable, Sendable {
-  case token
-  case password
-  case sso
-  case none
-
-  public init(_ method: ConnectionAuthMethod) {
-    switch method {
-    case .token: self = .token
-    case .password: self = .password
-    case .sso: self = .sso
-    case .none: self = .none
-    }
-  }
-}
-
 // MARK: - Buckets
 
 /// A count of uses. Zero has no bucket: the key is left out instead.

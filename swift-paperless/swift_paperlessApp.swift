@@ -247,7 +247,7 @@ struct MainView: View {
   /// Sends the day's telemetry pings once this scene is active on a server.
   private func reportTelemetry() {
     guard scenePhase == .active, storeReady, let store else { return }
-    TelemetryService.current?.appBecameActive { [manager] in
+    TelemetryService.shared.appBecameActive { [manager] in
       await TelemetryEnvironment.current(store: store, connectionManager: manager)
     }
   }
@@ -490,7 +490,7 @@ struct MainView: View {
     }
 
     .onChange(of: AppSettings.shared.telemetryOptIn) {
-      TelemetryService.current?.consentDidChange(hasConnection: !manager.connections.isEmpty)
+      TelemetryService.shared.consentDidChange(hasConnection: !manager.connections.isEmpty)
     }
 
     .onChange(of: manager.needsAuthIds) { old, new in
@@ -513,10 +513,6 @@ struct MainView: View {
 struct swift_paperlessApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   @State private var bootstrap = DatabaseBootstrap()
-
-  init() {
-    TelemetryService.installProduction()
-  }
 
   var body: some Scene {
     WindowGroup {
