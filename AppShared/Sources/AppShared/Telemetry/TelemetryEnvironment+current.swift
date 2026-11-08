@@ -23,7 +23,8 @@
         appVersion: Bundle.main.releaseVersionNumber ?? "other",
         osMajor: os.majorVersion,
         osMinor: os.minorVersion,
-        device: UIDevice.current.userInterfaceIdiom == .pad ? .iPad : .iPhone,
+        device: ProcessInfo.processInfo.isiOSAppOnMac
+          ? .Mac : UIDevice.current.userInterfaceIdiom == .pad ? .iPad : .iPhone,
         localization: Bundle.main.preferredLocalizations.first ?? "en",
         backendVersion: versions.map { $0.backendVersion.description },
         apiVersion: versions.map { min(ApiRepository.maximumApiVersion, $0.apiVersion) },
@@ -32,7 +33,9 @@
         clientCertificate: active?.identity != nil,
         customHeaders: !(active?.extraHeaders.isEmpty ?? true),
         serverCount: connectionManager.connections.count,
-        availableFeatures: TelemetryFeature.allCases)
+        availableFeatures: TelemetryFeature.allCases.filter {
+          $0 != .networkScanUploaded || AppFeatures.enabled(.networkScanner)
+        })
     }
   }
 #endif
