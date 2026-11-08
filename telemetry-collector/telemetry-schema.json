@@ -39,8 +39,8 @@
     "iPad"
   ],
   "auth": [
-    "token",
     "password",
+    "token",
     "sso",
     "none"
   ],
