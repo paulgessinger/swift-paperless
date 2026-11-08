@@ -50,7 +50,6 @@ def health_payload(**overrides: object) -> dict[str, object]:
         "client_cert": True,
         "custom_headers": False,
         "servers": "1",
-        "active_days_30": "8-20",
         "install_age": "<30d",
         "first_month": True,
         "first_week": False,

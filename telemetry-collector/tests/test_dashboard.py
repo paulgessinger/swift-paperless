@@ -204,6 +204,7 @@ def test_sign_in_and_render(make_dashboard, provider, seeded_db):
     assert "Daily active · 2026-11-07" in html
     assert "MAU" not in html
     assert "Active installs this month · 2026-11" in html
+    assert "Average active days per install · 2026-11" in html
     assert "Active installs this week · 2026-W45" in html
     assert 'id="chart-months"' in html and 'id="chart-weeks"' in html
     assert "<svg" in html
@@ -531,7 +532,9 @@ def test_active_install_cards_and_charts(make_client, db_path, clock):
     month, week = ctx["cards"]["month"], ctx["cards"]["week"]
     assert (month.label, month.start, month.count) == ("2026-11", "2026-11-01", 2)
     assert (week.label, week.start, week.count) == ("2026-W46", "2026-11-09", 1)
-    assert ctx["chart"]["months"] == [{"label": "2026-11", "count": 2, "filling": True}]
+    # Four health pings in November over two active installs.
+    assert ctx["cards"]["avg_active_days"] == 2.0
+    assert ctx["chart"]["months"] == [{"label": "2026-11", "count": 2, "filling": True, "avg_active_days": 2.0}]
     assert ctx["chart"]["weeks"] == [
         {"label": "2026-W45", "count": 2, "filling": False},
         {"label": "2026-W46", "count": 1, "filling": True},
@@ -541,4 +544,5 @@ def test_active_install_cards_and_charts(make_client, db_path, clock):
     months = ctx["chart"]["months"]
     assert [m["label"] for m in months] == ["2026-08", "2026-09", "2026-10", "2026-11"]
     assert [m["filling"] for m in months] == [False, False, False, True]
+    assert [m["avg_active_days"] for m in months] == [None, None, None, 2.0]
     assert len(ctx["chart"]["weeks"]) == 14

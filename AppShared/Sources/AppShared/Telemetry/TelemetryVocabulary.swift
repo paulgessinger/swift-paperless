@@ -112,24 +112,6 @@ public enum TelemetryServersBucket: String, Codable, CaseIterable, Sendable {
   }
 }
 
-/// On how many UTC days of the last 30 the app became active.
-public enum TelemetryActiveDaysBucket: String, Codable, CaseIterable, Sendable {
-  case one = "1"
-  case upToWeek = "2-7"
-  case upTo20 = "8-20"
-  case atLeast21 = "21+"
-
-  public init?(count: Int) {
-    switch count {
-    case ..<1: return nil
-    case 1: self = .one
-    case 2...7: self = .upToWeek
-    case 8...20: self = .upTo20
-    default: self = .atLeast21
-    }
-  }
-}
-
 /// Time since the local install stamp, or `existing` when the user opted in
 /// after the app was already set up.
 public enum TelemetryInstallAgeBucket: String, Codable, CaseIterable, Sendable {

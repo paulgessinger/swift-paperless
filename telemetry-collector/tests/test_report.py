@@ -10,6 +10,7 @@ from telemetry_collector.report import (
     Counts,
     PeriodCount,
     active_installs,
+    average_active_days,
     completion_pairs,
     distribution,
     error_shares,
@@ -27,10 +28,10 @@ SCHEMA = load_schema()
 def seeded(make_client, db_path, clock):
     with make_client() as c:
         clock.day = "2026-11-06"
-        c.post("/t/health", json=health_payload(active_days_30="1", first_month=True, first_week=True))
+        c.post("/t/health", json=health_payload(first_month=True, first_week=True))
         clock.day = "2026-11-07"
-        c.post("/t/health", json=health_payload(active_days_30="2-7", auth=None, backend=None, first_month=False))
-        c.post("/t/health", json=health_payload(active_days_30="2-7", auth="none", first_month=True))
+        c.post("/t/health", json=health_payload(auth=None, backend=None, first_month=False))
+        c.post("/t/health", json=health_payload(auth="none", first_month=True))
         assert c.post("/t/feature", json=feature_payload(day="2026-11-06")).status_code == 204
         assert c.post("/t/feature", json=feature_payload(day="2026-11-06", features={}, errors=None)).status_code == 204
     return db_path
@@ -42,7 +43,7 @@ def test_report(seeded):
     conn.close()
     assert "still filling in" in out.splitlines()[0]
     assert "== 2026-11-07  channel=appstore" in out
-    assert "active_days_30: 2-7=2" in out
+    assert "servers: 1=2" in out
     # Feature pings sent on 11-07 are filed under the day they report.
     day_06 = out.split("== 2026-11-06  channel=appstore")[1].split("== 2026-11-07")[0]
     assert "[feature] pings=2" in day_06
@@ -52,7 +53,10 @@ def test_report(seeded):
     assert "[feature]" not in out.split("== 2026-11-07  channel=appstore")[1]
     assert "MAU" not in out
     # 2026-11-07 is a Saturday in 2026-W45, which started on Monday 11-02.
-    assert "== Active installs appstore this month (2026-11, 2026-11-01 to 2026-11-07, still filling in): 2" in out
+    assert (
+        "== Active installs appstore this month (2026-11, 2026-11-01 to 2026-11-07, still filling in): 2, "
+        "average active days per install: 1.5" in out
+    )
     assert "== Active installs appstore this week (2026-W45, 2026-11-02 to 2026-11-07, still filling in): 1" in out
 
 
@@ -94,7 +98,7 @@ def test_report_counts_the_whole_month_and_week(make_client, db_path, clock):
     conn = open_readonly(db_path)
     out = render(conn, SCHEMA, days=1, until="2026-10-02")
     conn.close()
-    assert "this month (2026-10, 2026-10-01 to 2026-10-02, still filling in): 2" in out
+    assert "this month (2026-10, 2026-10-01 to 2026-10-02, still filling in): 2," in out
     # 2026-09-28 is the Monday of 2026-W40.
     assert "this week (2026-W40, 2026-09-28 to 2026-10-02, still filling in): 3" in out
 
@@ -128,6 +132,27 @@ def test_active_installs_per_period(make_client, db_path, clock):
     assert active_installs(counts, "week", "2026-11-02", "2026-11-02") == [
         PeriodCount("2026-W45", "2026-11-02", 2, True)
     ]
+
+
+def test_average_active_days(make_client, db_path, clock):
+    with make_client() as c:
+        # Two installs in November: one active on three days, one on one.
+        for day, first in (("2026-11-01", True), ("2026-11-02", False), ("2026-11-02", True), ("2026-11-03", False)):
+            clock.day = day
+            c.post("/t/health", json=health_payload(first_month=first))
+        # December is outside the period.
+        clock.day = "2026-12-01"
+        c.post("/t/health", json=health_payload(first_month=True))
+    conn = open_readonly(db_path)
+    counts = Counts(conn, "appstore", "2026-11-01", "2026-12-01")
+    conn.close()
+    november, december = active_installs(counts, "month", "2026-11-01", "2026-12-01")
+    assert average_active_days(counts, "month", november, "2026-12-01") == 2.0
+    assert average_active_days(counts, "month", december, "2026-12-01") == 1.0
+    # Counted only through `end`.
+    (partial,) = active_installs(counts, "month", "2026-11-02", "2026-11-02")
+    assert average_active_days(counts, "month", partial, "2026-11-02") == 1.5
+    assert average_active_days(counts, "month", PeriodCount("2026-10", "2026-10-01", 0, False), "2026-12-01") is None
 
 
 def test_unknown_derived_for_optional_fields(seeded):
