@@ -53,6 +53,8 @@ struct TelemetryStorage {
     nonmutating set { set(newValue, .featureLastReported) }
   }
 
+  /// Only the days a feature ping can still report, and today: the feature
+  /// report needs nothing older.
   var activeDays: Set<String> {
     get { Set(defaults.stringArray(forKey: Key.activeDays.rawValue) ?? []) }
     nonmutating set { set(newValue.isEmpty ? nil : newValue.sorted(), .activeDays) }

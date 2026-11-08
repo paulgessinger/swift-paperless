@@ -139,11 +139,13 @@ public final class TelemetryService {
     let now = now()
     // Opted in before this process could observe it, with a connection.
     if storage.installStamp == nil { storage.installStamp = .existing }
+    let lastReported = storage.featureLastReported
     let activeDays = storage.activeDays
-    let recorded = TelemetryActiveDays.recording(activeDays, now: now)
+    let recorded = TelemetryReportableDays.recordingActive(
+      activeDays, now: now, lastReported: lastReported)
     if recorded != activeDays { storage.activeDays = recorded }
     let pending = storage.ownPending
-    let pruned = pending.pruned(now: now, lastReported: storage.featureLastReported)
+    let pruned = pending.pruned(now: now, lastReported: lastReported)
     if pruned != pending { storage.ownPending = pruned }
 
     guard sendTask == nil, !dueEndpoints(storage.load(now: now), now: now).isEmpty else { return }
