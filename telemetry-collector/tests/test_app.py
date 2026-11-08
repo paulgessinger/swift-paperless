@@ -227,7 +227,7 @@ def test_nothing_written_before_batch_full(make_client, db_path):
 def test_rejected_pings_do_not_count_towards_batch(make_client, db_path):
     with make_client(batch_size=2) as c:
         c.post("/t/health", json=health_payload())
-        c.post("/t/health", json=health_payload(device="Mac"))
+        c.post("/t/health", json=health_payload(device="Android"))
         assert rows(db_path) == []
         c.post("/t/health", json=health_payload())
         assert rows(db_path) != []

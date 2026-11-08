@@ -18,7 +18,7 @@ def test_metrics_carry_no_payload_content(make_client):
             "/t/feature",
             json=feature_payload(features={n: "1" for n in schema["features"]}, available=schema["features"]),
         )
-        c.post("/t/health", json=health_payload(device="Mac"))
+        c.post("/t/health", json=health_payload(device="Android"))
         c.post("/t/feature", json=feature_payload())
         # The public app does not serve metrics.
         assert c.get("/metrics").status_code == 404
