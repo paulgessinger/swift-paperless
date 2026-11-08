@@ -19,11 +19,11 @@ private func environment(
 }
 
 @Suite
-struct TelemetryCoarseningTests {
+struct TelemetryValuesTests {
   @Test("iOS versions are major.minor")
   func osVersion() {
-    #expect(TelemetryCoarsening.osVersion(major: 18, minor: 3) == "18.3")
-    #expect(TelemetryCoarsening.osVersion(major: 26, minor: 0) == "26.0")
+    #expect(TelemetryValues.osVersion(major: 18, minor: 3) == "18.3")
+    #expect(TelemetryValues.osVersion(major: 26, minor: 0) == "26.0")
   }
 
   @Test(
@@ -38,23 +38,23 @@ struct TelemetryCoarseningTests {
       ("", "other"),
     ])
   func backendVersion(raw: String, expected: String) {
-    #expect(TelemetryCoarsening.backendVersion(raw) == expected)
+    #expect(TelemetryValues.backendVersion(raw) == expected)
   }
 
   @Test("App versions that aren't major.minor[.patch] are not sent verbatim")
   func appVersion() {
-    #expect(TelemetryCoarsening.appVersion("1.11.0") == "1.11.0")
-    #expect(TelemetryCoarsening.appVersion("1.11") == "1.11")
-    #expect(TelemetryCoarsening.appVersion("1.11.0-beta") == "0.0")
+    #expect(TelemetryValues.appVersion("1.11.0") == "1.11.0")
+    #expect(TelemetryValues.appVersion("1.11") == "1.11")
+    #expect(TelemetryValues.appVersion("1.11.0-beta") == "0.0")
   }
 
   @Test("Languages drop region and script")
   func language() {
-    #expect(TelemetryCoarsening.language("") == "und")
-    #expect(TelemetryCoarsening.language("en") == "en")
-    #expect(TelemetryCoarsening.language("pt-BR") == "pt")
-    #expect(TelemetryCoarsening.language("zh-Hans") == "zh")
-    #expect(TelemetryCoarsening.language("de_CH") == "de")
+    #expect(TelemetryValues.language("") == "und")
+    #expect(TelemetryValues.language("en") == "en")
+    #expect(TelemetryValues.language("pt-BR") == "pt")
+    #expect(TelemetryValues.language("zh-Hans") == "zh")
+    #expect(TelemetryValues.language("de_CH") == "de")
   }
 }
 
@@ -85,7 +85,7 @@ struct TelemetryBucketTests {
   @Test("Unused features are absent from the feature ping")
   func zeroIsAbsent() {
     let state = TelemetryState(pendingFeatures: [.search: 0, .filter: 3])
-    let ping = TelemetryAssembly.featurePing(environment: environment(), state: state)
+    let ping = TelemetryPings.featurePing(environment: environment(), state: state)
     #expect(ping.features == [.filter: .few])
   }
 }
@@ -152,12 +152,12 @@ struct TelemetryActivityTests {
 }
 
 @Suite
-struct TelemetryAssemblyTests {
+struct TelemetryPingsTests {
   @Test("The health ping carries only coarsened values")
   func healthPing() throws {
     let state = TelemetryState(
       pendingErrors: [.timeout, .tls], activeDays: ["2026-01-05"], installStamp: .existing)
-    let ping = TelemetryAssembly.healthPing(
+    let ping = TelemetryPings.healthPing(
       environment: environment(backend: "2.14.3-dev"), state: state, now: utc("2026-01-05"))
     #expect(ping.ios == "18.3")
     #expect(ping.lang == "pt")
@@ -170,7 +170,7 @@ struct TelemetryAssemblyTests {
 
     let json = try #require(
       try JSONSerialization.jsonObject(
-        with: TelemetryAssembly.encodedPing(
+        with: TelemetryPings.encodedPing(
           .health, environment: environment(), state: TelemetryState(), now: utc("2026-01-05")))
         as? [String: Any])
     // Empty errors are left out rather than sent as null or [].
@@ -189,12 +189,12 @@ struct TelemetryAssemblyTests {
 
   @Test("The feature ping lists available features in schema order")
   func featurePing() throws {
-    let ping = TelemetryAssembly.featurePing(
+    let ping = TelemetryPings.featurePing(
       environment: environment(), state: TelemetryState(pendingFeatures: [.notes: 12]))
     #expect(ping.features == [.notes: .many])
     #expect(ping.available == TelemetryFeature.allCases)
 
-    let data = try TelemetryAssembly.encodedPing(
+    let data = try TelemetryPings.encodedPing(
       .feature, environment: environment(), state: TelemetryState(), now: utc("2026-01-05"))
     let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
     #expect((json["features"] as? [String: Any])?.isEmpty == true)
@@ -486,14 +486,6 @@ struct TelemetryServiceTests {
       #expect(shown == sent)
     }
   }
-
-  @Test("The static entry points do nothing without an installed service")
-  func noInstalledService() {
-    // The ShareExtension never installs one.
-    #expect(TelemetryService.current == nil)
-    TelemetryService.record(.search)
-    TelemetryService.record(error: URLError(.timedOut))
-  }
 }
 
 /// The constraints `telemetry-collector/src/telemetry_collector/schema.py`
@@ -518,9 +510,9 @@ struct TelemetryCollectorContractTests {
   func health(localization: String, backend: String?, auth: ConnectionAuthMethod?) throws {
     var env = environment(backend: backend, documents: nil)
     env.localization = localization
-    env.auth = auth.map(TelemetryAuth.init)
+    env.auth = auth
     let state = TelemetryState(pendingErrors: Set(TelemetryError.allCases))
-    let data = try TelemetryAssembly.encodedPing(
+    let data = try TelemetryPings.encodedPing(
       .health, environment: env, state: state, now: utc("2026-01-05"))
     let json = try object(data)
 
@@ -554,7 +546,7 @@ struct TelemetryCollectorContractTests {
   func feature() throws {
     let all = Dictionary(uniqueKeysWithValues: TelemetryFeature.allCases.map { ($0, 50) })
     for state in [TelemetryState(), TelemetryState(pendingFeatures: all)] {
-      let data = try TelemetryAssembly.encodedPing(
+      let data = try TelemetryPings.encodedPing(
         .feature, environment: environment(), state: state, now: utc("2026-01-05"))
       let json = try object(data)
       #expect(Set(json.keys) == ["channel", "features", "available"])

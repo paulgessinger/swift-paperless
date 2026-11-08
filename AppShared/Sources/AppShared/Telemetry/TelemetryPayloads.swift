@@ -17,7 +17,7 @@ public struct HealthPing: Codable, Equatable, Sendable {
   public var api: UInt?
   public var docs: TelemetryDocsBucket?
   /// `nil` for connections that predate recording the sign-in method.
-  public var auth: TelemetryAuth?
+  public var auth: ConnectionAuthMethod?
   public var client_cert: Bool
   public var custom_headers: Bool
   public var servers: TelemetryServersBucket

@@ -43,7 +43,7 @@ struct TelemetrySchemaTests {
     let schema = try Self.loadSchema()
     #expect(Self.raw(TelemetryChannel.self) == schema.channels)
     #expect(Self.raw(TelemetryDevice.self) == schema.device)
-    #expect(Self.raw(TelemetryAuth.self) == schema.auth)
+    #expect(Self.raw(ConnectionAuthMethod.self) == schema.auth)
     #expect(Self.raw(TelemetryFeature.self) == schema.features)
     #expect(Self.raw(TelemetryError.self) == schema.errors)
     #expect(Self.raw(TelemetryCountBucket.self) == schema.buckets.count)
