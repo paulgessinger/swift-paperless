@@ -28,7 +28,6 @@ struct ShareView: View {
   init(attachmentManager: AttachmentManager, callback: @escaping () -> Void) {
     self.attachmentManager = attachmentManager
     self.callback = callback
-    TelemetryService.installProduction()
     // The extension process's `AppStack` (app-group SQLite, WAL). Its registry is
     // never `start()`ed: an extension has no reason to react to connection edits
     // made elsewhere.

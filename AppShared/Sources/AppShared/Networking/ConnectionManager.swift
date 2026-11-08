@@ -14,8 +14,9 @@ import Networking
 import Persistence
 import os
 
-/// How the user signed in to a server. Stored with the connection.
-public enum ConnectionAuthMethod: String, Equatable, Sendable, CaseIterable {
+/// How the user signed in to a server. The raw values are stored with the
+/// connection and sent as the health ping's `auth`.
+public enum ConnectionAuthMethod: String, Codable, Equatable, Sendable, CaseIterable {
   case password
   case token
   case sso

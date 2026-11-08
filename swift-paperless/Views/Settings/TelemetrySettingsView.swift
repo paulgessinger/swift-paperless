@@ -51,10 +51,9 @@ struct TelemetrySettingsView: View {
   @State private var payloads: [TelemetryEndpoint: String] = [:]
 
   private func loadPayloads() async {
-    guard let service = TelemetryService.current else { return }
     let environment = await TelemetryEnvironment.current(
       store: store, connectionManager: connectionManager)
-    payloads = service.preview(environment: environment)
+    payloads = TelemetryService.shared.preview(environment: environment)
   }
 
   var body: some View {
