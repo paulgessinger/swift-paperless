@@ -24,7 +24,7 @@ uv run ruff check
 uv run ruff format --check   # `uv run ruff format` applies it
 uv run pyright
 
-# Dev mode: accepts the "dev" channel and serves /docs.
+# Dev mode: serves /docs.
 TELEMETRY_DEV=1 TELEMETRY_DB_PATH=/tmp/telemetry.sqlite3 uv run telemetry-collector-serve
 
 curl -i -X POST http://127.0.0.1:8000/t/feature -H 'content-type: application/json' \
@@ -44,14 +44,14 @@ TELEMETRY_ROLE=dashboard TELEMETRY_DEV=1 DASHBOARD_AUTH=off \
 |---|---|---|
 | `TELEMETRY_DB_PATH` | `telemetry.sqlite3` (`/data/telemetry.sqlite3` in the image) | SQLite database |
 | `TELEMETRY_SCHEMA_PATH` | `telemetry-schema.json` next to the package source | Shared schema |
-| `TELEMETRY_CHANNELS` | `appstore,testflight` (`+dev` in dev mode) | Accepted channels; others get 400 |
-| `TELEMETRY_DEV` | off | Allows the `dev` channel and enables `/docs`, `/openapi.json` |
+| `TELEMETRY_DEV` | off | Enables `/docs`, `/openapi.json` |
 | `TELEMETRY_BATCH_SIZE` | `20` | Pings per write transaction (k) |
 | `TELEMETRY_HOST` / `TELEMETRY_PORT` | `127.0.0.1` / `$PORT` or `8000` | API listener (the image sets `0.0.0.0` and `PORT=5000`, Dokku's convention) |
 | `METRICS_HOST` / `METRICS_PORT` | `127.0.0.1` / unset | Prometheus listener; disabled unless `METRICS_PORT` is set |
 | `TELEMETRY_ROLE` | `collector` | `collector` or `dashboard` |
 
-The `dev` channel is refused at startup unless `TELEMETRY_DEV` is set.
+Every schema channel is accepted, `dev` included: debug builds send to the
+production collector, and the dashboard shows each channel separately.
 
 Settings are read with pydantic-settings (`config.py`), from these exact
 variable names only. There is no `.env` file support, so a stray file is never
@@ -122,7 +122,7 @@ sudo chown 10001:10001 /var/lib/dokku/data/storage/telemetry-data
 dokku storage:mount telemetry /var/lib/dokku/data/storage/telemetry-data:/data
 
 dokku config:set --no-restart telemetry \
-  TELEMETRY_CHANNELS=appstore,testflight TELEMETRY_BATCH_SIZE=20 \
+  TELEMETRY_BATCH_SIZE=20 \
   METRICS_HOST=0.0.0.0 METRICS_PORT=9100
 
 # One container; SIGTERM leaves 30 s for the shutdown flush (uvicorn's own timeout is 10 s).

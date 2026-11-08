@@ -19,8 +19,7 @@ import os
 public final class TelemetryService {
   public static let shared = TelemetryService(
     isConsented: { AppFeatures.enabled(.telemetry) && AppSettings.shared.telemetryOptIn == true },
-    transport: URLSessionTelemetryTransport(
-      baseURL: TelemetryChannel(Bundle.main.appConfiguration).collectorBaseURL))
+    transport: URLSessionTelemetryTransport(baseURL: TelemetryCollector.baseURL))
 
   public static func record(_ feature: TelemetryFeature) {
     shared.record(feature)

@@ -201,15 +201,12 @@ struct TelemetryPingsTests {
     #expect(Set(json.keys) == ["channel", "features", "available"])
   }
 
-  @Test("Debug and simulator builds never point at the production collector")
+  @Test("Debug and simulator builds report as the dev channel")
   func channels() {
     #expect(TelemetryChannel(.Debug) == .dev)
     #expect(TelemetryChannel(.Simulator) == .dev)
     #expect(TelemetryChannel(.TestFlight) == .testflight)
     #expect(TelemetryChannel(.AppStore) == .appstore)
-    #expect(TelemetryChannel.dev.collectorBaseURL.host() == "localhost")
-    #expect(
-      TelemetryChannel.dev.collectorBaseURL != TelemetryChannel.appstore.collectorBaseURL)
   }
 }
 

@@ -43,14 +43,9 @@ public enum TelemetryEndpoint: String, CaseIterable, Sendable {
   public var path: String { "/t/\(rawValue)" }
 }
 
-extension TelemetryChannel {
-  /// Compiled in. `dev` only ever points at a local collector.
-  public var collectorBaseURL: URL {
-    switch self {
-    case .appstore, .testflight: URL(string: "https://telemetry.swift-paperless.app")!
-    case .dev: URL(string: "http://localhost:8000")!
-    }
-  }
+public enum TelemetryCollector {
+  /// Compiled in, for every channel: debug builds report as `dev`.
+  public static let baseURL = URL(string: "https://telemetry.swift-paperless.app")!
 }
 
 public enum TelemetryEncoding {

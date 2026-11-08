@@ -41,9 +41,6 @@ async def _read_capped(request: Request, limit: int) -> bytes:
 
 def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> FastAPI:
     schema: Schema = load_schema(settings.schema_path)
-    unknown = settings.channels - set(schema.channels)
-    if unknown:
-        raise ValueError(f"channels not in schema: {sorted(unknown)}")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
@@ -88,9 +85,6 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
             metrics.REQUESTS.labels(ping, "rejected_400").inc()
             return Response(status_code=400)
         channel = payload.model_dump(include={"channel"})["channel"]
-        if channel not in settings.channels:
-            metrics.REQUESTS.labels(ping, "rejected_400").inc()
-            return Response(status_code=400)
         split = schema.split_health if ping == "health" else schema.split_feature
         request.app.state.store.add(channel, ping, split(payload))
         metrics.REQUESTS.labels(ping, "accepted").inc()
