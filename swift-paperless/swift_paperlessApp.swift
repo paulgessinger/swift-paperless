@@ -247,7 +247,7 @@ struct MainView: View {
   /// Sends the day's telemetry pings once this scene is active on a server.
   private func reportTelemetry() {
     guard scenePhase == .active, storeReady, let store else { return }
-    TelemetryService.shared.appBecameActive { [manager] in
+    TelemetryService.current.appBecameActive { [manager] in
       await TelemetryEnvironment.current(store: store, connectionManager: manager)
     }
   }
@@ -490,7 +490,7 @@ struct MainView: View {
     }
 
     .onChange(of: AppSettings.shared.telemetryOptIn) {
-      TelemetryService.shared.consentDidChange(hasConnection: !manager.connections.isEmpty)
+      TelemetryService.current.consentDidChange(hasConnection: !manager.connections.isEmpty)
     }
 
     .onChange(of: manager.needsAuthIds) { old, new in

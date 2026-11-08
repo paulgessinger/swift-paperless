@@ -53,7 +53,7 @@ struct TelemetrySettingsView: View {
   private func loadPayloads() async {
     let environment = await TelemetryEnvironment.current(
       store: store, connectionManager: connectionManager)
-    payloads = TelemetryService.shared.preview(environment: environment)
+    payloads = TelemetryService.current.preview(environment: environment)
   }
 
   var body: some View {
