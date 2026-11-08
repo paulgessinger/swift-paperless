@@ -36,7 +36,8 @@
   },
   "device": [
     "iPhone",
-    "iPad"
+    "iPad",
+    "Mac"
   ],
   "auth": [
     "password",
@@ -54,6 +55,7 @@
     "scan_uploaded",
     "import_started",
     "import_uploaded",
+    "network_scan_uploaded",
     "share_extension_uploaded",
     "shortcut_uploaded",
     "notes"
