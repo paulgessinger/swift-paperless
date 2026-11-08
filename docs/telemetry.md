@@ -34,9 +34,30 @@
 | How you sign in | token, password, single sign-on, or none |
 | Whether you use a client certificate or custom headers | yes / no |
 | Whether you have more than one server set up | one / more than one |
-| On how many days in the last 30 you opened the app | 1 / 2–7 / 8–20 / 21+ days |
 | Roughly how long ago you started sharing | under a week / under a month / under a year / longer |
 | Whether this is the first report this month / this week | yes / no |
+
+- Example (health report):
+
+```json
+{
+  "api" : 9,
+  "app" : "1.11.2",
+  "auth" : "token",
+  "backend" : "2.14.3",
+  "channel" : "appstore",
+  "client_cert" : false,
+  "custom_headers" : false,
+  "device" : "iPhone",
+  "docs" : "1k-10k",
+  "first_month" : false,
+  "first_week" : true,
+  "install_age" : "<1y",
+  "ios" : "18.3",
+  "lang" : "en",
+  "servers" : "1"
+}
+```
 
 **Features you used**
 
@@ -49,6 +70,40 @@
 - Also lists which features are available to you, so an unsupported feature isn't read as unused
 - Report is still sent, empty, for an active day without feature use
 - Exact reports visible in **Settings → Anonymous usage → What's sent**
+
+- Example (feature report):
+
+```json
+{
+  "available" : [
+    "saved_view",
+    "search",
+    "filter",
+    "document_edit",
+    "document_share",
+    "scan_started",
+    "scan_uploaded",
+    "import_started",
+    "import_uploaded",
+    "network_scan_uploaded",
+    "share_extension_uploaded",
+    "shortcut_uploaded",
+    "notes"
+  ],
+  "channel" : "appstore",
+  "day" : "2026-11-06",
+  "errors" : [
+    "timeout"
+  ],
+  "features" : {
+    "document_edit" : "10+",
+    "filter" : "1",
+    "scan_started" : "1",
+    "scan_uploaded" : "1",
+    "search" : "2-9"
+  }
+}
+```
 
 ## What is never sent
 
@@ -84,4 +139,4 @@
 
 - Turn off **Settings → Anonymous usage**
 - Nothing more is sent
-- On-device bookkeeping (active days, opt-in date, month and week of the last report, pending counts) deleted immediately
+- On-device bookkeeping (days not yet reported, opt-in date, month and week of the last report, pending counts) deleted immediately

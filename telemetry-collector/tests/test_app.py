@@ -26,7 +26,6 @@ def test_health_split_into_counters(client, db_path):
         ("client_cert", "true"): 1,
         ("custom_headers", "false"): 1,
         ("servers", "1"): 1,
-        ("active_days_30", "8-20"): 1,
         ("install_age", "<30d"): 1,
         ("first_month", "true"): 1,
         ("first_week", "false"): 1,
@@ -112,7 +111,8 @@ def test_unknown_names_dropped_rest_kept(client, db_path):
         ("/t/health", health_payload(extra_field="x")),
         ("/t/health", health_payload(device="iPod")),
         ("/t/health", health_payload(docs="5")),
-        ("/t/health", health_payload(active_days_30="0")),
+        # Removed before release; a ping still carrying it is an unknown field.
+        ("/t/health", health_payload(active_days_30="8-20")),
         ("/t/health", health_payload(install_age="old")),
         ("/t/health", health_payload(servers="3")),
         ("/t/health", health_payload(auth="magic")),

@@ -75,7 +75,7 @@ picked up. Lists are comma-separated. An invalid value (e.g.
 - `413` for bodies over 4 KiB. `features`, `available` and `errors` are
   limited to 64 entries of at most 64 characters.
 - Required health fields: `channel app ios device lang client_cert
-  custom_headers servers active_days_30 install_age first_month first_week`.
+  custom_headers servers install_age first_month first_week`.
   `first_month` and `first_week` are JSON booleans: whether this is the
   install's first successful health ping of the UTC calendar month, and of the
   ISO-8601 week (UTC, Monday start). Optional (omitted when
@@ -113,7 +113,8 @@ short, and the next write's checkpoint completes it.
 counts (no small-count suppression; error classes appear under the feature
 ping), `used/available` per feature, a warning
 when feature pings exceed health pings by more than 1.5x, and per channel the
-active installs of the month and the ISO week containing the last day (see
+active installs of the month and the ISO week containing the last day, with
+the month's average active days per install (see
 [Active installs](#active-installs)). It reads counters back to the start of
 that month and week, whatever `--days` is.
 
@@ -209,6 +210,8 @@ a 7/30/90-day range:
   highlighted
 - active installs this month and this ISO week, as cards, and per month and
   per ISO week over the range as bar charts (see [Active installs](#active-installs))
+- average active days per install this month, as a card and in the monthly
+  chart's tooltip (see [Average active days](#average-active-days))
 - installs under 7 and 30 days old on the latest day
 - install-days per feature (used, available, ratio, bucket breakdown, and a
   "no use in range" flag)
@@ -244,13 +247,23 @@ counters are read back to the first month and week that overlap the range.
   still marked first; a ping the collector stored but whose response was lost
   is followed by another marked first.
 
+### Average active days
+
+An install sends at most one health ping per UTC day, so a month's health pings
+over its active installs is the average number of days an active install was
+active that month. Both are counted from the 1st through the month's last day
+or the latest day, so the current month is still filling in; with no active
+installs it shows `—`. The same caveats apply: an install that opts out and
+back in within the month counts as two installs that share its active days.
+
 ### Rendering
 
 Pages are Jinja2 templates (`src/telemetry_collector/templates/`) with
 autoescaping on. Python only builds plain data for them.
 
 The charts use Chart.js: daily active installs, each feature's used/available
-ratio per day, and active installs per month and per ISO week. The chart data is a JSON data block
+ratio per day, and active installs per month (with the average active days in
+the tooltip) and per ISO week. The chart data is a JSON data block
 (`<script type="application/json">`), read by `static/dashboard.js`. The
 channel and range switches are plain links.
 

@@ -138,27 +138,31 @@ public enum TelemetryInstallStamp: Equatable, Sendable {
   }
 }
 
-public enum TelemetryActiveDays {
-  public static let window = 30
+/// The UTC days a feature ping can still report.
+public enum TelemetryReportableDays {
+  /// How many UTC days, today included, a day stays reportable.
+  public static let maxAge = 30
 
-  /// `days` with today's UTC day added and anything outside the last 30 days
-  /// (today included) removed.
-  public static func recording(_ days: Set<String>, now: Date) -> Set<String> {
-    var result = pruned(days, now: now)
-    result.insert(TelemetryDay.string(for: now))
-    return result
-  }
-
-  public static func pruned(_ days: Set<String>, now: Date) -> Set<String> {
+  /// The days in `days` within the last ``maxAge`` UTC days and later than
+  /// `lastReported`.
+  public static func pruned(_ days: Set<String>, now: Date, lastReported: String?)
+    -> Set<String>
+  {
     days.filter { day in
       guard let date = TelemetryDay.date(for: day) else { return false }
       let age = TelemetryDay.days(from: date, to: now)
-      return age >= 0 && age < window
+      // `yyyy-MM-dd` strings order like the days they name.
+      return age >= 0 && age < maxAge && lastReported.map { day > $0 } ?? true
     }
   }
 
-  public static func bucket(_ days: Set<String>, now: Date) -> TelemetryActiveDaysBucket? {
-    TelemetryActiveDaysBucket(count: pruned(days, now: now).count)
+  /// `activeDays` pruned, with today's UTC day added.
+  public static func recordingActive(
+    _ activeDays: Set<String>, now: Date, lastReported: String?
+  ) -> Set<String> {
+    var result = pruned(activeDays, now: now, lastReported: lastReported)
+    result.insert(TelemetryDay.string(for: now))
+    return result
   }
 }
 
@@ -224,10 +228,10 @@ public struct TelemetryPending: Equatable, Sendable {
 
   public var isEmpty: Bool { features.isEmpty && errors.isEmpty }
 
-  /// Only the days in the last 30 UTC days that are later than `lastReported`.
+  /// Only the days that are still reportable (see ``TelemetryReportableDays``).
   public func pruned(now: Date, lastReported: String?) -> TelemetryPending {
-    let kept = TelemetryActiveDays.pruned(Set(features.keys).union(errors.keys), now: now)
-      .filter { day in lastReported.map { day > $0 } ?? true }
+    let kept = TelemetryReportableDays.pruned(
+      Set(features.keys).union(errors.keys), now: now, lastReported: lastReported)
     return TelemetryPending(
       features: features.filter { kept.contains($0.key) },
       errors: errors.filter { kept.contains($0.key) })
@@ -260,6 +264,8 @@ public struct TelemetryState: Equatable, Sendable {
   public var pendingFeatures: [String: [TelemetryFeature: Int]] = [:]
   /// Setup errors of every recording process by the UTC day they were hit on.
   public var pendingErrors: [String: Set<TelemetryError>] = [:]
+  /// The UTC days the app became active on that are still reportable, and
+  /// today once active.
   public var activeDays: Set<String> = []
   public var installStamp: TelemetryInstallStamp?
 
@@ -287,10 +293,11 @@ public struct TelemetryState: Equatable, Sendable {
   public func featureReportDay(now: Date) -> String? {
     let today = TelemetryDay.string(for: now)
     let candidates = activeDays.union(pendingFeatures.keys).union(pendingErrors.keys)
-    // `yyyy-MM-dd` strings order like the days they name.
-    return TelemetryActiveDays.pruned(candidates, now: now)
-      .filter { day in day < today && featureLastReported.map { day > $0 } ?? true }
-      .max()
+    return TelemetryReportableDays.pruned(
+      candidates, now: now, lastReported: featureLastReported
+    )
+    .filter { $0 < today }
+    .max()
   }
 }
 
@@ -311,9 +318,6 @@ public enum TelemetryPings {
       client_cert: env.clientCertificate,
       custom_headers: env.customHeaders,
       servers: TelemetryServersBucket(count: env.serverCount),
-      // Sending a ping means today is an active day.
-      active_days_30: TelemetryActiveDays.bucket(
-        TelemetryActiveDays.recording(state.activeDays, now: now), now: now) ?? .one,
       // No stamp means the user opted in without this process seeing it.
       install_age: state.installStamp?.bucket(now: now) ?? .existing,
       first_month: state.healthLastMonth != TelemetryDay.month(for: now),

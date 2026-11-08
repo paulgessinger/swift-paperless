@@ -11,7 +11,6 @@ struct TelemetrySchemaTests {
       let count: [String]
       let docs: [String]
       let servers: [String]
-      let active_days_30: [String]
       let install_age: [String]
     }
 
@@ -49,7 +48,6 @@ struct TelemetrySchemaTests {
     #expect(Self.raw(TelemetryCountBucket.self) == schema.buckets.count)
     #expect(Self.raw(TelemetryDocsBucket.self) == schema.buckets.docs)
     #expect(Self.raw(TelemetryServersBucket.self) == schema.buckets.servers)
-    #expect(Self.raw(TelemetryActiveDaysBucket.self) == schema.buckets.active_days_30)
     #expect(Self.raw(TelemetryInstallAgeBucket.self) == schema.buckets.install_age)
   }
 }

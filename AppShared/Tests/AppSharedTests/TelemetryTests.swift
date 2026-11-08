@@ -94,32 +94,26 @@ struct TelemetryBucketTests {
 
 @Suite
 struct TelemetryActivityTests {
-  @Test("active_days_30 counts distinct UTC days in the last 30")
+  @Test("Active days keep only today and the days a feature ping can still report")
   func activeDays() {
     let now = utc("2026-03-31")
-    var days: Set<String> = ["2026-03-01", "2026-03-02", "2026-02-28"]
-    days = TelemetryActiveDays.recording(days, now: now)
+    let days: Set<String> = ["2026-03-01", "2026-03-02", "2026-03-10", "2026-03-20"]
     // 2026-03-01 is 30 days back and falls out; 2026-03-02 is the oldest kept.
-    #expect(days == ["2026-03-02", "2026-03-31"])
-    #expect(TelemetryActiveDays.bucket(days, now: now) == .upToWeek)
-
-    #expect(TelemetryActiveDays.bucket([], now: now) == nil)
-    #expect(TelemetryActiveDays.bucket(["2026-03-31"], now: now) == .one)
-
-    let twenty = Set(
-      (0..<20).map { TelemetryDay.string(for: now.addingTimeInterval(-86400 * Double($0))) })
-    #expect(TelemetryActiveDays.bucket(twenty, now: now) == .upTo20)
-    let all = Set(
-      (0..<40).map { TelemetryDay.string(for: now.addingTimeInterval(-86400 * Double($0))) })
-    #expect(TelemetryActiveDays.pruned(all, now: now).count == 30)
-    #expect(TelemetryActiveDays.bucket(all, now: now) == .atLeast21)
+    #expect(
+      TelemetryReportableDays.recordingActive(days, now: now, lastReported: nil)
+        == ["2026-03-02", "2026-03-10", "2026-03-20", "2026-03-31"])
+    // The last reported day and earlier ones fall out.
+    #expect(
+      TelemetryReportableDays.recordingActive(days, now: now, lastReported: "2026-03-10")
+        == ["2026-03-20", "2026-03-31"])
   }
 
-  @Test("Recording the same day twice counts once")
+  @Test("Recording the same day twice keeps it once")
   func sameDay() {
-    let days = TelemetryActiveDays.recording(
-      TelemetryActiveDays.recording([], now: utc("2026-01-05", hour: 1)),
-      now: utc("2026-01-05", hour: 23))
+    let days = TelemetryReportableDays.recordingActive(
+      TelemetryReportableDays.recordingActive(
+        [], now: utc("2026-01-05", hour: 1), lastReported: nil),
+      now: utc("2026-01-05", hour: 23), lastReported: nil)
     #expect(days == ["2026-01-05"])
   }
 
@@ -247,7 +241,6 @@ struct TelemetryPingsTests {
     #expect(ping.backend == "other")
     #expect(ping.docs == .under10k)
     #expect(ping.servers == .one)
-    #expect(ping.active_days_30 == .one)
     #expect(ping.install_age == .existing)
     #expect(ping.first_month)
     #expect(ping.first_week)
@@ -259,8 +252,7 @@ struct TelemetryPingsTests {
     let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
     // Errors go in the feature ping.
     #expect(json["errors"] == nil)
-    // Without bookkeeping yet: today counts as active, the stamp as existing.
-    #expect(json["active_days_30"] as? String == "1")
+    // Without bookkeeping yet the stamp counts as existing.
     #expect(json["install_age"] as? String == "existing")
     #expect(json["first_month"] as? Bool == true)
     #expect(json["first_week"] as? Bool == true)
@@ -269,7 +261,7 @@ struct TelemetryPingsTests {
     #expect(
       Set(json.keys).isSubset(of: [
         "channel", "app", "ios", "device", "lang", "backend", "api", "docs", "auth",
-        "client_cert", "custom_headers", "servers", "active_days_30", "install_age",
+        "client_cert", "custom_headers", "servers", "install_age",
         "first_month", "first_week",
       ]))
   }
@@ -636,6 +628,8 @@ struct TelemetryServiceTests {
     clock.now = utc("2026-01-09", hour: 20)
     await activate(service)
     #expect(spy.count(.feature) == 1)
+    // Only days after the reported one are kept.
+    #expect(state.activeDays == ["2026-01-09"])
   }
 
   @Test("Uses recorded on a day the app wasn't opened are reported")
@@ -918,7 +912,7 @@ struct TelemetryCollectorContractTests {
 
     let required: Set = [
       "channel", "app", "ios", "device", "lang", "client_cert", "custom_headers",
-      "servers", "active_days_30", "install_age", "first_month", "first_week",
+      "servers", "install_age", "first_month", "first_week",
     ]
     let optional: Set = ["backend", "api", "docs", "auth"]
     #expect(json["auth"] as? String == auth?.rawValue)

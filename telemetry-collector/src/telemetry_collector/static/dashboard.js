@@ -117,7 +117,21 @@
       options: {
         maintainAspectRatio: false,
         animation: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              // Monthly periods carry the average active days per install.
+              afterLabel: (ctx) => {
+                const avg = periods[ctx.dataIndex].avg_active_days;
+                if (avg === undefined) {
+                  return "";
+                }
+                return "Average active days per install: " + (avg === null ? "—" : avg.toFixed(1));
+              },
+            },
+          },
+        },
         scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
       },
       plugins: [dashedFilling],

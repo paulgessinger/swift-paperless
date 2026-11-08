@@ -38,6 +38,9 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
     <div class="muted">avg {{ '%.1f' % cards.daily_avg }}/day over {{ days }}d</div></div>
   <div class="card"><div class="muted">Active installs this month · {{ cards.month.label }}</div><div class="big">{{ cards.month.count }}</div>
     <div class="muted">since {{ cards.month.start }} · still filling in</div></div>
+  <div class="card"><div class="muted">Average active days per install · {{ cards.month.label }}</div>
+    <div class="big">{{ '—' if cards.avg_active_days is none else '%.1f' % cards.avg_active_days }}</div>
+    <div class="muted">since {{ cards.month.start }} · still filling in</div></div>
   <div class="card"><div class="muted">Active installs this week · {{ cards.week.label }}</div><div class="big">{{ cards.week.count }}</div>
     <div class="muted">since {{ cards.week.start }} · still filling in</div></div>
   <div class="card"><div class="muted">Installs &lt;7 days old · {{ end }}</div><div class="big">{{ cards.new_7d }}</div>
@@ -63,7 +66,7 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
   <section class="card">
     <h2>Monthly active installs (UTC months)</h2>
     <div class="chart"><canvas id="chart-months" role="img" aria-label="Active installs per month"></canvas></div>
-    <p class="muted">Dashed: the current month, still filling in.</p>
+    <p class="muted">Dashed: the current month, still filling in. The tooltip shows the average active days per install.</p>
   </section>
   <section class="card">
     <h2>Weekly active installs (ISO weeks, UTC)</h2>

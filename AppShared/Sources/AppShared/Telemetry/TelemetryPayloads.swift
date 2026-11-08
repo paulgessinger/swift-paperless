@@ -21,7 +21,6 @@ public struct HealthPing: Codable, Equatable, Sendable {
   public var client_cert: Bool
   public var custom_headers: Bool
   public var servers: TelemetryServersBucket
-  public var active_days_30: TelemetryActiveDaysBucket
   public var install_age: TelemetryInstallAgeBucket
   /// No health ping was sent successfully earlier in this UTC month.
   public var first_month: Bool

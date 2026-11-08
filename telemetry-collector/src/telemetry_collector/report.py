@@ -97,6 +97,12 @@ def _next_period_start(period: Period, start: str) -> str:
     return (d.replace(year=d.year + 1, month=1) if d.month == 12 else d.replace(month=d.month + 1)).isoformat()
 
 
+def _period_last(period: Period, start: str, end: str) -> str:
+    """The last day of the period starting on `start`, or `end` if that is earlier."""
+    following = date.fromisoformat(_next_period_start(period, start))
+    return min((following - timedelta(days=1)).isoformat(), end)
+
+
 def _period_label(period: Period, start: str) -> str:
     if period == "month":
         return start[:7]
@@ -127,11 +133,21 @@ def active_installs(counts: Counts, period: Period, start: str, end: str) -> lis
     current = period_start(period, start)
     while current <= end:
         following = _next_period_start(period, current)
-        last = min((date.fromisoformat(following) - timedelta(days=1)).isoformat(), end)
+        last = _period_last(period, current, end)
         n = counts.values("health", f"first_{period}", current, last).get("true", 0)
         out.append(PeriodCount(_period_label(period, current), current, n, following > end))
         current = following
     return out
+
+
+def average_active_days(counts: Counts, period: Period, active: PeriodCount, end: str) -> float | None:
+    """Days an active install of `active` was active on average: its health pings from the
+    period's first day through its last or `end`, over its active installs. An install sends
+    at most one health ping per UTC day. None without active installs.
+    """
+    if not active.count:
+        return None
+    return counts.pings_in("health", active.start, _period_last(period, active.start, end)) / active.count
 
 
 UNKNOWN = "unknown"
@@ -263,7 +279,11 @@ def render(
                 lines.append(f"  !! implausible: {feature_n} feature pings vs {health_n} health pings")
         for period in ("month", "week"):
             (p,) = active_installs(counts, period, until, until)
-            lines.append(
+            line = (
                 f"== Active installs {ch} this {period} ({p.label}, {p.start} to {until}, still filling in): {p.count}"
             )
+            if period == "month":
+                avg = average_active_days(counts, period, p, until)
+                line += ", average active days per install: " + ("—" if avg is None else f"{avg:.1f}")
+            lines.append(line)
     return "\n".join(lines) + "\n"
