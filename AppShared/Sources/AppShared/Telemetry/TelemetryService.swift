@@ -3,13 +3,15 @@
 //  AppShared
 //
 
+import Common
 import Foundation
 import os
 
 /// Records feature use and setup errors, and sends the two daily pings.
 ///
-/// Only the main app installs one (``install(_:)``); everywhere else, the
-/// ShareExtension included, the static entry points do nothing. Every entry
+/// The app and the share extension each install one
+/// (``installProduction()``); until then the static entry points do nothing.
+/// Both record into the app-group defaults, and only the app sends. Every entry
 /// point checks consent first, so nothing is recorded or stored before opt-in.
 /// Sends are fire-and-forget: a failed ping is dropped and tried again on the
 /// next activation of the same UTC day at most.
@@ -22,6 +24,20 @@ public final class TelemetryService {
   public static func install(_ service: TelemetryService) {
     guard current == nil else { return }
     current = service
+  }
+
+  /// Telemetry and its opt-in UI only run in debug builds until the privacy
+  /// policy describes it.
+  public nonisolated static var isEnabledInThisBuild: Bool { Bundle.isDebug }
+
+  /// Installs ``production(isConsented:)``, consented by
+  /// ``AppSettings/telemetryOptIn``. Every process entry point calls it; only
+  /// the first call installs.
+  public static func installProduction() {
+    guard current == nil else { return }
+    install(
+      .production(isConsented: { isEnabledInThisBuild && AppSettings.shared.telemetryOptIn == true }
+      ))
   }
 
   public static func record(_ feature: TelemetryFeature) {
@@ -54,7 +70,8 @@ public final class TelemetryService {
   public init(
     isConsented: @escaping @MainActor () -> Bool,
     transport: any TelemetryTransport,
-    defaults: UserDefaults = .standard,
+    // The app group, so the share extension's uses reach the app's pings.
+    defaults: UserDefaults = .group,
     now: @escaping @Sendable () -> Date = { Date() },
     jitter: @escaping @Sendable () -> Duration = { .seconds(Int.random(in: 5...60)) },
     sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }

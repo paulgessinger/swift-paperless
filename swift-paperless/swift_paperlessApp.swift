@@ -515,10 +515,7 @@ struct swift_paperlessApp: App {
   @State private var bootstrap = DatabaseBootstrap()
 
   init() {
-    TelemetryService.install(
-      .production(isConsented: {
-        AppFeatures.enabled(.telemetry) && AppSettings.shared.telemetryOptIn == true
-      }))
+    TelemetryService.installProduction()
   }
 
   var body: some Scene {

@@ -91,6 +91,9 @@ struct UploadDocumentIntent: AppIntent {
       throw PaperlessIntentError.uploadFailed(error.localizedDescription)
     }
 
+    // The app's `init` installs it; repeated so this doesn't depend on that.
+    await TelemetryService.installProduction()
+    await TelemetryService.record(.shortcutUploaded)
     return .result(dialog: IntentDialog(.intents(.uploadDocumentIntentSuccess)))
   }
 }
