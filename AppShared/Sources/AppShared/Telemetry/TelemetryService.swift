@@ -9,7 +9,7 @@ import os
 
 /// Records feature use and setup errors, and sends the two daily pings.
 ///
-/// ``shared`` is the production service in every process. The app and the
+/// ``current`` is the production service in every process. The app and the
 /// share extension both record into the app-group defaults; only the app
 /// sends. Every entry
 /// point checks consent first, so nothing is recorded or stored before opt-in.
@@ -17,22 +17,22 @@ import os
 /// next activation of the same UTC day at most.
 @MainActor
 public final class TelemetryService {
-  public static let shared = TelemetryService(
+  public static let current = TelemetryService(
     isConsented: { AppFeatures.enabled(.telemetry) && AppSettings.shared.telemetryOptIn == true },
     transport: URLSessionTelemetryTransport(baseURL: TelemetryCollector.baseURL))
 
   public static func record(_ feature: TelemetryFeature) {
-    shared.record(feature)
+    current.record(feature)
   }
 
   /// Records the setup-problem class of `error`, if it has one.
   public static func record(error: any Error) {
     guard let error = TelemetryError(classifying: error) else { return }
-    shared.record(error)
+    current.record(error)
   }
 
   public static func record(_ error: TelemetryError) {
-    shared.record(error)
+    current.record(error)
   }
 
   private let isConsented: @MainActor () -> Bool
