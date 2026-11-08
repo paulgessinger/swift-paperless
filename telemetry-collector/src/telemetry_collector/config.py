@@ -9,13 +9,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
-from pydantic import Field, SecretStr, TypeAdapter, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # Request bodies larger than this get 413.
 MAX_BODY_BYTES = 4096
-PRODUCTION_CHANNELS = frozenset({"appstore", "testflight"})
-DEV_CHANNELS = PRODUCTION_CHANNELS | {"dev"}
 
 # Comma-separated in the environment (`a, b,c`), not JSON.
 CommaSet = Annotated[frozenset[str], NoDecode]
@@ -32,38 +30,14 @@ class CommonSettings(BaseSettings):
 
     db_path: Path = Field(default=Path("telemetry.sqlite3"), alias="TELEMETRY_DB_PATH")
     schema_path: Path | None = Field(default=None, alias="TELEMETRY_SCHEMA_PATH")
-    # Dev mode: the collector accepts the "dev" channel and serves /docs; the dashboard may run without auth.
+    # Dev mode: the collector serves /docs; the dashboard may run without auth.
     dev: bool = Field(default=False, alias="TELEMETRY_DEV")
 
 
 class Settings(CommonSettings):
     """Collector settings."""
 
-    # Defaults to appstore,testflight, plus dev in dev mode.
-    channels: CommaSet = Field(default=PRODUCTION_CHANNELS, alias="TELEMETRY_CHANNELS")
     batch_size: int = Field(default=20, ge=1, alias="TELEMETRY_BATCH_SIZE")
-
-    @model_validator(mode="before")
-    @classmethod
-    def _default_channels(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "TELEMETRY_CHANNELS" not in data:
-            try:
-                dev = TypeAdapter(bool).validate_python(data.get("TELEMETRY_DEV", False))
-            except ValueError:
-                return data  # field validation reports the invalid TELEMETRY_DEV
-            data = {**data, "TELEMETRY_CHANNELS": DEV_CHANNELS if dev else PRODUCTION_CHANNELS}
-        return data
-
-    @field_validator("channels", mode="before")
-    @classmethod
-    def _split_channels(cls, value: Any) -> Any:
-        return split_commas(value)
-
-    @model_validator(mode="after")
-    def _dev_channel_needs_dev_mode(self) -> Settings:
-        if "dev" in self.channels and not self.dev:
-            raise ValueError("the dev channel is only accepted in dev mode")
-        return self
 
 
 class DashboardSettings(CommonSettings):

@@ -142,27 +142,10 @@ def test_body_size_cap(client, db_path):
     assert r.content == b""
 
 
-def test_dev_channel_rejected_in_production(client, db_path):
-    r = client.post("/t/health", json=health_payload(channel="dev"))
-    assert r.status_code == 400
-    assert r.content == b""
-    assert rows(db_path) == []
-
-
-def test_dev_channel_accepted_in_dev_mode(make_client, db_path):
-    with make_client(dev=True, channels=frozenset({"appstore", "testflight", "dev"}), batch_size=1) as c:
+def test_dev_channel_accepted(make_client, db_path):
+    with make_client(batch_size=1) as c:
         assert c.post("/t/feature", json=feature_payload(channel="dev")).status_code == 204
     assert {ch for (_, ch, *_rest) in rows(db_path)} == {"dev"}
-
-
-def test_dev_channel_requires_dev_mode(db_path):
-    from conftest import by_field
-    from pydantic import ValidationError
-
-    from telemetry_collector.config import Settings
-
-    with pytest.raises(ValidationError, match="the dev channel is only accepted in dev mode"):
-        by_field(Settings, db_path=db_path, channels=frozenset({"appstore", "dev"}))
 
 
 def test_channels_keyed_separately(client, db_path):
@@ -178,7 +161,7 @@ def test_docs_disabled_in_production(client):
 
 
 def test_docs_enabled_in_dev(make_client):
-    with make_client(dev=True, channels=frozenset({"dev"})) as c:
+    with make_client(dev=True) as c:
         assert c.get("/openapi.json").status_code == 200
 
 
