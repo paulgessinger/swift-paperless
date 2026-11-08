@@ -39,6 +39,7 @@ from .report import (
     Counts,
     PeriodCount,
     active_installs,
+    average_active_days,
     completion_pairs,
     daily_feature_ratios,
     day_range,
@@ -294,8 +295,8 @@ def _share_rows(values: dict[str, int], total: int) -> list[dict[str, Any]]:
     return [{"value": v, "count": n, "share": n / total if total else 0.0, "unknown": v == UNKNOWN} for v, n in known]
 
 
-def _period_row(period: PeriodCount) -> dict[str, Any]:
-    return {"label": period.label, "count": period.count, "filling": period.filling}
+def _period_row(period: PeriodCount, **extra: Any) -> dict[str, Any]:
+    return {"label": period.label, "count": period.count, "filling": period.filling, **extra}
 
 
 def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) -> dict[str, Any]:
@@ -332,6 +333,7 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             "daily_active": daily[-1],
             "daily_avg": health_total / days,
             "month": months[-1],
+            "avg_active_days": average_active_days(counts, "month", months[-1], end),
             "week": weeks[-1],
             "new_7d": age_today.get("<7d", 0),
             # The buckets are exclusive, so under 30 days includes under 7.
@@ -377,7 +379,7 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             "filling": [i >= len(window) - FILLING_DAYS for i in range(len(window))],
             # A list, not a dict: tojson sorts keys, and the legend should follow schema order.
             "ratios": [{"name": n, "values": v} for n, v in daily_feature_ratios(counts, features, window).items()],
-            "months": [_period_row(p) for p in months],
+            "months": [_period_row(p, avg_active_days=average_active_days(counts, "month", p, end)) for p in months],
             "weeks": [_period_row(p) for p in weeks],
         },
     }

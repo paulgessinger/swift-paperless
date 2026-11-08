@@ -16,7 +16,8 @@ def report(
     until: Annotated[str | None, typer.Option(help="Last day (yyyy-MM-dd); default: latest in DB")] = None,
     schema_path: Annotated[Path | None, typer.Option(envvar="TELEMETRY_SCHEMA_PATH", help="Schema file")] = None,
 ) -> None:
-    """Print per-day per-field counts, used/available ratios, and this month's and week's active installs.
+    """Print per-day per-field counts, used/available ratios, this month's and week's active installs,
+    and this month's average active days per install.
 
     Feature pings (including setup errors) are filed under the day they report,
     so the latest days keep filling in.
