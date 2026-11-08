@@ -4,9 +4,9 @@ Swift Paperless uses the following third-party libraries for various features:
 
 ---
 
-## swift-async-algorithms
-[GitHub](https://github.com/apple/swift-async-algorithms)
-*Apache-2.0 license*
+## GRDB
+[GitHub](https://github.com/groue/GRDB.swift)
+*MIT license*
 
 ## Semaphore
 [GitHub](https://github.com/groue/Semaphore)
@@ -20,12 +20,12 @@ Swift Paperless uses the following third-party libraries for various features:
 [GitHub](https://github.com/gonzalezreal/swift-markdown-ui)
 *MIT license*
 
-## XCStrings Tool
-[GitHub](https://github.com/liamnichols/xcstrings-tool)
+## Toasts
+[GitHub](https://github.com/sunghyun-k/swiftui-toasts)
 *MIT license*
 
-## MetaCodable
-[GitHub](https://github.com/SwiftyLab/MetaCodable)
+## WindowOverlay
+[GitHub](https://github.com/sunghyun-k/swiftui-window-overlay)
 *MIT license*
 
 ## SwiftESCL
