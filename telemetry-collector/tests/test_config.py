@@ -23,7 +23,6 @@ def test_env_var_names_unchanged():
         "TELEMETRY_DB_PATH",
         "TELEMETRY_SCHEMA_PATH",
         "TELEMETRY_DEV",
-        "TELEMETRY_CHANNELS",
         "TELEMETRY_BATCH_SIZE",
     }
     assert {f.alias for f in DashboardSettings.model_fields.values()} == {
@@ -45,21 +44,10 @@ def test_env_var_names_unchanged():
 def test_collector_from_env(monkeypatch):
     monkeypatch.setenv("TELEMETRY_DB_PATH", "/data/t.sqlite3")
     monkeypatch.setenv("TELEMETRY_BATCH_SIZE", "5")
-    monkeypatch.setenv("TELEMETRY_CHANNELS", " appstore, testflight ,,")
     s = Settings()
     assert s.db_path == Path("/data/t.sqlite3")
     assert s.batch_size == 5
-    assert s.channels == frozenset({"appstore", "testflight"})
     assert not s.dev
-
-
-@pytest.mark.parametrize(
-    ("dev", "expected"), [("", {"appstore", "testflight"}), ("1", {"appstore", "testflight", "dev"})]
-)
-def test_default_channels_depend_on_dev(monkeypatch, dev, expected):
-    if dev:
-        monkeypatch.setenv("TELEMETRY_DEV", dev)
-    assert Settings().channels == frozenset(expected)
 
 
 @pytest.mark.parametrize(
@@ -71,12 +59,6 @@ def test_invalid_collector_values_name_the_variable(monkeypatch, name, value):
     with pytest.raises(ValidationError) as exc:
         Settings()
     assert name in str(exc.value)
-
-
-def test_dev_channel_rejected_outside_dev_mode(monkeypatch):
-    monkeypatch.setenv("TELEMETRY_CHANNELS", "appstore,dev")
-    with pytest.raises(ValidationError, match="only accepted in dev mode"):
-        Settings()
 
 
 def test_only_exact_env_names_are_read(monkeypatch, tmp_path):

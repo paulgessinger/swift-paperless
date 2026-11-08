@@ -124,7 +124,7 @@ def create_dashboard_app(
 ) -> FastAPI:
     """`transport` replaces the HTTP transport to the identity provider (tests)."""
     schema = load_schema(settings.schema_path)
-    channels = [c for c in schema.channels if c != "dev" or settings.dev]
+    channels = list(schema.channels)
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     static = _static_files()
