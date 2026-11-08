@@ -80,6 +80,8 @@ nav:
       - common_issues/local-network-denied.md
       - common_issues/certificates.md
       - common_issues/supported-versions.md
-  - privacy.md
+  - Privacy:
+      - privacy.md
+      - telemetry.md
   - libraries.md
   - maintenance.md
