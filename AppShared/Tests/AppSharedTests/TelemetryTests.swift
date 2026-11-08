@@ -84,8 +84,9 @@ struct TelemetryBucketTests {
 
   @Test("Unused features are absent from the feature ping")
   func zeroIsAbsent() {
-    let state = TelemetryState(pendingFeatures: [.search: 0, .filter: 3])
-    let ping = TelemetryPings.featurePing(environment: environment(), state: state)
+    let state = TelemetryState(pendingFeatures: ["2026-01-04": [.search: 0, .filter: 3]])
+    let ping = TelemetryPings.featurePing(
+      environment: environment(), state: state, day: "2026-01-04")
     #expect(ping.features == [.filter: .few])
   }
 }
@@ -143,6 +144,56 @@ struct TelemetryActivityTests {
     #expect(TelemetryDay.shouldSend(lastSent: "2026-01-05", now: utc("2026-01-06", hour: 0)))
   }
 
+  @Test("The feature ping reports the latest completed day not yet reported")
+  func featureReportDay() {
+    let now = utc("2026-01-10")
+    // Today is never reported.
+    #expect(TelemetryState(activeDays: ["2026-01-10"]).featureReportDay(now: now) == nil)
+    #expect(
+      TelemetryState(activeDays: ["2026-01-03", "2026-01-07", "2026-01-10"])
+        .featureReportDay(now: now) == "2026-01-07")
+    // Pending data alone makes a day reportable.
+    #expect(
+      TelemetryState(
+        pendingFeatures: ["2026-01-08": [.search: 1]], activeDays: ["2026-01-07"]
+      ).featureReportDay(now: now) == "2026-01-08")
+    #expect(
+      TelemetryState(pendingErrors: ["2026-01-09": [.tls]]).featureReportDay(now: now)
+        == "2026-01-09")
+    // Nothing at or before the last reported day.
+    #expect(
+      TelemetryState(featureLastReported: "2026-01-07", activeDays: ["2026-01-07"])
+        .featureReportDay(now: now) == nil)
+    // Nothing older than the 30-day window.
+    #expect(
+      TelemetryState(activeDays: ["2025-12-11", "2025-12-12"]).featureReportDay(now: now)
+        == "2025-12-12")
+    #expect(TelemetryState(activeDays: ["2025-12-11"]).featureReportDay(now: now) == nil)
+  }
+
+  @Test("Reporting a day drops its pending entries and earlier ones, not later ones")
+  func didReport() {
+    var state = TelemetryState(
+      pendingFeatures: [
+        "2026-01-03": [.notes: 1], "2026-01-04": [.search: 2], "2026-01-05": [.filter: 1],
+      ],
+      pendingErrors: ["2026-01-04": [.tls], "2026-01-05": [.auth]])
+    state.didReport(day: "2026-01-04")
+    #expect(state.featureLastReported == "2026-01-04")
+    #expect(state.pendingFeatures == ["2026-01-05": [.filter: 1]])
+    #expect(state.pendingErrors == ["2026-01-05": [.auth]])
+  }
+
+  @Test("Pending entries older than 30 days are pruned")
+  func prunePending() {
+    var state = TelemetryState(
+      pendingFeatures: ["2025-12-11": [.notes: 1], "2025-12-12": [.search: 1]],
+      pendingErrors: ["2025-12-01": [.tls], "2026-01-10": [.auth]])
+    state.prunePending(now: utc("2026-01-10"))
+    #expect(state.pendingFeatures == ["2025-12-12": [.search: 1]])
+    #expect(state.pendingErrors == ["2026-01-10": [.auth]])
+  }
+
   @Test("UTC days don't follow the local time zone")
   func utcDay() {
     // 23:30 UTC is already the next day in most of Europe.
@@ -156,7 +207,8 @@ struct TelemetryPingsTests {
   @Test("The health ping carries only coarsened values")
   func healthPing() throws {
     let state = TelemetryState(
-      pendingErrors: [.timeout, .tls], activeDays: ["2026-01-05"], installStamp: .existing)
+      pendingErrors: ["2026-01-05": [.timeout, .tls]], activeDays: ["2026-01-05"],
+      installStamp: .existing)
     let ping = TelemetryPings.healthPing(
       environment: environment(backend: "2.14.3-dev"), state: state, now: utc("2026-01-05"))
     #expect(ping.ios == "18.3")
@@ -166,14 +218,13 @@ struct TelemetryPingsTests {
     #expect(ping.servers == .one)
     #expect(ping.active_days_30 == .one)
     #expect(ping.install_age == .existing)
-    #expect(ping.errors == [.tls, .timeout])
 
-    let json = try #require(
-      try JSONSerialization.jsonObject(
-        with: TelemetryPings.encodedPing(
-          .health, environment: environment(), state: TelemetryState(), now: utc("2026-01-05")))
-        as? [String: Any])
-    // Empty errors are left out rather than sent as null or [].
+    let data = try #require(
+      try TelemetryPings.encodedPing(
+        .health, environment: environment(),
+        state: TelemetryState(pendingErrors: ["2026-01-05": [.tls]]), now: utc("2026-01-05")))
+    let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    // Errors go in the feature ping.
     #expect(json["errors"] == nil)
     // Without bookkeeping yet: today counts as active, the stamp as existing.
     #expect(json["active_days_30"] as? String == "1")
@@ -183,22 +234,37 @@ struct TelemetryPingsTests {
     #expect(
       Set(json.keys).isSubset(of: [
         "channel", "app", "ios", "device", "lang", "backend", "api", "docs", "auth",
-        "client_cert", "custom_headers", "servers", "active_days_30", "install_age", "errors",
+        "client_cert", "custom_headers", "servers", "active_days_30", "install_age",
       ]))
   }
 
   @Test("The feature ping lists available features in schema order")
   func featurePing() throws {
+    let state = TelemetryState(
+      pendingFeatures: ["2026-01-04": [.notes: 12], "2026-01-05": [.search: 1]],
+      pendingErrors: ["2026-01-04": [.timeout, .tls]])
     let ping = TelemetryPings.featurePing(
-      environment: environment(), state: TelemetryState(pendingFeatures: [.notes: 12]))
+      environment: environment(), state: state, day: "2026-01-04")
+    #expect(ping.day == "2026-01-04")
     #expect(ping.features == [.notes: .many])
     #expect(ping.available == TelemetryFeature.allCases)
+    #expect(ping.errors == [.tls, .timeout])
 
-    let data = try TelemetryPings.encodedPing(
-      .feature, environment: environment(), state: TelemetryState(), now: utc("2026-01-05"))
+    // Nothing to report on the first day.
+    #expect(
+      try TelemetryPings.encodedPing(
+        .feature, environment: environment(), state: TelemetryState(activeDays: ["2026-01-05"]),
+        now: utc("2026-01-05")) == nil)
+
+    let data = try #require(
+      try TelemetryPings.encodedPing(
+        .feature, environment: environment(), state: TelemetryState(activeDays: ["2026-01-04"]),
+        now: utc("2026-01-05")))
     let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
     #expect((json["features"] as? [String: Any])?.isEmpty == true)
-    #expect(Set(json.keys) == ["channel", "features", "available"])
+    // Empty errors are left out rather than sent as null or [].
+    #expect(Set(json.keys) == ["channel", "day", "features", "available"])
+    #expect(json["day"] as? String == "2026-01-04")
   }
 
   @Test("Debug and simulator builds report as the dev channel")
@@ -346,7 +412,15 @@ struct TelemetryServiceTests {
     #expect(storedKeys.isEmpty)
   }
 
-  @Test("Opted in: one health and one feature ping per UTC day")
+  private func featurePings() throws -> [FeaturePing] {
+    try spy.sent.filter { $0.0 == .feature }.map {
+      try JSONDecoder().decode(FeaturePing.self, from: $0.1)
+    }
+  }
+
+  private var state: TelemetryState { TelemetryStorage(defaults: defaults).load() }
+
+  @Test("Health goes out once per UTC day, feature once per completed day")
   func oncePerDay() async throws {
     let service = makeService()
     consent.optedIn = true
@@ -357,28 +431,33 @@ struct TelemetryServiceTests {
     clock.now = utc("2026-01-05", hour: 23)
     await activate(service)
     #expect(spy.count(.health) == 1)
-    #expect(spy.count(.feature) == 1)
+    // No completed day yet.
+    #expect(spy.count(.feature) == 0)
 
     clock.now = utc("2026-01-06", hour: 0)
     await activate(service)
+    await activate(service)
     #expect(spy.count(.health) == 2)
-    #expect(spy.count(.feature) == 2)
+    #expect(try featurePings().map(\.day) == ["2026-01-05"])
   }
 
-  @Test("An empty feature ping is still sent")
+  @Test("A day without feature use still gets an empty feature ping")
   func emptyFeaturePing() async throws {
     let service = makeService()
     consent.optedIn = true
     await activate(service)
+    clock.now = utc("2026-01-06")
+    await activate(service)
 
-    let body = try #require(spy.sent.first { $0.0 == .feature }?.1)
-    let ping = try JSONDecoder().decode(FeaturePing.self, from: body)
+    let ping = try #require(try featurePings().first)
+    #expect(ping.day == "2026-01-05")
     #expect(ping.features.isEmpty)
+    #expect(ping.errors == nil)
     #expect(ping.available == TelemetryFeature.allCases)
   }
 
-  @Test("Recorded uses and errors are sent once, then reset")
-  func pendingIsReset() async throws {
+  @Test("Uses and errors are reported under the day they were recorded on")
+  func perDayAttribution() async throws {
     let service = makeService()
     consent.optedIn = true
     service.record(.search)
@@ -387,34 +466,104 @@ struct TelemetryServiceTests {
     service.record(.auth)
     await activate(service)
 
-    let feature = try JSONDecoder().decode(
-      FeaturePing.self, from: try #require(spy.sent.first { $0.0 == .feature }?.1))
-    #expect(feature.features == [.search: .few, .scanStarted: .one])
-    let health = try JSONDecoder().decode(
-      HealthPing.self, from: try #require(spy.sent.first { $0.0 == .health }?.1))
-    #expect(health.errors == [.auth])
-    #expect(health.install_age == .existing)
-    #expect(health.active_days_30 == .one)
+    clock.now = utc("2026-01-06", hour: 1)
+    service.record(.notes)
+    service.record(.timeout)
+    await activate(service)
 
-    let state = TelemetryStorage(defaults: defaults).load()
+    let feature = try #require(try featurePings().first)
+    #expect(feature.day == "2026-01-05")
+    #expect(feature.features == [.search: .few, .scanStarted: .one])
+    #expect(feature.errors == [.auth])
+
+    let healthBody = try #require(spy.sent.last { $0.0 == .health }?.1)
+    let health = try #require(
+      try JSONSerialization.jsonObject(with: healthBody) as? [String: Any])
+    #expect(health["errors"] == nil)
+    #expect(health["install_age"] as? String == "existing")
+
+    // Today's uses survive the send.
+    #expect(state.featureLastReported == "2026-01-05")
+    #expect(state.pendingFeatures == ["2026-01-06": [.notes: 1]])
+    #expect(state.pendingErrors == ["2026-01-06": [.timeout]])
+  }
+
+  @Test("After a gap, only the latest unreported day is sent, under its own date")
+  func gap() async throws {
+    let service = makeService()
+    consent.optedIn = true
+    clock.now = utc("2026-01-03")
+    service.record(.filter)
+    await activate(service)
+
+    clock.now = utc("2026-01-04")
+    service.record(.search)
+    spy.failing = true
+    await activate(service)
+    spy.failing = false
+
+    clock.now = utc("2026-01-09")
+    await activate(service)
+    let pings = try featurePings()
+    #expect(pings.map(\.day) == ["2026-01-04"])
+    #expect(pings.first?.features == [.search: .one])
+    // 2026-01-03 is dropped, not sent later.
     #expect(state.pendingFeatures.isEmpty)
-    #expect(state.pendingErrors.isEmpty)
+    clock.now = utc("2026-01-09", hour: 20)
+    await activate(service)
+    #expect(spy.count(.feature) == 1)
+  }
+
+  @Test("Uses recorded on a day the app wasn't opened are reported")
+  func shareExtensionOnlyDay() async throws {
+    let app = makeService()
+    consent.optedIn = true
+    await activate(app)
+    clock.now = utc("2026-01-06")
+    await activate(app)
+
+    // The share extension records into the same defaults and never sends.
+    clock.now = utc("2026-01-07")
+    makeService().record(.documentShare)
+
+    clock.now = utc("2026-01-08")
+    await activate(app)
+    #expect(try featurePings().map(\.day) == ["2026-01-05", "2026-01-07"])
+    #expect(try featurePings().last?.features == [.documentShare: .one])
   }
 
   @Test("A failed send is dropped and tried on the next activation")
-  func failedSend() async {
+  func failedSend() async throws {
     let service = makeService()
     consent.optedIn = true
     service.record(.notes)
+    await activate(service)
+
+    clock.now = utc("2026-01-06")
     spy.failing = true
     await activate(service)
-    #expect(spy.sent.isEmpty)
-    #expect(TelemetryStorage(defaults: defaults).load().pendingFeatures == [.notes: 1])
+    #expect(spy.count(.health) == 1)
+    #expect(spy.count(.feature) == 0)
+    #expect(state.pendingFeatures == ["2026-01-05": [.notes: 1]])
+    #expect(state.featureLastReported == nil)
 
     spy.failing = false
     await activate(service)
-    #expect(spy.count(.health) == 1)
-    #expect(spy.count(.feature) == 1)
+    #expect(spy.count(.health) == 2)
+    #expect(try featurePings().map(\.day) == ["2026-01-05"])
+    #expect(try featurePings().first?.features == [.notes: .one])
+  }
+
+  @Test("Recording prunes pending entries older than 30 days")
+  func pruning() {
+    let service = makeService()
+    consent.optedIn = true
+    TelemetryStorage(defaults: defaults).save(
+      TelemetryState(
+        pendingFeatures: ["2025-12-01": [.notes: 1]], pendingErrors: ["2025-12-01": [.tls]]))
+    service.record(.search)
+    #expect(state.pendingFeatures == ["2026-01-05": [.search: 1]])
+    #expect(state.pendingErrors.isEmpty)
   }
 
   @Test("Opting in during onboarding stamps the day, later opt-ins are existing")
@@ -453,7 +602,7 @@ struct TelemetryServiceTests {
     service.record(.filter)
     await activate(service)
     #expect(spy.count(.health) == 1)
-    #expect(spy.count(.feature) == 1)
+    #expect(spy.count(.feature) == 0)
     #expect(storedKeys.isEmpty)
   }
 
@@ -469,9 +618,15 @@ struct TelemetryServiceTests {
     let service = makeService()
     consent.optedIn = true
     service.record(.savedView)
+    service.record(.tls)
+    clock.now = utc("2026-01-06")
     service.appBecameActive { environment() }
     let preview = service.preview(environment: environment())
     await service.waitForPendingSends()
+
+    // Nothing left to report until tomorrow.
+    #expect(service.preview(environment: environment())[.feature] == nil)
+    #expect(service.preview(environment: environment())[.health] != nil)
 
     for endpoint in TelemetryEndpoint.allCases {
       let shown =
@@ -508,16 +663,16 @@ struct TelemetryCollectorContractTests {
     var env = environment(backend: backend, documents: nil)
     env.localization = localization
     env.auth = auth
-    let state = TelemetryState(pendingErrors: Set(TelemetryError.allCases))
-    let data = try TelemetryPings.encodedPing(
-      .health, environment: env, state: state, now: utc("2026-01-05"))
+    let data = try #require(
+      try TelemetryPings.encodedPing(
+        .health, environment: env, state: TelemetryState(), now: utc("2026-01-05")))
     let json = try object(data)
 
     let required: Set = [
       "channel", "app", "ios", "device", "lang", "client_cert", "custom_headers",
       "servers", "active_days_30", "install_age",
     ]
-    let optional: Set = ["backend", "api", "docs", "auth", "errors"]
+    let optional: Set = ["backend", "api", "docs", "auth"]
     #expect(json["auth"] as? String == auth?.rawValue)
     #expect(required.isSubset(of: json.keys))
     #expect(Set(json.keys).isSubset(of: required.union(optional)))
@@ -535,22 +690,31 @@ struct TelemetryCollectorContractTests {
     let api = try #require(json["api"] as? NSNumber)
     #expect(CFGetTypeID(api) != CFBooleanGetTypeID())
     #expect((1...10_000).contains(api.intValue))
-    #expect(((json["errors"] as? [String])?.count ?? 0) <= 64)
     #expect(data.count <= 4096)
   }
 
-  @Test("Feature pings always carry channel, features and available")
+  @Test("Feature pings carry channel, day, features, available and optional errors")
   func feature() throws {
+    let day = "2026-01-04"
     let all = Dictionary(uniqueKeysWithValues: TelemetryFeature.allCases.map { ($0, 50) })
-    for state in [TelemetryState(), TelemetryState(pendingFeatures: all)] {
-      let data = try TelemetryPings.encodedPing(
-        .feature, environment: environment(), state: state, now: utc("2026-01-05"))
+    for state in [
+      TelemetryState(activeDays: [day]),
+      TelemetryState(
+        pendingFeatures: [day: all], pendingErrors: [day: Set(TelemetryError.allCases)]),
+    ] {
+      let data = try #require(
+        try TelemetryPings.encodedPing(
+          .feature, environment: environment(), state: state, now: utc("2026-01-05")))
       let json = try object(data)
-      #expect(Set(json.keys) == ["channel", "features", "available"])
+      let required: Set = ["channel", "day", "features", "available"]
+      #expect(required.isSubset(of: json.keys))
+      #expect(Set(json.keys).isSubset(of: required.union(["errors"])))
+      #expect(matches(json["day"], #"^\d{4}-\d{2}-\d{2}$"#))
       let features = try #require(json["features"] as? [String: String])
       let available = try #require(json["available"] as? [String])
       #expect(features.count <= 64)
       #expect(available.count <= 64)
+      #expect(((json["errors"] as? [String])?.count ?? 0) <= 64)
       #expect(data.count <= 4096)
     }
   }
