@@ -122,6 +122,12 @@ struct DocumentView: View {
     _showSettings = showSettings
   }
 
+  /// Opens the create sheet; each document it uploads counts as `feature`.
+  private func presentCreateSheet(counting feature: TelemetryFeature) {
+    uploadFeature = feature
+    showCreateModal = true
+  }
+
   private func createCallback() {
     if let uploadFeature { TelemetryService.record(uploadFeature) }
     importModel.pop()
@@ -750,8 +756,7 @@ struct DocumentView: View {
             showFileImporter = false
             await importModel.importFile(
               result: urls, isSecurityScoped: true, errorController: errorController)
-            uploadFeature = .importUploaded
-            showCreateModal = true
+            presentCreateSheet(counting: .importUploaded)
           case .failure(let failure):
             errorController.push(error: failure)
           }
@@ -774,8 +779,7 @@ struct DocumentView: View {
               showDocumentScanner = false
               await importModel.importFile(
                 result: urls, isSecurityScoped: false, errorController: errorController)
-              uploadFeature = .scanUploaded
-              showCreateModal = true
+              presentCreateSheet(counting: .scanUploaded)
             case .failure(let failure):
               errorController.push(error: failure)
             }
@@ -790,7 +794,7 @@ struct DocumentView: View {
         Task { @MainActor in
           await importModel.importFile(
             result: [url], isSecurityScoped: false, errorController: errorController)
-          showCreateModal = true
+          presentCreateSheet(counting: .networkScanUploaded)
         }
       }
     }
@@ -831,8 +835,7 @@ struct DocumentView: View {
           await importModel.importFile(
             result: [url], isSecurityScoped: false, errorController: errorController)
           selectedPhotos = []
-          uploadFeature = .importUploaded
-          showCreateModal = true
+          presentCreateSheet(counting: .importUploaded)
         } catch {
           Logger.shared.error("Got error when creating PDF from photos: \(error)")
           errorController.push(error: error)
