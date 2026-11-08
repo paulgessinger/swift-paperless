@@ -54,6 +54,8 @@
     "scan_uploaded",
     "import_started",
     "import_uploaded",
+    "share_extension_uploaded",
+    "shortcut_uploaded",
     "notes"
   ],
   "errors": [
