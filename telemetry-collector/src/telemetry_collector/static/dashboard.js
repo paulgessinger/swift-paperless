@@ -56,6 +56,8 @@
           pointRadius: 0,
           borderWidth: 1.5,
           spanGaps: false,
+          // Segments ending in a day that is still filling in are dashed.
+          segment: { borderDash: (ctx) => (data.filling[ctx.p1DataIndex] ? [4, 3] : undefined) },
         })),
       },
       options: {

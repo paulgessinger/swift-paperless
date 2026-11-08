@@ -92,7 +92,7 @@ struct TelemetrySettingsView: View {
       } footer: {
         Text(
           verbatim:
-            "The exact reports this device would send today. Sending any report tells the server that an install of the app was used that day."
+            "The exact reports this device would send now. The features report covers the last day you used the app and is shown only until it has been sent. Sending any report tells the server that an install of the app was used."
         )
       }
     }

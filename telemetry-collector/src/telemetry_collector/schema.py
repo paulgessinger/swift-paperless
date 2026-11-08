@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -32,6 +33,9 @@ MAX_NAME_LENGTH = 64
 
 PINGS_FIELD = "_pings"
 PINGS_VALUE = "total"
+
+# Oldest day a feature ping may report, in days before the server's UTC day.
+MAX_FEATURE_DAY_AGE = 30
 
 Name = Annotated[str, StringConstraints(max_length=MAX_NAME_LENGTH)]
 
@@ -76,32 +80,28 @@ class Schema:
 
     @property
     def environment_fields(self) -> list[str]:
-        """Scalar health fields, in model order (everything except channel and errors)."""
-        return [f for f in self.health_model.model_fields if f not in ("channel", "errors")]
+        """Scalar health fields, in model order (everything except channel)."""
+        return [f for f in self.health_model.model_fields if f != "channel"]
 
     @property
     def optional_fields(self) -> set[str]:
         """Health fields the client omits when unknown."""
-        return {name for name, f in self.health_model.model_fields.items() if not f.is_required()} - {"errors"}
+        return {name for name, f in self.health_model.model_fields.items() if not f.is_required()}
 
     def split_health(self, ping: BaseModel) -> list[tuple[str, str]]:
-        """(field, value) increments for one health ping. Unknown error names are dropped."""
+        """(field, value) increments for one health ping."""
         data = ping.model_dump(exclude_none=True)
         out = [(PINGS_FIELD, PINGS_VALUE)]
         for name, value in data.items():
-            if name in ("channel", "errors"):
+            if name == "channel":
                 continue
             if isinstance(value, bool):
                 value = "true" if value else "false"
             out.append((name, str(value)))
-        # Deduplicated: a ping counts each error class at most once.
-        for error in sorted(set(data.get("errors", ()))):
-            if error in self.errors:
-                out.append(("errors", error))
         return out
 
     def split_feature(self, ping: BaseModel) -> list[tuple[str, str]]:
-        """(field, value) increments for one feature ping. Unknown feature names are dropped."""
+        """(field, value) increments for one feature ping. Unknown feature and error names are dropped."""
         data = ping.model_dump()
         out = [(PINGS_FIELD, PINGS_VALUE)]
         for name, bucket in sorted(data["features"].items()):
@@ -110,7 +110,20 @@ class Schema:
         for name in sorted(set(data["available"])):
             if name in self.features:
                 out.append((f"available:{name}", "true"))
+        # Deduplicated: a ping counts each error class at most once.
+        for error in sorted(set(data["errors"] or ())):
+            if error in self.errors:
+                out.append(("errors", error))
         return out
+
+
+def feature_day_valid(day: str, today: str) -> bool:
+    """Whether a feature ping's `day` is a real date before `today` and at most MAX_FEATURE_DAY_AGE days back."""
+    try:
+        age = (date.fromisoformat(today) - date.fromisoformat(day)).days
+    except ValueError:
+        return False
+    return 1 <= age <= MAX_FEATURE_DAY_AGE
 
 
 def load_schema(path: Path | None = None) -> Schema:
@@ -137,14 +150,16 @@ def load_schema(path: Path | None = None) -> Schema:
         servers=(_one_of(buckets["servers"]), ...),
         active_days_30=(_one_of(buckets["active_days_30"]), ...),
         install_age=(_one_of(buckets["install_age"]), ...),
-        errors=(_optional(_NAMES), None),
     )
     feature_model = create_model(
         "FeaturePing",
         __config__=config,
         channel=(channel, ...),
+        # Shape only; app.py checks it is a real, recent past day (needs the server's day).
+        day=(_pattern(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"), ...),
         features=(_bucket_map(buckets["count"]), ...),
         available=(_NAMES, ...),
+        errors=(_optional(_NAMES), None),
     )
 
     return Schema(

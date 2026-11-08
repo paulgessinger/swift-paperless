@@ -20,6 +20,9 @@ ACTIVE_DAYS_MIDPOINTS: dict[str, float] = {
 }
 
 MAU_WINDOW_DAYS = 30
+# Feature pings report a day when the install next opens the app, so the
+# latest days' feature and error counts keep growing for about this long.
+FILLING_DAYS = 7
 # Feature pings above this multiple of health pings on a day are flagged.
 IMPLAUSIBLE_RATIO = 1.5
 
@@ -155,6 +158,18 @@ def daily_feature_ratios(counts: Counts, features: list[str], days: list[str]) -
     return out
 
 
+def error_shares(
+    counts: Counts, schema: Schema, start: str | None = None, end: str | None = None
+) -> list[tuple[str, int, float | None]]:
+    """(error, install-days, share of feature pings) over [start, end], most frequent first."""
+    errors = counts.values("feature", "errors", start, end)
+    pings = counts.values("feature", PINGS_FIELD, start, end).get(PINGS_VALUE, 0)
+    return [
+        (e, errors.get(e, 0), errors.get(e, 0) / pings if pings else None)
+        for e in sorted(schema.errors, key=lambda e: -errors.get(e, 0))
+    ]
+
+
 def completion_pairs(features: list[str]) -> list[tuple[str, str]]:
     """(`x_started`, `x_<done>`) pairs from the schema's feature names."""
     pairs = []
@@ -184,7 +199,7 @@ def render(
     window = day_range(until, max(days, MAU_WINDOW_DAYS))
     shown = set(day_range(until, days))
     features = list(schema.features)
-    lines: list[str] = []
+    lines = [f"(feature and error counts for the last {FILLING_DAYS} days are still filling in)"]
     for ch in [channel] if channel else channels_present(conn):
         counts = Counts(conn, ch, window[0], until)
         flagged = {d for d, _, _ in implausible_days(counts)}

@@ -192,23 +192,55 @@ public struct TelemetryEnvironment: Equatable, Sendable {
 /// The local bookkeeping. Exists only while opted in.
 public struct TelemetryState: Equatable, Sendable {
   public var healthLastSent: String?
-  public var featureLastSent: String?
-  public var pendingFeatures: [TelemetryFeature: Int] = [:]
-  public var pendingErrors: Set<TelemetryError> = []
+  /// The UTC day the last successful feature ping reported.
+  public var featureLastReported: String?
+  /// Feature uses by the UTC day they were recorded on.
+  public var pendingFeatures: [String: [TelemetryFeature: Int]] = [:]
+  /// Setup errors by the UTC day they were hit on.
+  public var pendingErrors: [String: Set<TelemetryError>] = [:]
   public var activeDays: Set<String> = []
   public var installStamp: TelemetryInstallStamp?
 
   public init(
-    healthLastSent: String? = nil, featureLastSent: String? = nil,
-    pendingFeatures: [TelemetryFeature: Int] = [:], pendingErrors: Set<TelemetryError> = [],
+    healthLastSent: String? = nil, featureLastReported: String? = nil,
+    pendingFeatures: [String: [TelemetryFeature: Int]] = [:],
+    pendingErrors: [String: Set<TelemetryError>] = [:],
     activeDays: Set<String> = [], installStamp: TelemetryInstallStamp? = nil
   ) {
     self.healthLastSent = healthLastSent
-    self.featureLastSent = featureLastSent
+    self.featureLastReported = featureLastReported
     self.pendingFeatures = pendingFeatures
     self.pendingErrors = pendingErrors
     self.activeDays = activeDays
     self.installStamp = installStamp
+  }
+
+  /// Drops pending entries outside the last 30 UTC days.
+  public mutating func prunePending(now: Date) {
+    let kept = TelemetryActiveDays.pruned(
+      Set(pendingFeatures.keys).union(pendingErrors.keys), now: now)
+    pendingFeatures = pendingFeatures.filter { kept.contains($0.key) }
+    pendingErrors = pendingErrors.filter { kept.contains($0.key) }
+  }
+
+  /// The day the next feature ping reports: the latest completed UTC day in
+  /// the last 30 that was active or has pending data and is later than the
+  /// last reported day. Older unreported days are never reported, so each
+  /// activation sends at most one feature ping.
+  public func featureReportDay(now: Date) -> String? {
+    let today = TelemetryDay.string(for: now)
+    let candidates = activeDays.union(pendingFeatures.keys).union(pendingErrors.keys)
+    // `yyyy-MM-dd` strings order like the days they name.
+    return TelemetryActiveDays.pruned(candidates, now: now)
+      .filter { day in day < today && featureLastReported.map { day > $0 } ?? true }
+      .max()
+  }
+
+  /// Marks `day` reported and drops the pending entries for it and earlier.
+  public mutating func didReport(day: String) {
+    featureLastReported = day
+    pendingFeatures = pendingFeatures.filter { $0.key > day }
+    pendingErrors = pendingErrors.filter { $0.key > day }
   }
 }
 
@@ -216,8 +248,7 @@ public enum TelemetryPings {
   public static func healthPing(
     environment env: TelemetryEnvironment, state: TelemetryState, now: Date
   ) -> HealthPing {
-    let errors = TelemetryError.allCases.filter(state.pendingErrors.contains)
-    return HealthPing(
+    HealthPing(
       channel: env.channel,
       app: TelemetryValues.appVersion(env.appVersion),
       ios: TelemetryValues.osVersion(major: env.osMajor, minor: env.osMinor),
@@ -234,32 +265,38 @@ public enum TelemetryPings {
       active_days_30: TelemetryActiveDays.bucket(
         TelemetryActiveDays.recording(state.activeDays, now: now), now: now) ?? .one,
       // No stamp means the user opted in without this process seeing it.
-      install_age: state.installStamp?.bucket(now: now) ?? .existing,
+      install_age: state.installStamp?.bucket(now: now) ?? .existing)
+  }
+
+  /// The feature ping for `day`, with that day's uses and errors.
+  public static func featurePing(
+    environment env: TelemetryEnvironment, state: TelemetryState, day: String
+  ) -> FeaturePing {
+    let errors = TelemetryError.allCases.filter { state.pendingErrors[day]?.contains($0) == true }
+    return FeaturePing(
+      channel: env.channel,
+      day: day,
+      features: (state.pendingFeatures[day] ?? [:])
+        .compactMapValues(TelemetryCountBucket.init(count:)),
+      available: TelemetryFeature.allCases.filter(env.availableFeatures.contains),
       errors: errors.isEmpty ? nil : errors)
   }
 
-  public static func featurePing(
-    environment env: TelemetryEnvironment, state: TelemetryState
-  ) -> FeaturePing {
-    FeaturePing(
-      channel: env.channel,
-      features: state.pendingFeatures.compactMapValues(TelemetryCountBucket.init(count:)),
-      available: TelemetryFeature.allCases.filter(env.availableFeatures.contains))
-  }
-
-  /// The exact bytes of one ping. The service sends this with `pretty: false`;
-  /// "What's sent" shows it with `pretty: true`.
+  /// The exact bytes of one ping, or `nil` for a feature ping with no day to
+  /// report. The service sends this with `pretty: false`; "What's sent" shows
+  /// it with `pretty: true`.
   public static func encodedPing(
     _ endpoint: TelemetryEndpoint, environment: TelemetryEnvironment, state: TelemetryState,
     now: Date, pretty: Bool = false
-  ) throws -> Data {
+  ) throws -> Data? {
     switch endpoint {
     case .health:
-      try TelemetryEncoding.encode(
+      return try TelemetryEncoding.encode(
         healthPing(environment: environment, state: state, now: now), pretty: pretty)
     case .feature:
-      try TelemetryEncoding.encode(
-        featurePing(environment: environment, state: state), pretty: pretty)
+      guard let day = state.featureReportDay(now: now) else { return nil }
+      return try TelemetryEncoding.encode(
+        featurePing(environment: environment, state: state, day: day), pretty: pretty)
     }
   }
 }

@@ -40,8 +40,8 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
     <div class="muted">Σ 1/midpoint(active_days_30)</div></div>
   <div class="card"><div class="muted">Installs &lt;7 days old · {{ end }}</div><div class="big">{{ cards.new_7d }}</div>
     <div class="muted">&lt;30d: {{ cards.new_30d }}</div></div>
-  <div class="card"><div class="muted">Feature pings · {{ end }}</div><div class="big">{{ cards.feature_pings }}</div>
-    <div class="muted">{{ cards.flagged_days }} implausible day(s) in range</div></div>
+  <div class="card"><div class="muted">Feature pings · {{ cards.feature_day }}</div><div class="big">{{ cards.feature_pings }}</div>
+    <div class="muted">still filling in · {{ cards.flagged_days }} implausible day(s) in range</div></div>
 </div>
 
 <div class="grid">
@@ -53,6 +53,7 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
   <section class="card">
     <h2>Feature use / availability per day</h2>
     <div class="chart"><canvas id="chart-ratios" role="img" aria-label="Daily used over available ratio per feature"></canvas></div>
+    <p class="muted">Dashed: the last {{ filling_days }} days, still filling in.</p>
   </section>
 </div>
 
@@ -68,6 +69,7 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
         <td>{% if f.unused %}<span class="warn">no use in range</span>{% elif not f.available %}<span class="muted">not available</span>{% endif %}</td></tr>
       {% endfor %}
     </table>
+    <p class="muted">Installs report a day's features when they next open the app, so the last {{ filling_days }} days are still filling in.</p>
   </section>
   <section class="card">
     <h2>Completion (install-days)</h2>
@@ -80,11 +82,12 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
     <p class="muted">Ratio of marginals; not a per-install funnel.</p>
     <h2 class="spaced">Error classes</h2>
     <table>
-      <tr><th>Error</th><th class="n">Install-days</th><th class="n">of health</th></tr>
+      <tr><th>Error</th><th class="n">Install-days</th><th class="n">of feature pings</th></tr>
       {% for e in errors %}
       <tr><td>{{ e.name }}</td><td class="n">{{ e.count }}</td><td class="n">{{ e.share | pct }}</td></tr>
       {% endfor %}
     </table>
+    <p class="muted">From feature pings, so the last {{ filling_days }} days are still filling in.</p>
   </section>
 </div>
 
