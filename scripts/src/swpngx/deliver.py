@@ -100,13 +100,17 @@ def read_categories(metadata_dir: Path) -> list[str]:
 
 
 def screenshot_display_types(screenshots_dir: Path, devices_file: Path) -> list[str]:
-    """Return the display type of each device with framed screenshots."""
+    """Return each display type with framed screenshots, once: iPhone Duo's
+    outer and inner displays share a set, and a second `--replace` upload
+    would delete the first's."""
     devices = load_screenshot_devices(devices_file).devices
-    types = [
-        device.asc_display_type
-        for device in devices
-        if any(screenshots_dir.glob(f"*/{device.id}-*-framed.png"))
-    ]
+    types = list(
+        dict.fromkeys(
+            device.asc_display_type
+            for device in devices
+            if any(screenshots_dir.glob(f"*/{device.id}-*-framed.png"))
+        )
+    )
     if not types:
         console.print(
             f"[red]No framed screenshots in {screenshots_dir}; run `swpngx frame`.[/red]"

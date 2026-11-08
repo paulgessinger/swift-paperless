@@ -4,7 +4,10 @@
   ribbon, a phone or tablet frame around a captured screen, and loose papers
   and tag pills around it.
 
-  ?device=iphone|ipad   layout (canvas 1320×2868 or 2064×2752)
+  ?device=iphone|ipad|duo_outer|duo_inner
+                        layout (canvas 1320×2868, 2064×2752, or iPhone Duo's
+                        outer 1398×2034 and open, landscape inner 2853×2007
+                        displays)
   ?slide=1..4           headline and decoration set
   ?img=<path>           captured screen, relative to this file
   ?ar=<h/w>             aspect ratio of the captured screen
@@ -58,6 +61,11 @@
               screenW: 1000, screenY: 640, bezel: 26, radius: 125, ribbonY: 1560 },
     ipad:   { W: 2064, H: 2752, u: 1.35, pad: 150, h1: 150, lh: 162, sub: 60, headY: 250,
               screenW: 1560, screenY: 600, bezel: 40, radius: 52, ribbonY: 1500 },
+    // The outer display reuses the iPhone's decorations.
+    duo_outer: { W: 1398, H: 2034, u: .85, pad: 90, h1: 112, lh: 122, sub: 46, headY: 200,
+                 screenW: 1000, screenY: 470, bezel: 24, radius: 110, ribbonY: 1110, deco: "iphone" },
+    duo_inner: { W: 2853, H: 2007, u: 1.1, pad: 160, h1: 120, lh: 130, sub: 50, headY: 190,
+                 screenW: 1950, screenY: 500, bezel: 36, radius: 70, ribbonY: 1150 },
   };
   const L = LAYOUTS[device];
   window.__scene = { duration: 0, width: L.W, height: L.H };
@@ -76,22 +84,30 @@
            iphone: [["letter", .07, .55, -14, .75, "back"], ["invoice", .94, .40, 12, .7, "back"],
                     ["Inbox", .14, .935, -8, 1, "front"]],
            ipad:   [["letter", .06, .55, -14, .75, "back"], ["invoice", .95, .40, 12, .7, "back"],
-                    ["Inbox", .80, .93, 8, 1, "front"]] } },
+                    ["Inbox", .80, .93, 8, 1, "front"]],
+           duo_inner: [["letter", .05, .55, -14, .75, "back"], ["invoice", .96, .40, 12, .7, "back"],
+                       ["Inbox", .84, .92, 8, 1, "front"]] } },
     2: { deco: {
            iphone: [["receipt", .95, .62, 14, .75, "back"], ["Bank", .22, .84, -10, 1, "front"],
                     ["Travel Document", .70, .925, 6, 1, "front"]],
            ipad:   [["receipt", .96, .62, 14, .75, "back"], ["Bank", .56, .50, -10, 1, "front"],
-                    ["Travel Document", .72, .92, 6, 1, "front"]] } },
+                    ["Travel Document", .72, .92, 6, 1, "front"]],
+           duo_inner: [["receipt", .97, .62, 14, .75, "back"], ["Bank", .17, .80, -10, 1, "front"],
+                       ["Travel Document", .78, .92, 6, 1, "front"]] } },
     3: { deco: {
            iphone: [["letter", .06, .44, -10, .8, "back"], ["receipt", .95, .74, 10, .7, "back"],
                     ["Important", .84, .51, 8, 1, "front"]],
            ipad:   [["letter", .05, .44, -10, .8, "back"], ["receipt", .96, .74, 10, .7, "back"],
-                    ["Important", .55, .66, -6, 1, "front"]] } },
+                    ["Important", .55, .66, -6, 1, "front"]],
+           duo_inner: [["letter", .05, .44, -10, .8, "back"], ["receipt", .96, .74, 10, .7, "back"],
+                       ["Important", .25, .91, -6, 1, "front"]] } },
     4: { deco: {
            iphone: [["invoice", .07, .70, -8, .75, "back"], ["letter", .94, .45, 10, .7, "back"],
                     ["Important", .76, .955, 6, 1, "front"]],
            ipad:   [["invoice", .06, .70, -8, .75, "back"], ["letter", .95, .45, 10, .7, "back"],
-                    ["Important", .56, .80, -6, 1, "front"]] } },
+                    ["Important", .56, .80, -6, 1, "front"]],
+           duo_inner: [["invoice", .05, .70, -8, .75, "back"], ["letter", .96, .45, 10, .7, "back"],
+                       ["Important", .84, .92, -6, 1, "front"]] } },
   };
   const S = SLIDES[slide];
   // Headline text comes from store/promo/headlines.toml via the query string.
@@ -109,7 +125,7 @@
     return `<rect x="${-w / 2}" y="-62" width="${w}" height="124" rx="62" fill="${fill}" stroke="${stroke}" stroke-width="6"/>
       <text x="0" y="24" font-size="68" font-weight="600" fill="${ink}" text-anchor="middle">${label}</text>`;
   };
-  const decorations = (layer) => S.deco[device].filter(d => d[5] === layer).map(([kind, x, y, r, s]) => {
+  const decorations = (layer) => S.deco[L.deco ?? device].filter(d => d[5] === layer).map(([kind, x, y, r, s]) => {
     const isPill = kind in PILLS;
     const body = isPill ? pill(kind) : `<use href="#sym-${kind}"/>`;
     return `<g transform="translate(${x * L.W} ${y * L.H}) rotate(${r}) scale(${s * L.u})"

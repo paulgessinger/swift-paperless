@@ -159,6 +159,7 @@ demo-reset:
 
 # Needs `just demo-up`; frames into store/screenshots/framed for `just deliver`.
 # Capture and frame App Store screenshots for every locale (--skip-build reuses the last build).
+# Stops for the iPhone Duo poses; `--device <id>` captures one device.
 screenshots *args:
   uv run --project scripts swpngx capture capture {{args}}
   uv run --project scripts swpngx promo screenshots

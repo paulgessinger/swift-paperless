@@ -57,6 +57,7 @@ def parse_devices_with_packs(
     return [
         (screenshot_device_to_frame_device(device), device.bezel_pack)
         for device in screenshot_devices.devices
+        if device.has_bezel
     ]
 
 

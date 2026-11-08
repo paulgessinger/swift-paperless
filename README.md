@@ -200,11 +200,20 @@ device), so no taps or link prompts are involved. It writes files like
 the device `id` from [`screenshot_devices.toml`](screenshot_devices.toml).
 Simulator UDIDs in `screenshots.toml` are per machine.
 
+iPhone Duo is one simulator with two displays: `iPhone_Duo_Inner` and
+`iPhone_Duo_Outer` share its UDID and pick a display with `display`. `simctl`
+cannot fold the device, so capture stops before each and asks you to set the
+pose (Open or Closed) in Device Hub. Open is captured in its landscape
+orientation, with the side status bar. `--device iPhone_Duo_Outer`
+captures one device only. Both land in App Store Connect's `IPHONE_DUO` set,
+which needs asc 6.4 or later.
+
 **3. Frame.** `swpngx promo screenshots` draws each capture in a device frame
 on the promo background with a headline from
 [`store/promo/headlines.toml`](store/promo/headlines.toml), and writes
 `store/screenshots/framed/<App Store locale>/*-framed.png` at 1320 × 2868
-(iPhone) and 2064 × 2752 (iPad). The scene is
+(iPhone), 2064 × 2752 (iPad), and 2853 × 2007 and 1398 × 2034 (iPhone Duo's
+inner and outer displays). The scene is
 `store/promo/scenes/screenshot.html`; long headlines shrink to fit. It renders
 with Playwright's Chromium (`uv run --project scripts playwright install
 chromium` once).

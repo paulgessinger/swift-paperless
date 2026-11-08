@@ -18,6 +18,7 @@ import random
 import re
 import subprocess
 import tempfile
+import threading
 import time
 from typing import Annotated
 
@@ -105,6 +106,11 @@ class SimulatorConfig(BaseModel):
 
     device: str
     udid: str
+    # `simctl io --display` name, for devices with more than one display.
+    display: str | None = None
+    # Device Hub pose to ask for before capturing, e.g. "Closed". Simulators
+    # sharing a udid run one after another.
+    pose: str | None = None
 
 
 class CaptureConfig(BaseModel):
@@ -1279,9 +1285,25 @@ def capture(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Print commands without executing")
     ] = False,
+    devices: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--device",
+            help="Capture only this device id (repeatable), e.g. iPhone_Duo_Outer",
+        ),
+    ] = None,
 ) -> None:
     """Capture screenshots from iOS simulator."""
     capture_config = load_capture_config(config)
+    if devices:
+        capture_config.simulators = [
+            simulator
+            for simulator in capture_config.simulators
+            if simulator.device in devices
+        ]
+        if not capture_config.simulators:
+            console.log(f"[red]No configured simulators match {devices}")
+            raise typer.Exit(1)
     config_path = config.resolve()
     devices_path = config_path.parent / "screenshot_devices.toml"
     screenshot_devices = load_screenshot_devices(devices_path)
@@ -1330,25 +1352,36 @@ def capture(
         console=console,
     ) as progress:
         progress_tasks = {
-            simulator.udid: progress.add_task(
+            simulator.device: progress.add_task(
                 f"{simulator.device} • queued",
                 total=steps_per_simulator,
             )
             for simulator in simulators
         }
 
+        prompt_lock = threading.Lock()
+        built_apps: dict[str, Path] = {}
+
         def capture_simulator(simulator: SimulatorConfig) -> None:
             target = simulator.udid
             device = device_by_id(screenshot_devices, simulator.device)
             screenshot_prefix = device.id
             simulator_name = device.simulator_name
-            progress_task_id = progress_tasks[target]
+            progress_task_id = progress_tasks[simulator.device]
             progress.update(
                 progress_task_id,
                 description=f"{screenshot_prefix} • preparing",
             )
 
             ensure_simulator_booted(target, dry_run=dry_run)
+            if simulator.pose and not dry_run:
+                with prompt_lock:
+                    progress.stop()
+                    console.input(
+                        f"[bold]Set {simulator_name} ({target}) to {simulator.pose} "
+                        "in Device Hub, then press Enter[/bold] "
+                    )
+                    progress.start()
             configure_simulator(
                 target=target,
                 status_bar_time=status_bar_time,
@@ -1360,7 +1393,9 @@ def capture(
             derived_data = build_config.derived_data_path / sanitize_filename(
                 simulator_name
             )
-            if build_config.enabled and not skip_build:
+            if target in built_apps:
+                app_path = built_apps[target]
+            elif build_config.enabled and not skip_build:
                 app_path = build_app_for_simulator(
                     simulator_name=simulator_name,
                     simulator_udid=target,
@@ -1379,6 +1414,8 @@ def capture(
                 except FileNotFoundError as exc:
                     console.log(f"[red]Error: {exc}")
                     raise typer.Exit(1)
+
+            built_apps[target] = app_path
 
             # A clean install drops filters and other state an earlier run left.
             simctl(["uninstall", target, bundle_id], check=False, dry_run=dry_run)
@@ -1421,8 +1458,19 @@ def capture(
 
                     screenshot_name = f"{screenshot_prefix}-{index:02d}_{sanitize_filename(step.name)}.png"
                     output_path = language_dir / screenshot_name
+                    display_args = (
+                        ["--display", simulator.display] if simulator.display else []
+                    )
                     simctl(
-                        ["io", target, "screenshot", "--type", "png", str(output_path)],
+                        [
+                            "io",
+                            target,
+                            "screenshot",
+                            "--type",
+                            "png",
+                            *display_args,
+                            str(output_path),
+                        ],
                         dry_run=dry_run,
                     )
                     console.log(f"Saved {output_path}")
@@ -1431,20 +1479,23 @@ def capture(
             progress.update(progress_task_id, description=f"{screenshot_prefix} • done")
 
         errors: list[str] = []
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=len(simulators)
-        ) as executor:
-            futures = {
-                executor.submit(capture_simulator, simulator): simulator
-                for simulator in simulators
-            }
-            for future in concurrent.futures.as_completed(futures):
-                simulator = futures[future]
+
+        def capture_group(group: list[SimulatorConfig]) -> None:
+            for simulator in group:
                 try:
-                    future.result()
+                    capture_simulator(simulator)
                 except Exception as exc:
                     console.log(f"[red]Error capturing {simulator.device}: {exc}")
                     errors.append(simulator.device)
+
+        groups: dict[str, list[SimulatorConfig]] = {}
+        for simulator in simulators:
+            groups.setdefault(simulator.udid, []).append(simulator)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(groups)) as executor:
+            for future in [
+                executor.submit(capture_group, group) for group in groups.values()
+            ]:
+                future.result()
         if errors:
             raise typer.Exit(1)
 

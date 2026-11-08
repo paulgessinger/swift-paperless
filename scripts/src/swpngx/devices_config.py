@@ -17,17 +17,23 @@ class ScreenshotDevice(BaseModel):
 
     id: str
     simulator_name: str
-    bezel_pack: str
-    bezel: str
     asc_display_type: str
+    # Bezel framing (`swpngx frame`); devices without a bezel are only framed
+    # by `swpngx promo screenshots`.
+    bezel_pack: str | None = None
+    bezel: str | None = None
     frames_dir: Path = Path("store/screenshots/frames")
-    target_size: tuple[int, int]
-    offset: tuple[int, int]
+    target_size: tuple[int, int] | None = None
+    offset: tuple[int, int] | None = None
     post_offset: tuple[int, int] = (0, 0)
     post_margin: int = 0
-    mask_corner_radius: int
-    mask_margin: int
+    mask_corner_radius: int | None = None
+    mask_margin: int | None = None
     shadow_blur: int = 30
+
+    @property
+    def has_bezel(self) -> bool:
+        return self.bezel is not None
 
     @property
     def name(self) -> str:

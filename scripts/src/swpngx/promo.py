@@ -41,7 +41,12 @@ PANORAMA_SCREEN_BOX = (94, 650, 1266, 2868)
 DETAIL_PAGE_BOX = (215, 365, 955, 1335)
 
 # Capture prefix (screenshot_devices.toml id) and scene layout per device.
-SCREENSHOT_DEVICES = {"iPhone_18_Pro_Max": "iphone", "iPad_Pro_13_M5": "ipad"}
+SCREENSHOT_DEVICES = {
+    "iPhone_18_Pro_Max": "iphone",
+    "iPad_Pro_13_M5": "ipad",
+    "iPhone_Duo_Inner": "duo_inner",
+    "iPhone_Duo_Outer": "duo_outer",
+}
 
 CanvasOption = Annotated[
     str | None,

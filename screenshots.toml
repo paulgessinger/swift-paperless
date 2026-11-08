@@ -40,13 +40,32 @@ udid = "A3F4F32C-F6E6-40EA-8D31-5872BF41EC04"
 device = "iPad_Pro_13_M5"
 udid = "CF576856-083F-4B83-B938-677D83B4B5AB"
 
+# iPhone Duo has no command-line pose control, so capture asks for each pose
+# and waits. `display` is the `simctl io enumerate` device name.
+[[simulators]]
+device = "iPhone_Duo_Inner"
+udid = "35FA9FF5-37FB-43EC-8FEB-AF7784C479EC"
+display = "primary-1"
+pose = "Open"
+
+[[simulators]]
+device = "iPhone_Duo_Outer"
+udid = "35FA9FF5-37FB-43EC-8FEB-AF7784C479EC"
+display = "primary"
+pose = "Closed"
+
 # Each screen is a fresh launch that routes through `urls` (x-paperless deep
 # links, see DataModel/Route.swift); `device_urls` overrides them per device.
 
 [[steps]]
 name = "documents"
-# On iPad, open a document so the detail column isn't empty.
-device_urls = { iPad_Pro_13_M5 = ["x-paperless://v1/document/3"] }
+# On iPad and the open iPhone Duo, open a document so the detail column isn't
+# empty.
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/3",
+] }
 
 [[steps]]
 name = "filter_tags"
@@ -54,17 +73,29 @@ urls = ["x-paperless://v1/open_filter/tags"]
 device_urls = { iPad_Pro_13_M5 = [
     "x-paperless://v1/document/3",
     "x-paperless://v1/open_filter/tags",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/3",
+    "x-paperless://v1/open_filter/tags",
 ] }
 
 [[steps]]
 name = "document_view"
 urls = ["x-paperless://v1/document/3"]
-device_urls = { iPad_Pro_13_M5 = ["x-paperless://v1/document/3?edit=1"] }
+# The open iPhone Duo keeps the iPhone detail layout, without an inspector,
+# so it shows another document than slide 1.
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3?edit=1",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/2",
+] }
 
 [[steps]]
 name = "document_edit"
 urls = ["x-paperless://v1/document/3?edit=tags"]
 device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3?edit=1",
+    "x-paperless://v1/document/3?edit=tags",
+], iPhone_Duo_Inner = [
     "x-paperless://v1/document/3?edit=1",
     "x-paperless://v1/document/3?edit=tags",
 ] }

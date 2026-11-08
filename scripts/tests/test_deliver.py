@@ -254,3 +254,31 @@ def test_skip_previews(metadata, screenshots, devices, previews, monkeypatch):
     run(metadata, screenshots, devices, previews_dir=previews, skip_previews=True)
 
     assert ("video-previews", "upload") not in fake.commands()
+
+
+def test_devices_sharing_a_set_upload_once(metadata, tmp_path, monkeypatch):
+    devices = tmp_path / "duo.toml"
+    devices.write_text(
+        """
+[[device]]
+id = "iPhone_Duo_Inner"
+simulator_name = "iPhone Duo"
+asc_display_type = "IPHONE_DUO"
+
+[[device]]
+id = "iPhone_Duo_Outer"
+simulator_name = "iPhone Duo"
+asc_display_type = "IPHONE_DUO"
+"""
+    )
+    screenshots = tmp_path / "framed"
+    (screenshots / "en-US").mkdir(parents=True)
+    for device in ("iPhone_Duo_Inner", "iPhone_Duo_Outer"):
+        (screenshots / "en-US" / f"{device}-01_documents-framed.png").touch()
+    fake = FakeAsc(monkeypatch, [{"id": "VERSION"}])
+
+    run(metadata, screenshots, devices)
+
+    uploads = [call for call in fake.calls if call[:2] == ("screenshots", "upload")]
+    assert len(uploads) == 1
+    assert uploads[0][uploads[0].index("--device-type") + 1] == "IPHONE_DUO"

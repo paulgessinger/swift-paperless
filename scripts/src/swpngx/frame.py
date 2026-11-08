@@ -317,6 +317,7 @@ def load_config(config_file: Path) -> Config:
         config_data["devices"] = [
             screenshot_device_to_frame_device(device)
             for device in screenshot_devices.devices
+            if device.has_bezel
         ]
     elif isinstance(devices_value, list):
         config_data["devices"] = [DeviceConfig(**entry) for entry in devices_value]

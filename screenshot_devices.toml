@@ -34,3 +34,15 @@ offset = [74, 68]
 post_offset = [0, 500]
 mask_corner_radius = 150
 mask_margin = 0
+
+# iPhone Duo: one simulator, two displays, in one App Store set. Framed only
+# by `swpngx promo screenshots`, which has no bezel for it.
+[[device]]
+id = "iPhone_Duo_Inner"
+simulator_name = "iPhone Duo"
+asc_display_type = "IPHONE_DUO"
+
+[[device]]
+id = "iPhone_Duo_Outer"
+simulator_name = "iPhone Duo"
+asc_display_type = "IPHONE_DUO"
