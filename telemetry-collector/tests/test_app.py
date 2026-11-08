@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 
 import pytest
-from conftest import feature_payload, health_payload, rows
+from conftest import days_before, feature_payload, health_payload, rows
+from prometheus_client import REGISTRY
 
 
 def test_health_split_into_counters(client, db_path):
-    r = client.post("/t/health", json=health_payload(errors=["tls", "timeout", "tls"]))
+    r = client.post("/t/health", json=health_payload())
     assert r.status_code == 204
     assert r.content == b""
     got = {(f, v): n for (_, ch, p, f, v, n) in rows(db_path) if ch == "appstore" and p == "health"}
@@ -26,16 +27,14 @@ def test_health_split_into_counters(client, db_path):
         ("servers", "1"): 1,
         ("active_days_30", "8-20"): 1,
         ("install_age", "<30d"): 1,
-        ("errors", "tls"): 1,
-        ("errors", "timeout"): 1,
     }
 
 
 def test_health_optional_fields_omitted(client, db_path):
-    r = client.post("/t/health", json=health_payload(backend=None, api=None, docs=None, auth=None, errors=None))
+    r = client.post("/t/health", json=health_payload(backend=None, api=None, docs=None, auth=None))
     assert r.status_code == 204
     fields = {f for (_, _, _, f, _, _) in rows(db_path)}
-    assert not fields & {"backend", "api", "docs", "auth", "errors"}
+    assert not fields & {"backend", "api", "docs", "auth"}
 
 
 def test_auth_none_accepted(client, db_path):
@@ -50,8 +49,9 @@ def test_removed_feature_name_dropped(client, db_path):
 
 
 def test_feature_split_into_counters(client, db_path):
-    r = client.post("/t/feature", json=feature_payload())
+    r = client.post("/t/feature", json=feature_payload(errors=["tls", "timeout", "tls"]))
     assert r.status_code == 204
+    assert {d for (d, *_rest) in rows(db_path)} == {"2026-11-06"}
     got = {(f, v): n for (_, _, p, f, v, n) in rows(db_path) if p == "feature"}
     assert got == {
         ("_pings", "total"): 1,
@@ -62,12 +62,20 @@ def test_feature_split_into_counters(client, db_path):
         ("available:scan_started", "true"): 1,
         ("available:scan_uploaded", "true"): 1,
         ("available:notes", "true"): 1,
+        ("errors", "tls"): 1,
+        ("errors", "timeout"): 1,
     }
 
 
+def test_feature_without_errors(client, db_path):
+    assert client.post("/t/feature", json=feature_payload(errors=None)).status_code == 204
+    assert client.post("/t/feature", json=feature_payload(errors=[])).status_code == 204
+    assert "errors" not in {f for (_, _, _, f, _, _) in rows(db_path)}
+
+
 def test_empty_feature_ping_counts(client, db_path):
-    assert client.post("/t/feature", json=feature_payload(features={}, available=[])).status_code == 204
-    assert rows(db_path) == [("2026-11-07", "appstore", "feature", "_pings", "total", 1)]
+    assert client.post("/t/feature", json=feature_payload(features={}, available=[], errors=None)).status_code == 204
+    assert rows(db_path) == [("2026-11-06", "appstore", "feature", "_pings", "total", 1)]
 
 
 def test_counters_accumulate(client, db_path):
@@ -82,11 +90,11 @@ def test_unknown_names_dropped_rest_kept(client, db_path):
     r = client.post(
         "/t/feature",
         json=feature_payload(
-            features={"saved_view": "1", "time_travel": "10+"}, available=["saved_view", "time_travel"]
+            features={"saved_view": "1", "time_travel": "10+"},
+            available=["saved_view", "time_travel"],
+            errors=["tls", "cosmic_ray"],
         ),
     )
-    assert r.status_code == 204
-    r = client.post("/t/health", json=health_payload(errors=["tls", "cosmic_ray"]))
     assert r.status_code == 204
     fields = {(f, v) for (_, _, _, f, v, _) in rows(db_path)}
     assert ("feature:saved_view", "1") in fields
@@ -118,7 +126,10 @@ def test_unknown_names_dropped_rest_kept(client, db_path):
         ("/t/feature", feature_payload(timestamp=123)),
         ("/t/feature", feature_payload(available=[f"f{i}" for i in range(65)])),
         ("/t/feature", feature_payload(features={f"f{i}": "1" for i in range(65)})),
-        ("/t/health", health_payload(errors=["x" * 65])),
+        ("/t/health", health_payload(errors=["tls"])),
+        ("/t/feature", feature_payload(errors=["x" * 65])),
+        ("/t/feature", feature_payload(errors="tls")),
+        ("/t/feature", feature_payload(day=None)),
     ],
 )
 def test_invalid_rejected_without_echo(client, db_path, path, payload):
@@ -178,7 +189,7 @@ def test_flush_failure_keeps_buffer(db_path, clock):
 
     conn = connect(db_path)
     store = CounterStore(conn, batch_size=10, today=clock)
-    store.add("appstore", "health", [("_pings", "total")])
+    store.add("2026-11-07", "appstore", "health", [("_pings", "total")])
     conn.execute("DROP TABLE counters")
     store.flush()
     assert store.pending_pings == 1
@@ -249,3 +260,72 @@ def test_wal_mode_and_truncated_after_flush(client, db_path):
     conn.close()
     wal = db_path.with_name(db_path.name + "-wal")
     assert not wal.exists() or wal.stat().st_size == 0
+
+
+def test_feature_counters_filed_under_ping_day(client, db_path, clock):
+    clock.day = "2026-11-08"
+    assert client.post("/t/health", json=health_payload()).status_code == 204
+    assert client.post("/t/feature", json=feature_payload(day="2026-11-07")).status_code == 204
+    assert client.post("/t/feature", json=feature_payload(day="2026-10-20")).status_code == 204
+    by_ping = {(p, d): n for (d, _, p, f, _, n) in rows(db_path) if f == "_pings"}
+    assert by_ping == {("health", "2026-11-08"): 1, ("feature", "2026-11-07"): 1, ("feature", "2026-10-20"): 1}
+    assert ("2026-11-07", "feature", "errors", "tls") in {(d, p, f, v) for (d, _, p, f, v, _) in rows(db_path)}
+
+
+def _rejected_feature() -> float:
+    return (
+        REGISTRY.get_sample_value("telemetry_requests_total", {"endpoint": "feature", "outcome": "rejected_400"}) or 0.0
+    )
+
+
+@pytest.mark.parametrize(
+    ("day", "status"),
+    [
+        (days_before("2026-11-07", 1), 204),
+        (days_before("2026-11-07", 30), 204),
+        ("2026-11-07", 400),  # today
+        ("2026-11-08", 400),  # future
+        (days_before("2026-11-07", 31), 400),
+        ("2026-02-30", 400),
+        ("2026-11-6", 400),
+        ("20261106", 400),
+        ("2026-W45-5", 400),
+        ("2026-11-06T00:00:00", 400),
+        ("２０２６-11-06", 400),
+        ("", 400),
+    ],
+)
+def test_feature_day_bounds(client, db_path, day, status):
+    before = _rejected_feature()
+    r = client.post("/t/feature", json=feature_payload(day=day))
+    assert r.status_code == status
+    assert r.content == b""
+    if status == 204:
+        assert {d for (d, *_rest) in rows(db_path)} == {day}
+        assert _rejected_feature() == before
+    else:
+        assert rows(db_path) == []
+        assert _rejected_feature() == before + 1
+
+
+def test_feature_day_must_be_string(client, db_path):
+    assert client.post("/t/feature", json=feature_payload(day=20261106)).status_code == 400
+    assert rows(db_path) == []
+
+
+def test_back_dated_feature_ping_does_not_roll_over(make_client, db_path, clock):
+    with make_client(batch_size=20) as c:
+        clock.day = "2026-11-08"
+        c.post("/t/health", json=health_payload())
+        # Filed under yesterday, but it arrives today: no rollover, still buffered.
+        c.post("/t/feature", json=feature_payload(day="2026-11-07"))
+        c.post("/t/health", json=health_payload())
+        c.post("/t/feature", json=feature_payload(day="2026-11-01"))
+        assert rows(db_path) == []
+        # The first ping arriving on the next day flushes everything buffered so far.
+        clock.day = "2026-11-09"
+        c.post("/t/feature", json=feature_payload(day="2026-11-08"))
+        got = {(p, d): n for (d, _, p, f, _, n) in rows(db_path) if f == "_pings"}
+        assert got == {("health", "2026-11-08"): 2, ("feature", "2026-11-07"): 1, ("feature", "2026-11-01"): 1}
+    got = {(p, d): n for (d, _, p, f, _, n) in rows(db_path) if f == "_pings"}
+    assert got[("feature", "2026-11-08")] == 1

@@ -27,8 +27,10 @@ uv run pyright
 # Dev mode: serves /docs.
 TELEMETRY_DEV=1 TELEMETRY_DB_PATH=/tmp/telemetry.sqlite3 uv run telemetry-collector-serve
 
+# `day` must be a past UTC day; yesterday works (BSD or GNU date).
+DAY=$(date -u -v-1d +%F 2>/dev/null || date -u -d yesterday +%F)
 curl -i -X POST http://127.0.0.1:8000/t/feature -H 'content-type: application/json' \
-  -d '{"channel":"dev","features":{"search":"1"},"available":["search"]}'
+  -d '{"channel":"dev","day":"'"$DAY"'","features":{"search":"1"},"available":["search"],"errors":["tls"]}'
 
 # Report (read-only; counters appear after k pings or after shutdown).
 uv run telemetry-report --db /tmp/telemetry.sqlite3 --days 7
@@ -62,8 +64,9 @@ error naming the variable.
 ## API behaviour
 
 - `204` on success, with an empty body.
-- `400` with an empty body for malformed JSON, unknown fields, wrong types, or
-  values outside the schema (buckets, device, auth, channel, version formats).
+- `400` with an empty body for malformed JSON, unknown fields, wrong types,
+  values outside the schema (buckets, device, auth, channel, version formats),
+  or a feature ping `day` out of range.
   `app` must look like `1.11` or `1.11.2`, `ios` like `18.3`, `lang` 2-3
   lowercase letters, `backend` `major.minor.patch` or `other`.
 - Unknown feature names (in `features` or `available`) and unknown error names
@@ -72,28 +75,40 @@ error naming the variable.
   limited to 64 entries of at most 64 characters.
 - Required health fields: `channel app ios device lang client_cert
   custom_headers servers active_days_30 install_age`. Optional (omitted when
-  unknown): `auth backend api docs errors`. Feature pings require `channel features available` (both may be
-  empty).
+  unknown): `auth backend api docs`. Health pings carry no `errors`; a health
+  ping with that field is rejected like any other unknown field.
+- A feature ping reports exactly one completed UTC day. It requires `channel
+  day features available` (`features` and `available` may be empty) and may
+  carry `errors`, that day's setup error classes.
+- `day` is `YYYY-MM-DD`, a real date strictly before the server's current UTC
+  day and at most 30 days before it. Today, future days, older days and
+  malformed dates are rejected with `400`.
 
 ## Storage
 
 One table, `counters(day, channel, ping, field, value, count)`. Each accepted
-ping adds one increment per field value: `_pings/total`, every scalar field
-(`client_cert` as `true`/`false`, `api` as its integer string), one `errors`
-row per distinct error, `feature:<name>` with its bucket as value, and
-`available:<name>` with value `true`. The day is the server's UTC receive day.
+ping adds one increment per field value. Health pings: `_pings/total` and every
+scalar field (`client_cert` as `true`/`false`, `api` as its integer string).
+Feature pings: `_pings/total`, `feature:<name>` with its bucket as value,
+`available:<name>` with value `true`, and one `errors` row per distinct error.
+Health counters are filed under the server's UTC receive day; feature counters
+under the ping's `day`. Feature and error counts for recent days therefore keep
+growing as installs report them when the app is next opened.
 
 Writes are batched: counters accumulate in memory and are written in one
-transaction every `TELEMETRY_BATCH_SIZE` accepted pings, when the first ping of
-a new UTC day arrives (the previous day's buffer is written first), and on
-graceful shutdown (SIGTERM, via the FastAPI lifespan). There is no time-based
+transaction every `TELEMETRY_BATCH_SIZE` accepted pings, when the first ping
+that arrives on a new UTC day is received (the buffer is written first), and on
+graceful shutdown (SIGTERM, via the FastAPI lifespan). The rollover follows the
+arrival day only: a feature ping for an earlier day does not trigger it, and
+one batch can hold counters for several days. There is no time-based
 flush. After each flush the WAL is checkpointed with `TRUNCATE`. A crash loses
 at most k-1 pings.
 
 ## Reporting
 
 `telemetry-report` prints, per day and channel, every field's value
-counts (no small-count suppression), `used/available` per feature, a warning
+counts (no small-count suppression; error classes appear under the feature
+ping), `used/available` per feature, a warning
 when feature pings exceed health pings by more than 1.5x, and an MAU estimate:
 the sum over the last 30 days of health pings weighted by
 `1 / midpoint(active_days_30)` (midpoints in `report.py`).
@@ -195,7 +210,12 @@ a 7/30/90-day range:
 - install-days per feature (used, available, ratio, bucket breakdown, and a
   "no use in range" flag)
 - completion rates for `*_started` pairs
-- error classes
+- error classes, as a share of feature pings
+
+Feature pings report a day when the install next opens the app, so the feature
+and error sections note that the last 7 days are still filling in, the feature
+ratio chart draws those days dashed, and the feature-ping card shows the day
+before the latest.
 - every environment field's distribution
 
 For optional fields (`auth`, `backend`, `api`, `docs`), an `unknown` row is
@@ -398,6 +418,10 @@ from about 45 days of seeded data. To cap it:
   zone, which is neither logged nor persisted.
 - Request bodies are never logged or echoed. Error responses have empty
   bodies; FastAPI's validation handler is replaced.
+- A feature ping's `day` reveals how long ago the install was last active
+  (one to 30 days before the ping arrives). It is used only to choose the day
+  the counters are filed under and is not stored on its own; the stored day
+  carries the same information in aggregate.
 - Only per-field marginals are stored, never the combined payload. Batched
   writes mean neither the WAL nor two database snapshots taken one ping apart
   reveal a single payload. This protects data at rest; whoever controls the

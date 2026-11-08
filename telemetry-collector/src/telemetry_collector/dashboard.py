@@ -34,6 +34,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .config import DashboardSettings
 from .report import (
+    FILLING_DAYS,
     MAU_WINDOW_DAYS,
     UNKNOWN,
     Counts,
@@ -41,6 +42,7 @@ from .report import (
     daily_feature_ratios,
     day_range,
     distribution,
+    error_shares,
     feature_stats,
     implausible_days,
     latest_day,
@@ -313,7 +315,8 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
     age_today = distribution(counts, schema, "install_age", end, end)
     stats = feature_stats(counts, features, start, end)
     by_name = {s.name: s for s in stats}
-    errors = counts.values("health", "errors", start, end)
+    # Feature pings for a day arrive on a later day, so the card shows the day before `end`.
+    feature_day = day_range(end, 2)[0]
 
     return {
         "end": end,
@@ -323,7 +326,8 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             "mau": mau_estimate(counts, end),
             "new_7d": age_today.get("<7d", 0),
             "new_30d": age_today.get("<30d", 0),
-            "feature_pings": counts.pings("feature", end),
+            "feature_day": feature_day,
+            "feature_pings": counts.pings("feature", feature_day),
             "flagged_days": len(flagged),
         },
         "count_buckets": list(schema.count_buckets),
@@ -348,10 +352,8 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             }
             for a, b in completion_pairs(features)
         ],
-        "errors": [
-            {"name": e, "count": errors.get(e, 0), "share": errors.get(e, 0) / health_total if health_total else None}
-            for e in sorted(schema.errors, key=lambda e: -errors.get(e, 0))
-        ],
+        "filling_days": FILLING_DAYS,
+        "errors": [{"name": e, "count": n, "share": share} for e, n, share in error_shares(counts, schema, start, end)],
         "environment": [
             {"field": f, "rows": _share_rows(distribution(counts, schema, f, start, end), health_total)}
             for f in schema.environment_fields
@@ -361,6 +363,8 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             "days": window,
             "active": daily,
             "flagged": [d in flagged for d in window],
+            # Days whose feature counts are still filling in, drawn dashed.
+            "filling": [i >= len(window) - FILLING_DAYS for i in range(len(window))],
             # A list, not a dict: tojson sorts keys, and the legend should follow schema order.
             "ratios": [{"name": n, "values": v} for n, v in daily_feature_ratios(counts, features, window).items()],
         },

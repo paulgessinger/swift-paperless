@@ -13,11 +13,16 @@ from telemetry_collector.schema import DEFAULT_SCHEMA_PATH
 def test_metrics_carry_no_payload_content(make_client):
     schema = json.loads(Path(DEFAULT_SCHEMA_PATH).read_text())
     with make_client(batch_size=2) as c:
-        c.post("/t/health", json=health_payload(channel="testflight", errors=list(schema["errors"])))
-        c.post(
+        assert c.post("/t/health", json=health_payload(channel="testflight")).status_code == 204
+        r = c.post(
             "/t/feature",
-            json=feature_payload(features={n: "1" for n in schema["features"]}, available=schema["features"]),
+            json=feature_payload(
+                features={n: "1" for n in schema["features"]},
+                available=schema["features"],
+                errors=list(schema["errors"]),
+            ),
         )
+        assert r.status_code == 204
         c.post("/t/health", json=health_payload(device="Android"))
         c.post("/t/feature", json=feature_payload())
         # The public app does not serve metrics.

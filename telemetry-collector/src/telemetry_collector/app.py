@@ -17,7 +17,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import metrics
 from .config import MAX_BODY_BYTES, Settings
-from .schema import Schema, load_schema
+from .schema import Schema, feature_day_valid, load_schema
 from .store import CounterStore, connect, utc_today
 
 
@@ -84,9 +84,15 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
         except ValidationError:
             metrics.REQUESTS.labels(ping, "rejected_400").inc()
             return Response(status_code=400)
-        channel = payload.model_dump(include={"channel"})["channel"]
-        split = schema.split_health if ping == "health" else schema.split_feature
-        request.app.state.store.add(channel, ping, split(payload))
+        fields = payload.model_dump(include={"channel", "day"})
+        if ping == "health":
+            day, split = today(), schema.split_health
+        else:
+            day, split = fields["day"], schema.split_feature
+            if not feature_day_valid(day, today()):
+                metrics.REQUESTS.labels(ping, "rejected_400").inc()
+                return Response(status_code=400)
+        request.app.state.store.add(day, fields["channel"], ping, split(payload))
         metrics.REQUESTS.labels(ping, "accepted").inc()
         return Response(status_code=204)
 
