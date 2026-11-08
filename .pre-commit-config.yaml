@@ -18,6 +18,16 @@ repos:
   rev: "24.4.2"
   hooks:
   - id: black
+    # The collector is formatted and linted by ruff with its own pyproject config.
+    exclude: ^telemetry-collector/
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.17.4
+  hooks:
+  - id: ruff-check
+    files: ^telemetry-collector/
+  - id: ruff-format
+    files: ^telemetry-collector/
 
 - repo: https://github.com/zizmorcore/zizmor-pre-commit
   rev: v1.26.1
