@@ -11,8 +11,7 @@ import Foundation
 enum AppFeatures {
   case tipJar
   case autoFocusSearchInDetailSheets
-  /// Telemetry and its opt-in UI only run in debug builds until the privacy
-  /// policy describes it.
+  /// See ``TelemetryService/isEnabledInThisBuild``.
   case telemetry
   case networkScanner
 
@@ -20,7 +19,7 @@ enum AppFeatures {
     return switch feature {
     case .tipJar: true
     case .autoFocusSearchInDetailSheets: false
-    case .telemetry: Bundle.isDebug
+    case .telemetry: TelemetryService.isEnabledInThisBuild
     // Scanning over eSCL has only been exercised against one printer, and the
     // page-fetch half not at all. Debug, Simulator and TestFlight get it so it
     // can be, but it stays out of the App Store build until it has been.

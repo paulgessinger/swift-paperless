@@ -41,6 +41,10 @@ public enum TelemetryFeature: String, Codable, CodingKeyRepresentable, CaseItera
   case scanUploaded = "scan_uploaded"
   case importStarted = "import_started"
   case importUploaded = "import_uploaded"
+  /// A document was uploaded from the share extension.
+  case shareExtensionUploaded = "share_extension_uploaded"
+  /// A document was uploaded by the Upload Document shortcut action.
+  case shortcutUploaded = "shortcut_uploaded"
   /// A note was added to a document.
   case notes
 }
