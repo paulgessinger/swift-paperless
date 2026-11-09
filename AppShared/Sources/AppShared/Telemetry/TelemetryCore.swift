@@ -189,14 +189,53 @@ public struct TelemetryEnvironment: Equatable, Sendable {
   }
 }
 
-/// The local bookkeeping. Exists only while opted in.
+/// One process's recorded feature uses and setup errors, by the UTC day they
+/// were recorded on.
+public struct TelemetryPending: Equatable, Sendable {
+  public var features: [String: [TelemetryFeature: Int]] = [:]
+  public var errors: [String: Set<TelemetryError>] = [:]
+
+  public init(
+    features: [String: [TelemetryFeature: Int]] = [:],
+    errors: [String: Set<TelemetryError>] = [:]
+  ) {
+    self.features = features
+    self.errors = errors
+  }
+
+  public var isEmpty: Bool { features.isEmpty && errors.isEmpty }
+
+  /// Only the days in the last 30 UTC days that are later than `lastReported`.
+  public func pruned(now: Date, lastReported: String?) -> TelemetryPending {
+    let kept = TelemetryActiveDays.pruned(Set(features.keys).union(errors.keys), now: now)
+      .filter { day in lastReported.map { day > $0 } ?? true }
+    return TelemetryPending(
+      features: features.filter { kept.contains($0.key) },
+      errors: errors.filter { kept.contains($0.key) })
+  }
+
+  /// Everything in `all`: counts per day and feature add up, errors per day
+  /// are united.
+  public static func merged(_ all: some Sequence<TelemetryPending>) -> TelemetryPending {
+    var result = TelemetryPending()
+    for pending in all {
+      result.features.merge(pending.features) { $0.merging($1, uniquingKeysWith: +) }
+      result.errors.merge(pending.errors) { $0.union($1) }
+    }
+    return result
+  }
+}
+
+/// The local bookkeeping as the app reads it to build pings. Exists only while
+/// opted in.
 public struct TelemetryState: Equatable, Sendable {
   public var healthLastSent: String?
   /// The UTC day the last successful feature ping reported.
   public var featureLastReported: String?
-  /// Feature uses by the UTC day they were recorded on.
+  /// Feature uses of every recording process by the UTC day they were
+  /// recorded on.
   public var pendingFeatures: [String: [TelemetryFeature: Int]] = [:]
-  /// Setup errors by the UTC day they were hit on.
+  /// Setup errors of every recording process by the UTC day they were hit on.
   public var pendingErrors: [String: Set<TelemetryError>] = [:]
   public var activeDays: Set<String> = []
   public var installStamp: TelemetryInstallStamp?
@@ -215,14 +254,6 @@ public struct TelemetryState: Equatable, Sendable {
     self.installStamp = installStamp
   }
 
-  /// Drops pending entries outside the last 30 UTC days.
-  public mutating func prunePending(now: Date) {
-    let kept = TelemetryActiveDays.pruned(
-      Set(pendingFeatures.keys).union(pendingErrors.keys), now: now)
-    pendingFeatures = pendingFeatures.filter { kept.contains($0.key) }
-    pendingErrors = pendingErrors.filter { kept.contains($0.key) }
-  }
-
   /// The day the next feature ping reports: the latest completed UTC day in
   /// the last 30 that was active or has pending data and is later than the
   /// last reported day. Older unreported days are never reported, so each
@@ -234,13 +265,6 @@ public struct TelemetryState: Equatable, Sendable {
     return TelemetryActiveDays.pruned(candidates, now: now)
       .filter { day in day < today && featureLastReported.map { day > $0 } ?? true }
       .max()
-  }
-
-  /// Marks `day` reported and drops the pending entries for it and earlier.
-  public mutating func didReport(day: String) {
-    featureLastReported = day
-    pendingFeatures = pendingFeatures.filter { $0.key > day }
-    pendingErrors = pendingErrors.filter { $0.key > day }
   }
 }
 

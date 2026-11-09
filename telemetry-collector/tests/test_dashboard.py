@@ -492,3 +492,15 @@ def test_recent_days_marked_filling(make_dashboard, provider, seeded_db):
     assert block is not None
     filling = json.loads(block[1])["filling"]
     assert filling == [False] * 23 + [True] * 7
+
+
+def test_new_install_cards_include_younger_buckets(make_client, db_path, clock):
+    from telemetry_collector.dashboard import dashboard_context
+
+    clock.day = "2026-11-07"
+    with make_client(batch_size=50) as c:
+        for age in ("<7d", "<30d", "<30d", "<1y", "existing"):
+            assert c.post("/t/health", json=health_payload(install_age=age)).status_code == 204
+    ctx = dashboard_context(db_path, load_schema(), "appstore", 7)
+    assert ctx["cards"]["new_7d"] == 1
+    assert ctx["cards"]["new_30d"] == 3

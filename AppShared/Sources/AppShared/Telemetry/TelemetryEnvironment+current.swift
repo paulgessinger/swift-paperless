@@ -17,6 +17,7 @@
       let os = ProcessInfo.processInfo.operatingSystemVersion
       let active = connectionManager.storedConnection
       let versions = active?.knownVersions
+      let hasDocumentCamera = await DocumentCamera.isAvailable
 
       return TelemetryEnvironment(
         channel: TelemetryChannel(Bundle.main.appConfiguration),
@@ -33,8 +34,13 @@
         clientCertificate: active?.identity != nil,
         customHeaders: !(active?.extraHeaders.isEmpty ?? true),
         serverCount: connectionManager.connections.count,
-        availableFeatures: TelemetryFeature.allCases.filter {
-          $0 != .networkScanUploaded || AppFeatures.enabled(.networkScanner)
+        availableFeatures: TelemetryFeature.allCases.filter { feature in
+          // The features the UI hides on this install, by the same checks.
+          switch feature {
+          case .scanStarted, .scanUploaded: hasDocumentCamera
+          case .networkScanUploaded: AppFeatures.enabled(.networkScanner)
+          default: true
+          }
         })
     }
   }
