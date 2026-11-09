@@ -208,6 +208,23 @@ struct TelemetryActivityTests {
     #expect(merged.errors == ["2026-01-04": [.tls, .auth]])
   }
 
+  @Test("Months and ISO weeks are UTC, with ISO week-numbering years")
+  func monthAndWeek() {
+    #expect(TelemetryDay.month(for: utc("2026-01-05")) == "2026-01")
+    #expect(TelemetryDay.month(for: utc("2026-12-31", hour: 23)) == "2026-12")
+    // 2026-12-31 is a Thursday, so its week is the year's 53rd and holds
+    // 2027-01-01 too; 2027-01-04 is the first Monday of 2027-W01.
+    #expect(TelemetryDay.isoWeek(for: utc("2026-12-31")) == "2026-W53")
+    #expect(TelemetryDay.isoWeek(for: utc("2027-01-01")) == "2026-W53")
+    #expect(TelemetryDay.isoWeek(for: utc("2027-01-03", hour: 23)) == "2026-W53")
+    #expect(TelemetryDay.isoWeek(for: utc("2027-01-04", hour: 0)) == "2027-W01")
+    // 2025-12-29 is a Monday in 2026-W01.
+    #expect(TelemetryDay.isoWeek(for: utc("2025-12-29")) == "2026-W01")
+    // Sunday 2026-11-08 and Monday 2026-11-09.
+    #expect(TelemetryDay.isoWeek(for: utc("2026-11-08", hour: 23)) == "2026-W45")
+    #expect(TelemetryDay.isoWeek(for: utc("2026-11-09", hour: 0)) == "2026-W46")
+  }
+
   @Test("UTC days don't follow the local time zone")
   func utcDay() {
     // 23:30 UTC is already the next day in most of Europe.
@@ -232,6 +249,8 @@ struct TelemetryPingsTests {
     #expect(ping.servers == .one)
     #expect(ping.active_days_30 == .one)
     #expect(ping.install_age == .existing)
+    #expect(ping.first_month)
+    #expect(ping.first_week)
 
     let data = try #require(
       try TelemetryPings.encodedPing(
@@ -243,13 +262,30 @@ struct TelemetryPingsTests {
     // Without bookkeeping yet: today counts as active, the stamp as existing.
     #expect(json["active_days_30"] as? String == "1")
     #expect(json["install_age"] as? String == "existing")
+    #expect(json["first_month"] as? Bool == true)
+    #expect(json["first_week"] as? Bool == true)
     // A connection without a recorded sign-in method sends no `auth`.
     #expect(json["auth"] == nil)
     #expect(
       Set(json.keys).isSubset(of: [
         "channel", "app", "ios", "device", "lang", "backend", "api", "docs", "auth",
         "client_cert", "custom_headers", "servers", "active_days_30", "install_age",
+        "first_month", "first_week",
       ]))
+  }
+
+  @Test("first_month and first_week are true until a health ping of that period was sent")
+  func firstOfPeriod() {
+    func ping(_ state: TelemetryState, _ day: String) -> (Bool, Bool) {
+      let ping = TelemetryPings.healthPing(environment: environment(), state: state, now: utc(day))
+      return (ping.first_month, ping.first_week)
+    }
+    // Wednesday 2026-11-04.
+    let sent = TelemetryState(healthLastMonth: "2026-11", healthLastWeek: "2026-W45")
+    #expect(ping(sent, "2026-11-08") == (false, false))
+    #expect(ping(sent, "2026-11-09") == (false, true))
+    #expect(ping(sent, "2026-12-01") == (true, true))
+    #expect(ping(TelemetryState(), "2026-11-08") == (true, true))
   }
 
   @Test("The feature ping lists available features in schema order")
@@ -485,6 +521,50 @@ struct TelemetryServiceTests {
     #expect(try featurePings().map(\.day) == ["2026-01-05"])
   }
 
+  private func healthPings() throws -> [HealthPing] {
+    try spy.sent.filter { $0.0 == .health }.map {
+      try JSONDecoder().decode(HealthPing.self, from: $0.1)
+    }
+  }
+
+  @Test("Only the first successful health ping of a month or week is marked first")
+  func firstOfPeriod() async throws {
+    let service = makeService()
+    consent.optedIn = true
+    // Saturday 2026-10-31, Sunday 2026-11-01, Monday 2026-11-02.
+    for day in ["2026-10-31", "2026-11-01", "2026-11-02", "2026-11-03"] {
+      clock.now = utc(day)
+      await activate(service)
+    }
+    #expect(try healthPings().map(\.first_month) == [true, true, false, false])
+    #expect(try healthPings().map(\.first_week) == [true, false, true, false])
+    #expect(state.healthLastMonth == "2026-11")
+    #expect(state.healthLastWeek == "2026-W45")
+  }
+
+  @Test("A failed health send leaves the period markers, so the retry is still first")
+  func failedSendKeepsPeriodMarkers() async throws {
+    let service = makeService()
+    consent.optedIn = true
+    await activate(service)
+
+    clock.now = utc("2026-02-02")
+    spy.failing = true
+    await activate(service)
+    #expect(state.healthLastSent == "2026-01-05")
+    #expect(state.healthLastMonth == "2026-01")
+    #expect(state.healthLastWeek == "2026-W02")
+
+    spy.failing = false
+    clock.now = utc("2026-02-03")
+    await activate(service)
+    let last = try #require(try healthPings().last)
+    #expect(last.first_month)
+    #expect(last.first_week)
+    #expect(state.healthLastMonth == "2026-02")
+    #expect(state.healthLastWeek == "2026-W06")
+  }
+
   @Test("A day without feature use still gets an empty feature ping")
   func emptyFeaturePing() async throws {
     let service = makeService()
@@ -638,9 +718,14 @@ struct TelemetryServiceTests {
     await activate(service)
     #expect(!storedKeys.isEmpty)
 
+    #expect(state.healthLastMonth == "2026-01")
+    #expect(state.healthLastWeek == "2026-W02")
+
     consent.optedIn = false
     service.consentDidChange(hasConnection: true)
     #expect(storedKeys.isEmpty)
+    #expect(state.healthLastMonth == nil)
+    #expect(state.healthLastWeek == nil)
 
     clock.now = utc("2026-01-06")
     service.record(.filter)
@@ -833,7 +918,7 @@ struct TelemetryCollectorContractTests {
 
     let required: Set = [
       "channel", "app", "ios", "device", "lang", "client_cert", "custom_headers",
-      "servers", "active_days_30", "install_age",
+      "servers", "active_days_30", "install_age", "first_month", "first_week",
     ]
     let optional: Set = ["backend", "api", "docs", "auth"]
     #expect(json["auth"] as? String == auth?.rawValue)
@@ -849,6 +934,8 @@ struct TelemetryCollectorContractTests {
     // Real JSON booleans and integers, not strings.
     #expect(json["client_cert"] is Bool)
     #expect(json["custom_headers"] is Bool)
+    #expect(CFGetTypeID(json["first_month"] as CFTypeRef) == CFBooleanGetTypeID())
+    #expect(CFGetTypeID(json["first_week"] as CFTypeRef) == CFBooleanGetTypeID())
     #expect(CFGetTypeID(json["client_cert"] as CFTypeRef) == CFBooleanGetTypeID())
     let api = try #require(json["api"] as? NSNumber)
     #expect(CFGetTypeID(api) != CFBooleanGetTypeID())

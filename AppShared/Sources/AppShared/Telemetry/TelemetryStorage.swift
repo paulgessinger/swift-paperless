@@ -16,6 +16,8 @@ struct TelemetryStorage {
   /// The app's keys.
   enum Key: String, CaseIterable {
     case healthLastSent = "telemetryHealthLastSent"
+    case healthLastMonth = "telemetryHealthLastMonth"
+    case healthLastWeek = "telemetryHealthLastWeek"
     case featureLastReported = "telemetryFeatureLastReported"
     case activeDays = "telemetryActiveDays"
     case installStamp = "telemetryInstallStamp"
@@ -33,6 +35,16 @@ struct TelemetryStorage {
   var healthLastSent: String? {
     get { defaults.string(forKey: Key.healthLastSent.rawValue) }
     nonmutating set { set(newValue, .healthLastSent) }
+  }
+
+  var healthLastMonth: String? {
+    get { defaults.string(forKey: Key.healthLastMonth.rawValue) }
+    nonmutating set { set(newValue, .healthLastMonth) }
+  }
+
+  var healthLastWeek: String? {
+    get { defaults.string(forKey: Key.healthLastWeek.rawValue) }
+    nonmutating set { set(newValue, .healthLastWeek) }
   }
 
   /// Read by every process to prune its pending key.
@@ -77,6 +89,8 @@ struct TelemetryStorage {
     ).pruned(now: now, lastReported: lastReported)
     return TelemetryState(
       healthLastSent: healthLastSent,
+      healthLastMonth: healthLastMonth,
+      healthLastWeek: healthLastWeek,
       featureLastReported: lastReported,
       pendingFeatures: pending.features,
       pendingErrors: pending.errors,

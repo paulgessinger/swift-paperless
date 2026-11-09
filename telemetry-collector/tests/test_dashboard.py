@@ -202,6 +202,10 @@ def test_sign_in_and_render(make_dashboard, provider, seeded_db):
     html = page.text
     assert "Content-Security-Policy" in page.headers
     assert "Daily active · 2026-11-07" in html
+    assert "MAU" not in html
+    assert "Active installs this month · 2026-11" in html
+    assert "Active installs this week · 2026-W45" in html
+    assert 'id="chart-months"' in html and 'id="chart-weeks"' in html
     assert "<svg" in html
     assert "saved_view" in html and "scan_started → scan_uploaded" in html
     assert "<i>unknown</i>" in html  # auth omitted by some pings
@@ -217,6 +221,8 @@ def test_sign_in_and_render(make_dashboard, provider, seeded_db):
         "servers",
         "client_cert",
         "custom_headers",
+        "first_month",
+        "first_week",
     ):
         assert f"<h2>{field}</h2>" in html
 
@@ -504,3 +510,35 @@ def test_new_install_cards_include_younger_buckets(make_client, db_path, clock):
     ctx = dashboard_context(db_path, load_schema(), "appstore", 7)
     assert ctx["cards"]["new_7d"] == 1
     assert ctx["cards"]["new_30d"] == 3
+
+
+def test_active_install_cards_and_charts(make_client, db_path, clock):
+    from telemetry_collector.dashboard import dashboard_context
+
+    with make_client() as c:
+        # Before the 7-day range, but in its first month and week.
+        clock.day = "2026-11-02"
+        c.post("/t/health", json=health_payload(first_month=True, first_week=True))
+        # Sunday, the last day of 2026-W45.
+        clock.day = "2026-11-08"
+        c.post("/t/health", json=health_payload(first_month=True, first_week=True))
+        c.post("/t/health", json=health_payload(first_month=False, first_week=False))
+        # Monday, 2026-W46.
+        clock.day = "2026-11-09"
+        c.post("/t/health", json=health_payload(first_month=False, first_week=True))
+    ctx = dashboard_context(db_path, load_schema(), "appstore", 7)
+    assert ctx["end"] == "2026-11-09"
+    month, week = ctx["cards"]["month"], ctx["cards"]["week"]
+    assert (month.label, month.start, month.count) == ("2026-11", "2026-11-01", 2)
+    assert (week.label, week.start, week.count) == ("2026-W46", "2026-11-09", 1)
+    assert ctx["chart"]["months"] == [{"label": "2026-11", "count": 2, "filling": True}]
+    assert ctx["chart"]["weeks"] == [
+        {"label": "2026-W45", "count": 2, "filling": False},
+        {"label": "2026-W46", "count": 1, "filling": True},
+    ]
+
+    ctx = dashboard_context(db_path, load_schema(), "appstore", 90)
+    months = ctx["chart"]["months"]
+    assert [m["label"] for m in months] == ["2026-08", "2026-09", "2026-10", "2026-11"]
+    assert [m["filling"] for m in months] == [False, False, False, True]
+    assert len(ctx["chart"]["weeks"]) == 14

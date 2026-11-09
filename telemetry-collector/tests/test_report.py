@@ -6,14 +6,16 @@ import pytest
 from conftest import feature_payload, health_payload
 
 from telemetry_collector.report import (
-    ACTIVE_DAYS_MIDPOINTS,
     UNKNOWN,
     Counts,
+    PeriodCount,
+    active_installs,
     completion_pairs,
     distribution,
     error_shares,
-    mau_estimate,
     open_readonly,
+    period_start,
+    periods_start,
     render,
 )
 from telemetry_collector.schema import load_schema
@@ -21,23 +23,14 @@ from telemetry_collector.schema import load_schema
 SCHEMA = load_schema()
 
 
-def test_midpoints_cover_schema_buckets():
-    import json
-
-    from telemetry_collector.schema import DEFAULT_SCHEMA_PATH
-
-    raw = json.loads(DEFAULT_SCHEMA_PATH.read_text())
-    assert set(ACTIVE_DAYS_MIDPOINTS) == set(raw["buckets"]["active_days_30"])
-
-
 @pytest.fixture
 def seeded(make_client, db_path, clock):
     with make_client() as c:
         clock.day = "2026-11-06"
-        c.post("/t/health", json=health_payload(active_days_30="1"))
+        c.post("/t/health", json=health_payload(active_days_30="1", first_month=True, first_week=True))
         clock.day = "2026-11-07"
-        c.post("/t/health", json=health_payload(active_days_30="2-7", auth=None, backend=None))
-        c.post("/t/health", json=health_payload(active_days_30="2-7", auth="none"))
+        c.post("/t/health", json=health_payload(active_days_30="2-7", auth=None, backend=None, first_month=False))
+        c.post("/t/health", json=health_payload(active_days_30="2-7", auth="none", first_month=True))
         assert c.post("/t/feature", json=feature_payload(day="2026-11-06")).status_code == 204
         assert c.post("/t/feature", json=feature_payload(day="2026-11-06", features={}, errors=None)).status_code == 204
     return db_path
@@ -45,8 +38,6 @@ def seeded(make_client, db_path, clock):
 
 def test_report(seeded):
     conn = open_readonly(seeded)
-    counts = Counts(conn, "appstore", "2026-10-01", "2026-11-07")
-    assert mau_estimate(counts, "2026-11-07") == 1 + 2 / 4.5
     out = render(conn, SCHEMA, days=7)
     conn.close()
     assert "still filling in" in out.splitlines()[0]
@@ -59,7 +50,84 @@ def test_report(seeded):
     assert "saved_view: 1/2 (50%)" in day_06
     assert "notes: 0/2 (0%)" in day_06
     assert "[feature]" not in out.split("== 2026-11-07  channel=appstore")[1]
-    assert "MAU estimate appstore (30 days ending 2026-11-07): 1.4" in out
+    assert "MAU" not in out
+    # 2026-11-07 is a Saturday in 2026-W45, which started on Monday 11-02.
+    assert "== Active installs appstore this month (2026-11, 2026-11-01 to 2026-11-07, still filling in): 2" in out
+    assert "== Active installs appstore this week (2026-W45, 2026-11-02 to 2026-11-07, still filling in): 1" in out
+
+
+def test_period_starts():
+    assert period_start("month", "2026-11-09") == "2026-11-01"
+    # Sunday and Monday.
+    assert period_start("week", "2026-11-08") == "2026-11-02"
+    assert period_start("week", "2026-11-09") == "2026-11-09"
+    # Thursday 2026-10-01's week starts in September.
+    assert periods_start("2026-10-01") == "2026-09-28"
+    assert periods_start("2026-11-20") == "2026-11-01"
+
+
+def test_iso_weeks_and_months_across_the_year(make_client, db_path, clock):
+    with make_client() as c:
+        for day in ("2026-12-31", "2027-01-01", "2027-01-04"):
+            clock.day = day
+            c.post("/t/health", json=health_payload(first_month=True, first_week=True))
+    conn = open_readonly(db_path)
+    counts = Counts(conn, "appstore", "2026-12-01", "2027-01-04")
+    conn.close()
+    # Thursday 2026-12-31 and Friday 2027-01-01 share 2026-W53.
+    assert active_installs(counts, "week", "2026-12-31", "2027-01-04") == [
+        PeriodCount("2026-W53", "2026-12-28", 2, False),
+        PeriodCount("2027-W01", "2027-01-04", 1, True),
+    ]
+    assert active_installs(counts, "month", "2026-12-31", "2027-01-04") == [
+        PeriodCount("2026-12", "2026-12-01", 1, False),
+        PeriodCount("2027-01", "2027-01-01", 2, True),
+    ]
+
+
+def test_report_counts_the_whole_month_and_week(make_client, db_path, clock):
+    """The CLI loads counts back to the period starts, even for a short --days."""
+    with make_client() as c:
+        for day in ("2026-09-30", "2026-10-01", "2026-10-02"):
+            clock.day = day
+            c.post("/t/health", json=health_payload(first_month=True, first_week=True))
+    conn = open_readonly(db_path)
+    out = render(conn, SCHEMA, days=1, until="2026-10-02")
+    conn.close()
+    assert "this month (2026-10, 2026-10-01 to 2026-10-02, still filling in): 2" in out
+    # 2026-09-28 is the Monday of 2026-W40.
+    assert "this week (2026-W40, 2026-09-28 to 2026-10-02, still filling in): 3" in out
+
+
+def test_active_installs_per_period(make_client, db_path, clock):
+    pings = {
+        # Sunday 2026-11-01 ends 2026-W44; Monday 2026-11-02 starts 2026-W45.
+        "2026-10-31": [(True, True), (False, False)],
+        "2026-11-01": [(True, False)],
+        "2026-11-02": [(False, True), (False, True)],
+        "2026-11-09": [(False, True)],
+    }
+    with make_client() as c:
+        for day, flags in pings.items():
+            clock.day = day
+            for month, week in flags:
+                c.post("/t/health", json=health_payload(first_month=month, first_week=week))
+    conn = open_readonly(db_path)
+    counts = Counts(conn, "appstore", periods_start("2026-10-29"), "2026-11-09")
+    conn.close()
+    assert active_installs(counts, "month", "2026-10-29", "2026-11-09") == [
+        PeriodCount("2026-10", "2026-10-01", 1, False),
+        PeriodCount("2026-11", "2026-11-01", 1, True),
+    ]
+    assert active_installs(counts, "week", "2026-10-29", "2026-11-09") == [
+        PeriodCount("2026-W44", "2026-10-26", 1, False),
+        PeriodCount("2026-W45", "2026-11-02", 2, False),
+        PeriodCount("2026-W46", "2026-11-09", 1, True),
+    ]
+    # A period is counted only through `end`.
+    assert active_installs(counts, "week", "2026-11-02", "2026-11-02") == [
+        PeriodCount("2026-W45", "2026-11-02", 2, True)
+    ]
 
 
 def test_unknown_derived_for_optional_fields(seeded):

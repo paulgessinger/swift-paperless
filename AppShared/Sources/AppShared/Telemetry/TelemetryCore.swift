@@ -74,6 +74,25 @@ public enum TelemetryDay {
     ).day ?? 0
   }
 
+  private static let isoCalendar: Calendar = {
+    var calendar = Calendar(identifier: .iso8601)
+    calendar.timeZone = TimeZone(identifier: "UTC")!
+    return calendar
+  }()
+
+  /// The UTC calendar month of `date` as `yyyy-MM`.
+  public static func month(for date: Date) -> String {
+    let c = calendar.dateComponents([.year, .month], from: date)
+    return String(format: "%04d-%02d", c.year!, c.month!)
+  }
+
+  /// The ISO-8601 week of `date` in UTC as `YYYY-Www`: weeks start on Monday,
+  /// and the year is the week's year, so 2027-01-01 is in `2026-W53`.
+  public static func isoWeek(for date: Date) -> String {
+    let c = isoCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+    return String(format: "%04d-W%02d", c.yearForWeekOfYear!, c.weekOfYear!)
+  }
+
   /// The daily gate: at most one ping per category per UTC day.
   public static func shouldSend(lastSent: String?, now: Date) -> Bool {
     lastSent != string(for: now)
@@ -230,6 +249,10 @@ public struct TelemetryPending: Equatable, Sendable {
 /// opted in.
 public struct TelemetryState: Equatable, Sendable {
   public var healthLastSent: String?
+  /// The UTC month (`yyyy-MM`) of the last successful health ping.
+  public var healthLastMonth: String?
+  /// The ISO week (`YYYY-Www`) of the last successful health ping.
+  public var healthLastWeek: String?
   /// The UTC day the last successful feature ping reported.
   public var featureLastReported: String?
   /// Feature uses of every recording process by the UTC day they were
@@ -241,12 +264,15 @@ public struct TelemetryState: Equatable, Sendable {
   public var installStamp: TelemetryInstallStamp?
 
   public init(
-    healthLastSent: String? = nil, featureLastReported: String? = nil,
+    healthLastSent: String? = nil, healthLastMonth: String? = nil, healthLastWeek: String? = nil,
+    featureLastReported: String? = nil,
     pendingFeatures: [String: [TelemetryFeature: Int]] = [:],
     pendingErrors: [String: Set<TelemetryError>] = [:],
     activeDays: Set<String> = [], installStamp: TelemetryInstallStamp? = nil
   ) {
     self.healthLastSent = healthLastSent
+    self.healthLastMonth = healthLastMonth
+    self.healthLastWeek = healthLastWeek
     self.featureLastReported = featureLastReported
     self.pendingFeatures = pendingFeatures
     self.pendingErrors = pendingErrors
@@ -289,7 +315,9 @@ public enum TelemetryPings {
       active_days_30: TelemetryActiveDays.bucket(
         TelemetryActiveDays.recording(state.activeDays, now: now), now: now) ?? .one,
       // No stamp means the user opted in without this process seeing it.
-      install_age: state.installStamp?.bucket(now: now) ?? .existing)
+      install_age: state.installStamp?.bucket(now: now) ?? .existing,
+      first_month: state.healthLastMonth != TelemetryDay.month(for: now),
+      first_week: state.healthLastWeek != TelemetryDay.isoWeek(for: now))
   }
 
   /// The feature ping for `day`, with that day's uses and errors.

@@ -36,8 +36,10 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
 <div class="cards">
   <div class="card"><div class="muted">Daily active · {{ end }}</div><div class="big">{{ cards.daily_active }}</div>
     <div class="muted">avg {{ '%.1f' % cards.daily_avg }}/day over {{ days }}d</div></div>
-  <div class="card"><div class="muted">MAU estimate · 30d</div><div class="big">{{ '%.0f' % cards.mau }}</div>
-    <div class="muted">Σ 1/midpoint(active_days_30)</div></div>
+  <div class="card"><div class="muted">Active installs this month · {{ cards.month.label }}</div><div class="big">{{ cards.month.count }}</div>
+    <div class="muted">since {{ cards.month.start }} · still filling in</div></div>
+  <div class="card"><div class="muted">Active installs this week · {{ cards.week.label }}</div><div class="big">{{ cards.week.count }}</div>
+    <div class="muted">since {{ cards.week.start }} · still filling in</div></div>
   <div class="card"><div class="muted">Installs &lt;7 days old · {{ end }}</div><div class="big">{{ cards.new_7d }}</div>
     <div class="muted">&lt;30d: {{ cards.new_30d }}</div></div>
   <div class="card"><div class="muted">Feature pings · {{ cards.feature_day }}</div><div class="big">{{ cards.feature_pings }}</div>
@@ -54,6 +56,20 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
     <h2>Feature use / availability per day</h2>
     <div class="chart"><canvas id="chart-ratios" role="img" aria-label="Daily used over available ratio per feature"></canvas></div>
     <p class="muted">Dashed: the last {{ filling_days }} days, still filling in.</p>
+  </section>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Monthly active installs (UTC months)</h2>
+    <div class="chart"><canvas id="chart-months" role="img" aria-label="Active installs per month"></canvas></div>
+    <p class="muted">Dashed: the current month, still filling in.</p>
+  </section>
+  <section class="card">
+    <h2>Weekly active installs (ISO weeks, UTC)</h2>
+    <div class="chart"><canvas id="chart-weeks" role="img" aria-label="Active installs per ISO week"></canvas></div>
+    <p class="muted">Dashed: the current week, still filling in. Both count installs, not people;
+      an install that opts out and back in within a period counts twice.</p>
   </section>
 </div>
 

@@ -52,6 +52,8 @@ def health_payload(**overrides: object) -> dict[str, object]:
         "servers": "1",
         "active_days_30": "8-20",
         "install_age": "<30d",
+        "first_month": True,
+        "first_week": False,
     }
     payload.update(overrides)
     return {k: v for k, v in payload.items() if v is not None}

@@ -36,6 +36,7 @@
 | Whether you have more than one server set up | one / more than one |
 | On how many days in the last 30 you opened the app | 1 / 2–7 / 8–20 / 21+ days |
 | Roughly how long ago you started sharing | under a week / under a month / under a year / longer |
+| Whether this is the first report this month / this week | yes / no |
 
 **Features you used**
 
@@ -75,6 +76,7 @@
 
 - Any report reveals that an install was used that day; unavoidable
 - The features report's date reveals the last day the app was used before the current one
+- The first-this-month / first-this-week answers reveal whether the install was already used earlier that month or week (UTC; weeks start Monday)
 - TestFlight reports are counted separately from App Store ones
 - Fewer TestFlight users, so less anonymity within that group: a day's totals there can be one install's setup and feature use
 
@@ -82,4 +84,4 @@
 
 - Turn off **Settings → Anonymous usage**
 - Nothing more is sent
-- On-device bookkeeping (active days, opt-in date, pending counts) deleted immediately
+- On-device bookkeeping (active days, opt-in date, month and week of the last report, pending counts) deleted immediately

@@ -215,6 +215,8 @@ public final class TelemetryService {
     switch endpoint {
     case .health:
       storage.healthLastSent = TelemetryDay.string(for: now)
+      storage.healthLastMonth = TelemetryDay.month(for: now)
+      storage.healthLastWeek = TelemetryDay.isoWeek(for: now)
     case .feature:
       // Pending days up to the reported one are skipped from now on and
       // pruned by their process's next write. The reported day is before

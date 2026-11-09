@@ -23,6 +23,10 @@ public struct HealthPing: Codable, Equatable, Sendable {
   public var servers: TelemetryServersBucket
   public var active_days_30: TelemetryActiveDaysBucket
   public var install_age: TelemetryInstallAgeBucket
+  /// No health ping was sent successfully earlier in this UTC month.
+  public var first_month: Bool
+  /// No health ping was sent successfully earlier in this ISO week (UTC).
+  public var first_week: Bool
 }
 
 /// The body of `POST /t/feature`: one completed UTC day. Sent for every

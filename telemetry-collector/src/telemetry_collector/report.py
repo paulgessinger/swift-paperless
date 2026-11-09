@@ -7,19 +7,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Literal
 
 from .schema import PINGS_FIELD, PINGS_VALUE, Schema
 
-# Representative value of each `active_days_30` bucket, used for the MAU
-# estimate: each health ping contributes 1 / midpoint(bucket) over a 30-day window.
-ACTIVE_DAYS_MIDPOINTS: dict[str, float] = {
-    "1": 1.0,
-    "2-7": 4.5,
-    "8-20": 14.0,
-    "21+": 25.5,
-}
-
-MAU_WINDOW_DAYS = 30
 # Feature pings report a day when the install next opens the app, so the
 # latest days' feature and error counts keep growing for about this long.
 FILLING_DAYS = 7
@@ -90,11 +81,57 @@ class Counts:
         return [self.pings(ping, d) for d in days]
 
 
-def mau_estimate(counts: Counts, end: str) -> float:
-    """Σ over the 30 days ending `end` of health pings weighted by 1 / midpoint(active_days_30)."""
-    start = day_range(end, MAU_WINDOW_DAYS)[0]
-    buckets = counts.values("health", "active_days_30", start=start, end=end)
-    return sum(n / ACTIVE_DAYS_MIDPOINTS[v] for v, n in buckets.items() if v in ACTIVE_DAYS_MIDPOINTS)
+Period = Literal["month", "week"]
+
+
+def period_start(period: Period, day: str) -> str:
+    """The first day of `day`'s UTC month, or the Monday of its ISO week."""
+    d = date.fromisoformat(day)
+    return (d.replace(day=1) if period == "month" else d - timedelta(days=d.weekday())).isoformat()
+
+
+def _next_period_start(period: Period, start: str) -> str:
+    d = date.fromisoformat(start)
+    if period == "week":
+        return (d + timedelta(days=7)).isoformat()
+    return (d.replace(year=d.year + 1, month=1) if d.month == 12 else d.replace(month=d.month + 1)).isoformat()
+
+
+def _period_label(period: Period, start: str) -> str:
+    if period == "month":
+        return start[:7]
+    year, week, _ = date.fromisoformat(start).isocalendar()
+    return f"{year}-W{week:02d}"
+
+
+def periods_start(day: str) -> str:
+    """The first day Counts must cover for the month and the week containing `day` to be complete."""
+    return min(period_start("month", day), period_start("week", day))
+
+
+@dataclass(frozen=True)
+class PeriodCount:
+    label: str  # `yyyy-MM` or ISO `YYYY-Www`
+    start: str
+    count: int
+    filling: bool  # the period contains `end`, so it isn't over
+
+
+def active_installs(counts: Counts, period: Period, start: str, end: str) -> list[PeriodCount]:
+    """Active installs per month or ISO week overlapping [start, end]: health pings with
+    `first_<period>=true`, each period counted from its first day through its last or `end`.
+
+    Counts must cover the first period's first day (see `periods_start`).
+    """
+    out = []
+    current = period_start(period, start)
+    while current <= end:
+        following = _next_period_start(period, current)
+        last = min((date.fromisoformat(following) - timedelta(days=1)).isoformat(), end)
+        n = counts.values("health", f"first_{period}", current, last).get("true", 0)
+        out.append(PeriodCount(_period_label(period, current), current, n, following > end))
+        current = following
+    return out
 
 
 UNKNOWN = "unknown"
@@ -196,12 +233,12 @@ def render(
     until = until or latest_day(conn)
     if until is None:
         return "no data\n"
-    window = day_range(until, max(days, MAU_WINDOW_DAYS))
     shown = set(day_range(until, days))
+    start = min(min(shown), periods_start(until))
     features = list(schema.features)
     lines = [f"(feature and error counts for the last {FILLING_DAYS} days are still filling in)"]
     for ch in [channel] if channel else channels_present(conn):
-        counts = Counts(conn, ch, window[0], until)
+        counts = Counts(conn, ch, start, until)
         flagged = {d for d, _, _ in implausible_days(counts)}
         for day in counts.days():
             if day not in shown:
@@ -224,5 +261,9 @@ def render(
             if day in flagged:
                 feature_n, health_n = counts.pings("feature", day), counts.pings("health", day)
                 lines.append(f"  !! implausible: {feature_n} feature pings vs {health_n} health pings")
-        lines.append(f"== MAU estimate {ch} ({MAU_WINDOW_DAYS} days ending {until}): {mau_estimate(counts, until):.1f}")
+        for period in ("month", "week"):
+            (p,) = active_installs(counts, period, until, until)
+            lines.append(
+                f"== Active installs {ch} this {period} ({p.label}, {p.start} to {until}, still filling in): {p.count}"
+            )
     return "\n".join(lines) + "\n"
