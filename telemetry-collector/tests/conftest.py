@@ -111,5 +111,5 @@ def make_client(db_path: Path, clock: Clock) -> Callable[..., AbstractContextMan
 
 @pytest.fixture
 def client(make_client: Callable[..., AbstractContextManager[TestClient]]) -> Generator[TestClient]:
-    with make_client(batch_size=1) as c:
+    with make_client() as c:
         yield c

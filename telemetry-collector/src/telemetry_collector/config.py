@@ -37,8 +37,6 @@ class CommonSettings(BaseSettings):
 class Settings(CommonSettings):
     """Collector settings."""
 
-    batch_size: int = Field(default=20, ge=1, alias="TELEMETRY_BATCH_SIZE")
-
 
 class DashboardSettings(CommonSettings):
     """Dashboard settings. Construction fails unless sign-in is fully configured (or explicitly off in dev mode)."""

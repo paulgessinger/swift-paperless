@@ -1,20 +1,11 @@
-"""Counter storage with batched writes.
-
-Writing each ping in its own transaction would leave the combined payload
-recoverable from the WAL or from two snapshots one ping apart. Counters are
-therefore buffered in memory and written in one transaction per `batch_size`
-pings, and before the first ping that arrives on a new UTC day. There is no
-time-based flush.
-"""
+"""Counter storage: each accepted ping's increments are upserted in their own transaction."""
 
 from __future__ import annotations
 
 import logging
 import sqlite3
-import threading
 import time
-from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -35,11 +26,9 @@ CREATE TABLE IF NOT EXISTS counters (
 """
 
 UPSERT_SQL = """
-INSERT INTO counters (day, channel, ping, field, value, count) VALUES (?, ?, ?, ?, ?, ?)
-ON CONFLICT (day, channel, ping, field, value) DO UPDATE SET count = count + excluded.count
+INSERT INTO counters (day, channel, ping, field, value, count) VALUES (?, ?, ?, ?, ?, 1)
+ON CONFLICT (day, channel, ping, field, value) DO UPDATE SET count = count + 1
 """
-
-Key = tuple[str, str, str, str, str]  # day, channel, ping, field, value
 
 
 def utc_today() -> str:
@@ -47,8 +36,8 @@ def utc_today() -> str:
 
 
 def connect(path: Path) -> sqlite3.Connection:
-    # check_same_thread=False: the lock in CounterStore serialises all use.
-    conn = sqlite3.connect(path, check_same_thread=False, isolation_level=None)
+    """Open the collector's connection. Use it from the thread that opened it only (the event loop)."""
+    conn = sqlite3.connect(path, isolation_level=None)
     # Waits instead of failing if another writer (e.g. an overlapping deploy) holds the lock.
     conn.execute("PRAGMA busy_timeout=5000")
     conn.execute("PRAGMA journal_mode=WAL")
@@ -58,80 +47,30 @@ def connect(path: Path) -> sqlite3.Connection:
     return conn
 
 
-class CounterStore:
-    """In-memory counter buffer in front of the SQLite `counters` table.
+def write_ping(
+    conn: sqlite3.Connection, day: str, channel: str, ping: str, increments: Iterable[tuple[str, str]]
+) -> None:
+    """Add one to each `(field, value)` counter under `day`, in one transaction.
 
-    Every buffer key carries the day it is filed under, so a flush never
-    misattributes counts, and one batch can hold several days (feature pings
-    report an earlier day). The rollover flush follows the arrival day only.
-    A threading lock guards the buffer and the connection. The endpoints are
-    async and run on the single event-loop thread, so the lock is uncontended
-    there; it keeps the class correct if it is ever called from a thread pool
-    (sync endpoints, tests). A flush holds the lock across a short blocking
-    SQLite write, which is acceptable at a few hundred pings per day.
+    On failure the transaction is rolled back, nothing is written, and the
+    `sqlite3.Error` is re-raised.
     """
-
-    def __init__(
-        self,
-        conn: sqlite3.Connection,
-        batch_size: int = 20,
-        today: Callable[[], str] = utc_today,
-    ) -> None:
-        if batch_size < 1:
-            raise ValueError("batch_size must be >= 1")
-        self._conn = conn
-        self._batch_size = batch_size
-        self._today = today
-        self._lock = threading.Lock()
-        self._buffer: Counter[Key] = Counter()
-        self._pings = 0
-        self._day: str | None = None
-
-    @property
-    def pending_pings(self) -> int:
-        return self._pings
-
-    def add(self, day: str, channel: str, ping: str, increments: Iterable[tuple[str, str]]) -> None:
-        """Buffer one ping's increments under `day`; flushes per the batching rules."""
-        with self._lock:
-            # Rollover is decided by the arrival day, not `day`: a back-dated feature
-            # ping must not flush the batch, or alternating health and feature pings
-            # would write one-ping batches.
-            arrival = self._today()
-            if self._day is not None and arrival != self._day and self._pings:
-                self._flush_locked()
-            self._day = arrival
-            for field, value in increments:
-                self._buffer[(day, channel, ping, field, value)] += 1
-            self._pings += 1
-            if self._pings >= self._batch_size:
-                self._flush_locked()
-
-    def flush(self) -> None:
-        with self._lock:
-            self._flush_locked()
-
-    def _flush_locked(self) -> None:
-        if not self._buffer:
-            self._pings = 0
-            return
-        rows = [(*key, n) for key, n in sorted(self._buffer.items())]
-        started = time.perf_counter()
-        try:
-            self._conn.execute("BEGIN IMMEDIATE")
-            self._conn.executemany(UPSERT_SQL, rows)
-            self._conn.execute("COMMIT")
-        except sqlite3.Error:
-            if self._conn.in_transaction:
-                self._conn.execute("ROLLBACK")
-            # Buffer is kept and retried with the next flush.
-            log.exception("counter flush failed")
-            metrics.FLUSHES.labels("error").inc()
-            return
-        self._buffer.clear()
-        self._pings = 0
-        self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-        metrics.FLUSH_DURATION.observe(time.perf_counter() - started)
-        metrics.FLUSHES.labels("ok").inc()
-        metrics.ROWS_WRITTEN.inc(len(rows))
-        metrics.LAST_FLUSH.set(time.time())
+    rows = [(day, channel, ping, field, value) for field, value in increments]
+    started = time.perf_counter()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        conn.executemany(UPSERT_SQL, rows)
+        conn.execute("COMMIT")
+    except sqlite3.Error:
+        if conn.in_transaction:
+            conn.execute("ROLLBACK")
+        log.exception("counter write failed")
+        metrics.WRITES.labels("error").inc()
+        raise
+    # Moves the write into the database file and empties the WAL. Best effort:
+    # while a dashboard read is open it may not complete, and the next write retries.
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    metrics.WRITE_DURATION.observe(time.perf_counter() - started)
+    metrics.WRITES.labels("ok").inc()
+    metrics.ROWS_WRITTEN.inc(len(rows))
+    metrics.LAST_WRITE.set(time.time())

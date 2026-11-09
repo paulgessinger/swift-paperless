@@ -142,7 +142,7 @@ def sign_in(client, provider, key=KEY, state_override=None, nonce_override=None,
 
 @pytest.fixture
 def seeded_db(make_client, db_path, clock):
-    with make_client(batch_size=50) as c:
+    with make_client() as c:
         for day, n in (("2026-11-05", 3), ("2026-11-06", 4), ("2026-11-07", 5)):
             clock.day = day
             for i in range(n):
@@ -472,7 +472,7 @@ def test_errors_and_feature_card_use_feature_pings(seeded_db):
 def test_error_share_denominator_is_feature_pings(make_client, db_path, clock):
     from telemetry_collector.dashboard import dashboard_context
 
-    with make_client(batch_size=50) as c:
+    with make_client() as c:
         clock.day = "2026-11-07"
         for _ in range(4):
             c.post("/t/health", json=health_payload())
@@ -498,7 +498,7 @@ def test_new_install_cards_include_younger_buckets(make_client, db_path, clock):
     from telemetry_collector.dashboard import dashboard_context
 
     clock.day = "2026-11-07"
-    with make_client(batch_size=50) as c:
+    with make_client() as c:
         for age in ("<7d", "<30d", "<30d", "<1y", "existing"):
             assert c.post("/t/health", json=health_payload(install_age=age)).status_code == 204
     ctx = dashboard_context(db_path, load_schema(), "appstore", 7)

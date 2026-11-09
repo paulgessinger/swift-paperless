@@ -24,5 +24,5 @@ USER collector
 VOLUME /data
 # Dokku maps http:80 to this port; a PORT set at runtime overrides it.
 EXPOSE 5000
-# exec form: uvicorn is PID 1 and receives SIGTERM directly, so the lifespan flush runs.
+# exec form: uvicorn is PID 1 and receives SIGTERM directly, so it shuts down gracefully.
 CMD ["telemetry-collector-serve"]

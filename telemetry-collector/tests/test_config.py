@@ -23,7 +23,6 @@ def test_env_var_names_unchanged():
         "TELEMETRY_DB_PATH",
         "TELEMETRY_SCHEMA_PATH",
         "TELEMETRY_DEV",
-        "TELEMETRY_BATCH_SIZE",
     }
     assert {f.alias for f in DashboardSettings.model_fields.values()} == {
         "TELEMETRY_DB_PATH",
@@ -43,16 +42,14 @@ def test_env_var_names_unchanged():
 
 def test_collector_from_env(monkeypatch):
     monkeypatch.setenv("TELEMETRY_DB_PATH", "/data/t.sqlite3")
-    monkeypatch.setenv("TELEMETRY_BATCH_SIZE", "5")
     s = Settings()
     assert s.db_path == Path("/data/t.sqlite3")
-    assert s.batch_size == 5
     assert not s.dev
 
 
 @pytest.mark.parametrize(
     ("name", "value"),
-    [("TELEMETRY_BATCH_SIZE", "abc"), ("TELEMETRY_BATCH_SIZE", "0"), ("TELEMETRY_DEV", "maybe")],
+    [("TELEMETRY_DEV", "maybe"), ("TELEMETRY_DEV", "")],
 )
 def test_invalid_collector_values_name_the_variable(monkeypatch, name, value):
     monkeypatch.setenv(name, value)
@@ -62,18 +59,18 @@ def test_invalid_collector_values_name_the_variable(monkeypatch, name, value):
 
 
 def test_only_exact_env_names_are_read(monkeypatch, tmp_path):
-    monkeypatch.setenv("batch_size", "7")
-    monkeypatch.setenv("telemetry_batch_size", "8")
+    monkeypatch.setenv("db_path", "/a.sqlite3")
+    monkeypatch.setenv("telemetry_db_path", "/b.sqlite3")
     # No .env file is read either.
-    (tmp_path / ".env").write_text("TELEMETRY_BATCH_SIZE=9\n")
+    (tmp_path / ".env").write_text("TELEMETRY_DB_PATH=/c.sqlite3\n")
     monkeypatch.chdir(tmp_path)
-    assert Settings().batch_size == 20
+    assert Settings().db_path == Path("telemetry.sqlite3")
 
 
 def test_settings_are_frozen():
     s = Settings()
     with pytest.raises(ValidationError):
-        s.batch_size = 3
+        s.dev = True
 
 
 def test_dashboard_from_env(monkeypatch):
@@ -137,6 +134,6 @@ def test_auth_off_allowed_in_dev_mode():
 def test_serve_fails_at_startup_on_invalid_env(monkeypatch):
     from telemetry_collector import serve
 
-    monkeypatch.setenv("TELEMETRY_BATCH_SIZE", "twenty")
-    with pytest.raises(ValidationError, match="TELEMETRY_BATCH_SIZE"):
+    monkeypatch.setenv("TELEMETRY_DEV", "maybe")
+    with pytest.raises(ValidationError, match="TELEMETRY_DEV"):
         serve._app()
