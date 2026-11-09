@@ -150,6 +150,9 @@ def load_schema(path: Path | None = None) -> Schema:
         servers=(_one_of(buckets["servers"]), ...),
         active_days_30=(_one_of(buckets["active_days_30"]), ...),
         install_age=(_one_of(buckets["install_age"]), ...),
+        # The install's first health ping of this UTC month / ISO week.
+        first_month=(StrictBool, ...),
+        first_week=(StrictBool, ...),
     )
     feature_model = create_model(
         "FeaturePing",

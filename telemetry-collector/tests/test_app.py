@@ -28,6 +28,8 @@ def test_health_split_into_counters(client, db_path):
         ("servers", "1"): 1,
         ("active_days_30", "8-20"): 1,
         ("install_age", "<30d"): 1,
+        ("first_month", "true"): 1,
+        ("first_week", "false"): 1,
     }
 
 
@@ -115,6 +117,9 @@ def test_unknown_names_dropped_rest_kept(client, db_path):
         ("/t/health", health_payload(servers="3")),
         ("/t/health", health_payload(auth="magic")),
         ("/t/health", health_payload(client_cert="true")),
+        ("/t/health", health_payload(first_month="true")),
+        ("/t/health", health_payload(first_week=1)),
+        ("/t/health", {k: v for k, v in health_payload().items() if k != "first_month"}),
         ("/t/health", health_payload(api="10")),
         ("/t/health", health_payload(ios="18.3.1")),
         ("/t/health", health_payload(lang="en-US")),

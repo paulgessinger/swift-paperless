@@ -44,6 +44,9 @@
       },
     });
 
+    periodChart("chart-months", data.months);
+    periodChart("chart-weeks", data.weeks);
+
     new Chart(document.getElementById("chart-ratios"), {
       type: "line",
       data: {
@@ -76,6 +79,48 @@
           y: { min: 0, max: 1, ticks: { callback: (v) => Math.round(v * 100) + "%" } },
         },
       },
+    });
+  }
+
+  // Active installs per period. A period still filling in is drawn as a dashed outline.
+  function periodChart(id, periods) {
+    const bar = cssVar("--bar");
+    const dashedFilling = {
+      id: "dashedFilling",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        chart.getDatasetMeta(0).data.forEach((element, i) => {
+          if (!periods[i].filling) {
+            return;
+          }
+          const { x, y, base, width } = element.getProps(["x", "y", "base", "width"], true);
+          ctx.save();
+          ctx.setLineDash([4, 3]);
+          ctx.strokeStyle = bar;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x - width / 2, y, width, base - y);
+          ctx.restore();
+        });
+      },
+    };
+    new Chart(document.getElementById(id), {
+      type: "bar",
+      data: {
+        labels: periods.map((p) => p.label),
+        datasets: [{
+          label: "Active installs",
+          data: periods.map((p) => p.count),
+          backgroundColor: periods.map((p) => (p.filling ? "transparent" : bar)),
+          borderRadius: 2,
+        }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+      },
+      plugins: [dashedFilling],
     });
   }
 
