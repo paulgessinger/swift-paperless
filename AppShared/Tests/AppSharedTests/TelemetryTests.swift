@@ -1,3 +1,4 @@
+import Common
 import DataModel
 import Foundation
 import Networking
@@ -171,27 +172,40 @@ struct TelemetryActivityTests {
     #expect(TelemetryState(activeDays: ["2025-12-11"]).featureReportDay(now: now) == nil)
   }
 
-  @Test("Reporting a day drops its pending entries and earlier ones, not later ones")
-  func didReport() {
-    var state = TelemetryState(
-      pendingFeatures: [
+  @Test("Pruning drops the reported day and earlier ones, not later ones")
+  func prunedReported() {
+    let pending = TelemetryPending(
+      features: [
         "2026-01-03": [.notes: 1], "2026-01-04": [.search: 2], "2026-01-05": [.filter: 1],
       ],
-      pendingErrors: ["2026-01-04": [.tls], "2026-01-05": [.auth]])
-    state.didReport(day: "2026-01-04")
-    #expect(state.featureLastReported == "2026-01-04")
-    #expect(state.pendingFeatures == ["2026-01-05": [.filter: 1]])
-    #expect(state.pendingErrors == ["2026-01-05": [.auth]])
+      errors: ["2026-01-04": [.tls], "2026-01-05": [.auth]]
+    ).pruned(now: utc("2026-01-05"), lastReported: "2026-01-04")
+    #expect(pending.features == ["2026-01-05": [.filter: 1]])
+    #expect(pending.errors == ["2026-01-05": [.auth]])
   }
 
   @Test("Pending entries older than 30 days are pruned")
   func prunePending() {
-    var state = TelemetryState(
-      pendingFeatures: ["2025-12-11": [.notes: 1], "2025-12-12": [.search: 1]],
-      pendingErrors: ["2025-12-01": [.tls], "2026-01-10": [.auth]])
-    state.prunePending(now: utc("2026-01-10"))
-    #expect(state.pendingFeatures == ["2025-12-12": [.search: 1]])
-    #expect(state.pendingErrors == ["2026-01-10": [.auth]])
+    let pending = TelemetryPending(
+      features: ["2025-12-11": [.notes: 1], "2025-12-12": [.search: 1]],
+      errors: ["2025-12-01": [.tls], "2026-01-10": [.auth]]
+    ).pruned(now: utc("2026-01-10"), lastReported: nil)
+    #expect(pending.features == ["2025-12-12": [.search: 1]])
+    #expect(pending.errors == ["2026-01-10": [.auth]])
+  }
+
+  @Test("Merging adds counts and unites errors per day")
+  func mergePending() {
+    let merged = TelemetryPending.merged([
+      TelemetryPending(
+        features: ["2026-01-04": [.search: 2, .notes: 1]], errors: ["2026-01-04": [.tls]]),
+      TelemetryPending(
+        features: ["2026-01-04": [.search: 1], "2026-01-05": [.filter: 1]],
+        errors: ["2026-01-04": [.auth, .tls]]),
+    ])
+    #expect(
+      merged.features == ["2026-01-04": [.search: 3, .notes: 1], "2026-01-05": [.filter: 1]])
+    #expect(merged.errors == ["2026-01-04": [.tls, .auth]])
   }
 
   @Test("UTC days don't follow the local time zone")
@@ -377,18 +391,46 @@ struct TelemetryServiceTests {
   }
 
   private func makeService() -> TelemetryService {
+    makeService(.app) { [consent] in consent.optedIn == true }
+  }
+
+  private func makeService(
+    _ process: TelemetryProcess, isConsented: @escaping @MainActor () -> Bool
+  ) -> TelemetryService {
     TelemetryService(
-      isConsented: { [consent] in consent.optedIn == true },
+      isConsented: isConsented,
       transport: spy,
+      process: process,
       defaults: defaults,
-      now: { [clock] in clock.now },
-      jitter: { .zero },
-      sleep: { _ in })
+      now: { [clock] in clock.now })
+  }
+
+  /// One process's settings: its own `.device` suite, and `defaults` as the
+  /// app group every process shares.
+  private func processSettings() -> SettingsStore {
+    let device = UserDefaults(suiteName: "telemetry-tests-device-\(UUID().uuidString)")!
+    return SettingsStore(suites: [.device: device, .shared: defaults])
+  }
+
+  /// A service consenting the way production does, through `settings`.
+  private func makeService(
+    _ process: TelemetryProcess, settings: SettingsStore
+  ) -> TelemetryService {
+    makeService(process) { settings[SettingKey<Bool?>.telemetryOptIn] == true }
   }
 
   private var storedKeys: [String] {
-    TelemetryStorage.Key.allCases.map(\.rawValue).filter { defaults.object(forKey: $0) != nil }
+    TelemetryStorage(defaults: defaults, process: .app).storedKeys
   }
+
+  /// The stored telemetry values, for checking which keys an operation wrote.
+  private var storedValues: NSDictionary {
+    NSDictionary(
+      dictionary: Dictionary(
+        uniqueKeysWithValues: storedKeys.map { ($0, defaults.object(forKey: $0)!) }))
+  }
+
+  private let extensionKey = TelemetryStorage.pendingKeyPrefix + "ShareExtension"
 
   private func activate(_ service: TelemetryService) async {
     service.appBecameActive { environment() }
@@ -418,7 +460,9 @@ struct TelemetryServiceTests {
     }
   }
 
-  private var state: TelemetryState { TelemetryStorage(defaults: defaults).load() }
+  private var state: TelemetryState {
+    TelemetryStorage(defaults: defaults, process: .app).load(now: clock.now)
+  }
 
   @Test("Health goes out once per UTC day, feature once per completed day")
   func oncePerDay() async throws {
@@ -516,15 +560,16 @@ struct TelemetryServiceTests {
 
   @Test("Uses recorded on a day the app wasn't opened are reported")
   func shareExtensionOnlyDay() async throws {
-    let app = makeService()
-    consent.optedIn = true
+    let appSettings = processSettings()
+    let app = makeService(.app, settings: appSettings)
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = true
     await activate(app)
     clock.now = utc("2026-01-06")
     await activate(app)
 
     // The share extension records into the same defaults and never sends.
     clock.now = utc("2026-01-07")
-    makeService().record(.documentShare)
+    makeService(.shareExtension, settings: processSettings()).record(.documentShare)
 
     clock.now = utc("2026-01-08")
     await activate(app)
@@ -558,9 +603,8 @@ struct TelemetryServiceTests {
   func pruning() {
     let service = makeService()
     consent.optedIn = true
-    TelemetryStorage(defaults: defaults).save(
-      TelemetryState(
-        pendingFeatures: ["2025-12-01": [.notes: 1]], pendingErrors: ["2025-12-01": [.tls]]))
+    TelemetryStorage(defaults: defaults, process: .app).ownPending = TelemetryPending(
+      features: ["2025-12-01": [.notes: 1]], errors: ["2025-12-01": [.tls]])
     service.record(.search)
     #expect(state.pendingFeatures == ["2026-01-05": [.search: 1]])
     #expect(state.pendingErrors.isEmpty)
@@ -571,17 +615,17 @@ struct TelemetryServiceTests {
     let service = makeService()
     consent.optedIn = true
     service.consentDidChange(hasConnection: false)
-    #expect(TelemetryStorage(defaults: defaults).load().installStamp == .day("2026-01-05"))
+    #expect(state.installStamp == .day("2026-01-05"))
 
     // A second change keeps the first stamp.
     service.consentDidChange(hasConnection: true)
-    #expect(TelemetryStorage(defaults: defaults).load().installStamp == .day("2026-01-05"))
+    #expect(state.installStamp == .day("2026-01-05"))
 
     consent.optedIn = false
     service.consentDidChange(hasConnection: true)
     consent.optedIn = true
     service.consentDidChange(hasConnection: true)
-    #expect(TelemetryStorage(defaults: defaults).load().installStamp == .existing)
+    #expect(state.installStamp == .existing)
   }
 
   @Test("Opting out deletes all local state and stops sending")
@@ -611,6 +655,125 @@ struct TelemetryServiceTests {
     defaults.set(["2026-01-01"], forKey: TelemetryStorage.Key.activeDays.rawValue)
     _ = makeService()
     #expect(storedKeys.isEmpty)
+  }
+
+  // MARK: Several processes
+
+  @Test("The share extension reads the opt-in the app wrote")
+  func sharedConsent() {
+    let app = processSettings()
+    let shareExtension = processSettings()
+    #expect(SettingKey<Bool?>.telemetryOptIn.scope == .shared)
+    app[SettingKey<Bool?>.telemetryOptIn] = true
+    #expect(shareExtension[SettingKey<Bool?>.telemetryOptIn] == true)
+
+    makeService(.shareExtension, settings: shareExtension).record(.shareExtensionUploaded)
+    #expect(state.pendingFeatures == ["2026-01-05": [.shareExtensionUploaded: 1]])
+  }
+
+  @Test("Each process writes only its own keys")
+  func singleWriter() async throws {
+    let appSettings = processSettings()
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = true
+    let app = makeService(.app, settings: appSettings)
+    let shareExtension = makeService(.shareExtension, settings: processSettings())
+    app.consentDidChange(hasConnection: true)
+    app.record(.search)
+    shareExtension.record(.shareExtensionUploaded)
+    await activate(app)
+    #expect(spy.count(.health) == 1)
+
+    // An extension record changes its pending key and nothing else, so it
+    // can't roll back the app's send markers.
+    var before = storedValues as! [String: Any]
+    shareExtension.record(.shareExtensionUploaded)
+    var after = storedValues as! [String: Any]
+    before[extensionKey] = nil
+    after[extensionKey] = nil
+    #expect(NSDictionary(dictionary: before) == NSDictionary(dictionary: after))
+    #expect(state.healthLastSent == "2026-01-05")
+
+    // Nothing the app does writes the extension's key.
+    let extensionPending = try #require(defaults.object(forKey: extensionKey) as? NSDictionary)
+    app.record(.notes)
+    app.record(.tls)
+    clock.now = utc("2026-01-06")
+    await activate(app)
+    #expect(defaults.object(forKey: extensionKey) as? NSDictionary == extensionPending)
+
+    let ping = try #require(try featurePings().first)
+    #expect(ping.day == "2026-01-05")
+    #expect(ping.features == [.search: .one, .notes: .one, .shareExtensionUploaded: .few])
+    #expect(ping.errors == [.tls])
+  }
+
+  @Test("Reported days are skipped, and pruned by the extension's next record")
+  func reportedExtensionDays() async throws {
+    let appSettings = processSettings()
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = true
+    let app = makeService(.app, settings: appSettings)
+    let shareExtension = makeService(.shareExtension, settings: processSettings())
+    shareExtension.record(.shareExtensionUploaded)
+    await activate(app)
+
+    clock.now = utc("2026-01-06")
+    await activate(app)
+    #expect(try featurePings().map(\.day) == ["2026-01-05"])
+    // Still stored, but no longer counted.
+    #expect(defaults.object(forKey: extensionKey) != nil)
+    #expect(state.pendingFeatures.isEmpty)
+    #expect(state.featureReportDay(now: clock.now) == nil)
+
+    shareExtension.record(.shareExtensionUploaded)
+    let stored = TelemetryStorage(defaults: defaults, process: .shareExtension).ownPending
+    #expect(stored.features == ["2026-01-06": [.shareExtensionUploaded: 1]])
+
+    clock.now = utc("2026-01-07")
+    await activate(app)
+    #expect(try featurePings().map(\.day) == ["2026-01-05", "2026-01-06"])
+    #expect(try featurePings().last?.features == [.shareExtensionUploaded: .one])
+  }
+
+  @Test("Opting out in the app deletes every process's state")
+  func optOutClearsAllProcesses() async {
+    let appSettings = processSettings()
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = true
+    let app = makeService(.app, settings: appSettings)
+    let shareExtension = makeService(.shareExtension, settings: processSettings())
+    app.consentDidChange(hasConnection: false)
+    app.record(.search)
+    shareExtension.record(.shareExtensionUploaded)
+    await activate(app)
+    #expect(storedKeys.contains(extensionKey))
+
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = false
+    app.consentDidChange(hasConnection: true)
+    #expect(storedKeys.isEmpty)
+
+    shareExtension.record(.shareExtensionUploaded)
+    #expect(storedKeys.isEmpty)
+  }
+
+  @Test("An extension never deletes or sends", arguments: [true, false])
+  func extensionNeverClears(optedIn: Bool) async {
+    let appSettings = processSettings()
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = true
+    let app = makeService(.app, settings: appSettings)
+    app.record(.search)
+    await activate(app)
+    let before = storedValues
+
+    // Seen by the extension through the shared suite.
+    appSettings[SettingKey<Bool?>.telemetryOptIn] = optedIn
+    let shareExtension = makeService(.shareExtension, settings: processSettings())
+    shareExtension.consentDidChange(hasConnection: true)
+    clock.now = utc("2026-01-06")
+    shareExtension.appBecameActive { environment() }
+    await shareExtension.waitForPendingSends()
+
+    #expect(storedValues == before)
+    #expect(spy.count(.health) == 1)
+    #expect(spy.count(.feature) == 0)
   }
 
   @Test("The disclosure renders the payloads the service sends")

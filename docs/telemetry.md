@@ -17,8 +17,8 @@
 ## What is sent
 
 - At most once a day per report, while the app is in use
-- Two reports, sent separately (a few seconds to a minute apart, random order)
-- Nothing connects the two reports to each other
+- Two reports, sent separately, one after the other
+- No shared field connects the two reports; the server sees both come from the same IP while receiving them, and never stores it
 
 **Your setup**
 
