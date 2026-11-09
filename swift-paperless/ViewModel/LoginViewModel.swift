@@ -525,8 +525,13 @@ class LoginViewModel {
     let headerStr = sanitize(headers: request.allHTTPHeaderFields)
     Logger.shared.info("Sending login request with headers: \(headerStr, privacy: .public)")
 
+    // A session cookie (e.g. from autologin) makes Django apply CSRF checks to
+    // this POST and reject it, so the token request goes without cookies.
+    let configuration = URLSessionConfiguration.default
+    configuration.httpShouldSetCookies = false
     let session = URLSession(
-      configuration: .default, delegate: PaperlessURLSessionDelegate(identity: selectedIdentity),
+      configuration: configuration,
+      delegate: PaperlessURLSessionDelegate(identity: selectedIdentity),
       delegateQueue: nil)
 
     let data: Data

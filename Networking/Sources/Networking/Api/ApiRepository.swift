@@ -1321,6 +1321,24 @@ extension ApiRepository: Repository {
       request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
     } else {
       Logger.networking.info("NOT adding token to request (token is nil)")
+      addCSRFTokenTo(request: &request)
+    }
+  }
+
+  /// Without a token the server authenticates through its session cookie
+  /// (e.g. with `PAPERLESS_AUTO_LOGIN_USERNAME`), and Django rejects unsafe
+  /// methods that lack a CSRF token. HTTPS requests also need a same-origin
+  /// `Referer`.
+  nonisolated
+    static func addCSRFTokenTo(request: inout URLRequest, cookies: HTTPCookieStorage = .shared)
+  {
+    guard let url = request.url,
+      let csrf = cookies.cookies(for: url)?.first(where: { $0.name == "csrftoken" })?.value
+    else { return }
+    request.setValue(csrf, forHTTPHeaderField: "X-CSRFToken")
+    if let scheme = url.scheme, let host = url.host() {
+      let port = url.port.map { ":\($0)" } ?? ""
+      request.setValue("\(scheme)://\(host)\(port)/", forHTTPHeaderField: "Referer")
     }
   }
 
