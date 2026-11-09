@@ -325,7 +325,8 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             "daily_avg": health_total / days,
             "mau": mau_estimate(counts, end),
             "new_7d": age_today.get("<7d", 0),
-            "new_30d": age_today.get("<30d", 0),
+            # The buckets are exclusive, so under 30 days includes under 7.
+            "new_30d": age_today.get("<7d", 0) + age_today.get("<30d", 0),
             "feature_day": feature_day,
             "feature_pings": counts.pings("feature", feature_day),
             "flagged_days": len(flagged),
