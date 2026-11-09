@@ -2,17 +2,17 @@
 
 <!-- Draft outline: points to hit under each heading. Replace with your own text. -->
 
-    
-> [!IMPORTANT] 
+
+> [!IMPORTANT]
 > **tl;dr**
-> 
-> Swift Paperless can **optionally** collect anonymous usage data. This functionality is off by default, and unless you opt in specifically, nothing is ever sent to anywhere other than your server. 
-> 
-> If you previously opted in, you can disable usage sharing at any time in: **Settings → Anonymous usage**. 
+>
+> Swift Paperless can **optionally** collect anonymous usage data. This functionality is off by default, and unless you opt in specifically, nothing is ever sent to anywhere other than your server.
+>
+> If you previously opted in, you can disable usage sharing at any time in: **Settings → Anonymous usage**.
 
 ## Why
 
-Swift Paperless is largely developed by a single developer, me, in my spare time. Basically, usage data allows me to focus my time on where it’s most effective in improving the app for users. 
+Swift Paperless is largely developed by a single developer, me, in my spare time. Basically, usage data allows me to focus my time on where it’s most effective in improving the app for users.
 
 Here are some of the types of questions that usage data can answer for me:
 
