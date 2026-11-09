@@ -35,9 +35,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from .config import DashboardSettings
 from .report import (
     FILLING_DAYS,
-    MAU_WINDOW_DAYS,
     UNKNOWN,
     Counts,
+    PeriodCount,
+    active_installs,
     completion_pairs,
     daily_feature_ratios,
     day_range,
@@ -46,8 +47,8 @@ from .report import (
     feature_stats,
     implausible_days,
     latest_day,
-    mau_estimate,
     open_readonly,
+    periods_start,
 )
 from .schema import Schema, load_schema
 
@@ -293,6 +294,10 @@ def _share_rows(values: dict[str, int], total: int) -> list[dict[str, Any]]:
     return [{"value": v, "count": n, "share": n / total if total else 0.0, "unknown": v == UNKNOWN} for v, n in known]
 
 
+def _period_row(period: PeriodCount) -> dict[str, Any]:
+    return {"label": period.label, "count": period.count, "filling": period.filling}
+
+
 def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) -> dict[str, Any]:
     """Plain data for index.html; `end` is None when there is nothing to show yet."""
     if not db_path.exists():
@@ -304,7 +309,8 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             return {"end": None, "empty_reason": "No data yet."}
         window = day_range(end, days)
         start = window[0]
-        counts = Counts(conn, channel, day_range(end, max(days, MAU_WINDOW_DAYS))[0], end)
+        # Back to the start of the first month and week in range, so those are complete.
+        counts = Counts(conn, channel, periods_start(start), end)
     finally:
         conn.close()
 
@@ -317,13 +323,16 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
     by_name = {s.name: s for s in stats}
     # Feature pings for a day arrive on a later day, so the card shows the day before `end`.
     feature_day = day_range(end, 2)[0]
+    months = active_installs(counts, "month", start, end)
+    weeks = active_installs(counts, "week", start, end)
 
     return {
         "end": end,
         "cards": {
             "daily_active": daily[-1],
             "daily_avg": health_total / days,
-            "mau": mau_estimate(counts, end),
+            "month": months[-1],
+            "week": weeks[-1],
             "new_7d": age_today.get("<7d", 0),
             # The buckets are exclusive, so under 30 days includes under 7.
             "new_30d": age_today.get("<7d", 0) + age_today.get("<30d", 0),
@@ -368,5 +377,7 @@ def dashboard_context(db_path: Path, schema: Schema, channel: str, days: int) ->
             "filling": [i >= len(window) - FILLING_DAYS for i in range(len(window))],
             # A list, not a dict: tojson sorts keys, and the legend should follow schema order.
             "ratios": [{"name": n, "values": v} for n, v in daily_feature_ratios(counts, features, window).items()],
+            "months": [_period_row(p) for p in months],
+            "weeks": [_period_row(p) for p in weeks],
         },
     }

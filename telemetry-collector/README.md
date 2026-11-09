@@ -75,7 +75,10 @@ picked up. Lists are comma-separated. An invalid value (e.g.
 - `413` for bodies over 4 KiB. `features`, `available` and `errors` are
   limited to 64 entries of at most 64 characters.
 - Required health fields: `channel app ios device lang client_cert
-  custom_headers servers active_days_30 install_age`. Optional (omitted when
+  custom_headers servers active_days_30 install_age first_month first_week`.
+  `first_month` and `first_week` are JSON booleans: whether this is the
+  install's first successful health ping of the UTC calendar month, and of the
+  ISO-8601 week (UTC, Monday start). Optional (omitted when
   unknown): `auth backend api docs`. Health pings carry no `errors`; a health
   ping with that field is rejected like any other unknown field.
 - A feature ping reports exactly one completed UTC day. It requires `channel
@@ -89,7 +92,8 @@ picked up. Lists are comma-separated. An invalid value (e.g.
 
 One table, `counters(day, channel, ping, field, value, count)`. Each accepted
 ping adds one increment per field value. Health pings: `_pings/total` and every
-scalar field (`client_cert` as `true`/`false`, `api` as its integer string).
+scalar field (booleans such as `client_cert` and `first_month` as
+`true`/`false`, `api` as its integer string).
 Feature pings: `_pings/total`, `feature:<name>` with its bucket as value,
 `available:<name>` with value `true`, and one `errors` row per distinct error.
 Health counters are filed under the server's UTC receive day; feature counters
@@ -108,9 +112,10 @@ short, and the next write's checkpoint completes it.
 `telemetry-report` prints, per day and channel, every field's value
 counts (no small-count suppression; error classes appear under the feature
 ping), `used/available` per feature, a warning
-when feature pings exceed health pings by more than 1.5x, and an MAU estimate:
-the sum over the last 30 days of health pings weighted by
-`1 / midpoint(active_days_30)` (midpoints in `report.py`).
+when feature pings exceed health pings by more than 1.5x, and per channel the
+active installs of the month and the ISO week containing the last day (see
+[Active installs](#active-installs)). It reads counters back to the start of
+that month and week, whatever `--days` is.
 
 On the Dokku host (`enter` runs inside the live container; the report opens the
 database read-only):
@@ -202,18 +207,19 @@ a 7/30/90-day range:
 
 - daily active installs (health pings) and a bar chart with implausible days
   highlighted
-- an MAU estimate from `active_days_30`, using the same midpoints as the report
+- active installs this month and this ISO week, as cards, and per month and
+  per ISO week over the range as bar charts (see [Active installs](#active-installs))
 - installs under 7 and 30 days old on the latest day
 - install-days per feature (used, available, ratio, bucket breakdown, and a
   "no use in range" flag)
 - completion rates for `*_started` pairs
 - error classes, as a share of feature pings
+- every environment field's distribution
 
 Feature pings report a day when the install next opens the app, so the feature
 and error sections note that the last 7 days are still filling in, the feature
 ratio chart draws those days dashed, and the feature-ping card shows the day
 before the latest.
-- every environment field's distribution
 
 For optional fields (`auth`, `backend`, `api`, `docs`), an `unknown` row is
 derived as health pings minus that field's counts; clients never send it. The
@@ -222,13 +228,29 @@ latest day can be partial.
 The dashboard opens the database read-only (`mode=ro`) on each request. SQLite
 WAL readers still need the `-shm` file, so the storage mount stays read-write.
 
+### Active installs
+
+The app marks its first successful health ping of each UTC month with
+`first_month: true` and of each ISO week with `first_week: true`. Active
+installs in a period are the `first_<period>=true` health pings filed from the
+period's first day (the 1st, or the Monday) through its last day or the latest
+day. The period containing the latest day is still filling in: the cards say so
+and the charts draw it as a dashed outline. Charts show whole periods, so the
+counters are read back to the first month and week that overlap the range.
+
+- These count installs, not people: one person with an iPhone and an iPad is two.
+- An install that opts out and back in within a period clears its markers and
+  counts twice. A failed send leaves the markers unchanged, so the retry is
+  still marked first; a ping the collector stored but whose response was lost
+  is followed by another marked first.
+
 ### Rendering
 
 Pages are Jinja2 templates (`src/telemetry_collector/templates/`) with
 autoescaping on. Python only builds plain data for them.
 
-The two charts use Chart.js: daily active installs, and each feature's
-used/available ratio per day. The chart data is a JSON data block
+The charts use Chart.js: daily active installs, each feature's used/available
+ratio per day, and active installs per month and per ISO week. The chart data is a JSON data block
 (`<script type="application/json">`), read by `static/dashboard.js`. The
 channel and range switches are plain links.
 
