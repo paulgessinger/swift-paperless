@@ -12,7 +12,7 @@ from telemetry_collector.schema import DEFAULT_SCHEMA_PATH
 
 def test_metrics_carry_no_payload_content(make_client):
     schema = json.loads(Path(DEFAULT_SCHEMA_PATH).read_text())
-    with make_client(batch_size=2) as c:
+    with make_client() as c:
         assert c.post("/t/health", json=health_payload(channel="testflight")).status_code == 204
         r = c.post(
             "/t/feature",
@@ -30,7 +30,7 @@ def test_metrics_carry_no_payload_content(make_client):
         text = generate_latest(REGISTRY).decode()
 
     assert "telemetry_requests_total" in text
-    assert "telemetry_flushes_total" in text
+    assert "telemetry_writes_total" in text
     assert "channel" not in text
     for name in [*schema["features"], *schema["errors"], *schema["channels"], *schema["auth"], *schema["device"]]:
         assert f'"{name}"' not in text, name
