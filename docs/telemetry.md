@@ -2,19 +2,27 @@
 
 <!-- Draft outline: points to hit under each heading. Replace with your own text. -->
 
-- Off by default; opt-in only
-- Toggle: **Settings → Anonymous usage**; can be turned off any time
+    
+> [!IMPORTANT] 
+> **tl;dr**
+> 
+> Swift Paperless can **optionally** collect anonymous usage data. This functionality is off by default, and unless you opt in specifically, nothing is ever sent to anywhere other than your server. 
+> 
+> If you previously opted in, you can disable usage sharing at any time in: **Settings → Anonymous usage**. 
 
 ## Why
 
-- One developer, spare time
-- Questions it answers:
-    - which Paperless-ngx versions are still in use
-    - whether iPad matters
-    - which features people actually use
-- Decisions it feeds: what to build, what to fix first, when to drop old versions
+Swift Paperless is largely developed by a single developer, me, in my spare time. Basically, usage data allows me to focus my time on where it’s most effective in improving the app for users. 
 
-## What is sent
+Here are some of the types of questions that usage data can answer for me:
+
+- Which Paperless-ngx versions are still in use (can I drop 1.14 support?)
+- Which iOS versions do I need to support?
+- How much iPad matters
+- Which features people actually use
+
+
+## How does it work and what is sent
 
 - At most once a day per report, while the app is in use
 - Two reports, sent separately, one after the other
