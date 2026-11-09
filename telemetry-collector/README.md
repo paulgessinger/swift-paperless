@@ -32,7 +32,7 @@ DAY=$(date -u -v-1d +%F 2>/dev/null || date -u -d yesterday +%F)
 curl -i -X POST http://127.0.0.1:8000/t/feature -H 'content-type: application/json' \
   -d '{"channel":"dev","day":"'"$DAY"'","features":{"search":"1"},"available":["search"],"errors":["tls"]}'
 
-# Report (read-only; counters appear after k pings or after shutdown).
+# Report (read-only).
 uv run telemetry-report --db /tmp/telemetry.sqlite3 --days 7
 
 # Dashboard without sign-in (only possible together with TELEMETRY_DEV=1).
@@ -47,7 +47,6 @@ TELEMETRY_ROLE=dashboard TELEMETRY_DEV=1 DASHBOARD_AUTH=off \
 | `TELEMETRY_DB_PATH` | `telemetry.sqlite3` (`/data/telemetry.sqlite3` in the image) | SQLite database |
 | `TELEMETRY_SCHEMA_PATH` | `telemetry-schema.json` next to the package source | Shared schema |
 | `TELEMETRY_DEV` | off | Enables `/docs`, `/openapi.json` |
-| `TELEMETRY_BATCH_SIZE` | `20` | Pings per write transaction (k) |
 | `TELEMETRY_HOST` / `TELEMETRY_PORT` | `127.0.0.1` / `$PORT` or `8000` | API listener (the image sets `0.0.0.0` and `PORT=5000`, Dokku's convention) |
 | `METRICS_HOST` / `METRICS_PORT` | `127.0.0.1` / unset | Prometheus listener; disabled unless `METRICS_PORT` is set |
 | `TELEMETRY_ROLE` | `collector` | `collector` or `dashboard` |
@@ -58,12 +57,14 @@ production collector, and the dashboard shows each channel separately.
 Settings are read with pydantic-settings (`config.py`), from these exact
 variable names only. There is no `.env` file support, so a stray file is never
 picked up. Lists are comma-separated. An invalid value (e.g.
-`TELEMETRY_BATCH_SIZE=twenty` or `TELEMETRY_DEV=maybe`) stops start-up with an
-error naming the variable.
+`TELEMETRY_DEV=maybe`) stops start-up with an error naming the variable.
 
 ## API behaviour
 
-- `204` on success, with an empty body.
+- `204` on success, with an empty body. The ping's counters are already
+  written when the response is sent.
+- `503` with an empty body if the database write fails; nothing from that
+  ping is written.
 - `400` with an empty body for malformed JSON, unknown fields, wrong types,
   values outside the schema (buckets, device, auth, channel, version formats),
   or a feature ping `day` out of range.
@@ -95,14 +96,12 @@ Health counters are filed under the server's UTC receive day; feature counters
 under the ping's `day`. Feature and error counts for recent days therefore keep
 growing as installs report them when the app is next opened.
 
-Writes are batched: counters accumulate in memory and are written in one
-transaction every `TELEMETRY_BATCH_SIZE` accepted pings, when the first ping
-that arrives on a new UTC day is received (the buffer is written first), and on
-graceful shutdown (SIGTERM, via the FastAPI lifespan). The rollover follows the
-arrival day only: a feature ping for an earlier day does not trigger it, and
-one batch can hold counters for several days. There is no time-based
-flush. After each flush the WAL is checkpointed with `TRUNCATE`. A crash loses
-at most k-1 pings.
+Each accepted ping's increments are written in one transaction (an UPSERT per
+counter) before the response is sent; nothing is held in memory. The database
+uses WAL mode with `secure_delete=ON`, and after each write the WAL is
+checkpointed with `TRUNCATE`, so the write moves into the database file and
+the WAL is emptied. If a dashboard read is in progress the checkpoint can stop
+short, and the next write's checkpoint completes it.
 
 ## Reporting
 
@@ -137,14 +136,11 @@ sudo chown 10001:10001 /var/lib/dokku/data/storage/telemetry-data
 dokku storage:mount telemetry /var/lib/dokku/data/storage/telemetry-data:/data
 
 dokku config:set --no-restart telemetry \
-  TELEMETRY_BATCH_SIZE=20 \
   METRICS_HOST=0.0.0.0 METRICS_PORT=9100
 
-# One container; SIGTERM leaves 30 s for the shutdown flush (uvicorn's own timeout is 10 s).
 dokku ps:scale telemetry web=1
-dokku ps:set telemetry stop-timeout-seconds 30
-# Old container stops before the new one starts, so two containers never write
-# the DB or clash on the metrics port; costs a few seconds of downtime per deploy.
+# Old container stops before the new one starts, so two containers never clash
+# on the published metrics port; costs a few seconds of downtime per deploy.
 dokku checks:disable telemetry
 
 # Metrics on the Tailscale address only.
@@ -191,8 +187,9 @@ public app never serves `/metrics` (it 404s through nginx). Publish the port on
 the Tailscale address only, as above, and scrape it from the tailnet.
 
 Exported: request counts by endpoint (`health`/`feature`) and outcome
-(`accepted`, `rejected_400`, `too_large`), flush counts and duration, rows
-written, last flush time, buffered ping count, DB file size, and the default
+(`accepted`, `rejected_400`, `too_large`), write transactions by result
+(`telemetry_writes_total`, `ok`/`error`), write duration including the
+checkpoint, rows written, last write time, DB file size, and the default
 process/Python metrics. Requests rejected by nginx (rate limit, body size)
 never reach the collector and are not counted here.
 
@@ -220,8 +217,7 @@ before the latest.
 
 For optional fields (`auth`, `backend`, `api`, `docs`), an `unknown` row is
 derived as health pings minus that field's counts; clients never send it. The
-latest day can be partial, and data lags by up to k-1 pings because of batched
-writes.
+latest day can be partial.
 
 The dashboard opens the database read-only (`mode=ro`) on each request. SQLite
 WAL readers still need the `-shm` file, so the storage mount stays read-write.
@@ -422,15 +418,18 @@ from about 45 days of seeded data. To cap it:
   (one to 30 days before the ping arrives). It is used only to choose the day
   the counters are filed under and is not stored on its own; the stored day
   carries the same information in aggregate.
-- Only per-field marginals are stored, never the combined payload. Batched
-  writes mean neither the WAL nor two database snapshots taken one ping apart
-  reveal a single payload. This protects data at rest; whoever controls the
-  live server sees payloads in memory as they arrive.
+- Only per-field counters per day and channel are stored, never a report, and
+  nothing in storage joins a health ping to a feature ping. Each ping is
+  written as it arrives, so two copies of the database taken one ping apart
+  differ by that ping's counters, and in a small group (TestFlight, or a rare
+  value) a day's counters can amount to a single install's report. This is
+  accepted because pings carry only coarse values from a fixed list. Whoever
+  controls the live server sees each payload, and that both pings come from
+  the same IP, while receiving them.
 - `/docs`, `/redoc` and `/openapi.json` are disabled in production.
 - Metrics are operational only: no metric or label is derived from payload
-  content, and there is no channel label. A scraped content counter would be a
-  per-request time series and undo the batched-write decorrelation; a test
-  enforces this.
+  content, and there is no channel label, since a scraped content counter
+  would be a per-request time series of payload values; a test enforces this.
 - The dashboard is a separate process that only reads the counters
   (read-only connection). It is reachable only over Tailscale and behind OIDC.
   Its session cookie holds the subject, email, groups and an expiry, signed

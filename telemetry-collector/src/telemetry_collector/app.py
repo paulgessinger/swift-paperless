@@ -7,6 +7,7 @@ combined payload is never stored; only per-field counters.
 
 from __future__ import annotations
 
+import sqlite3
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 
@@ -18,7 +19,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from . import metrics
 from .config import MAX_BODY_BYTES, Settings
 from .schema import Schema, feature_day_valid, load_schema
-from .store import CounterStore, connect, utc_today
+from .store import connect, utc_today, write_ping
 
 
 class _BodyTooLarge(Exception):
@@ -45,16 +46,12 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         conn = connect(settings.db_path)
-        store = CounterStore(conn, batch_size=settings.batch_size, today=today)
-        app.state.store = store
-        metrics.BUFFERED_PINGS.set_function(lambda: store.pending_pings)
+        app.state.conn = conn
         db_path = settings.db_path
         metrics.DB_SIZE.set_function(lambda: db_path.stat().st_size if db_path.exists() else 0)
         try:
             yield
         finally:
-            # SIGTERM -> uvicorn graceful shutdown -> here. Writes the partial batch.
-            store.flush()
             conn.close()
 
     docs = settings.dev
@@ -92,7 +89,10 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
             if not feature_day_valid(day, today()):
                 metrics.REQUESTS.labels(ping, "rejected_400").inc()
                 return Response(status_code=400)
-        request.app.state.store.add(day, fields["channel"], ping, split(payload))
+        try:
+            write_ping(request.app.state.conn, day, fields["channel"], ping, split(payload))
+        except sqlite3.Error:
+            return Response(status_code=503)
         metrics.REQUESTS.labels(ping, "accepted").inc()
         return Response(status_code=204)
 

@@ -32,7 +32,7 @@ def test_midpoints_cover_schema_buckets():
 
 @pytest.fixture
 def seeded(make_client, db_path, clock):
-    with make_client(batch_size=20) as c:
+    with make_client() as c:
         clock.day = "2026-11-06"
         c.post("/t/health", json=health_payload(active_days_30="1"))
         clock.day = "2026-11-07"
@@ -83,7 +83,7 @@ def test_completion_pairs_from_schema():
 
 
 def test_implausible_flagged(make_client, db_path):
-    with make_client(batch_size=1) as c:
+    with make_client() as c:
         c.post("/t/feature", json=feature_payload())
     conn = open_readonly(db_path)
     assert "!! implausible: 1 feature pings vs 0 health pings" in render(conn, SCHEMA)
@@ -91,7 +91,7 @@ def test_implausible_flagged(make_client, db_path):
 
 
 def test_report_readonly(make_client, db_path):
-    with make_client(batch_size=1) as c:
+    with make_client() as c:
         c.post("/t/feature", json=feature_payload())
     conn = open_readonly(db_path)
     with pytest.raises(sqlite3.OperationalError):
@@ -100,7 +100,7 @@ def test_report_readonly(make_client, db_path):
 
 
 def test_readonly_reader_while_collector_running(make_client, db_path):
-    with make_client(batch_size=1) as c:
+    with make_client() as c:
         c.post("/t/feature", json=feature_payload())
         conn = open_readonly(db_path)
         assert conn.execute("SELECT COUNT(*) FROM counters").fetchone()[0] > 0

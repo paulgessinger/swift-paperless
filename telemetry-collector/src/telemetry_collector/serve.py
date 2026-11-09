@@ -46,7 +46,6 @@ def main() -> None:
         date_header=False,
         # Keep uvicorn's default loggers from being configured; basicConfig above is enough.
         log_config=None,
-        # Leaves time for the lifespan shutdown flush; Dokku's stop timeout must exceed it.
         timeout_graceful_shutdown=10,
     )
 

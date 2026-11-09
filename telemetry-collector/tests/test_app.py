@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 
 import pytest
 from conftest import days_before, feature_payload, health_payload, rows
@@ -154,7 +155,7 @@ def test_body_size_cap(client, db_path):
 
 
 def test_dev_channel_accepted(make_client, db_path):
-    with make_client(batch_size=1) as c:
+    with make_client() as c:
         assert c.post("/t/feature", json=feature_payload(channel="dev")).status_code == 204
     assert {ch for (_, ch, *_rest) in rows(db_path)} == {"dev"}
 
@@ -184,20 +185,27 @@ def test_collector_serves_no_dashboard_routes(client):
     assert client.post("/logout").status_code == 404
 
 
-def test_flush_failure_keeps_buffer(db_path, clock):
-    from telemetry_collector.store import SCHEMA_SQL, CounterStore, connect
+def test_ping_visible_in_db_once_accepted(client, db_path):
+    assert client.post("/t/health", json=health_payload()).status_code == 204
+    assert ("health", "_pings", "total", 1) in {(p, f, v, n) for (_, _, p, f, v, n) in rows(db_path)}
+    assert client.post("/t/feature", json=feature_payload()).status_code == 204
+    got = {p: n for (_, _, p, f, _, n) in rows(db_path) if f == "_pings"}
+    assert got == {"health": 1, "feature": 1}
 
-    conn = connect(db_path)
-    store = CounterStore(conn, batch_size=10, today=clock)
-    store.add("2026-11-07", "appstore", "health", [("_pings", "total")])
-    conn.execute("DROP TABLE counters")
-    store.flush()
-    assert store.pending_pings == 1
-    conn.execute(SCHEMA_SQL)
-    store.flush()
-    assert store.pending_pings == 0
-    assert conn.execute("SELECT count FROM counters").fetchall() == [(1,)]
-    conn.close()
+
+def test_write_failure_returns_503_and_writes_nothing(client, db_path):
+    from telemetry_collector.store import SCHEMA_SQL
+
+    other = sqlite3.connect(db_path, isolation_level=None)
+    other.execute("DROP TABLE counters")
+    r = client.post("/t/health", json=health_payload())
+    assert r.status_code == 503
+    assert r.content == b""
+    other.execute(SCHEMA_SQL)
+    other.close()
+    assert rows(db_path) == []
+    assert client.post("/t/health", json=health_payload()).status_code == 204
+    assert [n for (*_, f, _, n) in rows(db_path) if f == "_pings"] == [1]
 
 
 def test_not_found_and_wrong_method_bare(client):
@@ -206,55 +214,8 @@ def test_not_found_and_wrong_method_bare(client):
     assert client.post("/nope", json={}).content == b""
 
 
-def test_nothing_written_before_batch_full(make_client, db_path):
-    with make_client(batch_size=5) as c:
-        for _ in range(4):
-            assert c.post("/t/health", json=health_payload()).status_code == 204
-        assert rows(db_path) == []
-        c.post("/t/feature", json=feature_payload())
-        got = {(p, f): n for (_, _, p, f, _, n) in rows(db_path) if f == "_pings"}
-        assert got == {("health", "_pings"): 4, ("feature", "_pings"): 1}
-        c.post("/t/health", json=health_payload())
-        assert sum(n for (*_, f, _, n) in rows(db_path) if f == "_pings") == 5
-
-
-def test_rejected_pings_do_not_count_towards_batch(make_client, db_path):
-    with make_client(batch_size=2) as c:
-        c.post("/t/health", json=health_payload())
-        c.post("/t/health", json=health_payload(device="Android"))
-        assert rows(db_path) == []
-        c.post("/t/health", json=health_payload())
-        assert rows(db_path) != []
-
-
-def test_shutdown_flushes_partial_batch(make_client, db_path):
-    with make_client(batch_size=20) as c:
-        c.post("/t/health", json=health_payload())
-        c.post("/t/feature", json=feature_payload())
-        assert rows(db_path) == []
-    got = {p: n for (_, _, p, f, _, n) in rows(db_path) if f == "_pings"}
-    assert got == {"health": 1, "feature": 1}
-
-
-def test_day_rollover_flushes_previous_day(make_client, db_path, clock):
-    with make_client(batch_size=20) as c:
-        clock.day = "2026-11-07"
-        c.post("/t/health", json=health_payload())
-        c.post("/t/health", json=health_payload())
-        assert rows(db_path) == []
-        clock.day = "2026-11-08"
-        c.post("/t/health", json=health_payload())
-        # Previous day written; the new day's ping is still buffered.
-        assert {d for (d, *_rest) in rows(db_path)} == {"2026-11-07"}
-        assert [n for (d, _, _, f, _, n) in rows(db_path) if f == "_pings"] == [2]
-    by_day = {d: n for (d, _, _, f, _, n) in rows(db_path) if f == "_pings"}
-    assert by_day == {"2026-11-07": 2, "2026-11-08": 1}
-
-
-def test_wal_mode_and_truncated_after_flush(client, db_path):
+def test_wal_mode_and_truncated_after_write(client, db_path):
     client.post("/t/health", json=health_payload())
-    import sqlite3
-
     conn = sqlite3.connect(db_path)
     assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     conn.close()
@@ -311,21 +272,3 @@ def test_feature_day_bounds(client, db_path, day, status):
 def test_feature_day_must_be_string(client, db_path):
     assert client.post("/t/feature", json=feature_payload(day=20261106)).status_code == 400
     assert rows(db_path) == []
-
-
-def test_back_dated_feature_ping_does_not_roll_over(make_client, db_path, clock):
-    with make_client(batch_size=20) as c:
-        clock.day = "2026-11-08"
-        c.post("/t/health", json=health_payload())
-        # Filed under yesterday, but it arrives today: no rollover, still buffered.
-        c.post("/t/feature", json=feature_payload(day="2026-11-07"))
-        c.post("/t/health", json=health_payload())
-        c.post("/t/feature", json=feature_payload(day="2026-11-01"))
-        assert rows(db_path) == []
-        # The first ping arriving on the next day flushes everything buffered so far.
-        clock.day = "2026-11-09"
-        c.post("/t/feature", json=feature_payload(day="2026-11-08"))
-        got = {(p, d): n for (d, _, p, f, _, n) in rows(db_path) if f == "_pings"}
-        assert got == {("health", "2026-11-08"): 2, ("feature", "2026-11-07"): 1, ("feature", "2026-11-01"): 1}
-    got = {(p, d): n for (d, _, p, f, _, n) in rows(db_path) if f == "_pings"}
-    assert got[("feature", "2026-11-08")] == 1
