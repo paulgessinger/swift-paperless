@@ -77,7 +77,6 @@ nav:
   - oidc.md
   - Common Issues:
       - common_issues/permissions.md
-
       - common_issues/local-network-denied.md
       - common_issues/certificates.md
       - common_issues/supported-versions.md
