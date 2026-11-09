@@ -145,7 +145,7 @@ public struct CreateDocumentView: View {
   private var useOriginalTitle = false
 
   private var isDocumentValid: Bool {
-    isAsnValid && !document.title.isEmpty
+    isAsnValid
   }
 
   private var thumbnailView: ThumbnailView
@@ -218,7 +218,9 @@ public struct CreateDocumentView: View {
   private var filename: String {
     let filename: String
 
-    if useOriginalTitle {
+    // An empty title is not sent, so the server titles the document from this
+    // filename unless its rules or workflows assign one.
+    if useOriginalTitle || document.title.isEmpty {
       filename = sourceUrl.lastPathComponent
     } else {
       let ext = sourceUrl.pathExtension
