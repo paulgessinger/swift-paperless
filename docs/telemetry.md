@@ -59,13 +59,15 @@
 
 ## How it's protected
 
-- No identifier; the two reports are separate and can't be linked, same day or across days
-- Server keeps only running totals per value and day ("412 devices on iOS 18 today"), never reports
-- Totals are written only after 20 reports have come in, so no write maps to one report
+- No identifier, so nothing links reports across days
+- Reports aren't stored; the server keeps only running totals per value, day and channel ("412 devices on iOS 18 today")
+- Nothing in storage joins the two reports
 - IP addresses:
     - server run by the developer, no third-party analytics or CDN
     - IP used in memory for rate limiting only
     - never logged or stored
+- In small groups (e.g. TestFlight, or a rare value), a day's totals can amount to a single install's report
+- Accepted because reports contain only coarse values from a fixed list
 - Open source: sender and receiver are both in the
   [Swift Paperless repository](https://github.com/paulgessinger/swift-paperless)
 
@@ -74,7 +76,7 @@
 - Any report reveals that an install was used that day; unavoidable
 - The features report's date reveals the last day the app was used before the current one
 - TestFlight reports are counted separately from App Store ones
-- Fewer TestFlight users, so less anonymity within that group
+- Fewer TestFlight users, so less anonymity within that group: a day's totals there can be one install's setup and feature use
 
 ## Turning it off
 
