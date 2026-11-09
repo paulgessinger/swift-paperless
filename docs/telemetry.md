@@ -30,6 +30,7 @@
 | Device type | iPhone, iPad or Mac, never the model |
 | App language | English, never your region |
 | Paperless-ngx version of the server you're using, without any build tags | 2.14.3 |
+| API version of that server | 9 |
 | Rough library size | under 1,000 / 1,000–10,000 / over 10,000 documents |
 | How you sign in | token, password, single sign-on, or none |
 | Whether you use a client certificate or custom headers | yes / no |
@@ -63,7 +64,7 @@
 
 - Covers one past day: the last day you used the app, sent the next time you open it
     - carries that day's date (UTC), at most 30 days back
-    - days without any use send nothing
+    - days you didn't open the app send nothing
 - Which features were used that day, and roughly how often: once, 2–9 times, 10 or more
 - Kinds of connection problems seen that day, for example "certificate error" or "server too old"
 - Includes uploads from the share extension and the Upload Document shortcut
