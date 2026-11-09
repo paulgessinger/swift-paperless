@@ -13,12 +13,12 @@
 
 import asyncio
 import concurrent.futures
-from dataclasses import dataclass
 from pathlib import Path
 import random
 import re
 import subprocess
 import tempfile
+import threading
 import time
 from typing import Annotated
 
@@ -59,45 +59,27 @@ RENDERED_DOCKER_COMPOSE_FILE = (
 # ============================================================================
 
 
-@dataclass(frozen=True)
-class ScreenshotStep:
-    name: str
-    url: str | None = None
-    post_url: str | None = None
-    wait: float | None = None
-
-
-DEFAULT_STEPS = [
-    ScreenshotStep("documents", wait=2),
-    ScreenshotStep(
-        "filter_tags",
-        "x-paperless://v1/open_filter/tags",
-        "x-paperless://v1/close_filter",
-    ),
-    ScreenshotStep("document_view", "x-paperless://v1/document/3?edit=0", wait=4),
-    ScreenshotStep("document_edit", "x-paperless://v1/document/3?edit=1", wait=4),
-]
-
-
 class ScreenshotStepConfig(BaseModel):
+    """One screenshot: a fresh launch that routes through `urls`, in order.
+
+    The app opens the URLs itself (preview mode's `--open-url`), so no
+    `simctl openurl` prompt can get in the way. `device_urls` replaces `urls`
+    for the named device ids.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    url: str | None = None
-    post_url: str | None = None
-    wait: float | None = None
+    urls: list[str] = Field(default_factory=list)
+    device_urls: dict[str, list[str]] = Field(default_factory=dict)
+    wait: float = 3.0
+
+    def urls_for(self, device_id: str) -> list[str]:
+        return self.device_urls.get(device_id, self.urls)
 
 
 def default_step_configs() -> list[ScreenshotStepConfig]:
-    return [
-        ScreenshotStepConfig(
-            name=step.name,
-            url=step.url,
-            post_url=step.post_url,
-            wait=step.wait,
-        )
-        for step in DEFAULT_STEPS
-    ]
+    return [ScreenshotStepConfig(name="documents")]
 
 
 class PreviewConfig(BaseModel):
@@ -124,6 +106,11 @@ class SimulatorConfig(BaseModel):
 
     device: str
     udid: str
+    # `simctl io --display` name, for devices with more than one display.
+    display: str | None = None
+    # Device Hub pose to ask for before capturing, e.g. "Closed". Simulators
+    # sharing a udid run one after another.
+    pose: str | None = None
 
 
 class CaptureConfig(BaseModel):
@@ -135,7 +122,6 @@ class CaptureConfig(BaseModel):
     bundle_id: str
     simulators: list[SimulatorConfig] = Field(default_factory=list)
     launch_wait: float = 2.0
-    url_wait: float = 2.0
     status_bar_time: str = "2007-01-09T09:41:00.000+01:00"
     status_bar_cellular_bars: int = Field(default=4, ge=0, le=4)
     appearance: str = "light"
@@ -385,14 +371,11 @@ def simctl(
     run_command(["xcrun", "simctl", *args], check=check, dry_run=dry_run, env=env)
 
 
-def display_plan(languages: list[str], steps: list[ScreenshotStep]) -> None:
+def display_plan(languages: list[str], steps: list[ScreenshotStepConfig]) -> None:
     table = Table(title="Screenshot plan", header_style="bold magenta")
     table.add_column("Language")
     table.add_column("Screens")
-    step_names = ", ".join(
-        f"{step.name}@{step.wait:g}s" if step.wait is not None else step.name
-        for step in steps
-    )
+    step_names = ", ".join(f"{step.name}@{step.wait:g}s" for step in steps)
     for language in languages:
         table.add_row(language, step_names)
     console.log(table)
@@ -433,6 +416,10 @@ def configure_simulator(
             status_bar_time,
             "--cellularBars",
             str(status_bar_cellular_bars),
+            "--batteryState",
+            "charged",
+            "--batteryLevel",
+            "100",
         ],
         dry_run=dry_run,
     )
@@ -1298,30 +1285,37 @@ def capture(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Print commands without executing")
     ] = False,
+    devices: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--device",
+            help="Capture only this device id (repeatable), e.g. iPhone_Duo_Outer",
+        ),
+    ] = None,
 ) -> None:
     """Capture screenshots from iOS simulator."""
     capture_config = load_capture_config(config)
+    if devices:
+        capture_config.simulators = [
+            simulator
+            for simulator in capture_config.simulators
+            if simulator.device in devices
+        ]
+        if not capture_config.simulators:
+            console.log(f"[red]No configured simulators match {devices}")
+            raise typer.Exit(1)
     config_path = config.resolve()
     devices_path = config_path.parent / "screenshot_devices.toml"
     screenshot_devices = load_screenshot_devices(devices_path)
     for simulator in capture_config.simulators:
         device_by_id(screenshot_devices, simulator.device)
 
-    screenshot_steps = [
-        ScreenshotStep(
-            name=step.name,
-            url=step.url,
-            post_url=step.post_url,
-            wait=step.wait,
-        )
-        for step in capture_config.steps
-    ]
+    screenshot_steps = capture_config.steps
     languages = capture_config.locales
     output_dir = capture_config.output_dir
     bundle_id = capture_config.bundle_id
     simulators = capture_config.simulators
     launch_wait = capture_config.launch_wait
-    url_wait = capture_config.url_wait
     status_bar_time = capture_config.status_bar_time
     status_bar_cellular_bars = capture_config.status_bar_cellular_bars
     appearance = capture_config.appearance
@@ -1358,25 +1352,36 @@ def capture(
         console=console,
     ) as progress:
         progress_tasks = {
-            simulator.udid: progress.add_task(
+            simulator.device: progress.add_task(
                 f"{simulator.device} • queued",
                 total=steps_per_simulator,
             )
             for simulator in simulators
         }
 
+        prompt_lock = threading.Lock()
+        built_apps: dict[str, Path] = {}
+
         def capture_simulator(simulator: SimulatorConfig) -> None:
             target = simulator.udid
             device = device_by_id(screenshot_devices, simulator.device)
             screenshot_prefix = device.id
             simulator_name = device.simulator_name
-            progress_task_id = progress_tasks[target]
+            progress_task_id = progress_tasks[simulator.device]
             progress.update(
                 progress_task_id,
                 description=f"{screenshot_prefix} • preparing",
             )
 
             ensure_simulator_booted(target, dry_run=dry_run)
+            if simulator.pose and not dry_run:
+                with prompt_lock:
+                    progress.stop()
+                    console.input(
+                        f"[bold]Set {simulator_name} ({target}) to {simulator.pose} "
+                        "in Device Hub, then press Enter[/bold] "
+                    )
+                    progress.start()
             configure_simulator(
                 target=target,
                 status_bar_time=status_bar_time,
@@ -1388,7 +1393,9 @@ def capture(
             derived_data = build_config.derived_data_path / sanitize_filename(
                 simulator_name
             )
-            if build_config.enabled and not skip_build:
+            if target in built_apps:
+                app_path = built_apps[target]
+            elif build_config.enabled and not skip_build:
                 app_path = build_app_for_simulator(
                     simulator_name=simulator_name,
                     simulator_udid=target,
@@ -1408,6 +1415,10 @@ def capture(
                     console.log(f"[red]Error: {exc}")
                     raise typer.Exit(1)
 
+            built_apps[target] = app_path
+
+            # A clean install drops filters and other state an earlier run left.
+            simctl(["uninstall", target, bundle_id], check=False, dry_run=dry_run)
             install_app(target, app_path, dry_run=dry_run)
 
             for language in languages:
@@ -1416,68 +1427,75 @@ def capture(
                 language_dir.mkdir(parents=True, exist_ok=True)
                 console.log(f"[bold green]Language: {language}")
 
-                simctl(["terminate", target, bundle_id], check=False, dry_run=dry_run)
-                simctl(
-                    [
-                        "launch",
-                        "--terminate-running-process",
-                        target,
-                        bundle_id,
-                        "-AppleLanguages",
-                        f"({language})",
-                        "-AppleLocale",
-                        language,
-                        *preview_args,
-                    ],
-                    dry_run=dry_run,
-                )
-                if launch_wait > 0:
-                    time.sleep(launch_wait)
-
                 for index, step in enumerate(screenshot_steps, start=1):
                     progress.update(
                         progress_task_id,
                         description=f"{screenshot_prefix} • {language} • {step.name}",
                     )
-                    wait_time = step.wait if step.wait is not None else url_wait
-                    if step.url:
-                        simctl(["openurl", target, step.url], dry_run=dry_run)
-                        if wait_time > 0:
-                            time.sleep(wait_time)
-                    elif step.wait is not None and wait_time > 0:
-                        time.sleep(wait_time)
+                    route_args = [
+                        arg
+                        for url in step.urls_for(device.id)
+                        for arg in ("--open-url", url)
+                    ]
+                    simctl(
+                        [
+                            "launch",
+                            "--terminate-running-process",
+                            target,
+                            bundle_id,
+                            "-AppleLanguages",
+                            f"({language})",
+                            "-AppleLocale",
+                            language,
+                            *preview_args,
+                            *route_args,
+                        ],
+                        dry_run=dry_run,
+                    )
+                    # Launch, then one second per route, then the screen's own wait.
+                    if not dry_run:
+                        time.sleep(launch_wait + len(route_args) // 2 + step.wait)
 
                     screenshot_name = f"{screenshot_prefix}-{index:02d}_{sanitize_filename(step.name)}.png"
                     output_path = language_dir / screenshot_name
+                    display_args = (
+                        ["--display", simulator.display] if simulator.display else []
+                    )
                     simctl(
-                        ["io", target, "screenshot", "--type", "png", str(output_path)],
+                        [
+                            "io",
+                            target,
+                            "screenshot",
+                            "--type",
+                            "png",
+                            *display_args,
+                            str(output_path),
+                        ],
                         dry_run=dry_run,
                     )
                     console.log(f"Saved {output_path}")
                     progress.advance(progress_task_id)
 
-                    if step.post_url:
-                        simctl(["openurl", target, step.post_url], dry_run=dry_run)
-                        if wait_time > 0:
-                            time.sleep(wait_time)
-
             progress.update(progress_task_id, description=f"{screenshot_prefix} • done")
 
         errors: list[str] = []
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=len(simulators)
-        ) as executor:
-            futures = {
-                executor.submit(capture_simulator, simulator): simulator
-                for simulator in simulators
-            }
-            for future in concurrent.futures.as_completed(futures):
-                simulator = futures[future]
+
+        def capture_group(group: list[SimulatorConfig]) -> None:
+            for simulator in group:
                 try:
-                    future.result()
+                    capture_simulator(simulator)
                 except Exception as exc:
                     console.log(f"[red]Error capturing {simulator.device}: {exc}")
                     errors.append(simulator.device)
+
+        groups: dict[str, list[SimulatorConfig]] = {}
+        for simulator in simulators:
+            groups.setdefault(simulator.udid, []).append(simulator)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(groups)) as executor:
+            for future in [
+                executor.submit(capture_group, group) for group in groups.values()
+            ]:
+                future.result()
         if errors:
             raise typer.Exit(1)
 

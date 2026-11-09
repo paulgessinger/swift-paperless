@@ -99,7 +99,7 @@ set-test-notes build version='' notes='':
 
 # Creates the App Store version if needed. Needs `asc` logged in or
 # APP_STORE_CONNECT_*.
-# Upload metadata + framed screenshots (no IPA). Replaces all screenshots on ASC.
+# Upload metadata, framed screenshots and app previews (no IPA). Replaces them on ASC.
 deliver *args:
   uv run --project scripts swpngx deliver --version "$(just get-version)" {{args}}
 
@@ -152,3 +152,22 @@ demo-up:
 
 demo-down:
   uv run --project scripts swpngx capture teardown
+
+# Fresh demo backend holding only the fixture documents (wipes its data).
+demo-reset:
+  uv run --project scripts swpngx capture setup --recreate
+
+# Needs `just demo-up`; frames into store/screenshots/framed for `just deliver`.
+# Capture and frame App Store screenshots for every locale (--skip-build reuses the last build).
+# Stops for the iPhone Duo poses; `--device <id>` captures one device.
+screenshots *args:
+  uv run --project scripts swpngx capture capture {{args}}
+  uv run --project scripts swpngx promo screenshots
+
+# Render the localized "Paper to pixels" app preview from the iPhone captures.
+previews *args:
+  uv run --project scripts swpngx promo previews {{args}}
+
+# Review the framed screenshots and the metadata in the browser.
+screenshots-preview:
+  uv run --project scripts swpngx preview

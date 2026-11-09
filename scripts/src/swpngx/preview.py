@@ -14,8 +14,10 @@ Generate an HTML preview of all metadata and screenshots for each language.
 """
 
 import http.server
+import re
 import shutil
 import socketserver
+import sys
 import tempfile
 import threading
 import webbrowser
@@ -63,6 +65,19 @@ class LocaleData:
     display_name: str
     metadata: list[MetadataItem]
     screenshots: list[Screenshot]
+    previews: list[str]
+
+
+@dataclass
+class PromoAsset:
+    src: str
+    name: str
+    is_video: bool
+
+
+# Rendered deliverables are named `<scene>_<width>x<height>.<ext>`; stills
+# taken at a time code carry a suffix and are skipped.
+PROMO_ASSET = re.compile(r"_\d+x\d+\.(mp4|png)$")
 
 
 def load_app_title(metadata_dir: Path, default_locale: str = "default") -> str:
@@ -184,6 +199,25 @@ def get_screenshots(
     return screenshots
 
 
+def get_previews(previews_dir: Path, locale: str) -> list[str]:
+    """Page-relative paths of a locale's app preview videos."""
+    return [
+        f"previews/{locale}/{path.name}"
+        for path in sorted((previews_dir / locale).glob("*.mp4"))
+    ]
+
+
+def get_promo_assets(promo_dir: Path) -> list[PromoAsset]:
+    """The header and search videos and the still, shared by all locales."""
+    return [
+        PromoAsset(
+            src=f"promo/{path.name}", name=path.name, is_video=path.suffix == ".mp4"
+        )
+        for path in sorted(promo_dir.glob("*"))
+        if PROMO_ASSET.search(path.name)
+    ]
+
+
 def get_display_name(locale: str) -> str:
     """Get a user-friendly display name for a locale."""
     # Map of locale codes to friendly names
@@ -235,6 +269,8 @@ def generate_html(
     output_dir: Path,
     default_locale: str = "default",
     embed_images: bool = False,
+    previews_dir: Path | None = None,
+    promo_dir: Path | None = None,
 ) -> Path:
     """Generate the HTML preview file."""
     locales = get_locales(metadata_dir, screenshots_dir, default_locale)
@@ -252,6 +288,24 @@ def generate_html(
         if output_screenshots.exists():
             shutil.rmtree(output_screenshots)
         shutil.copytree(screenshots_dir, output_screenshots)
+
+    # Videos are always linked, never embedded.
+    if previews_dir is not None and previews_dir.exists():
+        output_previews = output_dir / "previews"
+        if output_previews.exists():
+            shutil.rmtree(output_previews)
+        shutil.copytree(previews_dir, output_previews)
+
+    promo_assets = (
+        get_promo_assets(promo_dir) if promo_dir and promo_dir.exists() else []
+    )
+    if promo_assets:
+        output_promo = output_dir / "promo"
+        if output_promo.exists():
+            shutil.rmtree(output_promo)
+        output_promo.mkdir()
+        for asset in promo_assets:
+            shutil.copy(promo_dir / asset.name, output_promo / asset.name)
 
     # Build locale data
     fallback_metadata_dir = metadata_dir / default_locale
@@ -276,6 +330,7 @@ def generate_html(
                 display_name=get_display_name(locale),
                 metadata=metadata,
                 screenshots=screenshots,
+                previews=(get_previews(previews_dir, locale) if previews_dir else []),
             )
         )
 
@@ -288,6 +343,7 @@ def generate_html(
     html_content = template.render(
         app_title=app_title,
         locales=locale_data_list,
+        promo_assets=promo_assets,
     )
 
     output_file = output_dir / "index.html"
@@ -295,11 +351,76 @@ def generate_html(
     return output_file
 
 
+BYTE_RANGE = re.compile(r"bytes=(\d*)-(\d*)$")
+
+
 class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    """HTTP request handler that suppresses log output."""
+    """Silent file handler that answers single byte-range requests, so
+    browsers can fetch and seek videos without downloading them whole."""
+
+    _remaining: int | None = None
 
     def log_message(self, format, *args):
-        pass  # Suppress logging
+        pass
+
+    def end_headers(self):
+        if self._remaining is None:
+            self.send_header("Accept-Ranges", "bytes")
+        super().end_headers()
+
+    def send_head(self):
+        self._remaining = None
+        match = BYTE_RANGE.match(self.headers.get("Range", "").strip())
+        path = Path(self.translate_path(self.path))
+        if not match or not path.is_file() or match.groups() == ("", ""):
+            return super().send_head()
+
+        size = path.stat().st_size
+        first, last = match.groups()
+        if first:
+            start = int(first)
+            end = min(int(last), size - 1) if last else size - 1
+        else:
+            start, end = max(size - int(last), 0), size - 1
+        if start > end:
+            self.send_response(http.HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
+            self.send_header("Content-Range", f"bytes */{size}")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return None
+
+        file = path.open("rb")
+        file.seek(start)
+        self._remaining = end - start + 1
+        self.send_response(http.HTTPStatus.PARTIAL_CONTENT)
+        self.send_header("Content-Type", self.guess_type(str(path)))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(self._remaining))
+        self.end_headers()
+        return file
+
+    def copyfile(self, source, outputfile):
+        if self._remaining is None:
+            return super().copyfile(source, outputfile)
+        while self._remaining > 0:
+            chunk = source.read(min(self._remaining, 1 << 16))
+            if not chunk:
+                break
+            outputfile.write(chunk)
+            self._remaining -= len(chunk)
+
+
+class PreviewServer(socketserver.ThreadingTCPServer):
+    # Threaded, so video range requests do not block each other.
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def handle_error(self, request, client_address):
+        # Browsers drop video connections when they seek or switch tabs.
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
+            return
+        super().handle_error(request, client_address)
 
 
 def serve_directory(directory: Path, port: int) -> socketserver.TCPServer:
@@ -307,8 +428,7 @@ def serve_directory(directory: Path, port: int) -> socketserver.TCPServer:
     handler = lambda *args, **kwargs: QuietHTTPRequestHandler(
         *args, directory=str(directory), **kwargs
     )
-    server = socketserver.TCPServer(("", port), handler)
-    return server
+    return PreviewServer(("", port), handler)
 
 
 def main(
@@ -328,6 +448,20 @@ def main(
             help="Path to framed screenshots directory",
         ),
     ] = Path("store/screenshots/framed"),
+    previews_dir: Annotated[
+        Path,
+        typer.Option(
+            "--previews-dir",
+            help="Path to rendered app preview videos",
+        ),
+    ] = Path("store/previews"),
+    promo_dir: Annotated[
+        Path,
+        typer.Option(
+            "--promo-dir",
+            help="Path to the rendered header and search videos",
+        ),
+    ] = Path("store/promo/out"),
     port: Annotated[
         int,
         typer.Option(
@@ -359,10 +493,12 @@ def main(
         ),
     ] = False,
 ) -> None:
-    """Generate and serve an HTML preview of metadata and screenshots."""
+    """Generate and serve an HTML preview of metadata, screenshots and app previews."""
     # Resolve paths
     metadata_dir = metadata_dir.resolve()
     screenshots_dir = screenshots_dir.resolve()
+    previews_dir = previews_dir.resolve()
+    promo_dir = promo_dir.resolve()
 
     if not metadata_dir.exists() and not screenshots_dir.exists():
         console.log(
@@ -382,10 +518,18 @@ def main(
     console.log("[blue]Generating preview...")
     console.log(f"  Metadata: {metadata_dir}")
     console.log(f"  Screenshots: {screenshots_dir}")
+    console.log(f"  Previews: {previews_dir}")
+    console.log(f"  Promo: {promo_dir}")
     console.log(f"  Output: {output_dir}")
 
     # Generate HTML
-    html_file = generate_html(metadata_dir, screenshots_dir, output_dir)
+    html_file = generate_html(
+        metadata_dir,
+        screenshots_dir,
+        output_dir,
+        previews_dir=previews_dir,
+        promo_dir=promo_dir,
+    )
     console.log(f"[green]Generated: {html_file}")
 
     if no_serve:

@@ -24,8 +24,8 @@ mask_margin = 10
 
 # iPhone screenshots use Pro Max only; App Store Connect scales for smaller phones.
 [[device]]
-id = "iPhone_17_Pro_Max"
-simulator_name = "iPhone 17 Pro Max"
+id = "iPhone_18_Pro_Max"
+simulator_name = "iPhone 18 Pro Max"
 bezel_pack = "iphone_17"
 bezel = "iPhone 17 Pro Max - Silver - Portrait.png"
 asc_display_type = "IPHONE_67"
@@ -34,3 +34,15 @@ offset = [74, 68]
 post_offset = [0, 500]
 mask_corner_radius = 150
 mask_margin = 0
+
+# iPhone Duo: one simulator, two displays, in one App Store set. Framed only
+# by `swpngx promo screenshots`, which has no bezel for it.
+[[device]]
+id = "iPhone_Duo_Inner"
+simulator_name = "iPhone Duo"
+asc_display_type = "IPHONE_DUO"
+
+[[device]]
+id = "iPhone_Duo_Outer"
+simulator_name = "iPhone Duo"
+asc_display_type = "IPHONE_DUO"

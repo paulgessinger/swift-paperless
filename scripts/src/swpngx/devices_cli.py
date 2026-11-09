@@ -80,8 +80,9 @@ def check_devices(
     issues: list[str] = []
 
     for device in screenshot_devices.devices:
-        frame_path = (repo_root / device.frame_path).resolve()
-        frame_ok = frame_path.is_file()
+        frame_ok = (
+            not device.has_bezel or (repo_root / device.frame_path).resolve().is_file()
+        )
         in_capture = device.id in configured_device_ids
         on_disk = device.id in prefixes
         legacy_on_disk = [

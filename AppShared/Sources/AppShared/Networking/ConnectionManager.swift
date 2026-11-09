@@ -272,6 +272,19 @@ public final class ConnectionManager {
       self.previewMode = false
     }
 
+    // Activation reads the token from the keychain, and cached documents
+    // reference their server's row, so the preview connection needs both.
+    if self.previewMode {
+      do {
+        if let token = previewArguments?.token {
+          try previewStoredConnection.setToken(token)
+        }
+        try database.upsertConnection(previewStoredConnection.toRecord(needsAuth: false))
+      } catch {
+        Logger.api.error("Could not store the preview connection: \(error)")
+      }
+    }
+
     // Synchronous bootstrap read so SwiftUI body sees the cache populated
     // before the first frame. Subsequent updates come via the observer.
     do {
@@ -479,19 +492,24 @@ public final class ConnectionManager {
     }
   }
 
+  private static let previewConnectionID = UUID(
+    uuidString: "00000000-0000-0000-0000-0000000000AA")!
+
+  private var previewStoredConnection: StoredConnection {
+    let urlString =
+      previewArguments?.url
+      ?? "https://paperless.example.com/api/"
+    return StoredConnection(
+      id: Self.previewConnectionID,
+      url: URL(string: urlString)!,
+      extraHeaders: [],
+      user: User(id: 1, isSuperUser: true, username: "paperless"))
+  }
+
   public var storedConnection: StoredConnection? {
     if previewMode {
       Logger.api.info("Running in preview mode")
-
-      let urlString =
-        previewArguments?.url
-        ?? "https://paperless.example.com/api/"
-      let url = URL(string: urlString)!
-
-      return StoredConnection(
-        url: url,
-        extraHeaders: [],
-        user: User(id: 1, isSuperUser: true, username: "paperless"))
+      return previewStoredConnection
     }
 
     guard let activeConnectionId, let stored = connections[activeConnectionId] else {

@@ -10,8 +10,7 @@ locales = [
 ]
 output_dir = "store/screenshots"
 bundle_id = "com.paulgessinger.swift-paperless"
-launch_wait = 2.0
-url_wait = 2.0
+launch_wait = 4.0
 status_bar_time = "2007-01-09T09:41:00.000+01:00"
 status_bar_cellular_bars = 4
 appearance = "light"
@@ -22,7 +21,7 @@ scheme = "swift-paperless"
 project = "swift-paperless.xcodeproj"
 configuration = "Release"
 derived_data_path = ".build/DerivedData"
-app_name = "swift-paperless"
+app_name = "Paperless"
 
 [preview]
 url = "http://localhost:9988/"
@@ -34,28 +33,69 @@ password = "admin"
 # udid = "07ACA670-CF2B-42C2-B33A-229787FDF3B9"
 #
 [[simulators]]
-device = "iPhone_17_Pro_Max"
-udid = "D38BC21C-2840-4B54-88C3-018011A0BE29"
+device = "iPhone_18_Pro_Max"
+udid = "A3F4F32C-F6E6-40EA-8D31-5872BF41EC04"
 
 [[simulators]]
 device = "iPad_Pro_13_M5"
-udid = "B14463F9-4862-46B8-9D69-AA05A15DFDA9"
+udid = "CF576856-083F-4B83-B938-677D83B4B5AB"
+
+# iPhone Duo has no command-line pose control, so capture asks for each pose
+# and waits. `display` is the `simctl io enumerate` device name.
+[[simulators]]
+device = "iPhone_Duo_Inner"
+udid = "35FA9FF5-37FB-43EC-8FEB-AF7784C479EC"
+display = "primary-1"
+pose = "Open"
+
+[[simulators]]
+device = "iPhone_Duo_Outer"
+udid = "35FA9FF5-37FB-43EC-8FEB-AF7784C479EC"
+display = "primary"
+pose = "Closed"
+
+# Each screen is a fresh launch that routes through `urls` (x-paperless deep
+# links, see DataModel/Route.swift); `device_urls` overrides them per device.
 
 [[steps]]
 name = "documents"
-wait = 2.0
+# On iPad and the open iPhone Duo, open a document so the detail column isn't
+# empty.
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/3",
+] }
 
 [[steps]]
 name = "filter_tags"
-url = "x-paperless://v1/open_filter/tags"
-post_url = "x-paperless://v1/close_filter"
+urls = ["x-paperless://v1/open_filter/tags"]
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3",
+    "x-paperless://v1/open_filter/tags",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/3",
+    "x-paperless://v1/open_filter/tags",
+] }
 
 [[steps]]
 name = "document_view"
-url = "x-paperless://v1/document/3?edit=0"
-wait = 4.0
+urls = ["x-paperless://v1/document/3"]
+# The open iPhone Duo keeps the iPhone detail layout, without an inspector,
+# so it shows another document than slide 1.
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3?edit=1",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/2",
+] }
 
 [[steps]]
 name = "document_edit"
-url = "x-paperless://v1/document/3?edit=1"
-wait = 4.0
+urls = ["x-paperless://v1/document/3?edit=tags"]
+device_urls = { iPad_Pro_13_M5 = [
+    "x-paperless://v1/document/3?edit=1",
+    "x-paperless://v1/document/3?edit=tags",
+], iPhone_Duo_Inner = [
+    "x-paperless://v1/document/3?edit=1",
+    "x-paperless://v1/document/3?edit=tags",
+] }

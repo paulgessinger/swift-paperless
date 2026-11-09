@@ -1,45 +1,36 @@
-Redesigned document detail screen
+New app icon
 
-The document detail screen has been completely redesigned with clearer metadata
-and sheet-based editing for tags, correspondent, document type, storage path,
-dates, ASN, custom fields, and owner. The PDF now pages horizontally with a page
-indicator, and the full-screen preview adds in-document search and smoother
-scrolling. You can delete documents from the detail screen, see how many notes a
-document has, and include the original file when sharing.
+A new icon by The Iconfactory. The previous one is still available in Settings.
 
 
-Multi-column iPad layout
+Offline browsing
 
-The document list and detail screen now use a full multi-column layout on iPad,
-making much better use of the larger screen.
-
-
-Nested tags
-
-The app now supports Paperless-ngx nested (hierarchical) tags.
+Documents you open are kept on your device, with their notes and thumbnails, so
+they open without a connection. Choose "Entire library" to keep everything
+offline, downloaded in the background. A new Offline & Sync screen shows
+progress and storage use.
 
 
-Other Features
+Keep offline
 
-- Quick add: create a tag, correspondent, or document type on the fly right from
-  the picker
-- Show your server's configured app title as a friendly name in the server
-  picker and connection settings
-- Deep links can now open a specific document field for editing
-- Document cells in the list now show the number of notes a document has
-- Add a loading indicator to the search bar while results are loading
-- Renamed "Log out" to "Disconnect" to better reflect what the action does
-- Improved UI responsiveness when loading large amounts of data
-- Ready for saved view permissions and the new task API in the upcoming
-  Paperless-ngx v3
+Pin single documents or whole saved views so they are always available
+offline.
 
 
-Bug Fixes
+Also new
 
-- Show the actual error from your identity provider during OIDC login instead of
-  a cryptic message
-- Fix OIDC login failing behind some reverse proxies
-- Fix client-certificate (mTLS) login
-- Fix a freeze when polling tasks on installations with many pending tasks
-- Fix the task view briefly showing "no elements" while still loading
-- Hide the remove-inbox-tag action for documents that don't have inbox tags
+- Upload files from the Shortcuts app
+- See documents that share the same file (Paperless-ngx v3)
+- Default tags for uploads
+- TOTP codes for OIDC logins
+- Search matches the web interface on Paperless-ngx v3
+
+
+Fixes
+
+- Clearer error messages for connection and permission problems
+- Changes that fail while offline now tell you they weren't saved
+- Pull to refresh picks up a new version of an open document
+- Fixed a crash when opening a filter while another was open
+- The per-app language setting works again
+- Many smaller fixes
