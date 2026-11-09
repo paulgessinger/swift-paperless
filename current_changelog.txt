@@ -79,3 +79,4 @@
 - Long tag names in a document's tag editor are now cut short to fit, instead of widening the sheet and clipping every tag and the add buttons
 - The share extension's fields are no longer cut off at the bottom on iPad
 - Picking a correspondent, document type or storage path from a search in the add-document form now closes the search and keyboard
+- Uploading and logging in with a username and password now work on servers that sign you in automatically (PAPERLESS_AUTO_LOGIN_USERNAME), instead of failing with "CSRF token missing"
