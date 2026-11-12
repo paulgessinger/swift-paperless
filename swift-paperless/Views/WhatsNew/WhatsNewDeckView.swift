@@ -283,22 +283,22 @@ private struct TipBlock: View {
   }
 }
 
-/// Records the choice in ``AppSettings/telemetryOptIn``. The text is a placeholder
-/// until telemetry exists, so it stays out of the string catalogs.
+/// Records the choice in ``AppSettings/telemetryOptIn``. Sharing and not
+/// sharing are two equal buttons, and neither is chosen until the user taps one.
+/// The text is a placeholder until telemetry exists, so it stays out of the
+/// string catalogs.
 private struct TelemetryBlock: View {
   let card: WhatsNewDeck.Card
 
   @Bindable private var appSettings = AppSettings.shared
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack(spacing: 12) {
-        CardView(card: card, moreLabel: "See what's sent")
+    VStack(alignment: .leading, spacing: 14) {
+      CardView(card: card, moreLabel: "See what's sent")
 
-        Toggle(isOn: Binding($appSettings.telemetryOptIn, default: false)) {
-          Text(verbatim: card.title)
-        }
-        .labelsHidden()
+      HStack(spacing: 10) {
+        choiceButton("Don't share", value: false)
+        choiceButton("Share", value: true)
       }
 
       Text(verbatim: "Change this anytime in Settings.")
@@ -307,6 +307,29 @@ private struct TelemetryBlock: View {
     }
     .padding()
     .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 16))
+  }
+
+  @ViewBuilder
+  private func choiceButton(_ title: String, value: Bool) -> some View {
+    let isSelected = appSettings.telemetryOptIn == value
+    let button = Button {
+      appSettings.telemetryOptIn = value
+    } label: {
+      Label {
+        Text(verbatim: title)
+      } icon: {
+        if isSelected { Image(systemName: "checkmark") }
+      }
+      .frame(maxWidth: .infinity)
+    }
+    .controlSize(.large)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+    if isSelected {
+      button.buttonStyle(.borderedProminent)
+    } else {
+      button.buttonStyle(.bordered)
+    }
   }
 }
 

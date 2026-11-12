@@ -14,6 +14,16 @@ import Networking
 import Persistence
 import os
 
+/// How the user signed in to a server. The raw values are stored with the
+/// connection and sent as the health ping's `auth`.
+public enum ConnectionAuthMethod: String, Codable, Equatable, Sendable, CaseIterable {
+  case password
+  case token
+  case sso
+  /// No credentials: the server needs no authentication.
+  case none
+}
+
 public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var id: UUID = .init()
   public var url: URL
@@ -27,6 +37,9 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   /// The server's versions as last probed, which seed its repository so
   /// activation needs no network. `nil` until a probe has succeeded.
   public var knownVersions: BackendVersions? = nil
+  /// How the user last signed in, or `nil` for connections that predate
+  /// recording it.
+  public var authMethod: ConnectionAuthMethod? = nil
 
   public init(
     id: UUID = .init(),
@@ -37,7 +50,8 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     friendlyName: String? = nil,
     offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed,
     syncOverCellular: Bool = false,
-    knownVersions: BackendVersions? = nil
+    knownVersions: BackendVersions? = nil,
+    authMethod: ConnectionAuthMethod? = nil
   ) {
     self.id = id
     self.url = url
@@ -48,6 +62,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.offlineBrowsingMode = offlineBrowsingMode
     self.syncOverCellular = syncOverCellular
     self.knownVersions = knownVersions
+    self.authMethod = authMethod
   }
 
   public var token: String? {
@@ -648,6 +663,18 @@ public final class ConnectionManager {
       } catch {
         Logger.api.error("Downgrade GC failed: \(error)")
       }
+    }
+  }
+
+  /// Records how the user signed in to the connection `id`, after a re-auth.
+  public func setAuthMethod(_ method: ConnectionAuthMethod, for id: UUID) {
+    guard var stored = connections[id], stored.authMethod != method else { return }
+    stored.authMethod = method
+    connections[id] = stored
+    do {
+      try database.upsertConnection(stored.toRecord(needsAuth: needsAuthIds.contains(id)))
+    } catch {
+      Logger.api.error("setAuthMethod DB write failed: \(error)")
     }
   }
 

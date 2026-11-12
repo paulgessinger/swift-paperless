@@ -1,22 +1,22 @@
 //
-//  FeatureFlags.swift
-//  swift-paperless
+//  AppFeatures.swift
+//  AppShared
 //
 //  Created by Paul Gessinger on 24.01.26.
 //
 
-import AppShared
 import Foundation
 
-enum AppFeatures {
+/// Build-dependent feature switches, shared by the app and its extensions.
+public enum AppFeatures: Sendable {
   case tipJar
   case autoFocusSearchInDetailSheets
-  /// The opt-in UI only runs in debug builds until telemetry exists and the
-  /// privacy policy describes it.
+  /// Telemetry and its opt-in UI only run in debug builds until the privacy
+  /// policy describes it.
   case telemetry
   case networkScanner
 
-  static func enabled(_ feature: Self) -> Bool {
+  public static func enabled(_ feature: Self) -> Bool {
     return switch feature {
     case .tipJar: true
     case .autoFocusSearchInDetailSheets: false

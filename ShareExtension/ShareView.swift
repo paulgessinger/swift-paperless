@@ -46,7 +46,9 @@ struct ShareView: View {
     return false
   }
 
+  /// Called once per document, after its upload succeeded.
   private func internalCallback() {
+    TelemetryService.record(.shareExtensionUploaded)
     if !attachmentManager.importUrls.isEmpty {
       attachmentManager.importUrls.removeFirst()
     }

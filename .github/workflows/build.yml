@@ -167,6 +167,25 @@ jobs:
           enable-cache: false
       - run: uv run --project scripts pytest scripts/tests
 
+  telemetry-collector:
+    name: Telemetry collector tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: telemetry-collector
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          enable-cache: false
+      - run: uv run --locked pytest
+      - run: uv run --locked ruff check .
+      - run: uv run --locked ruff format --check .
+      - run: uv run --locked pyright
+
   # The only check branch protection requires. The other job names embed matrix
   # values (iOS/Xcode/runner versions) that change with every toolchain bump;
   # gating on this one job keeps the required-check list stable. `always()` is
@@ -175,7 +194,7 @@ jobs:
   all-green:
     name: CI
     if: always()
-    needs: [build, test, lint, release-tools]
+    needs: [build, test, lint, release-tools, telemetry-collector]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

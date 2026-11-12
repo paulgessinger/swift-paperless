@@ -1,0 +1,46 @@
+:root {
+  --bg: #f7f7f5; --card: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #e3e3e0;
+  --accent: #2f6fde; --warn: #b25000; --bar: #2f6fde;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141416; --card: #1e1e21; --fg: #ececee; --muted: #9a9aa1; --line: #2e2e33;
+    --accent: #6f9cf0; --warn: #f0a050; --bar: #6f9cf0;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 15px; margin: 0 0 10px; }
+h2.spaced { margin-top: 16px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg a { padding: 5px 12px; color: var(--fg); text-decoration: none; border-right: 1px solid var(--line); }
+.seg a:last-child { border-right: 0; }
+.seg a.on { background: var(--accent); color: #fff; }
+.muted { color: var(--muted); }
+.warn { color: var(--warn); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+.big { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.chart { position: relative; height: 220px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 500; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+.hbar { display: grid; grid-template-columns: minmax(70px, auto) 1fr auto; gap: 8px; align-items: center; margin: 3px 0; }
+.hbar > span:last-child { white-space: nowrap; min-width: 84px; text-align: right; }
+.hbar .track { width: 100%; height: 10px; }
+.hbar .bg { fill: var(--line); }
+.hbar .fg { fill: var(--bar); }
+.hbar.unknown .fg { fill: var(--muted); }
+form { margin: 0; }
+button {
+  font: inherit; background: none; border: 1px solid var(--line); color: var(--fg);
+  border-radius: 6px; padding: 4px 10px; cursor: pointer;
+}
