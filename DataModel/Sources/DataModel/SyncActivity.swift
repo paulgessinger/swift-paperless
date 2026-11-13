@@ -41,26 +41,50 @@ public struct SyncActivity: Sendable, Equatable, Identifiable {
   /// and the list doesn't re-animate on every page.
   public var id: Stage { stage }
 
+  /// Which of several views a stage is on, where it proceeds view by view.
+  public struct Part: Sendable, Equatable {
+    /// Zero-based.
+    public var index: Int
+    public var count: Int
+
+    public init(index: Int, count: Int) {
+      self.index = index
+      self.count = count
+    }
+  }
+
   public var stage: Stage
   /// The saved view currently being worked on, where the stage proceeds view by
   /// view. `nil` for the default list and for stages with no such subdivision.
   public var detail: String?
+  /// Progress within the current view where ``part`` is set, otherwise within
+  /// the stage.
   public var completed: Int
-  /// `nil` while the total isn't known yet — the UI shows an indeterminate bar
-  /// rather than a wrong one.
+  /// `nil` while the total isn't known yet.
   public var total: Int?
+  /// `nil` for a stage that doesn't proceed view by view.
+  public var part: Part?
 
-  public init(stage: Stage, detail: String? = nil, completed: Int = 0, total: Int? = nil) {
+  public init(
+    stage: Stage, detail: String? = nil, completed: Int = 0, total: Int? = nil,
+    part: Part? = nil
+  ) {
     self.stage = stage
     self.detail = detail
     self.completed = completed
     self.total = total
+    self.part = part
   }
 
-  /// `0...1`, or `nil` when the total is unknown or degenerate.
+  /// The stage's overall progress in `0...1`, or `nil` when it can't be told.
+  /// With a ``part``, the finished views plus the current view's share.
   public var fraction: Double? {
-    guard let total, total > 0 else { return nil }
-    return min(1, Double(completed) / Double(total))
+    var inner: Double?
+    if let total, total > 0 {
+      inner = min(1, Double(completed) / Double(total))
+    }
+    guard let part, part.count > 0 else { return inner }
+    return min(1, (Double(part.index) + (inner ?? 0)) / Double(part.count))
   }
 }
 
