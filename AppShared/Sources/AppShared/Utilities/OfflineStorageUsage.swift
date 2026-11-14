@@ -4,7 +4,7 @@
 //
 //  What the offline data occupies on disk, for the Offline & Sync screen's
 //  Storage section. The database measures its own files; the downloaded
-//  files and thumbnails are summed from the file index, no directory walk.
+//  files, texts and thumbnails are summed from the file index, no directory walk.
 //
 
 import Common
@@ -25,7 +25,7 @@ public struct OfflineStorageUsage: Sendable, Equatable {
   }
 
   public var totalBytes: Int64 {
-    database.bytes + files.documents.bytes + files.thumbnails.bytes
+    database.bytes + files.documents.bytes + files.text.bytes + files.thumbnails.bytes
   }
 
   /// Measure the database's files and read the index. The file walk is

@@ -3715,6 +3715,19 @@
         }
       }
     },
+    "offlineStorageText" : {
+      "comment" : "Row label in the Storage section: size of the documents' OCR text downloaded for offline use, for all servers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document text"
+          }
+        }
+      }
+    },
+
     "offlineSyncDocuments" : {
       "comment" : "Offline & Sync status row label: the server's documents on the device",
       "extractionState" : "manual",

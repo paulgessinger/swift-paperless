@@ -3,7 +3,7 @@
 //  swift-paperless
 //
 //  Read-only statistics on how much disk the offline data takes: the database,
-//  downloaded document files and thumbnails. Its own view so the Offline & Sync
+//  downloaded document files, their OCR text and thumbnails. Its own view so the Offline & Sync
 //  screen only has to place it.
 //
 
@@ -28,6 +28,8 @@ struct OfflineStorageSection: View {
           String(localized: .settings(.offlineStorageDocuments)),
           bytes: usage?.files.documents.bytes,
           caption: documentsCaption)
+        Divider()
+        sizeRow(String(localized: .settings(.offlineStorageText)), bytes: usage?.files.text.bytes)
         Divider()
         sizeRow(
           String(localized: .settings(.offlineStorageThumbnails)),

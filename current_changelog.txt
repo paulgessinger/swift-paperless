@@ -81,3 +81,4 @@
 - Picking a correspondent, document type or storage path from a search in the add-document form now closes the search and keyboard
 - Uploading and logging in with a username and password now work on servers that sign you in automatically (PAPERLESS_AUTO_LOGIN_USERNAME), instead of failing with "CSRF token missing"
 - The Offline & Sync screen now lists the steps of a sync as it runs, and shows which saved view and how many documents each step is on, so a long sync is visibly moving
+- The Storage section of the Offline & Sync screen now shows the space taken by the documents' OCR text separately from the document files

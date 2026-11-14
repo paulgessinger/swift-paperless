@@ -22,20 +22,21 @@ public struct FileAdoption: Sendable, Equatable {
   }
 }
 
-/// What the indexed files occupy, summed from `size`. Documents are the
-/// originals, archives and texts; thumbnails are kept apart because they are
-/// not budgeted.
+/// What the indexed files occupy, summed from `size`, split by kind: document
+/// files (originals and archives), their OCR texts, and thumbnails.
 public struct FileUsage: Sendable, Equatable {
   public var documents: DiskUsage
   public var documentsByServer: [UUID: DiskUsage]
+  public var text: DiskUsage
   public var thumbnails: DiskUsage
 
   public init(
     documents: DiskUsage = .zero, documentsByServer: [UUID: DiskUsage] = [:],
-    thumbnails: DiskUsage = .zero
+    text: DiskUsage = .zero, thumbnails: DiskUsage = .zero
   ) {
     self.documents = documents
     self.documentsByServer = documentsByServer
+    self.text = text
     self.thumbnails = thumbnails
   }
 }
@@ -238,9 +239,12 @@ extension Database {
       try await writer.read { db in
         var usage = FileUsage()
         for row in try Self.fileUsageByServerAndKind(db) {
-          if row.kind == ContentStore.Kind.thumbnail.rawValue {
+          switch ContentStore.Kind(rawValue: row.kind) {
+          case .thumbnail:
             usage.thumbnails += row.usage
-          } else {
+          case .content:
+            usage.text += row.usage
+          case .original, .archive, nil:
             usage.documents += row.usage
             usage.documentsByServer[row.serverID, default: .zero] += row.usage
           }
