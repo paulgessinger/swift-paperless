@@ -149,6 +149,16 @@ enum MembershipRewriteOutcome: Equatable {
 /// protocol (which stays technology-agnostic). A repository that isn't a
 /// `CachingBackend` (preview, Share Extension, tests) makes the store fall back
 /// to direct-network behavior.
+/// Which view of a library fill may still report its pages.
+@MainActor
+private final class FillReportGate {
+  var index: Int?
+}
+
+/// Reports a query fill's progress page by page: the rows written so far and
+/// the server's total, if known.
+public typealias QueryFillPageReporter = @Sendable (_ position: Int, _ total: UInt?) -> Void
+
 @MainActor
 public protocol CachingBackend: AnyObject, Sendable {
   /// Fetch the permissions / UI-settings singleton and write it to the cache.
@@ -182,7 +192,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// and the proactive library sweep, and the transfer meter has to tell those
   /// apart. It is a parameter rather than the ambient task-local because the
   /// paging runs on a detached task, which inherits no task-local.
-  func fillQuery(filter: FilterState, category: TransferCategory) async throws -> QueryFillHandle
+  ///
+  /// `onPage` is called off the main actor after each page is written, with
+  /// the rows written so far and the server's total.
+  func fillQuery(
+    filter: FilterState, category: TransferCategory, onPage: QueryFillPageReporter?
+  ) async throws -> QueryFillHandle
 
   /// Suspend until nothing is writing `key`'s cached order: no fill, and no
   /// membership or reachability sweep holding the key.
@@ -239,7 +254,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// entered a view appear offline. Only ids with a cached `document` row are
   /// added (their detail arrives via R3δ in the same reconcile). No-op unless
   /// *Entire library* is enabled.
-  func reconcileSavedViewMembership() async throws
+  func reconcileSavedViewMembership(progress: SyncProgressReporter?) async throws
 
   /// Re-sync one list's cached membership from the Tier-0 id projection, and
   /// fetch the objects missing from its first `window` rows, so the list on
@@ -290,7 +305,7 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// - Returns: how many members joined and rows were fetched, so the caller
   ///   can queue their files.
   @discardableResult
-  func reconcileKeptOffline() async throws -> Int
+  func reconcileKeptOffline(progress: SyncProgressReporter?) async throws -> Int
 
   /// Sync one kept saved view from the server's id list: its members become
   /// what the view lists now, its cached list follows, and every kept document
@@ -540,9 +555,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   /// `.full`. Page 1 is awaited (first window + exact count); the rest pages in
   /// the background. Shared by the interactive on-open path and the proactive
   /// library fill.
-  public func fillQuery(filter: FilterState, category: TransferCategory) async throws
-    -> QueryFillHandle
-  {
+  public func fillQuery(
+    filter: FilterState, category: TransferCategory, onPage: QueryFillPageReporter?
+  ) async throws -> QueryFillHandle {
     let key = QueryKey(serverID: serverID, filter: filter)
     // Pin the key before the first suspension: from here until the sweep next
     // reconsiders it, this key counts as in use even if its fill never lands a
@@ -608,6 +623,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
                 totalCount: total, basis: basis)
             else { throw CancellationError() }
             position = batch.count
+            onPage?(position, total)
             pageOne.yield(total)
             pageOne.finish()
           } catch {
@@ -633,11 +649,13 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
             // may already have landed — writing here would graft our stale
             // positions onto its rows.
             try Task.checkCancellation()
+            let total = await source.totalCount
             try await database.appendQueryPage(
               queryKey: key, serverID: serverID, documents: batch,
-              startPosition: position, totalCount: await source.totalCount,
+              startPosition: position, totalCount: total,
               deletions: deletions)
             position += batch.count
+            onPage?(position, total)
           }
 
           // Reached the end of the query: the cached order is now its complete
@@ -720,6 +738,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     // Whether every view that failed did so because the device is offline. A
     // pass like that is the network, not the library, and says so at `.info`.
     var failedOnlyOffline = true
+    // The view whose pages may still report. A page's report hops to the main
+    // actor, so one can land after its view, or the stage, has ended.
+    let reporting = FillReportGate()
+    defer { reporting.index = nil }
     Logger.sync.info(
       "Library fill: \(views.count, privacy: .public) view(s) for server \(self.serverLogLabel, privacy: .public)"
     )
@@ -733,14 +755,22 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         Logger.sync.info("Library fill: mode left Entire library mid-pass; stopping")
         return
       }
-      progress?(
-        SyncActivity(
-          stage: .libraryFill, detail: name, completed: index, total: views.count))
+      let part = SyncActivity.Part(index: index, count: views.count)
+      progress?(SyncActivity(stage: .libraryFill, detail: name, part: part))
+      reporting.index = index
       let key = QueryKey(serverID: serverID, filter: filter)
       do {
         // Sequential: let each query's background paging finish before the next,
         // so we never run N concurrent paging chains against the server.
-        let handle = try await fillQuery(filter: filter, category: .fill)
+        let handle = try await fillQuery(filter: filter, category: .fill) { position, total in
+          Task { @MainActor in
+            guard reporting.index == index else { return }
+            progress?(
+              SyncActivity(
+                stage: .libraryFill, detail: name, completed: position,
+                total: total.map { Int($0) }, part: part))
+          }
+        }
         // `fillQuery` pages the rest of the view on a *detached* task, which
         // inherits no cancellation, and awaiting a `Task<Void, Never>` neither
         // throws nor propagates one. Without this bridge the only cancellation
@@ -1555,14 +1585,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  public func reconcileKeptOffline() async throws -> Int {
+  public func reconcileKeptOffline(progress: SyncProgressReporter?) async throws -> Int {
     var changes = 0
     let savedViews = Dictionary(
       try await database.elements(SavedViewRecord.self, serverID: serverID).map { ($0.id, $0) },
       uniquingKeysWith: { first, _ in first })
-    for kept in try await database.keptOfflineViews(serverID: serverID) {
+    let keptViews = try await database.keptOfflineViews(serverID: serverID)
+    for (index, kept) in keptViews.enumerated() {
       try Task.checkCancellation()
       guard let view = savedViews[kept.savedViewID] else { continue }
+      progress?(
+        SyncActivity(
+          stage: .reconcile, detail: view.name,
+          part: SyncActivity.Part(index: index, count: keptViews.count)))
       let key = QueryKey(serverID: serverID, filter: FilterState(savedView: view))
       do {
         changes += try await syncKeptOfflineView(view)
@@ -1623,7 +1658,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return fetched
   }
 
-  public func reconcileSavedViewMembership() async throws {
+  public func reconcileSavedViewMembership(progress: SyncProgressReporter?) async throws {
     guard offlineBrowsingMode == .entireLibrary else { return }
     // Nothing cached ⇒ the proactive fill seeds membership first.
     guard try await !database.allDocumentIDs(serverID: serverID).isEmpty else { return }
@@ -1634,8 +1669,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
     let views: [(name: String?, filter: FilterState)] =
       [(nil, .default)] + savedViews.map { ($0.name, FilterState(savedView: $0)) }
-    for (name, filter) in views {
+    for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
+      progress?(
+        SyncActivity(
+          stage: .reconcile, detail: name,
+          part: SyncActivity.Part(index: index, count: views.count)))
       let key = QueryKey(serverID: serverID, filter: filter)
       do {
         // No hydration: on a cold cache every id can be missing, and filling

@@ -37,6 +37,11 @@ public struct OfflineSyncView: View {
   /// The active server's figures, observed while this screen is up.
   @State private var status: OfflineStatus?
 
+  /// Whether the steps are listed: during a pass and shortly after it.
+  @State private var stepsVisible = false
+
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
   private var libraryFileProgress: LibraryFileProgress { status?.libraryFileProgress ?? .zero }
   private var keptOfflineFileProgress: LibraryFileProgress {
     status?.keptOfflineFileProgress ?? .zero
@@ -94,31 +99,79 @@ public struct OfflineSyncView: View {
   }
 
   public var body: some View {
-    Form {
-      Section {
-        Picker(
-          selection: Binding(
-            get: { connectionManager.activeOfflineBrowsingMode },
-            set: { newMode in
-              // Leaving Entire library reclaims the cache, which is destructive
-              // and can't be undone short of downloading it all again. Confirm
-              // first; until then the picker snaps back, because `get:` still
-              // reads the unchanged stored mode.
-              if connectionManager.activeOfflineBrowsingMode == .entireLibrary,
-                newMode == .recentlyBrowsed
-              {
-                downgradeRequested = true
-              } else {
-                connectionManager.setOfflineBrowsingMode(newMode)
-                if newMode == .entireLibrary {
-                  Task { await store.fillIfEnabled(phases: plannedPhases, force: true) }
+    ScrollView {
+      VStack(spacing: 0) {
+        modeSection
+        cellularSection
+        statusSection
+
+        // Empty renders nothing.
+        SyncFailuresSection(
+          failures: store.syncFailures.filter {
+            mode == .entireLibrary || !$0.site.isEntireLibraryOnly
+          })
+
+        problemsSection
+        transferSection
+        OfflineStorageSection()
+      }
+      .labeledContentStyle(StatusRowStyle())
+      // On the whole stack, so the sections below the status block move with
+      // it as it changes height.
+      .animation(
+        reduceMotion ? nil : .snappy(duration: 0.35),
+        value: SyncStepList.layoutKey(headline: headline, steps: displayedSteps))
+    }
+    .background(Color(uiColor: .systemGroupedBackground))
+    .task { libraryTotal = await store.libraryDocumentCount() }
+    .task(id: store.activeServerID) { status = store.makeOfflineStatus() }
+    // The steps stay up briefly after the pass, so the last one is seen to
+    // finish.
+    .task(id: isBusy) {
+      if isBusy {
+        stepsVisible = true
+      } else {
+        try? await Task.sleep(for: .seconds(1.5))
+        if !Task.isCancelled { stepsVisible = false }
+      }
+    }
+    .navigationTitle(Text(.settings(.offlineSyncTitle)))
+    .navigationBarTitleDisplayMode(.inline)
+  }
+
+  private var modeSection: some View {
+    CustomSection {
+      CustomSectionRow {
+        LabeledContent {
+          Picker(
+            selection: Binding(
+              get: { connectionManager.activeOfflineBrowsingMode },
+              set: { newMode in
+                // Leaving Entire library reclaims the cache, which is destructive
+                // and can't be undone short of downloading it all again. Confirm
+                // first; until then the picker snaps back, because `get:` still
+                // reads the unchanged stored mode.
+                if connectionManager.activeOfflineBrowsingMode == .entireLibrary,
+                  newMode == .recentlyBrowsed
+                {
+                  downgradeRequested = true
+                } else {
+                  connectionManager.setOfflineBrowsingMode(newMode)
+                  if newMode == .entireLibrary {
+                    Task { await store.fillIfEnabled(phases: plannedPhases, force: true) }
+                  }
                 }
-              }
-            })
-        ) {
-          ForEach(OfflineBrowsingMode.allCases, id: \.self) { mode in
-            Text(mode.localizedName).tag(mode)
+              })
+          ) {
+            ForEach(OfflineBrowsingMode.allCases, id: \.self) { mode in
+              Text(mode.localizedName).tag(mode)
+            }
+          } label: {
+            Text(.settings(.offlineBrowsingModeLabel))
           }
+          .labelsHidden()
+          .pickerStyle(.menu)
+          .tint(.secondary)
         } label: {
           Text(.settings(.offlineBrowsingModeLabel))
         }
@@ -137,18 +190,22 @@ public struct OfflineSyncView: View {
         } message: {
           Text(.settings(.offlineBrowsingDowngradeMessage))
         }
-      } header: {
-        Text(.settings(.offlineBrowsingModeHeader))
-      } footer: {
-        VStack(alignment: .leading, spacing: 6) {
-          Text(.settings(.offlineBrowsingModeDescription))
-          if recommendsEntireLibrary {
-            Text(.settings(.offlineBrowsingModeRecommendation))
-          }
+      }
+    } header: {
+      Text(.settings(.offlineBrowsingModeHeader))
+    } footer: {
+      VStack(alignment: .leading, spacing: 6) {
+        Text(.settings(.offlineBrowsingModeDescription))
+        if recommendsEntireLibrary {
+          Text(.settings(.offlineBrowsingModeRecommendation))
         }
       }
+    }
+  }
 
-      Section {
+  private var cellularSection: some View {
+    CustomSection {
+      CustomSectionRow {
         Toggle(
           isOn: Binding(
             get: { connectionManager.activeSyncOverCellular },
@@ -156,156 +213,254 @@ public struct OfflineSyncView: View {
         ) {
           Text(.settings(.offlineSyncCellularLabel))
         }
-      } footer: {
-        Text(.settings(.offlineSyncCellularDescription))
+        // A toggle lays itself out as labeled content; the status rows'
+        // baseline alignment would push the switch down.
+        .labeledContentStyle(.automatic)
       }
+    } footer: {
+      Text(.settings(.offlineSyncCellularDescription))
+    }
+  }
 
-      Section {
-        // One row per running stage, in a fixed order. They overlap — a
-        // reconcile is usually still going when a fill starts — so showing only
-        // the "main" one hid work that was genuinely in progress. Each row is a
-        // single cell so its bar and caption sit under its own label rather than
-        // carrying a separator of their own.
-        if store.syncActivities.isEmpty {
-          statusRow(String(localized: .settings(.offlineSyncActivity)), value: activityText)
-        } else {
-          ForEach(store.syncActivities) { activity in
-            let activity = displayed(activity)
-            // The label on a line of its own and the count on the caption
-            // line: side by side, a growing count wrapped the row back and
-            // forth between one line and two.
-            VStack(alignment: .leading, spacing: 8) {
-              Text(stageLabel(for: activity.stage))
-              // `nil` fraction ⇒ indeterminate, for a stage that hasn't worked
-              // out its total yet.
-              ActivityBar(fraction: activity.fraction)
-              HStack(alignment: .firstTextBaseline) {
-                activityCaption(for: activity)
-                  .lineLimit(1)
-                Spacer(minLength: 8)
-                if let total = activity.total {
-                  Text(
-                    progressCountText(
-                      for: activity.stage, completed: activity.completed, total: total)
-                  )
-                  .monospacedDigit()
-                  .fixedSize()
-                }
-              }
-              .font(.caption)
-              .foregroundStyle(.secondary)
-            }
-            .accessibilityElement(children: .combine)
-          }
-        }
-        // The download row counts the same files, so the rows that count
+  private var statusSection: some View {
+    CustomSection {
+      VStack(spacing: 0) {
+        SyncStepList(headline: headline, steps: displayedSteps)
+        // The download step counts the same files, so the rows that count
         // them step aside while it shows.
         if mode == .recentlyBrowsed || !isDownloading {
-          documentsRow
+          Divider()
+          CustomSectionRow { documentsRow }
         }
         keptOfflineRow
-        dateStatusRow(
-          String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
+        Divider()
+        CustomSectionRow {
+          dateStatusRow(
+            String(localized: .settings(.offlineSyncLastRefresh)), date: status?.lastRefreshedAt)
+        }
+        Divider()
+        CustomSectionRow { syncNowButton }
+      }
+    } header: {
+      Text(.settings(.offlineSyncStatusHeader))
+    }
+  }
 
-        Button {
-          Task {
-            // Explicit user action: bypass the reconcile throttle and the
-            // link gate, and force a re-fill ignoring the freshness marker.
-            //
-            // `userInitiated` makes the sync rethrow instead of failing soft,
-            // so a failed "Sync now" is reported rather than looking identical
-            // to one that worked.
-            syncNowRunning = true
-            defer { syncNowRunning = false }
-            let announcedOffline = errorController.noteOfflineIfNeeded()
-            do {
-              try await store.sync(userInitiated: true)
-            } catch {
-              if !announcedOffline {
-                errorController.push(readError: error)
+  private var syncNowButton: some View {
+    Button {
+      Task {
+        // Explicit user action: bypass the reconcile throttle and the
+        // link gate, and force a re-fill ignoring the freshness marker.
+        //
+        // `userInitiated` makes the sync rethrow instead of failing soft,
+        // so a failed "Sync now" is reported rather than looking identical
+        // to one that worked.
+        syncNowRunning = true
+        defer { syncNowRunning = false }
+        let announcedOffline = errorController.noteOfflineIfNeeded()
+        do {
+          try await store.sync(userInitiated: true)
+        } catch {
+          if !announcedOffline {
+            errorController.push(readError: error)
+          }
+        }
+        // `.full` rather than the planned phases: this is the user asking
+        // for the work outright, so the link gate doesn't apply. Saying so
+        // in the phase set beats claiming the network is unmetered when it
+        // isn't.
+        await store.fillIfEnabled(phases: .full, force: true)
+      }
+    } label: {
+      Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
+        .foregroundStyle(syncNowBusy ? Color.secondary : Color.accentColor)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    // Any work on this server, not just the library fill: the detail fill
+    // left this enabled, so a second pass could be stacked on a running one.
+    .disabled(syncNowBusy)
+  }
+
+  @ViewBuilder
+  private var problemsSection: some View {
+    if !visibleSyncErrors.isEmpty {
+      CustomSection {
+        VStack(spacing: 0) {
+          ForEach(Array(visibleSyncErrors.enumerated()), id: \.element.id) { index, error in
+            if index > 0 { Divider() }
+            CustomSectionRow {
+              VStack(alignment: .leading, spacing: 2) {
+                Text(error.savedViewName ?? String(localized: .settings(.offlineSyncDefaultView)))
+                Text(error.message)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                Text(error.failedAt.formatted(.relative(presentation: .named)))
+                  .font(.caption2)
+                  .foregroundStyle(.tertiary)
               }
             }
-            // `.full` rather than the planned phases: this is the user asking
-            // for the work outright, so the link gate doesn't apply. Saying so
-            // in the phase set beats claiming the network is unmetered when it
-            // isn't.
-            await store.fillIfEnabled(phases: .full, force: true)
           }
-        } label: {
-          // Explicit `foregroundStyle`, not just `.disabled`: a `Label`'s icon
-          // in a `Form` row button doesn't pick up the row's disabled dimming
-          // the way its text does, so a disabled row otherwise reads as a
-          // grayed-out title next to a still-accent-coloured icon.
-          Label(String(localized: .settings(.offlineSyncNow)), systemImage: "arrow.clockwise")
-            .foregroundStyle(syncNowBusy ? Color.secondary : Color.accentColor)
         }
-        // Any work on this server, not just the library fill: the detail fill
-        // left this enabled, so a second pass could be stacked on a running one.
-        .disabled(syncNowBusy)
       } header: {
-        Text(.settings(.offlineSyncStatusHeader))
+        Label(
+          String(localized: .settings(.offlineSyncProblemsHeader)),
+          systemImage: "exclamationmark.triangle")
+      } footer: {
+        Text(.settings(.offlineSyncProblemsDescription))
       }
-      .labeledContentStyle(StatusRowStyle())
+    }
+  }
 
-      // Empty renders nothing.
-      SyncFailuresSection(
-        failures: store.syncFailures.filter {
-          mode == .entireLibrary || !$0.site.isEntireLibraryOnly
-        })
-
-      if !visibleSyncErrors.isEmpty {
-        Section {
-          ForEach(visibleSyncErrors) { error in
-            VStack(alignment: .leading, spacing: 2) {
-              Text(error.savedViewName ?? String(localized: .settings(.offlineSyncDefaultView)))
-              Text(error.message)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-              Text(error.failedAt.formatted(.relative(presentation: .named)))
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-            }
-          }
-        } header: {
-          Label(
-            String(localized: .settings(.offlineSyncProblemsHeader)),
-            systemImage: "exclamationmark.triangle")
-        } footer: {
-          Text(.settings(.offlineSyncProblemsDescription))
+  private var transferSection: some View {
+    CustomSection {
+      VStack(spacing: 0) {
+        CustomSectionRow {
+          statusRow(String(localized: .settings(.offlineSyncTotal)), value: byteText(stats.total))
         }
-      }
-
-      Section {
-        statusRow(String(localized: .settings(.offlineSyncTotal)), value: byteText(stats.total))
         ForEach(TransferCategory.allCases, id: \.self) { category in
           let bytes = stats.bytesByCategory[category] ?? 0
           if bytes > 0 {
-            statusRow(category.localizedName, value: byteText(bytes))
+            Divider()
+            CustomSectionRow {
+              statusRow(category.localizedName, value: byteText(bytes))
+            }
           }
         }
-        Button(role: .destructive) {
-          stats.reset()
-        } label: {
-          Text(.settings(.offlineSyncResetStatistics))
-        }
-      } header: {
-        Text(.settings(.offlineSyncDataTransferredHeader))
-      } footer: {
-        // Say what "Total" covers, and that opening a document already in the
-        // offline cache costs nothing, so a small Documents row isn't read as
-        // the meter missing traffic.
-        VStack(alignment: .leading, spacing: 4) {
-          Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
-          Text(.settings(.offlineSyncDataScopeAll))
+        Divider()
+        CustomSectionRow {
+          Button(role: .destructive) {
+            stats.reset()
+          } label: {
+            Text(.settings(.offlineSyncResetStatistics))
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .contentShape(Rectangle())
+          }
         }
       }
-
-      OfflineStorageSection()
+    } header: {
+      Text(.settings(.offlineSyncDataTransferredHeader))
+    } footer: {
+      // Say what "Total" covers, and that opening a document already in the
+      // offline cache costs nothing, so a small Documents row isn't read as
+      // the meter missing traffic.
+      VStack(alignment: .leading, spacing: 4) {
+        Text(.settings(.offlineSyncDataSince(formattedDate(stats.since))))
+        Text(.settings(.offlineSyncDataScopeAll))
+      }
     }
-    .task { libraryTotal = await store.libraryDocumentCount() }
-    .task(id: store.activeServerID) { status = store.makeOfflineStatus() }
-    .navigationTitle(Text(.settings(.offlineSyncTitle)))
-    .navigationBarTitleDisplayMode(.inline)
+  }
+
+  // MARK: - Sync steps
+
+  /// Work is running or downloads are in flight, which outlast the step that
+  /// queued them.
+  private var isBusy: Bool { syncNowBusy || !store.syncActivities.isEmpty }
+
+  /// The stages a pass on this server covers, so the list is complete from
+  /// its start.
+  private var listedStages: Set<SyncActivity.Stage> {
+    var stages: Set<SyncActivity.Stage> = [.elementSync, .reconcile]
+    if mode == .entireLibrary {
+      stages.formUnion(SyncActivity.Stage.allCases)
+    } else if !store.keptOfflineViewIDs.isEmpty || !store.keptOfflineDocumentIDs.isEmpty {
+      stages.formUnion([.contentFill, .fileDownload])
+    }
+    return stages.union(store.syncActivities.map(\.stage))
+  }
+
+  private var displayedSteps: [SyncStepDisplay] {
+    guard stepsVisible else { return [] }
+    return SyncStep.steps(
+      for: listedStages, activities: store.syncActivities.map(displayed),
+      completed: store.completedSyncStages
+    ).map { step in
+      var display = SyncStepDisplay(
+        id: String(describing: step.stage), title: stepTitle(for: step.stage))
+      switch step.state {
+      case .pending:
+        // A step the finished pass never reported had nothing to do.
+        display.state = isBusy ? .pending : .done
+      case .done:
+        display.state = .done
+      case .running:
+        display.state = .running
+        if let activity = step.activity {
+          display.caption = caption(for: activity)
+          display.count = countText(for: activity)
+          display.fraction = activity.fraction
+        }
+      }
+      return display
+    }
+  }
+
+  private var headline: SyncHeadline {
+    if isBusy {
+      let steps = displayedSteps
+      let done = steps.filter { $0.state == .done }.count
+      return SyncHeadline(
+        kind: .syncing, title: String(localized: .settings(.offlineSyncSyncing)),
+        detail: steps.isEmpty
+          ? nil : String(localized: .settings(.offlineSyncStepCount(done, steps.count))))
+    }
+    if store.libraryFilesPausedLowStorage {
+      return SyncHeadline(
+        kind: .paused, title: String(localized: .settings(.offlineSyncPausedLowStorage)))
+    }
+    if waitingForNetwork {
+      return SyncHeadline(
+        kind: .waiting, title: String(localized: .settings(.offlineSyncWaitingForWifi)))
+    }
+    if status?.lastRefreshedAt != nil, store.syncFailures.isEmpty, visibleSyncErrors.isEmpty {
+      return SyncHeadline(
+        kind: .upToDate, title: String(localized: .settings(.offlineSyncUpToDate)))
+    }
+    return SyncHeadline(kind: .idle, title: String(localized: .settings(.offlineSyncIdle)))
+  }
+
+  private func stepTitle(for stage: SyncActivity.Stage) -> String {
+    switch stage {
+    case .elementSync: String(localized: .settings(.offlineSyncStepElements))
+    case .reconcile: String(localized: .settings(.offlineSyncStepReconcile))
+    case .libraryFill: String(localized: .settings(.offlineSyncStepLists))
+    case .detailFill: String(localized: .settings(.offlineSyncStepDetails))
+    case .contentFill: String(localized: .settings(.offlineSyncStepText))
+    case .fileDownload: String(localized: .settings(.offlineSyncStepFiles))
+    }
+  }
+
+  /// What the running step is on: the saved view where it goes view by view,
+  /// and the downloads' own figures.
+  private func caption(for activity: SyncActivity) -> String? {
+    if activity.stage == .fileDownload { return fileDownloadCaption }
+    guard let part = activity.part else { return activity.detail }
+    // A `nil` name is the default list.
+    let name = activity.detail ?? String(localized: .settings(.offlineSyncDefaultView))
+    // The reconcile has no count of its own there, so the position goes in
+    // the count's place.
+    guard activity.stage != .reconcile else { return name }
+    return String(
+      localized: .settings(.offlineSyncViewPosition(name, part.index + 1, part.count)))
+  }
+
+  private func countText(for activity: SyncActivity) -> String? {
+    if let total = activity.total {
+      let resource: LocalizedStringResource =
+        switch activity.stage {
+        // The reconcile counts changed documents, not documents overall.
+        case .reconcile: .settings(.offlineSyncReconcileProgressCount(activity.completed, total))
+        case .fileDownload: .settings(.offlineSyncFileProgressCount(activity.completed, total))
+        case .libraryFill, .detailFill, .contentFill, .elementSync:
+          .settings(.offlineSyncProgressCount(activity.completed, total))
+        }
+      return String(localized: resource)
+    }
+    if activity.stage == .reconcile, let part = activity.part {
+      return String(localized: .settings(.offlineSyncViewCount(part.index + 1, part.count)))
+    }
+    return nil
   }
 
   /// The total, captioned with what it is made of, leading to the kept saved
@@ -316,13 +471,24 @@ public struct OfflineSyncView: View {
     let viewCount = store.keptOfflineViewIDs.count
     let ownCount = store.keptOfflineDocumentIDs.count
     if viewCount > 0 {
-      NavigationLink {
-        KeptOfflineViewsView(status: status)
-      } label: {
-        keptOfflineSummary(views: viewCount, documents: ownCount)
+      Divider()
+      CustomSectionRow {
+        NavigationLink {
+          KeptOfflineViewsView(status: status)
+        } label: {
+          HStack(spacing: 8) {
+            keptOfflineSummary(views: viewCount, documents: ownCount)
+            Image(systemName: "chevron.right")
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(.tertiary)
+          }
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
       }
     } else if ownCount > 0 {
-      keptOfflineSummary(views: viewCount, documents: ownCount)
+      Divider()
+      CustomSectionRow { keptOfflineSummary(views: viewCount, documents: ownCount) }
     }
   }
 
@@ -361,43 +527,6 @@ public struct OfflineSyncView: View {
     }
   }
 
-  private func stageLabel(for stage: SyncActivity.Stage) -> String {
-    switch stage {
-    case .libraryFill: String(localized: .settings(.offlineSyncFilling))
-    case .detailFill: String(localized: .settings(.offlineSyncDetailFill))
-    case .contentFill: String(localized: .settings(.offlineSyncContentFill))
-    case .fileDownload: String(localized: .settings(.offlineSyncFileDownload))
-    case .reconcile: String(localized: .settings(.offlineSyncReconciling))
-    case .elementSync: String(localized: .settings(.offlineSyncRefreshing))
-    }
-  }
-
-  /// The reconcile stage counts changed documents, not documents overall —
-  /// "3 of 15" reads as meaningless there (of *what*?) where it's obvious for
-  /// the other stages from their label. Only that stage gets a labeled count.
-  private func progressCountText(for stage: SyncActivity.Stage, completed: Int, total: Int)
-    -> LocalizedStringResource
-  {
-    switch stage {
-    case .reconcile: .settings(.offlineSyncReconcileProgressCount(completed, total))
-    case .fileDownload: .settings(.offlineSyncFileProgressCount(completed, total))
-    case .libraryFill, .detailFill, .contentFill, .elementSync:
-      .settings(.offlineSyncProgressCount(completed, total))
-    }
-  }
-
-  /// Only reached when nothing is running — the stage rows speak for themselves
-  /// otherwise. Says *why* it's not running where there's a reason to give.
-  private var activityText: String {
-    if store.libraryFilesPausedLowStorage {
-      String(localized: .settings(.offlineSyncPausedLowStorage))
-    } else if waitingForNetwork {
-      String(localized: .settings(.offlineSyncWaitingForWifi))
-    } else {
-      String(localized: .settings(.offlineSyncIdle))
-    }
-  }
-
   /// What the downloads cover: the whole library in *Entire library*, the
   /// kept documents otherwise, as the downloader scopes them.
   private var downloadProgress: LibraryFileProgress {
@@ -413,20 +542,6 @@ public struct OfflineSyncView: View {
     activity.completed = downloadProgress.downloadedFiles
     activity.total = downloadProgress.totalDocuments
     return activity
-  }
-
-  @ViewBuilder
-  private func activityCaption(for activity: SyncActivity) -> some View {
-    if let detail = activity.detail {
-      Text(detail)
-    } else if activity.stage == .libraryFill {
-      // `nil` here means "on the default list" (a saved view's name is never
-      // nil), not "no detail to show" — say so, rather than leaving the
-      // caption blank while it's already working.
-      Text(.settings(.offlineSyncDefaultView))
-    } else if activity.stage == .fileDownload {
-      Text(fileDownloadCaption)
-    }
   }
 
   /// Under the download row: what is on the device and how many files are
@@ -581,34 +696,6 @@ private struct StatusRowStyle: LabeledContentStyle {
           .layoutPriority(1)
       }
       .accessibilityElement(children: .combine)
-    }
-  }
-}
-
-/// A linear bar whose advance animates across the display cadence, so it
-/// moves on between the throttled updates. Drawn rather than a
-/// `ProgressView`, which jumps to each new value whatever the animation.
-private struct ActivityBar: View {
-  /// `nil` is indeterminate.
-  let fraction: Double?
-
-  var body: some View {
-    if let fraction {
-      Capsule()
-        .fill(.quaternary)
-        .overlay {
-          Capsule()
-            .fill(.tint)
-            .scaleEffect(x: min(max(fraction, 0), 1), anchor: .leading)
-        }
-        .clipShape(Capsule())
-        .frame(height: 4)
-        .animation(.linear(duration: 0.45), value: fraction)
-        .accessibilityElement()
-        .accessibilityValue(Text(fraction, format: .percent.precision(.fractionLength(0))))
-    } else {
-      ProgressView()
-        .progressViewStyle(.linear)
     }
   }
 }

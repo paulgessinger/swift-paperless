@@ -3715,60 +3715,6 @@
         }
       }
     },
-    "offlineSyncActivity" : {
-      "comment" : "Row label on the Offline & Sync screen whose value says what the sync is doing right now",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktivitet"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktivität"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activity"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activité"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attività"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activiteit"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktywność"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Etkinlik"
-          }
-        }
-      }
-    },
     "offlineSyncDocuments" : {
       "comment" : "Offline & Sync status row label: the server's documents on the device",
       "extractionState" : "manual",
@@ -4795,114 +4741,6 @@
         }
       }
     },
-    "offlineSyncDetailFill" : {
-      "comment" : "Activity label on the Offline & Sync screen while per-document notes and file metadata are downloading",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Henter dokumentdetaljer…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumentdetails werden geladen…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading document details…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Téléchargement des détails des documents…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download dei dettagli dei documenti…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documentgegevens downloaden…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pobieranie szczegółów dokumentów…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doküman ayrıntıları indiriliyor…"
-          }
-        }
-      }
-    },
-    "offlineSyncContentFill" : {
-      "comment" : "Activity label on the Offline & Sync screen while the full OCR text of documents is downloading",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Henter dokumenttekst…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumenttext wird heruntergeladen…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading document text…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Téléchargement du texte des documents…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download del testo dei documenti…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documenttekst downloaden…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pobieranie tekstu dokumentów…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doküman metni indiriliyor…"
-          }
-        }
-      }
-    },
     "offlineSyncFailureSiteFileFill" : {
       "comment" : "Name of a sync step in the Offline & Sync error list: downloading the library's document PDFs ahead of time",
       "extractionState" : "manual",
@@ -5065,60 +4903,6 @@
         }
       }
     },
-    "offlineSyncFileDownload" : {
-      "comment" : "Activity label on the Offline & Sync screen while the PDFs of the library are downloading ahead of time",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Henter dokumentfiler…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumentdateien werden geladen…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading document files…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Téléchargement des fichiers des documents…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download dei file dei documenti…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documentbestanden downloaden…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pobieranie plików dokumentów…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doküman dosyaları indiriliyor…"
-          }
-        }
-      }
-    },
     "offlineSyncFileDownloadDetail" : {
       "comment" : "Caption under the document file download bar. %1$@ is the size on the device, e.g. 1.2 GB; %2$lld the number of files downloading right now",
       "extractionState" : "manual",
@@ -5223,60 +5007,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld / %2$lld dosya"
-          }
-        }
-      }
-    },
-    "offlineSyncFilling" : {
-      "comment" : "Activity status while the whole-library download is running",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Henter bibliotek…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bibliothek wird geladen…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading library…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Téléchargement de la bibliothèque…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download della libreria…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bibliotheek downloaden…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pobieranie biblioteki…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitaplık indiriliyor…"
           }
         }
       }
@@ -6415,114 +6145,6 @@
         }
       }
     },
-    "offlineSyncReconciling" : {
-      "comment" : "Activity label on the Offline & Sync screen while the app reconciles server-side changes into the offline cache",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Søger efter ændringer…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Änderungen werden geprüft…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checking for changes…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recherche de modifications…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ricerca di modifiche…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controleren op wijzigingen…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprawdzanie zmian…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Değişiklikler denetleniyor…"
-          }
-        }
-      }
-    },
-    "offlineSyncRefreshing" : {
-      "comment" : "Activity status while the app is refreshing data from the server",
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opdaterer attributter…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attribute werden aktualisiert…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refreshing attributes…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actualisation des attributs…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aggiornamento degli attributi…"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Attributen vernieuwen…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odświeżanie atrybutów…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öznitelikler yenileniyor…"
-          }
-        }
-      }
-    },
     "offlineSyncResetStatistics" : {
       "comment" : "Destructive button that sets the data-transferred counters back to zero",
       "extractionState" : "manual",
@@ -6631,6 +6253,102 @@
         }
       }
     },
+    "offlineSyncStepCount" : {
+      "comment" : "How many steps of the running sync are finished, e.g. 2 of 6 steps",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld steps"
+          }
+        }
+      }
+    },
+    "offlineSyncStepDetails" : {
+      "comment" : "Sync step: downloading notes and file information",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document details"
+          }
+        }
+      }
+    },
+    "offlineSyncStepElements" : {
+      "comment" : "Sync step: correspondents, tags, document types, saved views and similar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags and metadata"
+          }
+        }
+      }
+    },
+    "offlineSyncStepFiles" : {
+      "comment" : "Sync step: downloading document files",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files"
+          }
+        }
+      }
+    },
+    "offlineSyncStepLists" : {
+      "comment" : "Sync step: downloading the document list of every saved view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document lists"
+          }
+        }
+      }
+    },
+    "offlineSyncStepReconcile" : {
+      "comment" : "Sync step: looking for changed and deleted documents",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking for changes"
+          }
+        }
+      }
+    },
+    "offlineSyncStepText" : {
+      "comment" : "Sync step: downloading the text content of documents",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Document text"
+          }
+        }
+      }
+    },
+    "offlineSyncSyncing" : {
+      "comment" : "Headline of the sync status while a sync is running",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing"
+          }
+        }
+      }
+    },
     "offlineSyncTitle" : {
       "comment" : "Title of the settings screen for offline storage and synchronization",
       "extractionState" : "manual",
@@ -6735,6 +6453,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toplam"
+          }
+        }
+      }
+    },
+    "offlineSyncUpToDate" : {
+      "comment" : "Headline of the sync status when the last sync finished without problems",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date"
+          }
+        }
+      }
+    },
+    "offlineSyncViewCount" : {
+      "comment" : "Position of the saved view a sync step is on, e.g. View 2 of 5",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "offlineSyncViewPosition" : {
+      "comment" : "Which saved view a sync step is on: the view's name, then its position among the views, e.g. Inbox · view 2 of 5",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · view %2$lld of %3$lld"
           }
         }
       }

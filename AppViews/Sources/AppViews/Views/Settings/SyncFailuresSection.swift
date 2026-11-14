@@ -19,24 +19,29 @@ struct SyncFailuresSection: View {
 
   var body: some View {
     if !failures.isEmpty {
-      Section {
-        ForEach(failures) { failure in
-          VStack(alignment: .leading, spacing: 2) {
-            Text(Self.label(for: failure.site))
-            Text(failure.message)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-              .lineLimit(3)
-            HStack(spacing: 4) {
-              // Live-updating, like the other timestamps on this screen.
-              Text(failure.failedAt, style: .relative)
-              if failure.consecutiveFailures > 1 {
-                Text(verbatim: "·")
-                Text(.settings(.offlineSyncFailureRepeated(failure.consecutiveFailures)))
+      CustomSection {
+        VStack(spacing: 0) {
+          ForEach(Array(failures.enumerated()), id: \.element.id) { index, failure in
+            if index > 0 { Divider() }
+            CustomSectionRow {
+              VStack(alignment: .leading, spacing: 2) {
+                Text(Self.label(for: failure.site))
+                Text(failure.message)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(3)
+                HStack(spacing: 4) {
+                  // Live-updating, like the other timestamps on this screen.
+                  Text(failure.failedAt, style: .relative)
+                  if failure.consecutiveFailures > 1 {
+                    Text(verbatim: "·")
+                    Text(.settings(.offlineSyncFailureRepeated(failure.consecutiveFailures)))
+                  }
+                }
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
               }
             }
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
           }
         }
       } header: {
