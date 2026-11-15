@@ -160,7 +160,7 @@ struct DocumentList: View {
 
     var body: some View {
       DocumentCell(
-        document: document, store: store, showsKeptOfflineBadge: true,
+        document: document, store: store, showsOfflineBadge: true,
         isRemovingInboxTags: isRemovingInboxTags
       )
       .contentShape(Rectangle())

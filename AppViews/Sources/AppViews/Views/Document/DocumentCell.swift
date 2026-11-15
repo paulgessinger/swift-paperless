@@ -90,16 +90,17 @@ public struct DocumentCell: View {
   /// removal is in flight.
   public var isRemovingInboxTags: Bool
 
-  /// Draws the kept-offline badge on the thumbnail when the document is kept.
-  public var showsKeptOfflineBadge: Bool
+  /// Draws the badge on the thumbnail saying whether the document's file is
+  /// online only, downloaded, or kept offline.
+  public var showsOfflineBadge: Bool
 
   public init(
-    document: Document, store: DocumentStore, showsKeptOfflineBadge: Bool = false,
+    document: Document, store: DocumentStore, showsOfflineBadge: Bool = false,
     isRemovingInboxTags: Bool = false
   ) {
     self.document = document
     self.store = store
-    self.showsKeptOfflineBadge = showsKeptOfflineBadge
+    self.showsOfflineBadge = showsOfflineBadge
     self.isRemovingInboxTags = isRemovingInboxTags
   }
 
@@ -152,8 +153,8 @@ public struct DocumentCell: View {
         // the badge hanging off its edge. The transaction below keeps it from
         // riding along with the image's animations.
         .overlay(alignment: .topTrailing) {
-          if showsKeptOfflineBadge {
-            KeptOfflineBadge(store: store, documentID: document.id)
+          if showsOfflineBadge {
+            OfflineAvailabilityBadge(store: store, documentID: document.id)
           }
         }
         .transaction { tx in
@@ -283,28 +284,37 @@ public struct DocumentCell: View {
   }
 }
 
-/// The kept-offline badge, for a document kept on its own or by a kept saved
-/// view. It reads the kept state itself, so a toggle updates only the badge:
-/// re-running the row's body rebuilt its swipe and menu actions, and the row
-/// closing its swipe was drawn below its place.
-/// Always in the tree and only shown or hidden, for the same reason, with
-/// its spring scoped to the kept state.
-private struct KeptOfflineBadge: View {
+/// Where the document's file is: a faint cloud for online only, a faint
+/// arrow for downloaded but evictable, and the solid indigo arrow for kept
+/// offline, on its own or by a kept saved view. It reads the state itself, so
+/// a change updates only the badge: re-running the row's body rebuilt its
+/// swipe and menu actions, and the row closing its swipe was drawn below its
+/// place.
+private struct OfflineAvailabilityBadge: View {
   let store: DocumentStore
   let documentID: UInt
 
   var body: some View {
-    let isKept = store.isOnDevice(documentID)
-    Image(systemName: "arrow.down.circle.fill")
+    let availability = store.offlineAvailability(documentID)
+    let isKept = availability == .kept
+    Image(systemName: availability == .onlineOnly ? "icloud.circle.fill" : "arrow.down.circle.fill")
       .symbolRenderingMode(.palette)
-      .foregroundStyle(.white, .indigo)
+      .foregroundStyle(.white, isKept ? Color.indigo : Color.gray)
       .font(.title2)
+      .contentTransition(.symbolEffect(.replace))
       .shadow(color: Color("ImageShadow"), radius: 2)
+      .opacity(isKept ? 1 : 0.4)
+      .symbolEffect(.bounce, value: isKept)
+      .animation(.spring(duration: 0.35, bounce: 0.45), value: availability)
       .padding(5)
-      .scaleEffect(isKept ? 1 : 0.4)
-      .opacity(isKept ? 1 : 0)
-      .animation(.spring(duration: 0.35, bounce: 0.45), value: isKept)
-      .accessibilityHidden(!isKept)
-      .accessibilityLabel(Text(.app(.keptOffline)))
+      .accessibilityLabel(Text(label(availability)))
+  }
+
+  private func label(_ availability: OfflineAvailability) -> LocalizedStringResource {
+    switch availability {
+    case .onlineOnly: .app(.onlineOnlyBadge)
+    case .downloaded: .app(.downloadedBadge)
+    case .kept: .app(.keptOffline)
+    }
   }
 }

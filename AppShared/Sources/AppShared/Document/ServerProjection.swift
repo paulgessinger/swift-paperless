@@ -66,6 +66,10 @@ public final class ServerProjection {
   /// The documents a kept saved view keeps, for the list's badge.
   public private(set) var keptOfflineViewMemberIDs: Set<UInt> = []
 
+  /// The documents whose current archive is on the device, for the list's
+  /// badge.
+  public private(set) var downloadedDocumentIDs: Set<UInt> = []
+
   // MARK: Members
 
   @ObservationIgnored
@@ -119,6 +123,9 @@ public final class ServerProjection {
       observeValue(
         database.observeKeptOfflineViewMemberIDs(serverID: serverID),
         into: \.keptOfflineViewMemberIDs),
+      observeValue(
+        database.observeDownloadedDocumentIDs(serverID: serverID),
+        into: \.downloadedDocumentIDs),
     ])
   }
 

@@ -7140,6 +7140,18 @@
         }
       }
     },
+    "downloadedBadge" : {
+      "comment" : "Accessibility label of the document list badge for a document whose file is on the device but not kept offline, so it may be removed to free space",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaded"
+          }
+        }
+      }
+    },
     "edit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9858,6 +9870,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tamam"
+          }
+        }
+      }
+    },
+    "onlineOnlyBadge" : {
+      "comment" : "Accessibility label of the document list badge for a document whose file is only on the server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online only"
           }
         }
       }
