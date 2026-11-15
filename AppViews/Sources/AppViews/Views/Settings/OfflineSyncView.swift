@@ -125,13 +125,16 @@ public struct OfflineSyncView: View {
     .background(Color(uiColor: .systemGroupedBackground))
     .task { libraryTotal = await store.libraryDocumentCount() }
     .task(id: store.activeServerID) { status = store.makeOfflineStatus() }
-    // The steps stay up briefly after the pass, so the last one is seen to
-    // finish.
+    // The steps stay up briefly after a pass that succeeded, so the last one
+    // is seen to finish. A failed pass has no finish to show, and an automatic
+    // pass that fails at once, as against an unreachable server, never shows
+    // its steps at all.
     .task(id: isBusy) {
       if isBusy {
-        stepsVisible = true
+        if !syncNowRunning { try? await Task.sleep(for: .seconds(0.6)) }
+        if !Task.isCancelled { stepsVisible = true }
       } else {
-        try? await Task.sleep(for: .seconds(1.5))
+        if store.syncFailures.isEmpty { try? await Task.sleep(for: .seconds(1.5)) }
         if !Task.isCancelled { stepsVisible = false }
       }
     }
@@ -380,8 +383,9 @@ public struct OfflineSyncView: View {
         id: String(describing: step.stage), title: stepTitle(for: step.stage))
       switch step.state {
       case .pending:
-        // A step the finished pass never reported had nothing to do.
-        display.state = isBusy ? .pending : .done
+        // A step a pass finished without reporting had nothing to do; one a
+        // failed pass never reached is still outstanding.
+        display.state = isBusy || !store.syncFailures.isEmpty ? .pending : .done
       case .done:
         display.state = .done
       case .running:
