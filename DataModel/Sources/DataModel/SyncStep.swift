@@ -36,7 +36,9 @@ public struct SyncStep: Sendable, Equatable, Identifiable {
   ///
   /// A stage that neither runs nor finished counts as done once a later one
   /// has started: a pass skips a stage with nothing to do without reporting
-  /// it.
+  /// it. File downloads don't count as a later stage for this: they are
+  /// queued alongside the other stages, before the text fill and sometimes
+  /// during the reconcile.
   ///
   /// - Parameters:
   ///   - stages: The stages the pass covers.
@@ -49,7 +51,9 @@ public struct SyncStep: Sendable, Equatable, Identifiable {
     let listed = order.filter(stages.contains)
     let running = Dictionary(
       activities.map { ($0.stage, $0) }, uniquingKeysWith: { first, _ in first })
-    let lastStarted = listed.lastIndex { running[$0] != nil || completed.contains($0) }
+    let lastStarted = listed.lastIndex {
+      $0 != .fileDownload && (running[$0] != nil || completed.contains($0))
+    }
     return listed.enumerated().map { index, stage in
       if let activity = running[stage] {
         return SyncStep(stage: stage, state: .running, activity: activity)

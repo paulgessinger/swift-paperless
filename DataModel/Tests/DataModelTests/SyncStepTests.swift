@@ -51,4 +51,17 @@ struct SyncStepTests {
     let steps = SyncStep.steps(for: all, activities: [], completed: [.contentFill])
     #expect(states(steps) == [.done, .done, .done, .done, .done, .pending])
   }
+
+  @Test("downloads running alongside don't mark the stages before them done")
+  func downloadsDontSkipStages() {
+    // The reconcile queued downloads for a kept document before the fills.
+    let running = SyncStep.steps(
+      for: all, activities: [SyncActivity(stage: .reconcile), SyncActivity(stage: .fileDownload)],
+      completed: [.elementSync])
+    #expect(states(running) == [.done, .running, .pending, .pending, .pending, .running])
+
+    let finished = SyncStep.steps(
+      for: all, activities: [], completed: [.elementSync, .fileDownload])
+    #expect(states(finished) == [.done, .pending, .pending, .pending, .pending, .done])
+  }
 }
