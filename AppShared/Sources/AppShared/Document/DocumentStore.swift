@@ -92,6 +92,11 @@ public final class DocumentStore: Sendable {
   /// while the only reporter was this store.
   public var syncActivities: [SyncActivity] { session?.syncActivities ?? [] }
 
+  /// The active server's ``ServerSession/completedSyncStages``.
+  public var completedSyncStages: Set<SyncActivity.Stage> {
+    session?.completedSyncStages ?? []
+  }
+
   /// Whether the active server has any sync work in flight. Distinct from
   /// ``syncActivities`` being non-empty, which only says whether a stage is
   /// currently *reporting* — see ``ServerSession/isSyncing``.
@@ -942,7 +947,7 @@ extension DocumentStore {
     guard let backend = session?.backend else {
       throw CachingRepositoryError.cacheMiss
     }
-    return try await backend.fillQuery(filter: filter, category: .list)
+    return try await backend.fillQuery(filter: filter, category: .list, onPage: nil)
   }
 
   /// Re-sync a stale list's cached membership from the server's id list,

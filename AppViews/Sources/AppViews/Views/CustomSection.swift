@@ -1,12 +1,11 @@
 //
 //  CustomSection.swift
-//  swift-paperless
+//  AppViews
 //
 //  Created by Paul Gessinger on 04.02.25.
 //
 
 import AppShared
-import AppViews
 import Common
 import SwiftUI
 
@@ -15,42 +14,51 @@ private struct CustomSectionBackgroundKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-  var customSectionBackground: AnyShapeStyle? {
+  public var customSectionBackground: AnyShapeStyle? {
     get { self[CustomSectionBackgroundKey.self] }
     set { self[CustomSectionBackgroundKey.self] = newValue }
   }
 }
 
 extension View {
-  func customSectionBackground<S: ShapeStyle>(_ style: S) -> some View {
+  public func customSectionBackground<S: ShapeStyle>(_ style: S) -> some View {
     environment(\.customSectionBackground, AnyShapeStyle(style))
   }
 
-  func customSectionBackground(_ style: AnyShapeStyle?) -> some View {
+  public func customSectionBackground(_ style: AnyShapeStyle?) -> some View {
     environment(\.customSectionBackground, style)
   }
 }
 
-struct CustomSectionRow<Content: View>: View {
+public struct CustomSectionRow<Content: View>: View {
   let content: () -> Content
 
   @ScaledMetric(relativeTo: .body) private var rowVerticalPadding = 12.0
 
-  init(@ViewBuilder content: @escaping () -> Content) {
+  public init(@ViewBuilder content: @escaping () -> Content) {
     self.content = content
   }
 
-  var body: some View {
+  public var body: some View {
     content()
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
       .padding(.vertical, rowVerticalPadding)
   }
 }
-struct CustomSection<Content: View, Footer: View, Header: View>: View {
+public struct CustomSection<Content: View, Footer: View, Header: View>: View {
   var content: () -> Content
-  var header: (() -> Header)? = nil
-  var footer: (() -> Footer)? = nil
+  var header: (() -> Header)?
+  var footer: (() -> Footer)?
+
+  public init(
+    content: @escaping () -> Content, header: (() -> Header)? = nil,
+    footer: (() -> Footer)? = nil
+  ) {
+    self.content = content
+    self.header = header
+    self.footer = footer
+  }
 
   @Environment(\.customSectionBackground) private var backgroundStyle
 
@@ -68,7 +76,7 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
     return shape.fill(backgroundFill)
   }
 
-  var body: some View {
+  public var body: some View {
     VStack(spacing: 4) {
       header?()
         .foregroundStyle(.secondary)
@@ -114,11 +122,11 @@ struct CustomSection<Content: View, Footer: View, Header: View>: View {
 }
 
 extension CustomSection where Footer == EmptyView {
-  init(@ViewBuilder content: @escaping () -> Content, header: @escaping () -> Header) {
+  public init(@ViewBuilder content: @escaping () -> Content, header: @escaping () -> Header) {
     self.init(content: content, header: header, footer: nil)
   }
 
-  init(
+  public init(
     @ViewBuilder content: @escaping () -> Content, footer _: () -> Void,
     header: @escaping () -> Header
   ) {
@@ -127,21 +135,25 @@ extension CustomSection where Footer == EmptyView {
 }
 
 extension CustomSection where Footer == EmptyView, Header == EmptyView {
-  init(@ViewBuilder content: @escaping () -> Content) {
+  public init(@ViewBuilder content: @escaping () -> Content) {
     self.init(content: content, header: nil, footer: nil)
   }
 
-  init(@ViewBuilder content: @escaping () -> Content, footer _: () -> Void, header _: () -> Void) {
+  public init(
+    @ViewBuilder content: @escaping () -> Content, footer _: () -> Void, header _: () -> Void
+  ) {
     self.init(content: content, header: nil, footer: nil)
   }
 }
 
 extension CustomSection where Header == EmptyView {
-  init(@ViewBuilder content: @escaping () -> Content, @ViewBuilder footer: @escaping () -> Footer) {
+  public init(
+    @ViewBuilder content: @escaping () -> Content, @ViewBuilder footer: @escaping () -> Footer
+  ) {
     self.init(content: content, header: nil, footer: footer)
   }
 
-  init(
+  public init(
     @ViewBuilder content: @escaping () -> Content, @ViewBuilder footer: @escaping () -> Footer,
     header _: () -> Void
   ) {
@@ -213,5 +225,5 @@ extension CustomSection where Header == EmptyView {
       }
     }
   }
-  .modifier(BackgroundColorModifier())
+  .background(Color(uiColor: .systemGroupedBackground))
 }

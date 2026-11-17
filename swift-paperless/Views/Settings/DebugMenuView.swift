@@ -125,6 +125,17 @@ struct DebugMenuView: View {
       }
 
       NavigationLink {
+        SyncStepListDemoView()
+      } label: {
+        Label {
+          Text(verbatim: "Sync step list")
+            .accentColor(.primary)
+        } icon: {
+          Image(systemName: "checklist")
+        }
+      }
+
+      NavigationLink {
         SyncRunsView()
       } label: {
         Label {

@@ -3,7 +3,7 @@
 //  swift-paperless
 //
 //  Read-only statistics on how much disk the offline data takes: the database,
-//  downloaded document files and thumbnails. Its own view so the Offline & Sync
+//  downloaded document files, their OCR text and thumbnails. Its own view so the Offline & Sync
 //  screen only has to place it.
 //
 
@@ -20,15 +20,23 @@ struct OfflineStorageSection: View {
   @State private var usage: OfflineStorageUsage?
 
   var body: some View {
-    Section {
-      sizeRow(String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes)
-      sizeRow(
-        String(localized: .settings(.offlineStorageDocuments)), bytes: usage?.files.documents.bytes,
-        caption: documentsCaption)
-      sizeRow(
-        String(localized: .settings(.offlineStorageThumbnails)),
-        bytes: usage?.files.thumbnails.bytes)
-      sizeRow(String(localized: .settings(.offlineSyncTotal)), bytes: usage?.totalBytes)
+    CustomSection {
+      VStack(spacing: 0) {
+        sizeRow(String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes)
+        Divider()
+        sizeRow(
+          String(localized: .settings(.offlineStorageDocuments)),
+          bytes: usage?.files.documents.bytes,
+          caption: documentsCaption)
+        Divider()
+        sizeRow(String(localized: .settings(.offlineStorageText)), bytes: usage?.files.text.bytes)
+        Divider()
+        sizeRow(
+          String(localized: .settings(.offlineStorageThumbnails)),
+          bytes: usage?.files.thumbnails.bytes)
+        Divider()
+        sizeRow(String(localized: .settings(.offlineSyncTotal)), bytes: usage?.totalBytes)
+      }
     } header: {
       Text(.settings(.offlineStorageHeader))
     } footer: {
@@ -74,19 +82,23 @@ struct OfflineStorageSection: View {
 
   @ViewBuilder
   private func sizeRow(_ title: String, bytes: Int64?, caption: Text? = nil) -> some View {
-    // `LabeledContent` like the other status rows on this screen; a second
-    // `Text` in the label renders as its subtitle.
-    LabeledContent {
-      if let bytes {
-        Text(bytes.formatted(.byteCount(style: .file)))
-          .foregroundStyle(.secondary)
-      } else {
-        ProgressView()
-      }
-    } label: {
-      Text(title)
-      if let caption {
-        caption
+    CustomSectionRow {
+      LabeledContent {
+        if let bytes {
+          Text(bytes.formatted(.byteCount(style: .file)))
+            .foregroundStyle(.secondary)
+        } else {
+          ProgressView()
+        }
+      } label: {
+        VStack(alignment: .leading, spacing: 2) {
+          Text(title)
+          if let caption {
+            caption
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
+        }
       }
     }
   }

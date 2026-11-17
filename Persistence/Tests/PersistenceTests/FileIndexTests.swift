@@ -261,7 +261,7 @@ struct FileIndexTests {
 
   // MARK: - Usage
 
-  @Test("fileUsage sums sizes per server, thumbnails apart")
+  @Test("fileUsage sums sizes per server, texts and thumbnails apart")
   func usage() async throws {
     let server = UUID()
     let other = UUID()
@@ -273,12 +273,15 @@ struct FileIndexTests {
     try await database.recordFile(
       key(server, 1, .thumbnail), documentID: 1, size: 7, modified: nil, checksum: nil,
       storedAt: date(1), lastAccessedAt: nil)
+    try await record(database, key(server, 1, .content), size: 20, accessed: date(1))
+    try await record(database, key(other, 1, .content), size: 5, accessed: date(1))
 
     let usage = try await database.fileUsage()
 
     #expect(usage.documents == DiskUsage(bytes: 450, files: 3))
     #expect(usage.documentsByServer[server] == DiskUsage(bytes: 400, files: 2))
     #expect(usage.documentsByServer[other] == DiskUsage(bytes: 50, files: 1))
+    #expect(usage.text == DiskUsage(bytes: 25, files: 2))
     #expect(usage.thumbnails == DiskUsage(bytes: 7, files: 1))
     #expect(try await Database.seeded().fileUsage() == FileUsage())
   }

@@ -56,6 +56,17 @@ struct SyncActivityTests {
     #expect(activity(.reconcile, completed: 12, total: 10).fraction == 1)
   }
 
+  @Test("with a part, the fraction is the finished views plus the current one's share")
+  func fractionAcrossViews() {
+    let part = SyncActivity.Part(index: 1, count: 4)
+    #expect(SyncActivity(stage: .libraryFill, part: part).fraction == 0.25)
+    #expect(
+      SyncActivity(stage: .libraryFill, completed: 50, total: 100, part: part).fraction == 0.375)
+    #expect(
+      SyncActivity(stage: .libraryFill, part: SyncActivity.Part(index: 0, count: 0)).fraction
+        == nil)
+  }
+
   @Test("a stage identifies a row, so progress updates don't re-create it")
   func identityIsTheStage() {
     #expect(activity(.libraryFill, completed: 1, total: 9).id == .libraryFill)

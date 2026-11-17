@@ -222,10 +222,21 @@ public final class ServerSession {
   // Observed, so the derived list above tracks it without a stored mirror.
   private var activeStages: [SyncActivity.Stage: SyncActivity] = [:]
 
+  /// The stages that reported and finished since the current pass began. A
+  /// pass begins when a stage that already finished starts again.
+  public private(set) var completedSyncStages: Set<SyncActivity.Stage> = []
+
   /// Fold one sweep's progress into the published activity. `nil` retires the
   /// stage; the list keeps showing whatever else is still running.
   private func report(_ activity: SyncActivity?, for stage: SyncActivity.Stage) {
-    activeStages[stage] = activity
+    if let activity {
+      if activeStages[stage] == nil, completedSyncStages.contains(stage) {
+        completedSyncStages = []
+      }
+      activeStages[stage] = activity
+    } else if activeStages.removeValue(forKey: stage) != nil {
+      completedSyncStages.insert(stage)
+    }
   }
 
   /// Record a failure at `site` and log it at the level the rule gives it.
@@ -619,8 +630,19 @@ public final class ServerSession {
           self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
         }
       }
-      await sweep(.keptOffline) { keptChanges = try await backend.reconcileKeptOffline() }
-      await sweep(.membership) { try await backend.reconcileSavedViewMembership() }
+      // The view sweeps report which view they are on; in between, the bare
+      // stage.
+      let viewProgress: SyncProgressReporter = { [weak self] in
+        self?.report($0 ?? SyncActivity(stage: .reconcile), for: .reconcile)
+      }
+      await sweep(.keptOffline) {
+        keptChanges = try await backend.reconcileKeptOffline(progress: viewProgress)
+      }
+      report(SyncActivity(stage: .reconcile), for: .reconcile)
+      await sweep(.membership) {
+        try await backend.reconcileSavedViewMembership(progress: viewProgress)
+      }
+      report(SyncActivity(stage: .reconcile), for: .reconcile)
       await sweep(.reachability) { try await backend.collectUnreachableQueries() }
     }
 
