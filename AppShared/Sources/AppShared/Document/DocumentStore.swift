@@ -193,6 +193,13 @@ public final class DocumentStore: Sendable {
     isKeptOffline(documentID) || projection?.keptOfflineViewMemberIDs.contains(documentID) == true
   }
 
+  /// Where a document's file is, for the list's badge.
+  public func offlineAvailability(_ documentID: UInt) -> OfflineAvailability {
+    if isOnDevice(documentID) { return .kept }
+    if projection?.downloadedDocumentIDs.contains(documentID) == true { return .downloaded }
+    return .onlineOnly
+  }
+
   /// Keep a saved view on the device, or stop keeping it. Keeping syncs the
   /// view's members, fetches their rows and queues their files at once, on
   /// any link, so the caller confirms it first; the
@@ -1226,4 +1233,16 @@ extension DocumentStore {
     }
     return descendants
   }
+}
+
+/// Where a document's file is, as the list's badge shows it.
+public enum OfflineAvailability: Sendable, Equatable {
+  /// Only on the server.
+  case onlineOnly
+  /// Its current archive is on the device, but nothing keeps it there: the
+  /// storage budget may evict it.
+  case downloaded
+  /// Kept on the device, on its own or by a kept saved view, whether or not
+  /// its file has arrived yet.
+  case kept
 }

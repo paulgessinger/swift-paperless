@@ -82,3 +82,4 @@
 - Uploading and logging in with a username and password now work on servers that sign you in automatically (PAPERLESS_AUTO_LOGIN_USERNAME), instead of failing with "CSRF token missing"
 - The Offline & Sync screen now lists the steps of a sync as it runs, and shows which saved view and how many documents each step is on, so a long sync is visibly moving
 - The Storage section of the Offline & Sync screen now shows the space taken by the documents' OCR text separately from the document files
+- The document list now shows whether each document is online only (cloud), downloaded to the device (arrow), or kept offline (solid arrow), instead of only marking kept documents

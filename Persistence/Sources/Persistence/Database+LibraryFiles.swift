@@ -176,6 +176,28 @@ extension Database {
     return stream(observation)
   }
 
+  /// Live set of the server's documents whose current version has a fresh
+  /// archive on the device: what the list's availability badge reads.
+  public func observeDownloadedDocumentIDs(serverID: UUID)
+    -> AsyncThrowingStream<Set<UInt>, Error>
+  {
+    let observation =
+      ValueObservation
+      .tracking { db in
+        Set(
+          try UInt.fetchAll(
+            db,
+            sql: """
+              SELECT d.id FROM document d
+              WHERE d.server_id = ? AND d.modified IS NOT NULL
+                AND \(Self.freshFileExists(.archive))
+              """,
+            arguments: [serverID]))
+      }
+      .removeDuplicates()
+    return stream(observation)
+  }
+
   // MARK: - Query bodies
 
   /// A file of `kind` fetched against the document's `modified`, for its

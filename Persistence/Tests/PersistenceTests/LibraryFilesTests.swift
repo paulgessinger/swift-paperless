@@ -137,6 +137,21 @@ struct LibraryFilesTests {
       next == LibraryFileProgress(totalDocuments: 2, downloadedFiles: 1, downloadedBytes: 100))
   }
 
+  @Test("Downloaded documents are those with a fresh archive, observed as they arrive")
+  func downloadedDocumentIDs() async throws {
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    // 1: fresh archive. 2: stale archive. 3: an original only.
+    try await recordArchive(database, 1, modified: date(500))
+    try await recordArchive(database, 2, modified: date(400))
+    try await recordArchive(database, 3, modified: date(500), kind: .original)
+
+    var iterator = database.observeDownloadedDocumentIDs(serverID: server).makeAsyncIterator()
+    #expect(try await iterator.next() == [1])
+
+    try await recordArchive(database, 2, modified: date(500))
+    #expect(try await iterator.next() == [1, 2])
+  }
+
   @Test("The kept scope lists only members, cached or stale, and counts every member")
   func keptScope() async throws {
     let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
