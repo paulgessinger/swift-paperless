@@ -314,15 +314,18 @@ private struct DetailView: View {
   let card: WhatsNewDeck.Card
 
   @Environment(\.whatsNewBaseURL) private var baseURL
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     ScrollView {
       VStack(spacing: 24) {
         header
         Divider()
-        Markdown(card.detail ?? "", baseURL: baseURL)
-          .markdownTheme(.whatsNew(tint: card.tintColor))
-          .frame(maxWidth: .infinity, alignment: .leading)
+        Markdown(
+          (card.detail ?? "").keepingImages(dark: colorScheme == .dark), baseURL: baseURL
+        )
+        .markdownTheme(.whatsNew(tint: card.tintColor))
+        .frame(maxWidth: .infinity, alignment: .leading)
       }
       .frame(maxWidth: 540)
       .padding()
