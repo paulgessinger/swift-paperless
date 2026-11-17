@@ -194,7 +194,7 @@ struct DocumentList: View {
           Button {
             Task { await viewModel.removeInboxTags(document: document) }
           } label: {
-            Label(String(localized: .app(.tagsRemoveInbox)), systemImage: "tray")
+            Label(String(localized: .app(.tagsRemoveInboxShort)), systemImage: "tray")
           }
           .tint(.accentColor)
         }
