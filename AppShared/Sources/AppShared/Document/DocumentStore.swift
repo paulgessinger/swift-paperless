@@ -48,6 +48,13 @@ public final class DocumentStore: Sendable {
   public var users: [UInt: User] { projection?.users ?? [:] }
   public var groups: [UInt: UserGroup] { projection?.groups ?? [:] }
   public var customFields: [UInt: CustomField] { projection?.customFields ?? [:] }
+
+  /// Share filename for `document`, with its correspondent's current name.
+  public func shareFilename(for document: Document, original: Bool) -> String {
+    document.shareFilename(
+      original: original,
+      correspondentName: document.correspondent.flatMap { correspondents[$0]?.name })
+  }
   public var currentUser: User? { projection?.currentUser }
   public var serverConfiguration: ServerConfiguration? { projection?.serverConfiguration }
   /// The permission matrix to *gate on* — and, until `ui_settings` has landed

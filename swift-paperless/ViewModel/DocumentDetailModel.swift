@@ -333,7 +333,7 @@ class DocumentDetailModel {
   /// PDFKit's document when it can open the file at `url`, otherwise a named
   /// link for QuickLook; `nil` when neither works.
   private static func loadContent(
-    url: URL, for document: Document, inMemory: Bool
+    url: URL, for document: Document, named name: String, inMemory: Bool
   ) async -> DocumentContent? {
     let pdfDocument =
       inMemory
@@ -342,7 +342,7 @@ class DocumentDetailModel {
     if let pdfDocument { return .pdf(pdfDocument) }
     Logger.shared.info("Document \(document.id) is not a PDF, previewing with QuickLook")
     // The link keeps the bytes it was made from if the store replaces the file.
-    return NamedFileLink.stage(url, as: document.shareFilename(original: false)).map {
+    return NamedFileLink.stage(url, as: name).map {
       .file($0)
     }
   }
@@ -356,7 +356,10 @@ class DocumentDetailModel {
     let stamp = FileStamp(url: url)
     // Read into memory: the download that validates it may replace the file
     // at this same path while it is on screen.
-    guard let content = await Self.loadContent(url: url, for: document, inMemory: true),
+    guard
+      let content = await Self.loadContent(
+        url: url, for: document,
+        named: store.shareFilename(for: document, original: false), inMemory: true),
       case .initial = download
     else { return }
     download = .loaded(url: url, content: content)
@@ -476,7 +479,11 @@ class DocumentDetailModel {
         return
       }
 
-      guard let content = await Self.loadContent(url: url, for: document, inMemory: false) else {
+      guard
+        let content = await Self.loadContent(
+          url: url, for: document,
+          named: store.shareFilename(for: document, original: false), inMemory: false)
+      else {
         if case .loaded = download {} else { download = .error }
         return
       }

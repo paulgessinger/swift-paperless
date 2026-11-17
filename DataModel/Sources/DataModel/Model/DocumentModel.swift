@@ -191,15 +191,45 @@ extension Document: DocumentProtocol {}
 extension Document: PermissionsModel {}
 
 extension Document {
-  /// User-facing filename for exporting/sharing this document, whose
-  /// extension is what tells other apps the file's type. A document without
-  /// an archive version is served as its original for an archive request, so
-  /// it takes the original's name. With no server name the title stands in,
-  /// without an extension, since the type is then unknown.
-  public func shareFilename(original: Bool) -> String {
-    let serverName = original ? originalFileName : archivedFileName ?? originalFileName
-    if let name = serverName, !name.isEmpty { return name }
-    return title.isEmpty ? "document" : title
+  /// Filename for sharing this document, built the way paperless-ngx names its
+  /// downloads: `"{created} {correspondent} {title}"` plus the extension (see
+  /// `Document.get_public_filename` upstream). It is rebuilt from current
+  /// metadata rather than taken from `archivedFileName`, which goes stale when
+  /// a correspondent is renamed: that does not bump the document's `modified`.
+  ///
+  /// A document without an archive version is served as its original for an
+  /// archive request, so it takes the original's extension. The original's
+  /// extension comes from its upload name; with none, the name has no extension.
+  public func shareFilename(original: Bool, correspondentName: String?) -> String {
+    let fileExtension: String
+    if !original, archivedFileName != nil {
+      fileExtension = ".pdf"
+    } else if let ext = originalFileName.map({ ($0 as NSString).pathExtension }), !ext.isEmpty {
+      fileExtension = ".\(ext)"
+    } else {
+      fileExtension = ""
+    }
+
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .current
+    let day = calendar.dateComponents([.year, .month, .day], from: created)
+    var head = String(format: "%04d-%02d-%02d", day.year ?? 0, day.month ?? 0, day.day ?? 0)
+    if let correspondentName, !correspondentName.isEmpty { head += " \(correspondentName)" }
+    if !title.isEmpty { head += " \(title)" }
+
+    // paperless caps the name at 255 UTF-8 bytes, shortening the head first.
+    let headBudget = max(0, 255 - fileExtension.utf8.count)
+    while head.utf8.count > headBudget { head.removeLast() }
+
+    // pathvalidate's universal rules: replace characters invalid on any
+    // platform, and trim the spaces Windows rejects at either end.
+    let invalid: Set<Unicode.Scalar> = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
+    let sanitized = String(
+      String.UnicodeScalarView(
+        (head + fileExtension).unicodeScalars.map {
+          invalid.contains($0) || $0.value < 0x20 || $0.value == 0x7F ? "-" : $0
+        }))
+    return sanitized.trimmingCharacters(in: .whitespaces)
   }
 
   /// Id of the version the server returns when no `?version=` query is sent.
