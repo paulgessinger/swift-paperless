@@ -81,6 +81,8 @@ public struct DocumentRecord:
     public var added: Date?
     public var originalFileName: String?
     public var archivedFileName: String?
+    // Absent from rows cached before it was stored.
+    public var mimeType: String?
     public var storagePath: UInt?
     public var owner: Owner
     public var pageCount: Int?
@@ -141,6 +143,7 @@ extension DocumentRecord {
       added: domain.added,
       originalFileName: domain.originalFileName,
       archivedFileName: domain.archivedFileName,
+      mimeType: domain.mimeType,
       storagePath: domain.storagePath,
       owner: domain.owner,
       pageCount: domain.pageCount,
@@ -166,6 +169,7 @@ extension DocumentRecord {
       modified: modified,
       originalFileName: payload.originalFileName,
       archivedFileName: payload.archivedFileName,
+      mimeType: payload.mimeType,
       storagePath: payload.storagePath,
       owner: payload.owner,
       pageCount: payload.pageCount,

@@ -11,14 +11,15 @@ import Testing
 @Suite
 struct ShareFilenameTest {
   static func makeDocument(
-    title: String = "Invoice 42", original: String? = nil, archived: String? = nil
+    title: String = "Invoice 42", original: String? = nil, archived: String? = nil,
+    mimeType: String? = nil
   ) -> Document {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = .current
     let created = calendar.date(from: DateComponents(year: 2024, month: 3, day: 1))!
     return Document(
       id: 1, title: title, created: created, tags: [],
-      originalFileName: original, archivedFileName: archived)
+      originalFileName: original, archivedFileName: archived, mimeType: mimeType)
   }
 
   @Test func archiveAndOriginalUseServerStyleName() {
@@ -29,6 +30,20 @@ struct ShareFilenameTest {
     #expect(
       doc.shareFilename(original: true, correspondentName: "ACME")
         == "2024-03-01 ACME Invoice 42.png")
+  }
+
+  @Test func originalExtensionComesFromMimeType() {
+    let doc = Self.makeDocument(original: "photo.JPEG", archived: "x.pdf", mimeType: "image/jpeg")
+    #expect(
+      doc.shareFilename(original: true, correspondentName: nil) == "2024-03-01 Invoice 42.jpg")
+    #expect(
+      doc.shareFilename(original: false, correspondentName: nil) == "2024-03-01 Invoice 42.pdf")
+  }
+
+  @Test func unknownMimeTypeFallsBackToUploadExtension() {
+    let doc = Self.makeDocument(original: "photo.JPEG", mimeType: "application/x-unknown")
+    #expect(
+      doc.shareFilename(original: true, correspondentName: nil) == "2024-03-01 Invoice 42.JPEG")
   }
 
   @Test func archiveWithoutArchiveVersionUsesOriginalExtension() {

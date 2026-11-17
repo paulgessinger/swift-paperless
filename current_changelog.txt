@@ -83,3 +83,4 @@
 - The Offline & Sync screen now lists the steps of a sync as it runs, and shows which saved view and how many documents each step is on, so a long sync is visibly moving
 - The Storage section of the Offline & Sync screen now shows the space taken by the documents' OCR text separately from the document files
 - The document list now shows whether each document is online only (cloud), downloaded to the device (arrow), or kept offline (solid arrow), instead of only marking kept documents
+- Sharing a document now names the file the way the Paperless-ngx web interface names a download, from its date, correspondent and title, instead of the name it was uploaded with. The original keeps its own file type, e.g. .jpg for a photo

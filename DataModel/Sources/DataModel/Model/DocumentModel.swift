@@ -109,6 +109,8 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
   // versions or in-progress consumption may omit them.
   public var originalFileName: String?
   public var archivedFileName: String?
+  /// Type of the original file; the archive is always a PDF.
+  public var mimeType: String?
 
   public var storagePath: UInt?
   public var owner: Owner
@@ -155,6 +157,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     modified: Date? = nil,
     originalFileName: String? = nil,
     archivedFileName: String? = nil,
+    mimeType: String? = nil,
     storagePath: UInt? = nil,
     owner: Owner = .unset,
     pageCount: Int? = nil,
@@ -175,6 +178,7 @@ public struct Document: Identifiable, Equatable, Hashable, Sendable {
     self.modified = modified
     self.originalFileName = originalFileName
     self.archivedFileName = archivedFileName
+    self.mimeType = mimeType
     self.storagePath = storagePath
     self.owner = owner
     self.pageCount = pageCount
@@ -198,12 +202,15 @@ extension Document {
   /// a correspondent is renamed: that does not bump the document's `modified`.
   ///
   /// A document without an archive version is served as its original for an
-  /// archive request, so it takes the original's extension. The original's
-  /// extension comes from its upload name; with none, the name has no extension.
+  /// archive request, so it takes the original's extension. That comes from
+  /// the mime type, as on the server, else from the upload name (rows cached
+  /// before the mime type was stored); with neither, there is no extension.
   public func shareFilename(original: Bool, correspondentName: String?) -> String {
     let fileExtension: String
     if !original, archivedFileName != nil {
       fileExtension = ".pdf"
+    } else if let ext = mimeType.flatMap({ Self.parserExtensions[$0] }) {
+      fileExtension = ext
     } else if let ext = originalFileName.map({ ($0 as NSString).pathExtension }), !ext.isEmpty {
       fileExtension = ".\(ext)"
     } else {
@@ -231,6 +238,40 @@ extension Document {
         }))
     return sanitized.trimmingCharacters(in: .whitespaces)
   }
+
+  /// The extension each paperless-ngx parser gives the mime types it consumes
+  /// (`supported_mime_types()` in `src/paperless/parsers/`), which is what
+  /// `Document.file_type` uses for every type paperless accepts.
+  static let parserExtensions: [String: String] = [
+    // tesseract
+    "application/pdf": ".pdf",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/tiff": ".tif",
+    "image/gif": ".gif",
+    "image/bmp": ".bmp",
+    "image/webp": ".webp",
+    "image/heic": ".heic",
+    // text
+    "text/plain": ".txt",
+    "text/csv": ".csv",
+    "application/csv": ".csv",
+    // tika
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "application/vnd.ms-excel": ".xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+    "application/vnd.ms-powerpoint": ".ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow": ".ppsx",
+    "application/vnd.oasis.opendocument.presentation": ".odp",
+    "application/vnd.oasis.opendocument.spreadsheet": ".ods",
+    "application/vnd.oasis.opendocument.text": ".odt",
+    "application/vnd.oasis.opendocument.graphics": ".odg",
+    "text/rtf": ".rtf",
+    // mail
+    "message/rfc822": ".eml",
+  ]
 
   /// Id of the version the server returns when no `?version=` query is sent.
   /// paperless resolves that with `order_by("-id").first()`, so we order by
