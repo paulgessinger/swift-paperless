@@ -383,6 +383,12 @@ struct ApiDocumentTest {
     #expect(document.owner == Owner.user(3))
     #expect(document.customFields.isEmpty)
     #expect(document.notes.count == 0)
+    #expect(document.mimeType == "application/pdf")
+    // The server built `archived_file_name`; the local rebuild must match it.
+    #expect(
+      document.shareFilename(original: false, correspondentName: nil) == document.archivedFileName)
+    #expect(
+      document.shareFilename(original: true, correspondentName: nil) == "1990-10-21 1990-10-21.pdf")
     #expect(document.pageCount == 1)
   }
 }

@@ -29,6 +29,7 @@ public struct ApiDocument: Codable, Sendable {
   var modified: Date?
   var original_file_name: String?
   var archived_file_name: String?
+  var mime_type: String?
   var storage_path: UInt?
   var owner: Owner?
   var page_count: Int?
@@ -61,6 +62,7 @@ extension ApiDocument {
       modified: modified,
       originalFileName: original_file_name,
       archivedFileName: archived_file_name,
+      mimeType: mime_type,
       storagePath: storage_path,
       owner: owner ?? .unset,
       pageCount: page_count,
