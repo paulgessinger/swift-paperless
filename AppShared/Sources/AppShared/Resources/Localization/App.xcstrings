@@ -16386,6 +16386,31 @@
         }
       }
     },
+    "tagsRemoveInboxShort" : {
+      "comment" : "Short label of the swipe action that removes inbox tags from a document. Shown under a swipe button; keep it to about 12 characters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear inbox"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablegen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classer"
+          }
+        }
+      }
+    },
+
     "tasksPending" : {
       "extractionState" : "manual",
       "localizations" : {
