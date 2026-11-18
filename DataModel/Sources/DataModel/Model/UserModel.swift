@@ -160,6 +160,7 @@ public struct UserPermissions: Sendable {
     case shareLink = "sharelink"
     case customField = "customfield"
     case workflow
+    case appConfig = "applicationconfiguration"
   }
 
   private var rules: [Resource: PermissionSet]
