@@ -4905,6 +4905,240 @@
         }
       }
     },
+    "documentChatClear" : {
+      "comment" : "Button that removes all messages from the AI document chat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat leeren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear chat"
+          }
+        }
+      }
+    },
+    "documentChatEmptyDescription" : {
+      "comment" : "Shown in the AI document chat before the first question",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antworten stammen aus deinen Dokumenten, mit Links zu den Quellen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answers come from your documents, with links to their sources."
+          }
+        }
+      }
+    },
+    "documentChatError" : {
+      "comment" : "Shown in place of an AI chat answer that failed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Antwort konnte nicht geladen werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The answer could not be loaded."
+          }
+        }
+      }
+    },
+    "documentChatOffline" : {
+      "comment" : "Shown in the AI document chat while the device is offline",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Dokumenten-Chat braucht eine Verbindung zum Server."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The document chat needs a connection to the server."
+          }
+        }
+      }
+    },
+    "documentChatPlaceholder" : {
+      "comment" : "Placeholder of the AI document chat input",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stell eine Frage zu deinen Dokumenten …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask a question about your documents…"
+          }
+        }
+      }
+    },
+    "documentChatPlaceholderSingleDocument" : {
+      "comment" : "Placeholder of the AI document chat input when it is limited to one document",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stell eine Frage zu diesem Dokument …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask a question about this document…"
+          }
+        }
+      }
+    },
+    "documentChatSend" : {
+      "comment" : "Accessibility label of the AI document chat send button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "documentChatSources" : {
+      "comment" : "Heading above the documents an AI chat answer is based on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources"
+          }
+        }
+      }
+    },
+    "documentChatStillThinking" : {
+      "comment" : "Shown when the AI document chat has waited a while for an answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denke noch nach …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still thinking…"
+          }
+        }
+      }
+    },
+    "documentChatStop" : {
+      "comment" : "Accessibility label of the button that stops an AI chat answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopp"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        }
+      }
+    },
+    "documentChatThinking" : {
+      "comment" : "Shown while the AI document chat waits for the first part of an answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denke nach …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thinking…"
+          }
+        }
+      }
+    },
+    "documentChatTitle" : {
+      "comment" : "Title of the AI document chat sheet and its toolbar button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frag deine Dokumente"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask your documents"
+          }
+        }
+      }
+    },
+    "documentChatTitleSingleDocument" : {
+      "comment" : "Title of the AI document chat when it is limited to one document",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frag zu diesem Dokument"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask about this document"
+          }
+        }
+      }
+    },
     "documentCountIndicator" : {
       "comment" : "Total document count, shown in a pill at the bottom of the document list",
       "extractionState" : "manual",
