@@ -84,3 +84,5 @@
 - The Storage section of the Offline & Sync screen now shows the space taken by the documents' OCR text separately from the document files
 - The document list now shows whether each document is online only (cloud), downloaded to the device (arrow), or kept offline (solid arrow), instead of only marking kept documents
 - Sharing a document now names the file the way the Paperless-ngx web interface names a download, from its date, correspondent and title, instead of the name it was uploaded with. The original keeps its own file type, e.g. .jpg for a photo
+- On Paperless-ngx 3.5 and later, users without the App Config view permission no longer get an error on every sync; the permission is now listed in the permissions screen
+- The inbox swipe action now uses a short label that fits the button in every language

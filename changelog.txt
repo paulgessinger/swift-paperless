@@ -2,6 +2,148 @@
 # Regenerate with `just changelog-archive`; the GitHub build
 # prereleases (tag `builds/<version>/<build>`) are the source of truth.
 
+1.11.0 (231)
+
+- Importing several files at once no longer closes before the last file, and a later import in the same session no longer closes after its first file
+- New per-server "Default upload tags" setting in Preferences: the chosen tags are preselected when uploading a document, including from the share sheet
+- Task results and error messages show up again on Paperless-ngx v3, including files rejected as duplicates
+- Documents with duplicates now say so: on Paperless-ngx v3 a document that shares its file content with others shows them in its details, and you can open them from there
+- New "Duplicates" filter for documents with or without duplicates, on Paperless-ngx v3.2 and later
+- Items in the Settings lists and Trash now stay in place until a delete succeeds, so a failed delete no longer hides them
+- Swipe-to-delete in a searched Settings list now deletes the item you swiped
+- New installs start with a short welcome page before the login screen, explaining that the app needs your own Paperless-ngx server
+- What's New can now show a paged overview of a release, with an icon and a short description per feature and more detail on request; versions without one keep showing the release notes
+- A "Leave a tip" link in the release notes now opens the tip jar in the app
+- Nested tags in Settings now show delete buttons in edit mode
+- Failed loads now retry on their own when a VPN such as Tailscale connects, and for about a minute after the app opens or returns to the foreground
+- Long tag names in a document's tag editor are now cut short to fit, instead of widening the sheet and clipping every tag and the add buttons
+- The share extension's fields are no longer cut off at the bottom on iPad
+- Picking a correspondent, document type or storage path from a search in the add-document form now closes the search and keyboard
+- Uploading and logging in with a username and password now work on servers that sign you in automatically (PAPERLESS_AUTO_LOGIN_USERNAME), instead of failing with "CSRF token missing"
+
+1.11.0 (229)
+
+- Keeping a document or saved view offline now downloads it and its text right away on any connection, including cellular data and Low Data Mode. Keeping a saved view on such a connection says so before you confirm
+
+1.11.0 (228)
+
+- New "Keep offline" action on documents: a kept document's PDF is downloaded right away and stays on the device whatever the offline browsing mode, is never removed by the storage budget, the list trim or switching back to "Recently browsed", and follows new versions from the server. The new "Kept offline" view in the saved view selector lists them, and the Offline & Sync screen shows how many of their files are on the device
+
+1.11.0 (227)
+
+- A document whose PDF is already downloaded now opens with it straight away, even when the server takes a while to answer. A small spinner next to the page count shows while the app checks the server for a newer copy, which replaces it if there is one
+- A downloaded document whose details changed on the server, for example a new tag or title, is no longer downloaded again when you open it: the app asks the server whether the file itself changed and keeps its copy if not
+- With "Entire library" offline browsing, the PDF of every document is now downloaded ahead of time, so documents open offline without ever having been viewed. The downloads run in the background and continue while the app is closed, stay on Wi-Fi unless "Sync over cellular" is on, pause when the device is low on storage, and are removed when you switch back to "Recently browsed". The Offline & Sync screen shows how many files are on the device and how many are downloading
+
+1.10.4 (226)
+
+- On iPhone Duo's inner display, the document list now sits beside the open document, and the list and document stay put when you fold or unfold the phone
+- The app now rotates to landscape on iPhone Duo's outer display
+- Fix PDF pages and the filter bar sitting under the side toolbar on iPhone Duo
+- On iPad, the edit panel now starts closed so it doesn't cover the document; the toolbar button opens it
+- The iPad split view keeps the columns you chose after a trip through narrow Split View or Slide Over
+- On iPad you can now refresh an open document from the toolbar, picking up a new version or changed details without closing and reopening it
+
+1.11.0 (225)
+
+- A new "Upload Document" action in the Shortcuts app uploads a file to Paperless without opening the app, letting you automate uploads. You can pick the target server, and optionally set a title, document type, correspondent and tags; leaving the title empty lets the server derive one from the filename
+- "Last refreshed" on the Offline & Sync screen now keeps its value when the app is restarted, instead of showing "Never" until the next refresh
+- Switching away from the app while it is syncing no longer cuts the sync off: it gets some time to finish in the background, and stops cleanly if that time runs out
+- Offline data now refreshes in the background, even when you haven't opened the app for a while. With "Entire library", the full download also continues in the background, mostly overnight. This needs Background App Refresh to be on for the app
+- The debug menu now has a "Sync runs" screen listing what each recent sync did, step by step, and how it ended, including background runs
+- Documents you have opened are kept for offline use within a 500 MB budget: once it is full, the ones you opened longest ago are removed first. Files that no longer belong to any cached document are cleaned up at launch and when a server is removed, and the debug menu shows what each cleanup did
+- Thumbnails are now stored alongside the downloaded document files and removed with them, instead of in a separate cache that could drop them at any time; the Offline & Sync storage figures now come from the app's own records of what it has downloaded
+
+1.11.0 (224)
+
+- With "Entire library" offline browsing, a document's file metadata viewed offline now shows its current file names after the document is moved on the server, for example to another storage path, instead of the names from before the move
+- Pulling to refresh a document whose preview or original file failed to download now tries the download again, instead of staying on the error until the document is reopened
+- A change the server has saved is no longer reported as failed when the app cannot update its local copy right away; the local copy catches up on its own
+- The document list no longer briefly says you have no documents while it is still loading on launch
+- A deleted document no longer reappears in a document list, as an empty placeholder or as a document that still opens, when a list update was running at the moment it was deleted
+- New app icon. The previous icon is still available in Settings as an alternative icon
+
+1.11.0 (223)
+
+- On Paperless-ngx 2.15 and later, document notes are saved for offline use straight from your document lists, without separate downloads
+
+1.11.0 (222)
+
+- A swipe to remove a document's inbox tags now tells you when the change could not be saved, instead of silently leaving the tags in place
+- The Offline & Sync screen now lists which parts of the last sync failed and why, clearing each as it succeeds again. Being offline doesn't count as a failure, so syncing without a connection no longer marks every saved view as failed
+- Turning off "Entire library" offline browsing now stops the download already in progress, instead of letting it carry on re-downloading data that was just removed
+- The Offline & Sync screen now shows how much space the offline data takes up on your device: the database, downloaded documents and thumbnails
+- Thumbnails are no longer cached twice on disk
+- Document lists now update when one of their documents changes, whether in the app or on the server: a document that no longer matches the filter disappears, and one whose sort field changed moves to its new place
+
+1.10.3 (221)
+
+- Restore the tip jar
+
+1.11.0 (218)
+
+- Fix bug that prevented the app to show the proper translated UI
+
+1.11.0 (217)
+
+- Opening a document whose PDF is already cached now shows it immediately, even on a slow connection, instead of waiting behind a loading spinner
+- Pulling to refresh an open document now picks up a new version added on the server, instead of continuing to show the previous one until you close and reopen it
+- Pulling to refresh a document that has a new version on the server now finishes refreshing its notes, metadata and suggestions, instead of stopping partway and showing an "Unexpected error"
+- On iPad you can now refresh an open document from the toolbar, picking up a new version or changed details without closing and reopening it
+- Saving, editing or deleting something while offline now tells you the change was not saved, instead of failing silently and leaving your edit looking like it was queued. If the connection dropped mid-request, so the change may or may not have gone through, it says that instead of guessing.
+- Pulling to refresh while offline now shows the offline indicator instead of doing nothing at all
+- The app no longer freezes briefly while it reads or writes its offline cache; this was most noticeable when opening the app with a large library, or while the share extension was saving a document at the same time
+- The offline cache no longer grows with every filter and sort combination you have ever browsed: lists you have stopped using are cleaned up in the background, together with the documents only they were keeping on disk
+- Thumbnails and downloaded document files are now counted in the Offline & Sync data-transfer statistics, each under its own category
+- With "Recently browsed" offline browsing, long lists you haven't opened in the last day are now trimmed back down when the app starts, instead of only when you switch away from "Entire library". Your main document list and anything you viewed in the last day are kept in full
+- Fixed a crash that could happen when one filter was opened while another filter was still on screen, for example when following a link or shortcut that opens a filter
+- Connection errors now say what went wrong: that your device is offline, that the server's address can't be found, that the server isn't responding, or that the connection dropped, instead of a generic error. Timeouts while signing in are reported the same way
+- When a document list can't be loaded, for example after changing the filter or switching saved views while the server is unreachable, the list now says so and offers to retry, instead of showing "No documents". A list that only partly loaded shows a notice above the documents it has
+
+1.11.0 (216)
+
+- All of your configured servers now stay synced for offline browsing in the background, not just the one you're currently viewing, so switching servers shows your documents right away
+- An offline download that is interrupted, by losing connection or by the app being backgrounded, is now retried instead of leaving a list stuck partway while reporting it as fully downloaded
+- Background sync and an open document list downloading at the same time no longer leave gaps in a cached list
+- A document you no longer have permission to view is no longer served from the offline cache as though the server were unreachable
+- A failed cleanup of documents deleted on the server no longer stops the rest of the offline refresh
+- Switching to another server no longer throws away the offline download already running for the one you left; it keeps going in the background instead of starting over next time you switch back
+- Data used by the background library download is now counted under its own category in the Offline & Sync transfer statistics, instead of being lumped into "Other"
+- Switching a server to "Entire library" now starts downloading document notes and file metadata straight away, instead of waiting until the next time you reopen the app
+
+1.11.0 (214)
+
+- Document notes and file metadata are cached when viewed, so they remain available offline
+- With "Entire library" offline browsing, notes and file metadata are now downloaded for your whole library in the background, so every document's details are available offline even if you never opened it
+- New "Offline browsing" setting: choose "Entire library" to keep every saved view and your full document list available offline, downloaded in the background over Wi-Fi
+- Turning off "Entire library" offline browsing now asks first, and says that the documents downloaded for that server will be removed
+- New "Offline & Sync" settings screen showing sync status and how much data the app has transferred
+- New per-server "Sync over cellular" setting: offline downloads stay on Wi-Fi unless you turn it on, and Low Data Mode always pauses them
+- The Offline & Sync screen now shows which stage the offline download is in and how far along it is, instead of only "Idle" or a spinner
+- Documents that belong to a list but aren't downloaded yet appear as placeholder rows instead of being missing
+- A saved view that can't be downloaded for offline use no longer blocks the rest of the offline sync; the Offline & Sync screen now lists any views that failed to sync
+- Opening a document while the server is unreachable no longer removes it from your document list
+
+1.11.0 (213)
+
+- The app switches to a persistent synced database as the source of truth for attributes like correspondents. Please let me know if there are any permissions errors or any views show no or outdated data or don’t update
+- The share extension now reports errors when saving a document fails, instead of only briefly flashing a warning icon. If your login has expired it says so and tells you to sign in again in the app
+- Permission errors now say which operation was refused, e.g. "Delete not permitted" instead of a generic access error, and name the affected item in the error details
+- Pulling to refresh on a document now also refreshes permissions, so a permission change on the server takes effect without restarting the app
+- Starting the app before your permissions have loaded, for example while offline, no longer looks like you have no permissions: lists and documents stay usable instead of showing "Insufficient permissions"
+
+1.11.0 (212)
+
+- Sharing a document link now shares the web interface URL, which opens in a browser, instead of the API URL that did not
+
+1.11.0 (211)
+
+- Changing the default sort field, sort order or search mode in Preferences now applies to the document list right away, instead of only after a restart
+- Recover the correct API version after launching while the server is unreachable, instead of staying stuck on the minimum version
+- Title search and title and content search now use the new search API on Paperless-ngx v3.0 and later, matching what the web interface does. The same search now returns the same documents in both. Older servers are unaffected.
+- The content-only search mode is no longer offered, following the Paperless-ngx web interface, which has dropped it. Existing filters, saved views and links that use it keep working.
+- OIDC logins now support TOTP (two-factor authentication) codes from Paperless-ngx
+
 1.11.0 (208)
 
 - Fix the "What's New" screen failing to load when a release was published without release notes
