@@ -29,6 +29,9 @@ struct ApiUISettingsSettings: Codable, Sendable {
   var permissions: ApiUISettingsPermissions?
   var saved_views: ApiUISettingsSavedViews?
   var app_title: String?
+  // Server-computed and read-only: never sent back (it stays nil when built
+  // from the domain, and nil optionals are not encoded).
+  var ai_enabled: Bool?
 }
 
 extension ApiUISettingsSettings {
@@ -37,7 +40,8 @@ extension ApiUISettingsSettings {
       documentEditing: document_editing?.domain ?? UISettingsDocumentEditing(),
       permissions: permissions?.domain ?? UISettingsPermissions(),
       savedViews: saved_views?.domain ?? UISettingsSavedViews(),
-      appTitle: app_title
+      appTitle: app_title,
+      aiEnabled: ai_enabled ?? false
     )
   }
 
@@ -46,6 +50,7 @@ extension ApiUISettingsSettings {
     permissions = ApiUISettingsPermissions(from: domain.permissions)
     saved_views = ApiUISettingsSavedViews(from: domain.savedViews)
     app_title = domain.appTitle
+    ai_enabled = nil
   }
 }
 

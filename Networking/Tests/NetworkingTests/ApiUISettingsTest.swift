@@ -186,4 +186,33 @@ struct ApiUISettingsTest {
     let response = try JSONDecoder().decode(ApiUISettings.self, from: json).domain
     #expect(response.settings.appTitle == "My Paperless")
   }
+
+  @Test("ai_enabled decodes, and is absent on older servers")
+  func testAiEnabledDecodes() throws {
+    func decode(_ settings: String) throws -> Bool {
+      let json = """
+        {
+          "user": {"id": 1, "username": "paperless", "is_staff": true, "is_superuser": true, "groups": []},
+          "settings": {\(settings)},
+          "permissions": []
+        }
+        """.data(using: .utf8)!
+      return try JSONDecoder().decode(ApiUISettings.self, from: json).domain.settings.aiEnabled
+    }
+
+    #expect(try decode(#""ai_enabled": true"#))
+    #expect(try !decode(#""ai_enabled": false"#))
+    #expect(try !decode(""))
+
+    let older = try #require(testData("Data/UISettings/ui_settings_v2.13.5.json"))
+    #expect(!(try JSONDecoder().decode(ApiUISettings.self, from: older).domain.settings.aiEnabled))
+  }
+
+  @Test("ai_enabled is server-computed and never written back")
+  func testAiEnabledNotEncoded() throws {
+    let wire = ApiUISettingsSettings(from: UISettingsSettings(aiEnabled: true))
+    let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(wire))
+    let settings = try #require(json as? [String: Any])
+    #expect(!settings.keys.contains("ai_enabled"))
+  }
 }

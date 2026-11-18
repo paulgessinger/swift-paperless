@@ -197,6 +197,24 @@ public protocol Repository<Documents, Tasks>: Sendable {
   { get }
 
   func supports(feature: BackendFeature) -> Bool
+
+  // MARK: AI
+
+  /// Asks the server's AI chat a question about one document, or about every
+  /// document the user can see when `documentId` is nil.
+  ///
+  /// Returns once the server has accepted the question; the stream then yields
+  /// the raw response text received so far (not deltas) each time more arrives.
+  /// Parse it with ``DocumentChatResponse/init(parsing:)``. Only available when
+  /// the server reports `ai_enabled` in its UI settings.
+  func documentChat(
+    question: String, documentId: UInt?
+  ) async throws -> AsyncThrowingStream<String, any Error>
+}
+
+/// The repository has no server-side AI chat to talk to.
+public struct DocumentChatUnavailableError: Error, Equatable {
+  public init() {}
 }
 
 extension Repository {
@@ -229,6 +247,12 @@ extension Repository {
 
 extension Repository {
   public func supports(feature: BackendFeature) -> Bool { true }
+
+  public func documentChat(
+    question _: String, documentId _: UInt?
+  ) async throws -> AsyncThrowingStream<String, any Error> {
+    throw DocumentChatUnavailableError()
+  }
 
   public func documents(ids: [UInt]) async throws -> [Document] {
     try await documentsOneByOne(ids: ids)

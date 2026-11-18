@@ -238,7 +238,8 @@ struct ElementCacheTests {
       documentEditing: .init(removeInboxTags: true),
       permissions: .init(defaultOwner: .user(1), defaultViewUsers: [2, 3]),
       savedViews: .init(dashboardViewsVisibleIds: [9]),
-      appTitle: "My Paperless")
+      appTitle: "My Paperless",
+      aiEnabled: true)
     let uiSettings = UISettings(
       user: User(id: 1, isSuperUser: false, username: "alice", groups: [7]),
       settings: settings,
