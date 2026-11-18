@@ -419,6 +419,16 @@ public final class NeedsAuthRepository<Wrapped: Repository>: Repository {
   public func supports(feature: BackendFeature) -> Bool {
     wrapped.supports(feature: feature)
   }
+
+  // MARK: - AI chat
+
+  public func documentChat(
+    question: String, documentId: UInt?
+  ) async throws -> AsyncThrowingStream<String, any Error> {
+    try await intercept {
+      try await wrapped.documentChat(question: question, documentId: documentId)
+    }
+  }
 }
 
 // MARK: - PagedSource wrappers

@@ -46,6 +46,8 @@ public struct UISettingsRecord: Codable, Sendable, Equatable {
       public var dashboardViewsVisibleIds: [UInt]
       public var sidebarViewsVisibleIds: [UInt]
       public var appTitle: String?
+      // Optional so rows cached before this field existed still decode.
+      public var aiEnabled: Bool?
     }
   }
 
@@ -100,7 +102,8 @@ extension UISettingsRecord: FetchableRecord, PersistableRecord, TableRecord {
         defaultEditGroups: domain.settings.permissions.defaultEditGroups,
         dashboardViewsVisibleIds: domain.settings.savedViews.dashboardViewsVisibleIds,
         sidebarViewsVisibleIds: domain.settings.savedViews.sidebarViewsVisibleIds,
-        appTitle: domain.settings.appTitle),
+        appTitle: domain.settings.appTitle,
+        aiEnabled: domain.settings.aiEnabled),
       permissions: permissions)
   }
 
@@ -140,7 +143,8 @@ extension UISettingsRecord: FetchableRecord, PersistableRecord, TableRecord {
       savedViews: UISettingsSavedViews(
         dashboardViewsVisibleIds: payload.settings.dashboardViewsVisibleIds,
         sidebarViewsVisibleIds: payload.settings.sidebarViewsVisibleIds),
-      appTitle: payload.settings.appTitle)
+      appTitle: payload.settings.appTitle,
+      aiEnabled: payload.settings.aiEnabled ?? false)
 
     return UISettings(user: user, settings: settings, permissions: permissions)
   }

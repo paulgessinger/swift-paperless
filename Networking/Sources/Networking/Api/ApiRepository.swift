@@ -1372,6 +1372,121 @@ extension ApiRepository: Repository {
     ).domain
   }
 
+  // MARK: AI chat
+
+  public func documentChat(
+    question: String, documentId: UInt?
+  ) async throws -> AsyncThrowingStream<String, any Error> {
+    Logger.networking.notice("Starting document chat")
+    var request = try request(.documentChat())
+    request.httpMethod = HttpMethod.post.rawValue
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = try encoder.encode(
+      ApiDocumentChatRequest(q: question, document_id: documentId))
+    request.cachePolicy = .reloadIgnoringLocalCacheData
+    // Retrieval plus a (possibly local) LLM can take a long while to produce
+    // the first token.
+    request.timeoutInterval = Self.documentChatTimeout
+
+    return try await Self.streamDocumentChat(request: request, urlSession: urlSession)
+  }
+
+  nonisolated static let documentChatTimeout: TimeInterval = 300
+
+  /// Sends the chat request and waits for the response headers, so a refused
+  /// question (401, 403, AI turned off) throws here, where the auth
+  /// interception sees it. The body is then read in the same task and handed
+  /// on through the returned stream, which owns that task: cancelling the
+  /// stream's consumer cancels the request.
+  nonisolated static func streamDocumentChat(
+    request: URLRequest, urlSession: URLSession
+  ) async throws -> AsyncThrowingStream<String, any Error> {
+    let (stream, continuation) = AsyncThrowingStream<String, any Error>.makeStream()
+    // One-shot signal: finishes cleanly once the server accepted the question,
+    // or throws why it didn't.
+    let (accepted, acceptedContinuation) = AsyncThrowingStream<Void, any Error>.makeStream()
+    let sanitizedUrl = request.url.map(sanitizeUrlForLog) ?? "<nil>"
+
+    let task = Task.detached {
+      let bytes: URLSession.AsyncBytes
+      do {
+        let response: URLResponse
+        do {
+          (bytes, response) = try await urlSession.bytes(for: request)
+        } catch let error where error.isCancellationError {
+          throw error
+        } catch {
+          throw RequestError.normalizingTransportFailure(error, path: NetworkPathProbe.sample())
+        }
+
+        guard let response = response as? HTTPURLResponse, let status = response.status else {
+          throw RequestError.invalidResponse
+        }
+
+        if status != .ok {
+          // Error bodies are short (a message or a JSON detail); cap the read
+          // in case something streams anyway.
+          var body = Data()
+          for try await byte in bytes {
+            body.append(byte)
+            if body.count >= 64 * 1024 { break }
+          }
+          Logger.networking.error(
+            "Document chat request to \(sanitizedUrl, privacy: .public) failed with status \(response.statusCode)"
+          )
+          switch status {
+          case .forbidden: throw RequestError.forbidden(body: body)
+          case .unauthorized: throw RequestError.unauthorized(body: body)
+          case .notAcceptable: throw RequestError.unsupportedVersion(sentVersion: nil)
+          default: throw RequestError.unexpectedStatusCode(code: status, body: body)
+          }
+        }
+      } catch {
+        acceptedContinuation.finish(throwing: error)
+        continuation.finish(throwing: error)
+        return
+      }
+
+      acceptedContinuation.finish()
+
+      // The server flushes text as the model produces it. Decode as characters
+      // so multi-byte UTF-8 split across chunks stays intact, and throttle
+      // updates so the UI isn't re-rendered for every character.
+      var text = ""
+      var lastYield = ContinuousClock.now
+      do {
+        for try await character in bytes.characters {
+          text.append(character)
+          let now = ContinuousClock.now
+          if now - lastYield >= .milliseconds(50) {
+            continuation.yield(text)
+            lastYield = now
+          }
+        }
+        continuation.yield(text)
+        continuation.finish()
+      } catch let error where error.isCancellationError {
+        continuation.finish(throwing: error)
+      } catch {
+        Logger.networking.error(
+          "Document chat stream from \(sanitizedUrl, privacy: .public) failed: \(error)")
+        let failure = RequestError.normalizingTransportFailure(
+          error, path: NetworkPathProbe.sample())
+        continuation.finish(throwing: failure)
+      }
+    }
+    // Dropping or cancelling the consumer of the answer stops the request.
+    continuation.onTermination = { _ in task.cancel() }
+
+    try await withTaskCancellationHandler {
+      for try await _ in accepted {}
+    } onCancel: {
+      task.cancel()
+    }
+
+    return stream
+  }
+
   // MARK: Saved views
 
   public func savedViews() async throws -> [SavedView] {

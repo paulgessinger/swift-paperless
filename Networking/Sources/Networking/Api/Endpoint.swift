@@ -250,6 +250,11 @@ extension Endpoint {
     Endpoint(path: "/api/documents/\(documentId)/suggestions", queryItems: [])
   }
 
+  /// paperless-ngx's AI document chat. Answers stream back as plain text.
+  public static func documentChat() -> Endpoint {
+    Endpoint(path: "/api/documents/chat", queryItems: [])
+  }
+
   public static func nextAsn() -> Endpoint {
     Endpoint(path: "/api/documents/next_asn", queryItems: [])
   }

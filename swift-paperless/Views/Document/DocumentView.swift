@@ -109,6 +109,7 @@ struct DocumentView: View {
   @State private var selectedPhotos: [PhotosPickerItem] = []
 
   @State private var showDataScanner = false
+  @State private var showDocumentChat = false
   @State private var taskViewNavState: NavigationState? = nil
 
   /// A saved view from the sidebar waiting for the user to confirm keeping it
@@ -305,10 +306,52 @@ struct DocumentView: View {
     }
   }
 
+  /// The server's AI document chat, offered when the server has AI turned on.
+  private var isDocumentChatAvailable: Bool {
+    store.settings.aiEnabled && store.permissions.test(.view, for: .document)
+  }
+
+  /// Opens a document the chat cited, the way a deep link does.
+  private func openDocument(id: UInt) {
+    Task {
+      do {
+        guard let document = try await store.document(id: id) else {
+          Logger.shared.error("Document with id \(id) from chat was not found")
+          if let connId = connectionManager.activeConnectionId,
+            let connection = connectionManager.connections[connId]
+          {
+            errorController.push(error: DocumentNotFoundError(id: id, connection: connection))
+          }
+          return
+        }
+
+        store.preloadThumbnail(for: document)
+        if horizontalSizeClass == .regular {
+          select(document)
+        } else {
+          navPath = [.detail(document: document)]
+        }
+      } catch {
+        Logger.shared.error("Error opening document from chat: \(error)")
+        errorController.push(error: error)
+      }
+    }
+  }
+
   @ToolbarContentBuilder
   private var trailingToolbar: some ToolbarContent {
     ToolbarItemGroup(placement: .navigationBarTrailing) {
       TaskActivityToolbar(navState: $taskViewNavState)
+
+      if isDocumentChatAvailable {
+        Button {
+          showDocumentChat = true
+        } label: {
+          Label(
+            String(localized: .app(.documentChatTitle)),
+            systemImage: "bubble.left.and.text.bubble.right")
+        }
+      }
 
       Menu {
         Group {
@@ -827,6 +870,12 @@ struct DocumentView: View {
     }
 
     .sheet(item: $taskViewNavState, content: tasksSheet)
+
+    .sheet(isPresented: $showDocumentChat) {
+      DocumentChatView(onOpenDocument: openDocument(id:))
+        .environment(store)
+        .environment(networkMonitor)
+    }
 
     .onChange(of: routeManager.pendingRoute, initial: true, handlePendingRoute)
 
