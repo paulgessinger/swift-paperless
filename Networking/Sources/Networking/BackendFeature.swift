@@ -48,6 +48,11 @@ public enum BackendFeature {
   // document as if filtered.
   case hasDuplicatesFilter
 
+  // https://github.com/paperless-ngx/paperless-ngx/pull/14709 / 3.5.0
+  // Reading `/api/config/` requires `view_applicationconfiguration`; before,
+  // any authenticated user could.
+  case appConfigViewPermission
+
   func isSupported(on backendVersion: Version, api apiVersion: UInt) -> Bool {
     switch self {
     case .nextAsnEndpoint, .documentIDFilter:
@@ -62,6 +67,8 @@ public enum BackendFeature {
       apiVersion >= 10 || backendVersion >= Version(3, 0, 0)
     case .hasDuplicatesFilter:
       backendVersion >= Version(3, 2, 0)
+    case .appConfigViewPermission:
+      backendVersion >= Version(3, 5, 0)
     }
   }
 }

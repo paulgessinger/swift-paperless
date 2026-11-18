@@ -38,6 +38,24 @@ struct ServerSessionTests {
     #expect(tags.count == 1)
   }
 
+  // The transient repository reports every backend feature as supported, so it
+  // stands in for a backend that gates `/api/config/` on the permission.
+  @Test("Server configuration is fetched only when the user may view it")
+  func serverConfigurationFollowsPermission() async throws {
+    for canView in [true, false] {
+      let harness = try await StoreHarness.make()
+      harness.transient.addUser(StoreHarness.user)
+      try harness.transient.login(userId: StoreHarness.user.id)
+      harness.transient.set(permissions: .full { $0.set(.view, to: canView, for: .appConfig) })
+
+      try await harness.session.syncElements()
+
+      let config = try await harness.database.serverConfiguration(serverID: harness.serverID)
+      #expect((config != nil) == canView)
+      #expect(harness.session.syncFailures.isEmpty)
+    }
+  }
+
   // Driven through the database rather than `reconcileDocuments()`, so the
   // stamp is a known value.
   @Test(
