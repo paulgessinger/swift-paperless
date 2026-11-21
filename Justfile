@@ -140,6 +140,10 @@ lint-whitespace:
 lint-eof:
   uv run .ci/lint.py eof
 
+# List localization keys no Swift code uses; pass --remove to delete them
+lint-strings *args:
+  uv run .ci/unused_strings.py {{args}}
+
 lint: lint-format lint-whitespace lint-eof
 
 resolve-packages: generate

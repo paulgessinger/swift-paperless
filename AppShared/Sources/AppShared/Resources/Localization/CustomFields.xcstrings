@@ -1379,59 +1379,6 @@
         }
       }
     },
-    "noCustomFieldsInDocumentDescriptionNoPerms" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dette dokument har ikke nogen brugerdefinerede felter tilknyttet."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses Dokument enthält keine benutzerdefinierten Felder."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This document does not have any custom fields attached."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce document ne comporte pas de champs personnalisés."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A questo documento non sono allegati campi personalizzati."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aan dit document zijn geen aangepaste velden gekoppeld."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ten dokument nie zawiera żadnych pól dodatkowych."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu dokümana eklenmiş herhangi bir özel alan yoktur."
-          }
-        }
-      }
-    },
     "noDateDescription" : {
       "extractionState" : "manual",
       "localizations" : {

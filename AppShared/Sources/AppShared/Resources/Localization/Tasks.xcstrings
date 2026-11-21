@@ -60,13 +60,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Afvis alle"
+            "value" : "Afvis viste"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle verwerfen"
+            "value" : "Sichtbare verwerfen"
           }
         },
         "en" : {
@@ -78,31 +78,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tout ignorer"
+            "value" : "Ignorer les tâches affichées"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ignora tutti"
+            "value" : "Ignora quelle visibili"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alles negeren"
+            "value" : "Zichtbare negeren"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odrzuć wszystkie"
+            "value" : "Odrzuć widoczne"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tümünü yoksay"
+            "value" : "Görünenleri yoksay"
           }
         }
       }
@@ -209,59 +209,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oluşturuldu"
-          }
-        }
-      }
-    },
-    "doneLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Udført"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abgeschlossen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completed"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminé"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completato"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voltooid"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zakończone"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamamlandı"
           }
         }
       }
@@ -373,59 +320,6 @@
         }
       }
     },
-    "filenameLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filnavn"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dateiname"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File name"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nom du fichier"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nome file"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bestandsnaam"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nazwa pliku"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dosya adı"
-          }
-        }
-      }
-    },
     "idLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -528,59 +422,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu görevle ilişkili %@ numaralı doküman mevcut değil.\nBu esnada silinmiş olabilir, veya görüntülemeye yetkiniz olmayabilir."
-          }
-        }
-      }
-    },
-    "noTasks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ingen opgaver"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Aufgaben"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No tasks"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune tâche"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun task"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geen taken"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak zadań"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Görev yok"
           }
         }
       }
@@ -697,14 +538,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "Dokument #%@ oprettet"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "Dokument #%@ erstellt"
           }
         },
         "en" : {
@@ -715,32 +556,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "Document #%@ créé"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "Documento #%@ creato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "Document #%@ aangemaakt"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "Utworzono dokument #%@"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Created document #%@"
+            "state" : "translated",
+            "value" : "#%@ numaralı doküman oluşturuldu"
           }
         }
       }
