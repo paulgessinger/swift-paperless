@@ -26,6 +26,7 @@ extension UserPermissions.Resource {
     case .mailRule: String(localized: .permissions(.resourceMailRule))
     case .shareLink: String(localized: .permissions(.resourceShareLink))
     case .workflow: String(localized: .permissions(.resourceWorkflow))
+    case .appConfig: String(localized: .permissions(.resourceAppConfig))
     case .customField: CustomField.localizedName
     }
   }
@@ -49,6 +50,7 @@ extension UserPermissions.Resource {
     case .mailRule: String(localized: .permissions(.resourceMailRules))
     case .shareLink: String(localized: .permissions(.resourceShareLinks))
     case .workflow: String(localized: .permissions(.resourceWorkflows))
+    case .appConfig: String(localized: .permissions(.resourceAppConfig))
     case .customField: CustomField.localizedNamePlural
     }
   }

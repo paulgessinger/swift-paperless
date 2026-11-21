@@ -539,8 +539,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
           }
         }
       }
-      total += 1
-      group.addTask { [self] in try await syncServerConfiguration() }
+      // Older backends serve the config to any authenticated user, so their
+      // matrix doesn't say whether the fetch will succeed.
+      if !wrapped.supports(feature: .appConfigViewPermission) || canView(.appConfig) {
+        total += 1
+        group.addTask { [self] in try await syncServerConfiguration() }
+      }
 
       for try await _ in group {
         completed += 1

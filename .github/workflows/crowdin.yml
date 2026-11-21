@@ -37,12 +37,44 @@ jobs:
           install-only: true
 
       - name: Crowdin push
-        uses: crowdin/github-action@959dc74ac104447731cba99a016f85d0ae719788 # v3.5.0
+        uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
         with:
           command: push
 
+      # The repo is the source of truth for translations: catalog edits that
+      # land on main are uploaded and approved on Crowdin before the pull.
+      - name: Decide whether to upload translations
+        id: gate
+        if: github.event_name == 'push'
+        env:
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          # A merged sync PR only carries values that came from Crowdin.
+          if [[ "$HEAD_MESSAGE" == "chore: Update localization"* ]]; then
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # While a sync PR is open, Crowdin has translations main lacks;
+          # uploading main's older values would overwrite them.
+          pending=$(git ls-remote --heads origin l18n_update)
+          if [[ -n "$pending" ]]; then
+            echo "::notice::Skipping translation upload: l18n_update is pending"
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "upload=true" >> "$GITHUB_OUTPUT"
+
+      - name: Crowdin push translations
+        if: steps.gate.outputs.upload == 'true'
+        uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
+        with:
+          command: push translations
+          # Keep values equal to the source ("Scan"), and let repo edits
+          # replace approved translations.
+          command_args: --import-eq-suggestions --auto-approve-imported
+
       - name: Crowdin pull
-        uses: crowdin/github-action@959dc74ac104447731cba99a016f85d0ae719788 # v3.5.0
+        uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
         with:
           command: pull
 
@@ -55,7 +87,7 @@ jobs:
           prek run end-of-file-fixer --files "${catalogs[@]}" || true
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
           token: ${{ secrets.GH_TOKEN }}
           title: 'chore: Update localization'

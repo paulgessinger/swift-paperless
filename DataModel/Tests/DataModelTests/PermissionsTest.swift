@@ -42,11 +42,16 @@ struct PermissionsTest {
   @Test func testUserPermissionsDescription() {
     var permissions = UserPermissions(rules: [:])
 
+    let nameWidth = (UserPermissions.Resource.allCases.map(\.rawValue.count).max() ?? 0) + 1
+    func row(_ name: String, _ flags: String) -> String {
+      name.padding(toLength: nameWidth, withPad: " ", startingAt: 0) + flags
+    }
+
     // Empty permissions
     let emptyDescription = permissions.matrix
     #expect(emptyDescription.contains("vacd"))
-    #expect(emptyDescription.contains("document      ----"))
-    #expect(emptyDescription.contains("tag           ----"))
+    #expect(emptyDescription.contains(row("document", "----")))
+    #expect(emptyDescription.contains(row("tag", "----")))
 
     // Add some permissions
     permissions.set(.view, to: true, for: .document)
@@ -55,9 +60,10 @@ struct PermissionsTest {
     permissions.set(.delete, to: true, for: .user)
 
     let description = permissions.matrix
-    #expect(description.contains("document      va--"))
-    #expect(description.contains("tag           --c-"))
-    #expect(description.contains("user          ---d"))
+    #expect(description.contains(row("document", "va--")))
+    #expect(description.contains(row("tag", "--c-")))
+    #expect(description.contains(row("user", "---d")))
+    #expect(description.contains(row("applicationconfiguration", "----")))
 
     // Verify format
     let lines = description.split(separator: "\n")

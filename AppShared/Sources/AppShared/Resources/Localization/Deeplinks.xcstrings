@@ -31,7 +31,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I tag esclusi (!) non sono ammessi quando si usa tag_mode=any"
+            "value" : "Le etichette escluse (!) non sono ammesse quando si usa tag_mode=any"
           }
         },
         "nl" : {

@@ -328,13 +328,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfiguration"
+            "value" : "Kanal"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfiguration"
+            "value" : "Kanal"
           }
         },
         "en" : {
@@ -346,31 +346,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuration"
+            "value" : "Canal"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configurazione"
+            "value" : "Canale"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configuratie"
+            "value" : "Kanaal"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Konfiguracja"
+            "value" : "Kanał"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yapılandırma"
+            "value" : "Kanal"
           }
         }
       }
@@ -381,7 +381,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version"
+            "value" : "App-version"
           }
         },
         "de" : {
@@ -399,31 +399,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version"
+            "value" : "Version de l'app"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Versione"
+            "value" : "Versione dell'app"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Versie"
+            "value" : "App-versie"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wersja"
+            "value" : "Wersja aplikacji"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sürüm"
+            "value" : "Uygulama sürümü"
           }
         }
       }
@@ -903,59 +903,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sertifika yüklenmedi"
-          }
-        }
-      }
-    },
-    "certificates" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certifikater"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zertifikate"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificates"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificats"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificati"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certificaten"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certyfikaty"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sertifikalar"
           }
         }
       }
@@ -1546,10 +1493,10 @@
     "defaultUploadTags" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
+        "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Default upload tags"
+            "value" : "Standardetiketter til upload"
           }
         },
         "de" : {
@@ -1557,22 +1504,94 @@
             "state" : "translated",
             "value" : "Standard-Tags für Uploads"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default upload tags"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags par défaut pour l'envoi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etichette predefinite per il caricamento"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaardlabels voor uploads"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślne tagi przesyłania"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varsayılan yükleme etiketleri"
+          }
         }
       }
     },
     "defaultUploadTagsDescription" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
+        "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "These tags are preselected for every document you upload to this server. You can still change them per document."
+            "value" : "Disse etiketter er forvalgt for hvert dokument, du uploader til denne server. Du kan stadig ændre dem for hvert dokument."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Tags werden bei jedem Dokument, das du auf diesen Server hochlädst, vorausgewählt. Du kannst sie pro Dokument weiterhin anpassen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These tags are preselected for every document you upload to this server. You can still change them per document."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces tags sont présélectionnés pour chaque document que vous envoyez vers ce serveur. Vous pouvez toujours les modifier pour chaque document."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste etichette sono preselezionate per ogni documento che carichi su questo server. Puoi comunque modificarle per ogni documento."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze labels worden vooraf geselecteerd voor elk document dat je naar deze server uploadt. Je kunt ze per document nog aanpassen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Te tagi są wstępnie wybrane dla każdego dokumentu przesyłanego na ten serwer. Nadal możesz je zmienić dla każdego dokumentu."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu etiketler, bu sunucuya yüklediğiniz her doküman için önceden seçilir. Bunları yine de her doküman için değiştirebilirsiniz."
           }
         }
       }
@@ -2107,59 +2126,6 @@
         }
       }
     },
-    "feedbackSendEmail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send e-mail"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Mail senden"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send mail"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Envoyer un courriel"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invia email"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mail versturen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyślij e-mail"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-posta gönder"
-          }
-        }
-      }
-    },
     "filterConfiguration" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2643,13 +2609,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Logfiler"
+            "value" : "App-logfiler"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Logs"
+            "value" : "App-Logs"
           }
         },
         "en" : {
@@ -2661,31 +2627,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Journaux"
+            "value" : "Journaux de l'app"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Registri"
+            "value" : "Registri dell'app"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Logboeken"
+            "value" : "App-logboeken"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dzienniki"
+            "value" : "Dzienniki aplikacji"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Günlükler"
+            "value" : "Uygulama günlükleri"
           }
         }
       }
@@ -2804,7 +2770,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokumenter, der er hentet til offlinebrug på denne server, bliver fjernet – bortset fra de nyeste i din dokumentliste. Gemte visninger hentes igen, når du åbner dem."
+            "value" : "Dokumenter og PDF-filer, der er hentet til offlinebrug på denne server, bliver fjernet – bortset fra de nyeste dokumenter i din dokumentliste og de dokumenter, du beholder offline. Filerne hentes igen, når du åbner et dokument."
           }
         },
         "de" : {
@@ -2822,31 +2788,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les documents téléchargés pour une utilisation hors ligne sur ce serveur seront supprimés, à l'exception des plus récents de votre liste de documents. Les vues enregistrées seront téléchargées à nouveau lorsque vous les ouvrirez."
+            "value" : "Les documents et fichiers PDF téléchargés pour une utilisation hors ligne sur ce serveur seront supprimés, à l'exception des documents les plus récents de votre liste de documents et de ceux que vous conservez hors ligne. Les fichiers sont téléchargés à nouveau lorsque vous ouvrez un document."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I documenti scaricati per l'uso offline su questo server verranno rimossi, tranne i più recenti nel tuo elenco di documenti. Le viste salvate vengono scaricate di nuovo quando le apri."
+            "value" : "I documenti e i file PDF scaricati per l'uso offline su questo server verranno rimossi, tranne i documenti più recenti nel tuo elenco di documenti e quelli che mantieni offline. I file vengono scaricati di nuovo quando apri un documento."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documenten die op deze server voor offlinegebruik zijn gedownload, worden verwijderd, behalve de meest recente in je documentenlijst. Opgeslagen weergaven worden opnieuw gedownload zodra je ze opent."
+            "value" : "Documenten en pdf-bestanden die op deze server voor offlinegebruik zijn gedownload, worden verwijderd, behalve de meest recente documenten in je documentenlijst en de documenten die je offline bewaart. Bestanden worden opnieuw gedownload zodra je een document opent."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dokumenty pobrane do użytku offline na tym serwerze zostaną usunięte, z wyjątkiem najnowszych z Twojej listy dokumentów. Zapisane widoki zostaną pobrane ponownie po ich otwarciu."
+            "value" : "Dokumenty i pliki PDF pobrane do użytku offline na tym serwerze zostaną usunięte, z wyjątkiem najnowszych dokumentów z Twojej listy dokumentów i dokumentów zachowanych offline. Pliki zostaną pobrane ponownie po otwarciu dokumentu."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu sunucuda çevrimdışı kullanım için indirilen dokümanlar, doküman listenizdeki en yeni olanlar dışında kaldırılacak. Kayıtlı görünümler açtığınızda yeniden indirilir."
+            "value" : "Bu sunucuda çevrimdışı kullanım için indirilen dokümanlar ve PDF dosyaları, doküman listenizdeki en yeni dokümanlar ve çevrimdışı tuttuğunuz dokümanlar dışında kaldırılacak. Dosyalar, bir dokümanı açtığınızda yeniden indirilir."
           }
         }
       }
@@ -2912,7 +2878,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Når Hele biblioteket er valgt, hentes alle gemte visninger og hele din dokumentliste via Wi-Fi, så de kan gennemses offline. Selve dokumentfilerne hentes fortsat kun, når du åbner dem. Skifter du tilbage til Senest gennemsete, fjernes det, der er hentet."
+            "value" : "Når Hele biblioteket er valgt, hentes alle gemte visninger, hele din dokumentliste og PDF-filen for hvert dokument via Wi-Fi, så du kan læse dem offline. Skifter du tilbage til Senest gennemsete, fjernes det, der er hentet."
           }
         },
         "de" : {
@@ -2930,31 +2896,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avec « Bibliothèque entière », toutes les vues enregistrées et votre liste de documents complète sont téléchargées en Wi-Fi afin de pouvoir être consultées hors ligne. Les fichiers des documents ne sont toujours téléchargés qu'à leur ouverture. Revenir à « Récemment consultés » supprime ce qui a été téléchargé."
+            "value" : "Avec « Bibliothèque entière », toutes les vues enregistrées, votre liste de documents complète et le PDF de chaque document sont téléchargés en Wi-Fi afin que vous puissiez les lire hors ligne. Revenir à « Récemment consultés » supprime ce qui a été téléchargé."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Con «Intera libreria», tutte le viste salvate e l'elenco completo dei documenti vengono scaricati tramite Wi-Fi per poter essere consultati offline. I file dei documenti vengono comunque scaricati solo quando li apri. Tornando a «Consultati di recente» viene rimosso ciò che è stato scaricato."
+            "value" : "Con «Intera libreria», tutte le viste salvate, l'elenco completo dei documenti e il PDF di ogni documento vengono scaricati tramite Wi-Fi, così puoi leggerli offline. Tornando a «Consultati di recente» viene rimosso ciò che è stato scaricato."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bij Volledige bibliotheek worden alle opgeslagen weergaven en je volledige documentenlijst via wifi gedownload, zodat je ze offline kunt bekijken. De documentbestanden zelf worden nog steeds pas gedownload wanneer je ze opent. Terugschakelen naar Onlangs bekeken verwijdert wat is gedownload."
+            "value" : "Bij Volledige bibliotheek worden alle opgeslagen weergaven, je volledige documentenlijst en de pdf van elk document via wifi gedownload, zodat je ze offline kunt lezen. Terugschakelen naar Onlangs bekeken verwijdert wat is gedownload."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przy ustawieniu Cała biblioteka wszystkie zapisane widoki i pełna lista dokumentów są pobierane przez Wi-Fi, aby można je było przeglądać offline. Same pliki dokumentów nadal są pobierane dopiero po ich otwarciu. Przełączenie z powrotem na Ostatnio przeglądane usuwa to, co zostało pobrane."
+            "value" : "Przy ustawieniu Cała biblioteka wszystkie zapisane widoki, pełna lista dokumentów i plik PDF każdego dokumentu są pobierane przez Wi-Fi, aby można je było czytać offline. Przełączenie z powrotem na Ostatnio przeglądane usuwa to, co zostało pobrane."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tüm kitaplık seçildiğinde, tüm kayıtlı görünümler ve eksiksiz doküman listeniz çevrimdışı göz atılabilmesi için Wi-Fi üzerinden indirilir. Doküman dosyaları yine yalnızca siz açtığınızda indirilir. Son görüntülenenler seçeneğine geri dönmek indirilenleri kaldırır."
+            "value" : "Tüm kitaplık seçildiğinde, tüm kayıtlı görünümler, eksiksiz doküman listeniz ve her dokümanın PDF dosyası çevrimdışı okuyabilmeniz için Wi-Fi üzerinden indirilir. Son görüntülenenler seçeneğine geri dönmek indirilenleri kaldırır."
           }
         }
       }
@@ -3719,15 +3685,56 @@
       "comment" : "Row label in the Storage section: size of the documents' OCR text downloaded for offline use, for all servers",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumenttekst"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumenttext"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Document text"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte des documents"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testo dei documenti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documenttekst"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekst dokumentów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doküman metni"
+          }
         }
       }
     },
-
     "offlineSyncDocuments" : {
       "comment" : "Offline & Sync status row label: the server's documents on the device",
       "extractionState" : "manual",
@@ -5037,7 +5044,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine"
+            "value" : "Inaktiv"
           }
         },
         "en" : {
@@ -6270,10 +6277,52 @@
       "comment" : "How many steps of the running sync are finished, e.g. 2 of 6 steps",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld af %2$lld trin"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld Schritten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld of %2$lld steps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld étapes sur %2$lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld di %2$lld passaggi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld van %2$lld stappen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kroki: %1$lld z %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld adım"
           }
         }
       }
@@ -6282,10 +6331,52 @@
       "comment" : "Sync step: downloading notes and file information",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentdetaljer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentdetails"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Document details"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails des documents"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dettagli dei documenti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentgegevens"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szczegóły dokumentów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doküman ayrıntıları"
           }
         }
       }
@@ -6294,10 +6385,52 @@
       "comment" : "Sync step: correspondents, tags, document types, saved views and similar",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiketter og metadata"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags und Metadaten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tags and metadata"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags et métadonnées"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etichette e metadati"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels en metagegevens"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tagi i metadane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiketler ve metaveri"
           }
         }
       }
@@ -6306,10 +6439,52 @@
       "comment" : "Sync step: downloading document files",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateien"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Files"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fichiers"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestanden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pliki"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosyalar"
           }
         }
       }
@@ -6318,10 +6493,52 @@
       "comment" : "Sync step: downloading the document list of every saved view",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentlister"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentlisten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Document lists"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listes de documents"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elenchi dei documenti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentlijsten"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listy dokumentów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doküman listeleri"
           }
         }
       }
@@ -6330,10 +6547,52 @@
       "comment" : "Sync step: looking for changed and deleted documents",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søger efter ændringer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suche nach Änderungen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Checking for changes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche de modifications"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca delle modifiche"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleren op wijzigingen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdzanie zmian"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikler denetleniyor"
           }
         }
       }
@@ -6342,10 +6601,52 @@
       "comment" : "Sync step: downloading the text content of documents",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumenttekst"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumenttext"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Document text"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte des documents"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testo dei documenti"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documenttekst"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekst dokumentów"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doküman metni"
           }
         }
       }
@@ -6354,10 +6655,52 @@
       "comment" : "Headline of the sync status while a sync is running",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synkroniserer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird synchronisiert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Syncing"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisation en cours"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione in corso"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezig met synchroniseren"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronizowanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eşitleniyor"
           }
         }
       }
@@ -6474,10 +6817,52 @@
       "comment" : "Headline of the sync status when the last sync finished without problems",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opdateret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuell"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Up to date"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À jour"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornato"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bijgewerkt"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualne"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncel"
           }
         }
       }
@@ -6486,10 +6871,52 @@
       "comment" : "Position of the saved view a sync step is on, e.g. View 2 of 5",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visning %1$lld af %2$lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ansicht %1$lld von %2$lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "View %1$lld of %2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vue %1$lld sur %2$lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista %1$lld di %2$lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weergave %1$lld van %2$lld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widok %1$lld z %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Görünüm %1$lld / %2$lld"
           }
         }
       }
@@ -6498,10 +6925,52 @@
       "comment" : "Which saved view a sync step is on: the view's name, then its position among the views, e.g. Inbox · view 2 of 5",
       "extractionState" : "manual",
       "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · visning %2$lld af %3$lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Ansicht %2$lld von %3$lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · view %2$lld of %3$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · vue %2$lld sur %3$lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · vista %2$lld di %3$lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · weergave %2$lld van %3$lld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · widok %2$lld z %3$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · görünüm %2$lld / %3$lld"
           }
         }
       }
@@ -7035,112 +7504,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sunucu adı"
-          }
-        }
-      }
-    },
-    "showDocumentDetailPropertyBar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vis dokumentets egenskabslinje"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumenteneigenschaftsleiste anzeigen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show document property bar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher la barre de propriétés du document"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra barra delle proprietà documento"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Documenteigenschappen weergeven"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pokaż pasek właściwości dokumentu"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doküman özellik çubuğunu göster"
-          }
-        }
-      }
-    },
-    "showDocumentDetailPropertyBarDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vis som standard dokumentegenskaberne i bunden af skærmbilledet med dokumentoplysninger."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumenteigenschaften standardmäßig am Ende des Dokument-Detailbildschirms anzeigen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show the document properties in the bottom of the document detail screen by default."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher les propriétés du document au bas de l'écran détaillé du document par défaut."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra le proprietà del documento nella parte inferiore della schermata di dettaglio del documento."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon standaard de document eigenschappen onderaan het document detail scherm."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Domyślnie wyświetlaj właściwości dokumentu w dolnej części ekranu szczegółów dokumentu."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doküman özelliklerini varsayılan olarak doküman ayrıntı ekranının alt kısmında gösterin."
           }
         }
       }
@@ -7967,7 +8330,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bibliotheks-Download"
+            "value" : "Bibliothek laden"
           }
         },
         "en" : {
@@ -8237,7 +8600,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Attribute"
+            "value" : "Elementsynchronisierung"
           }
         },
         "en" : {
@@ -8658,7 +9021,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Affald"
+            "value" : "Papirkurv"
           }
         },
         "de" : {
@@ -8676,31 +9039,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Poubelle"
+            "value" : "Corbeille"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rifiuti"
+            "value" : "Cestino"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vuilnis"
+            "value" : "Prullenbak"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Śmieci"
+            "value" : "Kosz"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Çöp"
+            "value" : "Çöp kutusu"
           }
         }
       }
@@ -8814,7 +9177,7 @@
     "upload" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
+        "da" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Upload"
@@ -8824,6 +9187,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Upload"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caricamento"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploaden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesyłanie"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme"
           }
         }
       }

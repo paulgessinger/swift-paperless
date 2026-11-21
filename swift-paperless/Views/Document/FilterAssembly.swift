@@ -43,8 +43,8 @@ struct FilterAssembly: View {
     } label: {
       Label(localized: .app(.searchModeSettings), systemImage: "ellipsis.circle")
         .labelStyle(.iconOnly)
-        .foregroundStyle(.accentColorLightened)
     }
+    .tint(.primary)
   }
 
   @State private var showSearch = false

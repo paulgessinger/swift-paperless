@@ -42,7 +42,7 @@ struct DocumentCacheTests {
     var input = Document(
       id: 1, title: "Invoice", asn: 42, documentType: 2, correspondent: 3,
       created: date(1000), tags: [4, 5], added: date(2000), modified: date(3000),
-      originalFileName: "scan.pdf", archivedFileName: "archive.pdf",
+      originalFileName: "scan.pdf", archivedFileName: "archive.pdf", mimeType: "application/pdf",
       storagePath: 6, owner: .user(7), pageCount: 3, notes: NotesPayload(count: 2),
       versions: [
         DocumentVersion(id: 1, added: date(1000), isRoot: true),

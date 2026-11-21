@@ -605,7 +605,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         if let url = archiveURL {
           sharedFile = NamedShareItem(
             url: url,
-            name: viewModel.document.shareFilename(original: false))
+            name: store.shareFilename(for: viewModel.document, original: false))
         }
       } label: {
         Label(localized: .app(.shareArchive), systemImage: "doc.zipper")
@@ -616,7 +616,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
         if let url = originalURL {
           sharedFile = NamedShareItem(
             url: url,
-            name: viewModel.document.shareFilename(original: true))
+            name: store.shareFilename(for: viewModel.document, original: true))
         }
       } label: {
         Label(localized: .app(.shareOriginal), systemImage: "doc")

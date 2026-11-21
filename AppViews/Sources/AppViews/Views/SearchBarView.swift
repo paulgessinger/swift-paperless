@@ -27,46 +27,50 @@ public struct SearchBarView<Content: View>: View {
   @State private var showCancel: Bool = false
 
   public var body: some View {
-    GlassEffectContainer(spacing: 0) {
-      HStack {
-        HStack(spacing: 12) {
-          Image(systemName: "magnifyingglass")
-          TextField(
-            text: $text,
-            label: {
-              Text(.app(.search))
-            }
-          )
-          .focused($focused)
-          ProgressView()
-            .controlSize(.regular)
-            .opacity(isLoading ? 1 : 0)
-            .animation(.default, value: isLoading)
-        }
-        .padding(.leading, 20)
-        .padding(.trailing, 12)
-        .frame(height: 45)
-        .glassEffect(.regular.interactive())
-
-        if showCancel {
-          Button {
-            focused = false
-            text = ""
-          } label: {
-            Label(localized: .app(.cancel), systemImage: "xmark")
-              .labelStyle(.iconOnly)
-              .foregroundStyle(Color("AccentColorLightened"))
+    HStack {
+      GlassEffectContainer(spacing: 0) {
+        HStack {
+          HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+            TextField(
+              text: $text,
+              label: {
+                Text(.app(.search))
+              }
+            )
+            .focused($focused)
+            ProgressView()
+              .controlSize(.regular)
+              .opacity(isLoading ? 1 : 0)
+              .animation(.default, value: isLoading)
           }
-          .font(.title2)
-          .frame(width: 45, height: 45)
-          .glassEffect(.regular.interactive(), in: .circle)
-        }
+          .padding(.leading, 20)
+          .padding(.trailing, 12)
+          .frame(height: 45)
+          .glassEffect(.regular.interactive())
 
-        content()
-          .font(.title2)
-          .frame(width: 45, height: 45)
-          .glassEffect(.regular.interactive(), in: .circle)
+          if showCancel {
+            Button {
+              focused = false
+              text = ""
+            } label: {
+              Label(localized: .app(.cancel), systemImage: "xmark")
+                .labelStyle(.iconOnly)
+                .foregroundStyle(Color("AccentColorLightened"))
+            }
+            .font(.title2)
+            .frame(width: 45, height: 45)
+            .glassEffect(.regular.interactive(), in: .circle)
+          }
+        }
       }
+
+      // Outside the container: a menu here morphs out of the shared glass,
+      // and taps on rows over the text field don't register.
+      content()
+        .font(.title2)
+        .frame(width: 45, height: 45)
+        .glassEffect(.regular.interactive(), in: .circle)
     }
 
     .onChange(of: text) {
