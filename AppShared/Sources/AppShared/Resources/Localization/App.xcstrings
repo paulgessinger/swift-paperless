@@ -2380,7 +2380,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Corrispondente"
+            "value" : "Corrispondenti"
           }
         },
         "nl" : {
@@ -2434,7 +2434,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nessun tag"
+            "value" : "Nessuna etichetta"
           }
         },
         "nl" : {
@@ -2552,7 +2552,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pola niestandardowe"
+            "value" : "Pola dodatkowe"
           }
         },
         "tr" : {
@@ -9368,7 +9368,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nessun tag selezionato"
+            "value" : "Nessuna etichetta selezionata"
           }
         },
         "nl" : {
@@ -12036,13 +12036,13 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Viste salvate"
+            "value" : "Vista salvata"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opgeslagen weergaven"
+            "value" : "Opgeslagen weergave"
           }
         },
         "pl" : {
@@ -14038,7 +14038,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Besitzer"
+            "value" : "Eigentümer"
           }
         },
         "en" : {
@@ -14759,7 +14759,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znacznik"
+            "value" : "Tag"
           }
         },
         "tr" : {
@@ -15331,7 +15331,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag genitore"
+            "value" : "Etichetta principale"
           }
         },
         "nl" : {
@@ -15343,7 +15343,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znacznik rodzica"
+            "value" : "Tag nadrzędny"
           }
         },
         "tr" : {
