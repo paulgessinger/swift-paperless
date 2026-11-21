@@ -14,12 +14,22 @@ Polish and Turkish.
 
 ## Workflow
 
-Crowdin is where translators work. The `Crowdin synchronization` workflow runs
-every 12 hours and on pushes to `main` that touch a catalog. It uploads the
-catalogs and opens a `chore: Update localization` PR with Crowdin's result.
+The catalogs in the repo are the source of truth; Crowdin is a mirror that
+translators can also work in. The `Crowdin synchronization` workflow runs every
+12 hours and on pushes to `main` that touch a catalog. It uploads the English
+source, then pulls Crowdin's translations and opens a
+`chore: Update localization` PR if they differ from `main`.
 
-- Translations can also be edited in the catalogs directly; the sync keeps
-  them.
+- On a push to `main` it also uploads the repo's translations and approves
+  them, so edits made in the repo replace what Crowdin had, including
+  approved translations.
+- It skips that upload for merged sync PRs, and while an `l18n_update` sync PR
+  is open, because then Crowdin has newer translations than `main`. Merge the
+  sync PR first; the next catalog push uploads everything again.
+- The `Upload existing translations to Crowdin` workflow does the same upload
+  on demand, without the checks. If a sync PR would revert repo edits, close
+  it, delete the `l18n_update` branch, and run this workflow; the next sync
+  then pulls the repo's values back.
 - Crowdin fills untranslated entries with the English text and
   `"state" : "new"`. Treat `new` as untranslated, even though a value is
   present.
