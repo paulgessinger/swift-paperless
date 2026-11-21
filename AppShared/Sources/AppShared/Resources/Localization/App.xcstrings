@@ -14038,7 +14038,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eigentümer"
+            "value" : "Besitzer"
           }
         },
         "en" : {
@@ -14759,7 +14759,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tag"
+            "value" : "Znacznik"
           }
         },
         "tr" : {
@@ -17005,13 +17005,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld dpi"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld dpi"
           }
         },
@@ -17029,25 +17029,25 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld dpi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld dpi"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld dpi"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "%lld dpi"
           }
         }
@@ -17058,7 +17058,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Scan"
           }
         },
@@ -17235,7 +17235,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Source"
           }
         },

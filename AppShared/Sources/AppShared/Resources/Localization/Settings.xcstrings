@@ -334,7 +334,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kanal"
+            "value" : "Konfiguration"
           }
         },
         "en" : {
@@ -2615,7 +2615,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App-Logs"
+            "value" : "Logs"
           }
         },
         "en" : {
@@ -9179,13 +9179,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Upload"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Upload"
           }
         },
