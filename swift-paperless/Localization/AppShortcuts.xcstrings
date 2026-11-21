@@ -98,7 +98,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyślij dokument do ${applicationName}"
+            "value" : "Prześlij plik do ${applicationName}"
           }
         },
         "tr" : {
