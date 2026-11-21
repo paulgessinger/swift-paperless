@@ -478,59 +478,6 @@
         }
       }
     },
-    "explanationAll" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokumentet indeholder alle disse ord (separeret af mellemrum)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokument enthält alle folgenden Wörter (mit Leerzeichen getrennt)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Document contains all of these words (space separated)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le document contient tous ces mots (séparés par des espaces)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il documento contiene tutte queste parole (separate da spazi)"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Document bevat al deze woorden (gescheiden door spaties)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dokument zawiera wszystkie poniższe słowa (oddzielone spacją)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doküman bu kelimelerin tümünü içerir (boşluk bırakarak girin)"
-          }
-        }
-      }
-    },
     "explanationAny" : {
       "extractionState" : "manual",
       "localizations" : {
