@@ -135,6 +135,10 @@ enum Migrations {
       try V21_CreateDefaultUploadTag.run(db)
     }
 
+    migrator.registerMigration("v22_add_server_auth_method") { db in
+      try V22_AddServerAuthMethod.run(db)
+    }
+
     return migrator
   }
 }

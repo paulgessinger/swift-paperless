@@ -30,6 +30,9 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
   public var apiVersion: Int?
   /// Last-known `X-Version` string, or `nil` until a probe has succeeded.
   public var backendVersion: String?
+  /// Raw value of AppShared's `ConnectionAuthMethod`, or `nil` when the
+  /// connection predates recording it.
+  public var authMethod: String?
 
   public init(
     id: UUID,
@@ -42,7 +45,8 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     offlineBrowsingMode: String = "recentlyBrowsed",
     syncOverCellular: Bool = false,
     apiVersion: Int? = nil,
-    backendVersion: String? = nil
+    backendVersion: String? = nil,
+    authMethod: String? = nil
   ) {
     self.id = id
     self.url = url
@@ -55,6 +59,7 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     self.syncOverCellular = syncOverCellular
     self.apiVersion = apiVersion
     self.backendVersion = backendVersion
+    self.authMethod = authMethod
   }
 
   public struct StoredUser: Codable, Equatable, Sendable {
@@ -95,6 +100,7 @@ public struct ConnectionRecord: Equatable, Sendable, Codable {
     case syncOverCellular = "sync_over_cellular"
     case apiVersion = "api_version"
     case backendVersion = "backend_version"
+    case authMethod = "auth_method"
   }
 }
 
@@ -115,6 +121,7 @@ extension ConnectionRecord: FetchableRecord, PersistableRecord, TableRecord {
     public static let syncOverCellular = Column(CodingKeys.syncOverCellular)
     public static let apiVersion = Column(CodingKeys.apiVersion)
     public static let backendVersion = Column(CodingKeys.backendVersion)
+    public static let authMethod = Column(CodingKeys.authMethod)
   }
 
   // Storage-dedicated JSON coders. Sorted keys for deterministic on-disk

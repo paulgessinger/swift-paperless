@@ -13,10 +13,9 @@ import Foundation
 // stored under: it is persisted user data, so renaming one orphans what users
 // already have stored.
 //
-// Everything is `.device` for now, which is where these values have always
-// been written. Moving a key to `.shared` (so the ShareExtension can read it)
-// needs a migration of the existing value and is deliberately not part of this
-// change.
+// Keys default to `.device`, which is where these values have always been
+// written. Moving an existing key to `.shared` (so the ShareExtension can read
+// it) needs a migration of the stored value.
 extension SettingKey {
   public static var documentDeleteConfirmation: SettingKey<Bool> {
     .init("documentDeleteConfirmation", default: true)
@@ -34,9 +33,9 @@ extension SettingKey {
   }
 
   /// Whether the user opted in to sharing usage data, or `nil` until they've
-  /// been asked.
+  /// been asked. Shared, because the ShareExtension records telemetry too.
   public static var telemetryOptIn: SettingKey<Bool?> {
-    .init("telemetryOptIn", default: nil)
+    .init("telemetryOptIn", default: nil, scope: .shared)
   }
 
   /// The version this install last launched, which drives the release-notes

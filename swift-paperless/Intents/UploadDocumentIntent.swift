@@ -91,6 +91,7 @@ struct UploadDocumentIntent: AppIntent {
       throw PaperlessIntentError.uploadFailed(error.localizedDescription)
     }
 
+    await TelemetryService.record(.shortcutUploaded)
     return .result(dialog: IntentDialog(.intents(.uploadDocumentIntentSuccess)))
   }
 }

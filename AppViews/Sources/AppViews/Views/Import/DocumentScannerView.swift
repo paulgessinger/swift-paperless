@@ -4,14 +4,6 @@ import SwiftUI
 import VisionKit
 import os
 
-private func isCameraViewControllerSupported() async -> Bool {
-  await withCheckedContinuation { continuation in
-    Task.detached {
-      await continuation.resume(returning: VNDocumentCameraViewController.isSupported)
-    }
-  }
-}
-
 public struct DocumentScannerView: UIViewControllerRepresentable {
   @Binding public var isPresented: Bool
   public let onCompletion: @Sendable (_ result: Result<[URL], any Error>) -> Void
@@ -27,7 +19,7 @@ public struct DocumentScannerView: UIViewControllerRepresentable {
   @MainActor
   public static var isAvailable: Bool {
     get async {
-      await isCameraViewControllerSupported()
+      await DocumentCamera.isAvailable
     }
   }
 

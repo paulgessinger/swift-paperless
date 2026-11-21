@@ -32,6 +32,7 @@ private struct CreateNoteView: View {
 
     do {
       try await store.addNote(to: document, note: note)
+      TelemetryService.record(.notes)
       // We have no way to only get the new note here
       notes = try await store.notes(for: document)
       document.notes = NotesPayload(notes: notes)

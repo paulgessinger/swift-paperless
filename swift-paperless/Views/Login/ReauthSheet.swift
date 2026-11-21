@@ -73,6 +73,9 @@ struct ReauthSheet: View {
     Logger.api.info(
       "Re-auth succeeded for connection \(stored.id, privacy: .private(mask: .hash))")
     connectionManager.clearNeedsAuth(for: stored.id)
+    if let method = newStored.authMethod {
+      connectionManager.setAuthMethod(method, for: stored.id)
+    }
     connectionManager.cancelReauthRequest()
     // Trigger a connection refresh so the app shell rebuilds ApiRepository
     // with the now-fresh token. The init-time header probe runs again with

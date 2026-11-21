@@ -603,6 +603,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
     Menu {
       Button {
         if let url = archiveURL {
+          TelemetryService.record(.documentShare)
           sharedFile = NamedShareItem(
             url: url,
             name: store.shareFilename(for: viewModel.document, original: false))
@@ -614,6 +615,7 @@ struct DocumentDetailViewV4: DocumentDetailViewProtocol {
 
       Button {
         if let url = originalURL {
+          TelemetryService.record(.documentShare)
           sharedFile = NamedShareItem(
             url: url,
             name: store.shareFilename(for: viewModel.document, original: true))
