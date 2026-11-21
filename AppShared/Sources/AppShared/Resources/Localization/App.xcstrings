@@ -5036,7 +5036,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le document que vous essayez de télécharger a été rejeté car il est trop volumineux. Veuillez vérifier les paramètres de votre Paperless-ngx et/ou de votre proxy inverse."
+            "value" : "Le document que vous essayez d'envoyer a été rejeté car il est trop volumineux. Veuillez vérifier les paramètres de votre Paperless-ngx et/ou de votre proxy inverse."
           }
         },
         "it" : {
@@ -5048,7 +5048,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het document dat u probeert te uploaden is geweigerd omdat het te groot is. Controleer uw Paperless-ngx en/of reverse proxy-instellingen."
+            "value" : "Het document dat je probeert te uploaden is geweigerd omdat het te groot is. Controleer je Paperless-ngx- en/of reverse-proxy-instellingen."
           }
         },
         "pl" : {
@@ -6952,13 +6952,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Téléchargement terminé"
+            "value" : "Envoi terminé"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Upload completato"
+            "value" : "Caricamento completato"
           }
         },
         "nl" : {
@@ -7005,13 +7005,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erreur de téléchargement"
+            "value" : "Erreur d'envoi"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Errore di upload"
+            "value" : "Errore di caricamento"
           }
         },
         "nl" : {
@@ -7146,14 +7146,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "Hentet"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "Heruntergeladen"
           }
         },
         "en" : {
@@ -7164,32 +7164,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "Téléchargé"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "Scaricato"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "Gedownload"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "Pobrany"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloaded"
+            "state" : "translated",
+            "value" : "İndirildi"
           }
         }
       }
@@ -7950,14 +7950,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Med dubletter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Mit Duplikaten"
           }
         },
         "en" : {
@@ -7968,32 +7968,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Avec doublons"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Con duplicati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Met duplicaten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Z duplikatami"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "With duplicates"
+            "state" : "translated",
+            "value" : "Kopyası olanlar"
           }
         }
       }
@@ -8004,14 +8004,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Uden dubletter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Ohne Duplikate"
           }
         },
         "en" : {
@@ -8022,32 +8022,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Sans doublons"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Senza duplicati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Zonder duplicaten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Bez duplikatów"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "No duplicates"
+            "state" : "translated",
+            "value" : "Kopyası olmayanlar"
           }
         }
       }
@@ -8812,14 +8812,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "Få mere at vide"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "Mehr erfahren"
           }
         },
         "en" : {
@@ -8830,32 +8830,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "En savoir plus"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "Scopri di più"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "Meer informatie"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "Dowiedz się więcej"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Learn more"
+            "state" : "translated",
+            "value" : "Daha fazla bilgi"
           }
         }
       }
@@ -9290,14 +9290,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "Næste"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "Weiter"
           }
         },
         "en" : {
@@ -9308,32 +9308,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "Suivant"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "Avanti"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "Volgende"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "Dalej"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Next"
+            "state" : "translated",
+            "value" : "İleri"
           }
         }
       }
@@ -10090,14 +10090,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "Kun online"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "Nur online"
           }
         },
         "en" : {
@@ -10108,32 +10108,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "En ligne uniquement"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "Solo online"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "Alleen online"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "Tylko online"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Online only"
+            "state" : "translated",
+            "value" : "Yalnızca çevrimiçi"
           }
         }
       }
@@ -14242,14 +14242,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Spring over"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Überspringen"
           }
         },
         "en" : {
@@ -14260,32 +14260,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Passer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Salta"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Overslaan"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Pomiń"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip"
+            "state" : "translated",
+            "value" : "Atla"
           }
         }
       }
@@ -16686,8 +16686,8 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear inbox"
+            "state" : "translated",
+            "value" : "Ryd indbakke"
           }
         },
         "de" : {
@@ -16710,26 +16710,26 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear inbox"
+            "state" : "translated",
+            "value" : "Smista"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear inbox"
+            "state" : "translated",
+            "value" : "Uit inbox"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear inbox"
+            "state" : "translated",
+            "value" : "Odłóż"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear inbox"
+            "state" : "translated",
+            "value" : "Dosyala"
           }
         }
       }
@@ -18173,13 +18173,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld dpi"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld dpi"
           }
         },
@@ -18197,25 +18197,25 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld dpi"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld dpi"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld dpi"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%lld dpi"
           }
         }
@@ -18226,7 +18226,7 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Scan"
           }
         },
@@ -18403,7 +18403,7 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Source"
           }
         },

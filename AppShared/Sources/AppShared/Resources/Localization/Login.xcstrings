@@ -804,13 +804,13 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log ind med et brugernavn og en adgangskode. Dette fungerer kun med lokale konti og ikke med konti, der er godkendt via OAuth2/OIDC."
+            "value" : "Log ind med et brugernavn og en adgangskode. Dette fungerer kun med lokale konti og ikke med konti, der er godkendt via OpenID Connect."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Anmeldung mit einem Benutzernamen und einem Passwort. Dies funktioniert nur mit lokalen Konten und nicht mit Konten, die über OAuth2/OIDC authentifiziert wurden."
+            "value" : "Anmeldung mit einem Benutzernamen und einem Passwort. Dies funktioniert nur mit lokalen Konten und nicht mit Konten, die über OpenID Connect authentifiziert wurden."
           }
         },
         "en" : {
@@ -822,31 +822,31 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se connecter avec un nom d'utilisateur et un mot de passe. Cela ne fonctionne qu'avec les comptes locaux, et non avec les comptes authentifiés par OAuth2/OIDC."
+            "value" : "Se connecter avec un nom d'utilisateur et un mot de passe. Cela ne fonctionne qu'avec les comptes locaux, et non avec les comptes authentifiés par OpenID Connect."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Accedi con un nome utente e una password. Funziona solo con gli account locali, e non con gli account autenticati tramite OAuth2/OIDC."
+            "value" : "Accedi con un nome utente e una password. Funziona solo con gli account locali, e non con gli account autenticati tramite OpenID Connect."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inloggen met een gebruikersnaam en wachtwoord. Dit werkt alleen met lokale accounts en niet met accounts die geverifieerd zijn via OAuth2/OIDC."
+            "value" : "Inloggen met een gebruikersnaam en wachtwoord. Dit werkt alleen met lokale accounts en niet met accounts die geverifieerd zijn via OpenID Connect."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaloguj się za pomocą nazwy użytkownika i hasła. Działa to tylko z kontami lokalnymi, a nie z kontami uwierzytelnionymi przez OAuth2/OIDC."
+            "value" : "Zaloguj się za pomocą nazwy użytkownika i hasła. Działa to tylko z kontami lokalnymi, a nie z kontami uwierzytelnionymi przez OpenID Connect."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir kullanıcı adı ve parola ile giriş yapın. Bu yalnızca yerel hesaplarla çalışır ve OAuth2/OIDC aracılığıyla kimliği doğrulanan hesaplarla çalışmaz."
+            "value" : "Bir kullanıcı adı ve parola ile giriş yapın. Bu yalnızca yerel hesaplarla çalışır ve OpenID Connect aracılığıyla kimliği doğrulanan hesaplarla çalışmaz."
           }
         }
       }
@@ -2778,14 +2778,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Filtrér efter etiketter, korrespondenter, dokumenttyper og meget mere."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Filtere nach Tags, Korrespondenten, Dokumenttypen und mehr."
           }
         },
         "en" : {
@@ -2796,32 +2796,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Filtrez par tags, correspondants, types de documents et plus encore."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Filtra per etichette, corrispondenti, tipi di documento e altro."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Filter op labels, correspondenten, documenttypen en meer."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Filtruj według tagów, korespondentów, typów dokumentów i nie tylko."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Filter by tags, correspondents, document types, and more."
+            "state" : "translated",
+            "value" : "Etiketlere, muhataplara, doküman türlerine ve daha fazlasına göre filtreleyin."
           }
         }
       }
@@ -2832,14 +2832,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Find alt"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Alles finden"
           }
         },
         "en" : {
@@ -2850,32 +2850,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Trouvez tout"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Trova tutto"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Vind alles"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Znajdź wszystko"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Find anything"
+            "state" : "translated",
+            "value" : "Her şeyi bulun"
           }
         }
       }
@@ -2886,14 +2886,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Kom i gang"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Los geht's"
           }
         },
         "en" : {
@@ -2904,32 +2904,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Commencer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Inizia"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Aan de slag"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Zaczynamy"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Get started"
+            "state" : "translated",
+            "value" : "Başlayın"
           }
         }
       }
@@ -2940,14 +2940,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "Dine loginoplysninger og dokumenter sendes kun til din egen server."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "Deine Anmeldedaten und Dokumente gehen ausschließlich an deinen eigenen Server."
           }
         },
         "en" : {
@@ -2958,32 +2958,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "Vos identifiants et vos documents ne sont envoyés qu'à votre propre serveur."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "I tuoi dati di accesso e i tuoi documenti vengono inviati solo al tuo server."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "Je inloggegevens en documenten gaan alleen naar je eigen server."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "Twoje dane logowania i dokumenty trafiają wyłącznie na Twój własny serwer."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Your login details and documents only ever go to your own server."
+            "state" : "translated",
+            "value" : "Giriş bilgileriniz ve dokümanlarınız yalnızca kendi sunucunuza gider."
           }
         }
       }
@@ -2994,14 +2994,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Bliver på din server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Bleibt auf deinem Server"
           }
         },
         "en" : {
@@ -3012,32 +3012,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Reste sur votre serveur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Resta sul tuo server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Blijft op je server"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Zostaje na Twoim serwerze"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Stays on your server"
+            "state" : "translated",
+            "value" : "Sunucunuzda kalır"
           }
         }
       }
@@ -3048,14 +3048,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Indfang dokumenter med kameraet, eller del filer fra andre apps."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Erfasse Dokumente mit der Kamera oder teile Dateien aus anderen Apps."
           }
         },
         "en" : {
@@ -3066,32 +3066,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Capturez des documents avec l'appareil photo ou partagez des fichiers depuis d'autres apps."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Acquisisci documenti con la fotocamera o condividi file da altre app."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Leg documenten vast met de camera of deel bestanden vanuit andere apps."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Skanuj dokumenty aparatem lub udostępniaj pliki z innych aplikacji."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Capture documents with the camera, or share files from other apps."
+            "state" : "translated",
+            "value" : "Dokümanları kamerayla tarayın veya diğer uygulamalardan dosya paylaşın."
           }
         }
       }
@@ -3102,14 +3102,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Scan og upload"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Scannen und hochladen"
           }
         },
         "en" : {
@@ -3120,32 +3120,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Numériser et envoyer"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Scansiona e carica"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Scannen en uploaden"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Skanuj i przesyłaj"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Scan and upload"
+            "state" : "translated",
+            "value" : "Tara ve yükle"
           }
         }
       }
@@ -3156,14 +3156,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Du skal bruge en kørende Paperless-ngx-instans. Appen indeholder ikke en."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Du brauchst eine laufende Paperless-ngx-Instanz. Die App enthält keine."
           }
         },
         "en" : {
@@ -3174,32 +3174,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Vous aurez besoin d'une instance Paperless-ngx en fonctionnement. L'app n'en inclut pas."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Ti serve un'istanza di Paperless-ngx in esecuzione. L'app non ne include una."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Je hebt een draaiende Paperless-ngx-instantie nodig. De app bevat er zelf geen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Potrzebujesz działającej instancji Paperless-ngx. Aplikacja jej nie zawiera."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "You'll need a running Paperless-ngx instance. The app doesn't include one."
+            "state" : "translated",
+            "value" : "Çalışan bir Paperless-ngx kurulumuna ihtiyacınız var. Uygulama bunu içermez."
           }
         }
       }
@@ -3210,14 +3210,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Brug din egen server"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Dein eigener Server"
           }
         },
         "en" : {
@@ -3228,32 +3228,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Votre propre serveur"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Usa il tuo server"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Je eigen server"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Własny serwer"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Bring your own server"
+            "state" : "translated",
+            "value" : "Kendi sunucunuzu kullanın"
           }
         }
       }
@@ -3264,14 +3264,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "En native app til din Paperless-ngx-server."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "Eine native App für deinen Paperless-ngx-Server."
           }
         },
         "en" : {
@@ -3282,32 +3282,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "Une app native pour votre serveur Paperless-ngx."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "Un'app nativa per il tuo server Paperless-ngx."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "Een native app voor je Paperless-ngx-server."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "Natywna aplikacja dla Twojego serwera Paperless-ngx."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "A native app for your Paperless-ngx server."
+            "state" : "translated",
+            "value" : "Paperless-ngx sunucunuz için yerel bir uygulama."
           }
         }
       }
@@ -3318,14 +3318,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Velkommen til Swift Paperless"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Willkommen bei Swift Paperless"
           }
         },
         "en" : {
@@ -3336,32 +3336,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Bienvenue dans Swift Paperless"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Benvenuto in Swift Paperless"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Welkom bij Swift Paperless"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Witaj w Swift Paperless"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Welcome to Swift Paperless"
+            "state" : "translated",
+            "value" : "Swift Paperless'a hoş geldiniz"
           }
         }
       }

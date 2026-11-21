@@ -328,14 +328,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "I papirkurven"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "Im Papierkorb"
           }
         },
         "en" : {
@@ -346,32 +346,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "Dans la corbeille"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "Nel cestino"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "In prullenbak"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "W koszu"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "In trash"
+            "state" : "translated",
+            "value" : "Çöp kutusunda"
           }
         }
       }
@@ -382,14 +382,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Dubletter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Duplikate"
           }
         },
         "en" : {
@@ -400,32 +400,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Doublons"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Duplicati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Duplicaten"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Duplikaty"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Duplicates"
+            "state" : "translated",
+            "value" : "Kopyalar"
           }
         }
       }
@@ -436,14 +436,14 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Disse dokumenter har samme filindhold som dette."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Diese Dokumente haben denselben Dateiinhalt wie dieses."
           }
         },
         "en" : {
@@ -454,32 +454,32 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Ces documents ont le même contenu de fichier que celui-ci."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Questi documenti hanno lo stesso contenuto del file di questo documento."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Deze documenten hebben dezelfde bestandsinhoud als dit document."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Te dokumenty mają taką samą zawartość pliku jak ten."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "These documents have the same file content as this one."
+            "state" : "translated",
+            "value" : "Bu dokümanlar, bu dokümanla aynı dosya içeriğine sahip."
           }
         }
       }
