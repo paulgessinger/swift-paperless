@@ -41,6 +41,38 @@ jobs:
         with:
           command: push
 
+      # The repo is the source of truth for translations: catalog edits that
+      # land on main are uploaded and approved on Crowdin before the pull.
+      - name: Decide whether to upload translations
+        id: gate
+        if: github.event_name == 'push'
+        env:
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          # A merged sync PR only carries values that came from Crowdin.
+          if [[ "$HEAD_MESSAGE" == "chore: Update localization"* ]]; then
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # While a sync PR is open, Crowdin has translations main lacks;
+          # uploading main's older values would overwrite them.
+          pending=$(git ls-remote --heads origin l18n_update)
+          if [[ -n "$pending" ]]; then
+            echo "::notice::Skipping translation upload: l18n_update is pending"
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "upload=true" >> "$GITHUB_OUTPUT"
+
+      - name: Crowdin push translations
+        if: steps.gate.outputs.upload == 'true'
+        uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
+        with:
+          command: push translations
+          # Keep values equal to the source ("Scan"), and let repo edits
+          # replace approved translations.
+          command_args: --import-eq-suggestions --auto-approve-imported
+
       - name: Crowdin pull
         uses: crowdin/github-action@d651c77756acbe11a31d77a6fb79d8a239e1e05a # v3.6.0
         with:
