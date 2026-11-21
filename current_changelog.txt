@@ -86,3 +86,4 @@
 - Sharing a document now names the file the way the Paperless-ngx web interface names a download, from its date, correspondent and title, instead of the name it was uploaded with. The original keeps its own file type, e.g. .jpg for a photo
 - On Paperless-ngx 3.5 and later, users without the App Config view permission no longer get an error on every sync; the permission is now listed in the permissions screen
 - The inbox swipe action now uses a short label that fits the button in every language
+- Documents can be uploaded without a title: the server then titles them from the filename, unless its matching rules or workflows assign one
