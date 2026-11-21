@@ -466,6 +466,30 @@ public class PreviewRepository: Repository {
       dates: [.now, .now.advanced(by: 86400)])
   }
 
+  public func documentChat(
+    question _: String, documentId: UInt?
+  ) async throws -> AsyncThrowingStream<String, any Error> {
+    let answer = "Your **last electricity bill** was 84.20 € and is due at the end of the month."
+    let reference = documents[documentId ?? 1] ?? documents.values.first
+    let references = reference.map { [DocumentChatReference(id: $0.id, title: $0.title)] } ?? []
+    let metadata = try JSONEncoder().encode(["references": references])
+    let trailer = DocumentChatResponse.metadataDelimiter + String(decoding: metadata, as: UTF8.self)
+
+    return AsyncThrowingStream { continuation in
+      let task = Task {
+        var text = ""
+        for word in answer.split(separator: " ", omittingEmptySubsequences: false) {
+          try? await Task.sleep(for: .milliseconds(80))
+          text += text.isEmpty ? String(word) : " \(word)"
+          continuation.yield(text)
+        }
+        continuation.yield(text + trailer)
+        continuation.finish()
+      }
+      continuation.onTermination = { _ in task.cancel() }
+    }
+  }
+
   struct NotImplemented: Error {}
 
   public func savedViews() async -> [SavedView] { [] }
@@ -517,7 +541,7 @@ public class PreviewRepository: Repository {
   public func uiSettings() async -> UISettings {
     UISettings(
       user: User(id: 1, isSuperUser: true, username: "user"),
-      settings: UISettingsSettings(),
+      settings: UISettingsSettings(aiEnabled: true),
       permissions: UserPermissions.full
     )
   }

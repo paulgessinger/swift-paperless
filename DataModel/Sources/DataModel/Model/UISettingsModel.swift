@@ -80,17 +80,23 @@ public struct UISettingsSettings: Sendable, Equatable {
   public var permissions: UISettingsPermissions
   public var savedViews: UISettingsSavedViews
   public var appTitle: String?
+  /// Whether the server has its AI features (document chat, AI suggestions)
+  /// turned on. Reported read-only by the server (`ai_enabled`); absent on
+  /// backends without AI support, which reads as `false`.
+  public var aiEnabled: Bool
 
   public init(
     documentEditing: UISettingsDocumentEditing = UISettingsDocumentEditing(),
     permissions: UISettingsPermissions = UISettingsPermissions(),
     savedViews: UISettingsSavedViews = UISettingsSavedViews(),
-    appTitle: String? = nil
+    appTitle: String? = nil,
+    aiEnabled: Bool = false
   ) {
     self.documentEditing = documentEditing
     self.permissions = permissions
     self.savedViews = savedViews
     self.appTitle = appTitle
+    self.aiEnabled = aiEnabled
   }
 }
 
