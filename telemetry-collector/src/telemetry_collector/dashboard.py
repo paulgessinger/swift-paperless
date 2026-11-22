@@ -257,7 +257,8 @@ def create_dashboard_app(
         who = user(request)
         if channel not in channels:
             channel = channels[0]
-        n_days = int(days) if days.isdigit() and int(days) in RANGES else 30
+        # Matched as text: `isdigit()` accepts strings `int()` rejects, such as "²".
+        n_days = {str(r): r for r in RANGES}.get(days, 30)
         context = dashboard_context(settings.db_path, schema, channel, n_days)
         return render(
             "index.html",

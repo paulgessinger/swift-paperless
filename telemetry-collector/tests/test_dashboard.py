@@ -342,6 +342,15 @@ def test_auth_off_in_dev_mode(db_path, seeded_db):
     assert client.get("/").status_code == 200
 
 
+@pytest.mark.parametrize("days", ["²", "9" * 4301, "abc", "-7", "07", ""])
+def test_invalid_range_falls_back_to_30_days(db_path, seeded_db, days):
+    app = create_dashboard_app(by_field(DashboardSettings, db_path=db_path, dev=True, auth="off"))
+    client = TestClient(app, base_url="https://dash.example.test")
+    page = client.get("/", params={"days": days})
+    assert page.status_code == 200
+    assert 'class="on" href="/?channel=appstore&amp;days=30"' in page.text
+
+
 # ---------------------------------------------------------------- database
 
 
