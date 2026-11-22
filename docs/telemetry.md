@@ -1,16 +1,12 @@
 # Anonymous usage statistics
 
-<!-- Draft outline: points to hit under each heading. Replace with your own text. -->
-<!-- Claude: this outline comment can go once the page is written. -->
-
 
 > [!IMPORTANT]
 > **tl;dr**
 >
-> Swift Paperless can **optionally** collect anonymous usage data. This functionality is off by default, and unless you opt in specifically, nothing is ever sent to anywhere other than your server.
+> Swift Paperless can **optionally** collect anonymous usage data. This functionality is off by default, and unless you opt in specifically, no usage data is ever sent anywhere.
 >
 > If you previously opted in, you can disable usage sharing at any time in: **Settings → Anonymous usage**.
-<!-- Claude: "nothing is ever sent to anywhere other than your server" is true for usage data, but the app also loads release notes and the privacy page from GitHub. Consider "no usage data is ever sent" or a link to the privacy page (https://swift-paperless.app/privacy/). -->
 
 ## Why
 
@@ -26,11 +22,11 @@ Here are some of the types of questions that usage data can answer for me:
 
 ## How does it work and what is sent
 
-When you turn the feature on, **and only then**, the app starts preparing two packages that contains information about your install, software versions and features.
+When you turn the feature on, **and only then**, the app starts preparing two reports that contain information about your install, software versions and features.
 
 The app sends information in two distinct operations, each at most once a day. On the first app open each day, the app will try to send a setup report (see table below for an example of the contents). This report contains install-level information.
 
-For each complete day, sent on the first launch at some point after that do, the app will attempt to send information on the actual usage of the app, in broad categories rather than a detailed log of everything that you did.
+Alongside it, the app will attempt to send information on how the app was used on one earlier, completed day, in broad categories rather than a detailed log of everything that you did.
 
 The usage server does not attempt to combine or link information from these two reports.
 
@@ -51,7 +47,7 @@ Below you can find information on what exactly is collected locally and periodic
 | How you sign in | token, password, single sign-on, or none |
 | Whether you use a client certificate or custom headers | yes / no |
 | Whether you have more than one server set up | one / more than one |
-| Roughly how long ago you started sharing | under a week / under a month / under a year / longer |
+| Roughly how long ago you installed the app, if you opted in while setting it up | under a week / under a month / under a year / longer, or "existing" if you opted in later |
 | Whether this is the first report this month / this week | yes / no |
 
 Below you can see an example setup report that looks exactly like the ones the app sends. You can in fact see the json payload with the exact contents that the app will send under **Settings → Anonymous usage → What's sent**.
@@ -78,7 +74,7 @@ Below you can see an example setup report that looks exactly like the ones the a
 
 **Features you used**
 
-To understand which features are relevant to roughly how many users, the app sends a list of features that were used in the relevant day, roughly the last day that you’ve used the app before today, at most 30 days in the past. I tried to come up with a system that reveals as little as possible.
+To understand which features are relevant to roughly how many users, the app sends a list of features that were used on one completed day: the most recent day since the last report on which you used the app, the share extension or the shortcut, at most 30 days in the past. Earlier days are never reported. I tried to come up with a system that reveals as little as possible.
 
 The app counts the number of times each feature was used, but only sends a rough bucket of usage: once, 2–9 times, 10 or more. This is used to help separate occasionally used features from features that are used all the time.
 
@@ -141,7 +137,7 @@ Example (the same features report, on a day with an error):
 
 ## How it's protected
 
-The primary goal here is to build something that is as anonymous as feasible. The data collected already intentionally does not include any account or device identifiers,  reports cannot directly be connected that way. Technically, the IP addresses used to submit the reports could be used to connect them, but the receiver intentionally does not store them, and they are only briefly held in memory in the web server to prevent abuse.
+The primary goal here is to build something that is as anonymous as feasible. The data collected already intentionally does not include any account or device identifiers, so reports cannot be connected that way. Technically, the IP addresses used to submit the reports could be used to connect them, but the receiver never reads them and the web server is set up not to log them. They are only held briefly in memory to rate-limit requests.
 
 Despite all of that, it would theoretically be possible anyway to *fingerprint* data based on the correlation between variables, say a particular backend version in combination with a particular iOS version. To mitigate this, the usage collector server decomposes the tuples of data that come in right away, and then increments independent counters per attribute, e.g. backend version. This essentially avoids storing any correlated information.
 
@@ -152,10 +148,10 @@ The app and the usage collector are open source: sender and receiver code are bo
 Overall, here’s what the sent data tells me about you:
 
 - Your install was used that day; unavoidable
-- The report's date reveals the last day the app was used before the current one
+- The report's date reveals the most recent day before today on which the app, the share extension or the shortcut was used
 - The first-this-month / first-this-week answers reveal whether the install was already used earlier that month or week (UTC; weeks start Monday)
 - TestFlight reports are counted separately from App Store ones
 
 ## Turning it off
 
-If you opted in and change your mind, you can turn the usage system off in **Settings → Anonymous usage**. From that moment, nothing more is sent and the on-device bookkeeping (days not yet reported, opt-in date, month and week of the last report, pending counts) is deleted immediately.
+If you opted in and change your mind, you can turn the usage system off in **Settings → Anonymous usage**. From that moment, nothing more is sent and the on-device bookkeeping (days not yet reported, install date, the dates of the last reports, pending counts) is deleted immediately.
