@@ -122,6 +122,7 @@ public final class ServerSession {
   private let elementSyncSlot = TaskSlot<Void, any Error>()
   private let reconcileSlot = TaskSlot<ReconcileResult, Never>()
   private let libraryFillSlot = TaskSlot<Bool, Never>()
+  private let librarySeedSlot = TaskSlot<Bool, Never>()
   private let detailFillSlot = TaskSlot<Bool, Never>()
   private let fileFillSlot = TaskSlot<Bool, Never>()
   private let contentFillSlot = TaskSlot<Bool, Never>()
@@ -721,6 +722,40 @@ public final class ServerSession {
     }
   }
 
+  /// One-time metadata seed, in either offline mode: see
+  /// `CachingBackend.seedLibrary`. Recorded on the library-fill site, which a
+  /// later fill clears, since the fill pages the same list. Returns whether
+  /// the pass finished, like ``fillLibrary(force:)``.
+  @discardableResult
+  public func seedLibrary() async -> Bool {
+    guard let backend = current else { return true }
+    // Its own slot: joining an in-flight *Entire library* fill would be fine
+    // for the seed, but a fill that joined a seed would skip the saved views.
+    return await librarySeedSlot.joinOrStart { [weak self] in
+      guard let self else { return false }
+      return await asBackgroundWork { [weak self] in
+        let row = await self?.recorder.begin(.libraryFill)
+        do {
+          try await NetworkTransfer.$category.withValue(.fill) {
+            try await backend.seedLibrary { self?.report($0, for: .libraryFill) }
+          }
+          try Task.checkCancellation()
+          self?.recordSuccess(at: .libraryFill)
+          await self?.recorder.end(row, .ok)
+          return true
+        } catch is CancellationError {
+          Logger.sync.debug("Library seed cancelled")
+          await self?.recorder.end(row, .cancelled)
+          return false
+        } catch {
+          self?.recordFailure(error, at: .libraryFill)
+          await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
+          return false
+        }
+      }
+    }
+  }
+
   /// Proactive document files: top the downloader's window up with this
   /// server's missing archives, the whole library in *Entire library* and the
   /// documents kept offline otherwise. Returns at once; the downloads run on
@@ -1011,6 +1046,9 @@ public final class ServerSession {
           // so the reconcile's 300 s sub-throttle — which exists to keep the
           // *active* server's on-appear flurry off the wire — must not veto it.
           reconcile = await reconcileDocuments(force: true)
+        case .seed:
+          guard !reconcile.cancelled else { continue }
+          filled = await seedLibrary() && filled
         case .fill:
           // A reconcile that was called off means the pass as a whole is
           // unwanted; don't start paging the library behind it.

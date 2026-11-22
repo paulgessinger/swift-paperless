@@ -209,12 +209,16 @@ struct SyncPlanTests {
       syncOverCellular: false)
 
     #expect(SyncPlan.phases(isEntireLibrary: true, condition: unmetered) == .full)
-    #expect(SyncPlan.phases(isEntireLibrary: true, condition: metered) == .cheap)
+    #expect(
+      SyncPlan.phases(isEntireLibrary: true, condition: metered)
+        == [.elements, .reconcile, .seed])
     // The kept documents' files need the link, not the mode.
     #expect(
       SyncPlan.phases(isEntireLibrary: false, condition: unmetered)
-        == [.elements, .reconcile, .files])
-    #expect(SyncPlan.phases(isEntireLibrary: false, condition: metered) == .cheap)
+        == [.elements, .reconcile, .seed, .files])
+    #expect(
+      SyncPlan.phases(isEntireLibrary: false, condition: metered)
+        == [.elements, .reconcile, .seed])
   }
 
   @Test("A server's own cellular opt-in reinstates the fill on a metered link")
@@ -234,6 +238,28 @@ struct SyncPlanTests {
     #expect(phases.contains(.elements))
     #expect(phases.contains(.reconcile))
     #expect(!phases.contains(.fill))
+  }
+
+  @Test("The seed runs on cellular in either mode, but not in Low Data Mode or beside the fill")
+  func seedFollowsLowDataModeOnly() {
+    let costs = [
+      LinkCost.unrestricted,
+      LinkCost(isExpensive: true, isConstrained: false),
+      LinkCost(isExpensive: true, isConstrained: true),
+      LinkCost(isExpensive: false, isConstrained: true),
+    ]
+    for entire in [true, false] {
+      for cost in costs {
+        for optIn in [true, false] {
+          let phases = SyncPlan.phases(
+            isEntireLibrary: entire,
+            condition: SyncCondition(cost: cost, syncOverCellular: optIn))
+          // The fill pages the default list first, so it covers the seed.
+          let covered = phases.contains(.fill)
+          #expect(phases.contains(.seed) == (!cost.isConstrained && !covered))
+        }
+      }
+    }
   }
 
   @Test("The sweep plans each server by the same rule the active server uses")
@@ -264,8 +290,8 @@ struct SyncPhasesTests {
   @Test("ordered is dependency order regardless of how the set was built")
   func orderedIsCanonical() {
     #expect(
-      SyncPhases([.files, .fill, .elements, .reconcile]).ordered == [
-        .elements, .reconcile, .fill, .files,
+      SyncPhases([.files, .fill, .seed, .elements, .reconcile]).ordered == [
+        .elements, .reconcile, .seed, .fill, .files,
       ])
     #expect(SyncPhases([.files, .elements]).ordered == [.elements, .files])
   }

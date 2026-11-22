@@ -8,10 +8,14 @@ import Foundation
 
 /// How aggressively the offline cache fills a given server's documents.
 ///
-/// - `recentlyBrowsed`: only queries the user actually opens are cached
-///   (the on-open eager fill).
-/// - `entireLibrary`: a proactive fill caches every saved view and the default
-///   list, so the whole library browses offline even if never opened.
+/// Every document's metadata row is cached in both modes (the one-time seed,
+/// then the delta); the mode decides the rest.
+///
+/// - `recentlyBrowsed`: only the lists the user actually opens are cached
+///   (the on-open eager fill), and only kept documents' files download.
+/// - `entireLibrary`: a proactive fill caches every saved view, the default
+///   list, every document's details and every file, so the whole library
+///   browses offline even if never opened.
 ///
 /// **Per-server**: persisted on each server's connection record
 /// (`ConnectionRecord.offlineBrowsingMode`) — a large work server can stay

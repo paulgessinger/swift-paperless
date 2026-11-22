@@ -103,9 +103,9 @@ public enum SyncPlan {
   ///   sweep).
   /// - Servers whose credential can't be read right now yield nothing.
   /// - Credentialed servers are dropped while their last sweep is still within
-  ///   `throttle`; otherwise they yield a sync action whose `.fill` phase is
-  ///   gated on `allowsFill`, `isEntireLibrary` and that server's own
-  ///   ``SyncCondition/allowsProactiveSync``.
+  ///   `throttle`; otherwise they yield a sync action planned by
+  ///   ``phases(isEntireLibrary:condition:)``, or only the cheap phases when
+  ///   `allowsFill` is off.
   /// - Stalest first: never-swept servers, then the oldest `lastSweep`, with
   ///   `id` breaking ties. A background run that runs out of time has then
   ///   reached the servers that needed it most.
@@ -164,11 +164,17 @@ public enum SyncPlan {
   /// The mode gate is here as well as in the executor (which re-reads the
   /// server's mode from the database before filling) on purpose: this is the
   /// copy that is unit-tested, and the executor's is a guard, not a decision.
+  ///
+  /// The seed is metadata only and runs once, so it goes on a metered link
+  /// without the cellular opt-in. Low Data Mode still stops it. The fill pages
+  /// the default list first, so a plan with the fill has no seed.
   public static func phases(isEntireLibrary: Bool, condition: SyncCondition) -> SyncPhases {
-    guard condition.allowsProactiveSync else { return .cheap }
+    guard condition.allowsProactiveSync else {
+      return condition.cost.isConstrained ? .cheap : [.elements, .reconcile, .seed]
+    }
     // Outside *Entire library* there is no fill, but the kept documents'
     // files still download.
-    return isEntireLibrary ? .full : [.elements, .reconcile, .files]
+    return isEntireLibrary ? .full : [.elements, .reconcile, .seed, .files]
   }
 
   /// Server IDs that appeared since the last observation tick and warrant an

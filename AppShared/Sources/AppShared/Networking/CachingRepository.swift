@@ -207,6 +207,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// failed advances nothing, so it retries.
   func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws
 
+  /// One-time metadata seed, in both offline modes: page the default list to
+  /// the end, so every document the server lists has a row. A no-op once that
+  /// list has been paged to the end; the delta keeps the rows complete from
+  /// there. Throws when the fill fails or is cancelled.
+  func seedLibrary(progress: SyncProgressReporter?) async throws
+
   /// Proactive per-document detail fill (*Entire library*): give every
   /// cached document its notes and file-metadata so it's fully renderable
   /// offline even if never opened. Zero-note documents are seeded from the
@@ -819,6 +825,36 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       return
     }
     try? await database.setLibraryCoverageAt(Date(), serverID: serverID)
+  }
+
+  public func seedLibrary(progress: SyncProgressReporter?) async throws {
+    let key = QueryKey(serverID: serverID, filter: .default)
+    guard try await database.queryFillCompletedAt(queryKey: key, serverID: serverID) == nil
+    else { return }
+
+    defer { progress?(nil) }
+    progress?(SyncActivity(stage: .libraryFill))
+    Logger.sync.info(
+      "Library seed: paging the default list for server \(self.serverLogLabel, privacy: .public)")
+    // A page's report hops to the main actor and can land after the stage ended.
+    let reporting = FillReportGate()
+    reporting.index = 0
+    defer { reporting.index = nil }
+    let handle = try await fillQuery(filter: .default, category: .fill) { position, total in
+      Task { @MainActor in
+        guard reporting.index == 0 else { return }
+        progress?(
+          SyncActivity(
+            stage: .libraryFill, completed: position, total: total.map { Int($0) }))
+      }
+    }
+    // The paging runs on a detached task; see `fillLibrary`.
+    try await withTaskCancellationHandler {
+      try await handle.awaitCompletion()
+    } onCancel: {
+      handle.cancel()
+    }
+    try Task.checkCancellation()
   }
 
   @discardableResult

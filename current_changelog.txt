@@ -90,3 +90,4 @@
 - Tapping "Title" in the search mode menu now registers reliably; the menu button next to the search field is also no longer tinted with the accent color
 - Thumbnails now have their own storage limit of 200 MB outside "Entire library", and the least recently viewed are removed first; thumbnails of kept documents always stay
 - Switching offline browsing back to "Recently browsed" no longer deletes downloaded files right away: documents, their text and thumbnails stay until they exceed the storage limit, least recently opened first, and your document list stays available offline
+- Both offline browsing modes now keep every document's details on the device: the list of documents downloads once in the background, also over cellular but not in Low Data Mode, and stays up to date from there. Which PDF files download still follows the offline browsing setting
