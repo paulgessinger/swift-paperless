@@ -166,7 +166,7 @@ sudo -u dokku mkdir -p /home/dokku/telemetry/nginx.conf.d
 sudo -u dokku cp deploy/nginx.conf.d/ratelimit.conf /home/dokku/telemetry/nginx.conf.d/
 
 dokku domains:set telemetry t.example.org
-git push dokku main            # from a machine with the dokku remote
+git push dokku HEAD:main       # Dokku deploys what is pushed to its main; any local branch works
 dokku letsencrypt:set telemetry email you@example.org
 dokku letsencrypt:enable telemetry
 dokku proxy:build-config telemetry
@@ -186,10 +186,25 @@ dokku proxy:build-config telemetry
   locations inherit the server-level ones from `nginx.conf.d`. The zone file
   must exist before the app's nginx config is built, or `nginx -t` fails.
 - Run nothing in front of nginx (no CDN or tunnel); it would see client IPs.
+- The metrics port is published on the Tailscale address, so the container
+  only starts once that address exists. The `ip_nonlocal_bind` sysctl under
+  [Boot order](#deploy-dokku-tailscale-only) should lift that for Docker as well as
+  nginx.
 - Deploy collector updates (new feature or error names in the schema) before
   the app release that sends them; until then those names are dropped.
 - Back up `/var/lib/dokku/data/storage/telemetry-data`, ideally with
   `sqlite3 .backup`.
+
+### Updating
+
+`git push dokku HEAD:main` rebuilds the image and applies the `nginx:set`
+settings, which Dokku keeps on the host. It does not copy anything from
+`deploy/`: `.dockerignore` keeps it out of the image, and the nginx files live
+outside the app. When `deploy/` changes, copy both files again as above, then:
+
+```sh
+dokku proxy:build-config telemetry   # rebuilds the app's nginx config, runs nginx -t, reloads
+```
 
 ### Resources
 
