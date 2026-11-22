@@ -59,8 +59,7 @@ public enum QueryRetention {
 /// produced the moment its inputs change — the user edits a filter or a sort, a
 /// saved view is edited server-side, the default sort setting changes. Nothing
 /// used to delete those rows, so every filter combination ever browsed stayed on
-/// disk for the life of the install, and (because `pruneUnreferencedDocuments`
-/// anti-joins against `query_order`) went on pinning its documents as well.
+/// disk for the life of the install.
 ///
 /// Async only, like every cache table — see the rule in `Database+Connections`.
 extension Database {

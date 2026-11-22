@@ -2769,49 +2769,49 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Dokumenter og PDF-filer, der er hentet til offlinebrug på denne server, bliver fjernet – bortset fra de nyeste dokumenter i din dokumentliste og de dokumenter, du beholder offline. Filerne hentes igen, når du åbner et dokument."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Für die Offline-Nutzung auf diesem Server heruntergeladene Dokumente und PDF-Dateien werden entfernt – außer den neuesten Dokumenten in deiner Dokumentliste und den Dokumenten, die du offline behältst. Dateien werden erneut heruntergeladen, sobald du ein Dokument öffnest."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Documents and PDF files downloaded for offline use on this server will be removed, apart from the most recent documents in your document list and the documents you keep offline. Files download again when you open a document."
+            "value" : "PDF files downloaded for offline use on this server will be removed, apart from the documents you keep offline. Your document list stays available offline, and files download again when you open a document."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Les documents et fichiers PDF téléchargés pour une utilisation hors ligne sur ce serveur seront supprimés, à l'exception des documents les plus récents de votre liste de documents et de ceux que vous conservez hors ligne. Les fichiers sont téléchargés à nouveau lorsque vous ouvrez un document."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "I documenti e i file PDF scaricati per l'uso offline su questo server verranno rimossi, tranne i documenti più recenti nel tuo elenco di documenti e quelli che mantieni offline. I file vengono scaricati di nuovo quando apri un documento."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Documenten en pdf-bestanden die op deze server voor offlinegebruik zijn gedownload, worden verwijderd, behalve de meest recente documenten in je documentenlijst en de documenten die je offline bewaart. Bestanden worden opnieuw gedownload zodra je een document opent."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Dokumenty i pliki PDF pobrane do użytku offline na tym serwerze zostaną usunięte, z wyjątkiem najnowszych dokumentów z Twojej listy dokumentów i dokumentów zachowanych offline. Pliki zostaną pobrane ponownie po otwarciu dokumentu."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Bu sunucuda çevrimdışı kullanım için indirilen dokümanlar ve PDF dosyaları, doküman listenizdeki en yeni dokümanlar ve çevrimdışı tuttuğunuz dokümanlar dışında kaldırılacak. Dosyalar, bir dokümanı açtığınızda yeniden indirilir."
           }
         }

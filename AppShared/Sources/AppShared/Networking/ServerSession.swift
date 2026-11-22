@@ -617,10 +617,9 @@ public final class ServerSession {
     // in every offline list). The delta and the membership sweep are no-ops
     // unless *Entire library* is enabled.
     //
-    // The query-key GC goes last, in both modes, and specifically *after* the
-    // membership sweep: it prunes documents no cached query lists any more, and
-    // the membership sweep is what puts newly-matched documents into a list. Run
-    // ahead of it, it would reclaim rows the very next sweep re-fetches.
+    // The query-key GC goes last, in both modes: it drops the lists nothing
+    // reaches any more, after the membership sweep has rewritten the ones that
+    // stay.
     await NetworkTransfer.$category.withValue(.reconcile) {
       await sweep(.deletions) { try await backend.reconcileDocumentDeletions() }
       await sweep(.changes) {
@@ -656,7 +655,7 @@ public final class ServerSession {
     }
 
     // File reclaim last, and outside the transfer category: it touches no
-    // network. After the delete sweep on purpose — a document pruned above
+    // network. After the delete sweep on purpose — a document deleted above
     // loses its downloaded file in the same pass rather than a pass later.
     // The reclaimer is process-wide and throttles itself, so every server's
     // reconcile may ask and only the first in an hour sweeps.

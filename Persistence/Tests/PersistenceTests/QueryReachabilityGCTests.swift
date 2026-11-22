@@ -221,8 +221,8 @@ struct QueryReachabilityGCTests {
     #expect(counter.commits == 1)
   }
 
-  @Test("frees documents that only the orphaned key was pinning")
-  func unblocksDocumentPruning() async throws {
+  @Test("keeps the rows of documents only the collected key listed")
+  func keepsDocumentsOfCollectedKey() async throws {
     let server = UUID()
     let database = try database(server)
 
@@ -232,14 +232,10 @@ struct QueryReachabilityGCTests {
     try await database.replaceQueryOrder(
       queryKey: key("drop"), serverID: server, orderedIDs: [2], basis: .initial)
 
-    // Before the sweep the orphaned key still "references" document 2.
-    #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
-
     try await database.pruneQueries(serverID: server, collectedKeys: [key("drop")])
 
-    #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 1)
     #expect(try await database.document(serverID: server, id: 1) != nil)
-    #expect(try await database.document(serverID: server, id: 2) == nil)
+    #expect(try await database.document(serverID: server, id: 2) != nil)
   }
 
   // MARK: - cachedQueries

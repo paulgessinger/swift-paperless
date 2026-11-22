@@ -87,9 +87,7 @@ enum QueryRetentionPolicy {
   /// Twenty rather than a handful or a hundred: what the retention buys is "go
   /// back to what I was just looking at and it's still there offline", which is
   /// a session's worth of browsing, not a history. Each retained key costs one
-  /// `query_order` row per member document *and* — through the anti-join in
-  /// `pruneUnreferencedDocuments` — pins every document it lists, so this is
-  /// really a cap on how much of the library an abandoned filter can keep alive.
+  /// `query_order` row per member document.
   static let recentAdHocCap = 20
 
   /// How long a viewed list stays exempt from the *Recently browsed* cap
@@ -269,9 +267,8 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// Reachability GC for cached query keys: delete `query_order` / `query_meta`
   /// / `query_sync_error` for every key that is no longer reachable (the default
   /// list, the current saved views, a bounded LRU of recent ad-hoc filters,
-  /// anything in use right now), then reclaim the documents those orphans were
-  /// pinning. Runs in *both* offline modes — an ad-hoc filter leaves a key
-  /// behind either way.
+  /// anything in use right now). Document rows stay. Runs in *both* offline
+  /// modes — an ad-hoc filter leaves a key behind either way.
   func collectUnreachableQueries() async throws
 
   /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
@@ -294,8 +291,8 @@ public protocol CachingBackend: AnyObject, Sendable {
 
   /// Bring what is kept offline up to date: sync every kept saved view
   /// (``syncKeptOfflineView(savedViewID:)``), then fetch the kept documents
-  /// whose rows are not cached (after a cache wipe, or a document pruned
-  /// before it was kept), so the lists have rows and the file pass has a
+  /// whose rows are not cached (after a cache wipe, or a document that was
+  /// never fetched), so the lists have rows and the file pass has a
   /// `modified` to download against. A view that fails is recorded and
   /// stepped over.
   ///
@@ -1800,8 +1797,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
 
   /// Apply the *Recently browsed* storage cap: cut every list not viewed within
   /// ``QueryRetentionPolicy/recentlyBrowsedGrace`` back to its first
-  /// `OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows, and drop the
-  /// documents that frees.
+  /// `OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows. Document rows
+  /// stay.
   ///
   /// Only correct while none of this server's lists can be on screen or filling
   /// (see `Database.capRecentlyBrowsedQueries`), so ``ServerSession`` runs it as
@@ -1837,7 +1834,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         exempting: opening.union(kept))
       if result.truncatedRows > 0 {
         Logger.sync.info(
-          "Recently browsed cap: trimmed \(result.truncatedRows, privacy: .public) row(s), reclaimed \(result.removedDocuments, privacy: .public) document(s) for server \(self.serverLogLabel, privacy: .public)"
+          "Recently browsed cap: trimmed \(result.truncatedRows, privacy: .public) row(s) for server \(self.serverLogLabel, privacy: .public)"
         )
       }
     } catch {
@@ -1850,9 +1847,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func collectUnreachableQueries() async throws {
     // Deliberately not gated on `offlineBrowsingMode`: `fillQuery` writes a
     // key's rows on every list open in either mode, so orphans accumulate in
-    // either mode — under *Recently browsed* they are in fact the *only* thing
-    // keeping the reclaimed library from growing back one abandoned filter at a
-    // time.
+    // either mode.
     let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
     let cached = try await database.cachedQueries(serverID: serverID)
 
@@ -1910,17 +1905,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     Logger.sync.info(
       "Reachability sweep: collected \(collected.count, privacy: .public) orphaned query key(s) for server \(self.serverLogLabel, privacy: .public)"
     )
-    // Only when something was actually collected: this is the anti-join that
-    // orphaned keys were blocking, and running it on every reconcile regardless
-    // would scan the whole document table to find nothing — and would widen the
-    // blast radius of "referenced means `query_order` membership" (a document
-    // cached by an ASN scan and listed nowhere) to every sweep rather than the
-    // passes that just freed something.
-    let reclaimed = try await database.pruneUnreferencedDocuments(serverID: serverID)
-    if reclaimed > 0 {
-      Logger.sync.info(
-        "Reachability sweep: reclaimed \(reclaimed, privacy: .public) unreferenced document(s)")
-    }
   }
 
   /// Per-server delta watermark (newest `modified` applied), in

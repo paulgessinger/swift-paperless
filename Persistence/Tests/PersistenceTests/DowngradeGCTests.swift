@@ -33,125 +33,31 @@ struct DowngradeGCTests {
     try Database.seeded(serverID: server)
   }
 
-  // MARK: - Orphan reclaim
+  // MARK: - Document rows
 
-  @Test("deletes a document referenced by no query_order row")
-  func deletesUnreferencedDocument() async throws {
+  @Test("reclaimAfterDowngrade keeps every document row and its detail")
+  func reclaimKeepsDocumentRows() async throws {
     let server = UUID()
     let database = try database(server)
-    let key = QueryKey(sentinel: "A")
+    let keep = QueryKey(sentinel: "default")
+    let drop = QueryKey(sentinel: "saved-view")
 
-    try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    // Only doc 1 is tracked by any query.
+    try await database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1], basis: .initial)
-
-    let removed = try await database.pruneUnreferencedDocuments(serverID: server)
-
-    #expect(removed == 1)
-    #expect(try await database.document(serverID: server, id: 1) != nil)
-    #expect(try await database.document(serverID: server, id: 2) == nil)
-  }
-
-  @Test("preserves a document referenced by at least one query, even if others dropped it")
-  func preservesDocumentStillReferencedElsewhere() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let keyA = QueryKey(sentinel: "A")
-    let keyB = QueryKey(sentinel: "B")
-
-    try await database.upsertDocuments([doc(1, "A")], serverID: server)
+      queryKey: keep, serverID: server, orderedIDs: [1, 2], basis: .initial)
+    // 3 is listed only by the saved view the downgrade drops.
     try await database.replaceQueryOrder(
-      queryKey: keyA, serverID: server, orderedIDs: [1], basis: .initial)
-    try await database.replaceQueryOrder(
-      queryKey: keyB, serverID: server, orderedIDs: [], basis: .initial)
-
-    let removed = try await database.pruneUnreferencedDocuments(serverID: server)
-
-    #expect(removed == 0)
-    #expect(try await database.document(serverID: server, id: 1) != nil)
-  }
-
-  @Test("is a no-op when every cached document is still referenced")
-  func noOpWhenFullyReferenced() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let key = QueryKey(sentinel: "A")
-
-    try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1, 2], basis: .initial)
-
-    #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
-    #expect(try await database.document(serverID: server, id: 1) != nil)
-    #expect(try await database.document(serverID: server, id: 2) != nil)
-  }
-
-  @Test("is scoped to one server")
-  func scopedToOneServer() async throws {
-    let serverA = UUID()
-    let serverB = UUID()
-    let database = try database(serverA)
-    try database.upsertConnection(
-      ConnectionRecord(
-        id: serverB,
-        url: URL(string: "https://other.example.com/api/")!,
-        user: .init(id: 1, isSuperUser: true, username: "bob")))
-
-    // Neither server's document is referenced by any query.
-    try await database.upsertDocuments([doc(1, "A")], serverID: serverA)
-    try await database.upsertDocuments([doc(1, "A")], serverID: serverB)
-
-    let removed = try await database.pruneUnreferencedDocuments(serverID: serverA)
-
-    #expect(removed == 1)
-    #expect(try await database.document(serverID: serverA, id: 1) == nil)
-    #expect(try await database.document(serverID: serverB, id: 1) != nil)
-  }
-
-  // MARK: - Detail-cache cleanup
-
-  @Test("also drops the orphaned document's notes and file-metadata")
-  func dropsDetailCacheForOrphan() async throws {
-    let server = UUID()
-    let database = try database(server)
-
-    try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.setNotes([note(1)], serverID: server, documentID: 1)
+      queryKey: drop, serverID: server, orderedIDs: [3], basis: .initial)
+    try await database.setNotes([note(1)], serverID: server, documentID: 3)
     try await database.setFileMetadata(
-      metadata("sum"), serverID: server, versionID: 1, documentModified: nil)
-    // Not referenced by any query.
+      metadata("sum"), serverID: server, versionID: 3, documentModified: nil)
 
-    _ = try await database.pruneUnreferencedDocuments(serverID: server)
+    try await database.reclaimAfterDowngrade(
+      serverID: server, defaultQueryKey: keep, keepingFirst: 1)
 
-    #expect(try await database.notes(serverID: server, documentID: 1) == nil)
-    #expect(try await database.fileMetadata(serverID: server, versionID: 1) == nil)
-  }
-
-  @Test("cleans up file-metadata for every recorded version, not just the current one")
-  func dropsFileMetadataForEveryVersion() async throws {
-    let server = UUID()
-    let database = try database(server)
-
-    try await database.upsertDocuments(
-      [
-        doc(
-          1, "A",
-          versions: [
-            DocumentVersion(id: 1, added: date(1000), isRoot: true),
-            DocumentVersion(id: 9, added: date(5000), isRoot: false),
-          ])
-      ], serverID: server)
-    try await database.setFileMetadata(
-      metadata("root"), serverID: server, versionID: 1, documentModified: nil)
-    try await database.setFileMetadata(
-      metadata("v9"), serverID: server, versionID: 9, documentModified: nil)
-    // Not referenced by any query.
-
-    _ = try await database.pruneUnreferencedDocuments(serverID: server)
-
-    #expect(try await database.fileMetadata(serverID: server, versionID: 1) == nil)
-    #expect(try await database.fileMetadata(serverID: server, versionID: 9) == nil)
+    #expect(try await database.documentCount(serverID: server) == 3)
+    #expect(try await database.notes(serverID: server, documentID: 3)?.count == 1)
+    #expect(try await database.fileMetadata(serverID: server, versionID: 3) != nil)
   }
 
   // MARK: - dropQueryOrder
@@ -319,7 +225,7 @@ struct DowngradeGCTests {
 
   // MARK: - reclaimAfterDowngrade
 
-  @Test("reclaimAfterDowngrade drops, truncates and prunes in one call")
+  @Test("reclaimAfterDowngrade drops and truncates the lists in one call")
   func reclaimDoesTheWholeSequence() async throws {
     let server = UUID()
     let database = try database(server)
@@ -336,14 +242,14 @@ struct DowngradeGCTests {
     let removed = try await database.reclaimAfterDowngrade(
       serverID: server, defaultQueryKey: keep, keepingFirst: 2)
 
-    // 5 and 6 lost their only reference; 3 and 4 fell off the truncated prefix.
+    // The saved view's two rows, and 3 and 4 off the truncated prefix.
     #expect(removed == 4)
     #expect(
       try await database.queryDocuments(queryKey: keep, serverID: server, limit: 10).map(\.id) == [
         1, 2,
       ])
     #expect(try await database.queryDocuments(queryKey: drop, serverID: server, limit: 10).isEmpty)
-    #expect(try await database.document(serverID: server, id: 5) == nil)
+    #expect(try await database.documentCount(serverID: server) == 6)
   }
 
   @Test("reclaimAfterDowngrade clears the library-coverage marker")
@@ -385,46 +291,9 @@ struct DowngradeGCTests {
     #expect(try await database.deltaWatermark(serverID: server) == date(7000))
   }
 
-  // MARK: - End-to-end downgrade sequence
-
-  @Test("drop-non-default + truncate-default + prune actually shrinks the cache")
-  func downgradeSequenceShrinksCache() async throws {
-    // Reproduces the reported gap: after an entire-library-style fill, both
-    // the default list and a saved view reference every document, so
-    // pruneUnreferencedDocuments alone finds nothing to reclaim.
-    let server = UUID()
-    let database = try database(server)
-    let defaultKey = QueryKey(sentinel: "default")
-    let savedViewKey = QueryKey(sentinel: "saved-view")
-
-    let allDocs = (1...10).map { doc($0, "d\($0)") }
-    try await database.upsertDocuments(allDocs, serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: defaultKey, serverID: server, orderedIDs: allDocs.map(\.id), basis: .initial)
-    try await database.replaceQueryOrder(
-      queryKey: savedViewKey, serverID: server, orderedIDs: allDocs.map(\.id), basis: .initial)
-
-    #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 0)
-    #expect(try await database.documentCount(serverID: server) == 10)
-
-    // The actual downgrade sequence (mirrors ConnectionManager.runDowngradeGC).
-    try await database.dropQueryOrder(serverID: server, exceptQueryKey: defaultKey)
-    try await database.truncateQueryOrder(serverID: server, queryKey: defaultKey, keepingFirst: 3)
-    let removed = try await database.pruneUnreferencedDocuments(serverID: server)
-
-    #expect(removed == 7)
-    #expect(try await database.documentCount(serverID: server) == 3)
-    #expect(
-      try await database.queryDocuments(queryKey: defaultKey, serverID: server, limit: 10).map(\.id)
-        == [1, 2, 3])
-    #expect(
-      try await database.queryDocuments(queryKey: savedViewKey, serverID: server, limit: 10).isEmpty
-    )
-  }
-
   // MARK: - Kept offline
 
-  @Test("a kept document survives the prune and the downgrade with its notes")
+  @Test("a kept document stays kept through the downgrade, with its notes")
   func keptDocumentSurvives() async throws {
     let server = UUID()
     let database = try database(server)
@@ -442,15 +311,10 @@ struct DowngradeGCTests {
     let removed = try await database.reclaimAfterDowngrade(
       serverID: server, defaultQueryKey: keep, keepingFirst: 200)
 
-    #expect(removed == 1)
+    #expect(removed == 2)
     #expect(try await database.document(serverID: server, id: 2) != nil)
-    #expect(try await database.document(serverID: server, id: 3) == nil)
     #expect(try await database.notes(serverID: server, documentID: 2)?.count == 1)
     #expect(try await database.keptOfflineIDs(serverID: server) == [2])
-
-    try await database.setKeptOffline(serverID: server, documentID: 2, kept: false)
-    #expect(try await database.pruneUnreferencedDocuments(serverID: server) == 1)
-    #expect(try await database.document(serverID: server, id: 2) == nil)
   }
 
   @Test("a kept view's members keep their rows and archives through the downgrade")
@@ -477,8 +341,7 @@ struct DowngradeGCTests {
     try await database.reclaimAfterDowngrade(
       serverID: server, defaultQueryKey: keep, keepingFirst: 200)
 
-    #expect(try await database.document(serverID: server, id: 2) != nil)
-    #expect(try await database.document(serverID: server, id: 3) == nil)
+    #expect(try await database.documentCount(serverID: server) == 3)
     #expect(try await database.isKept(serverID: server, documentID: 2))
     // The archives the downgrade removes: not the kept view's member.
     #expect(

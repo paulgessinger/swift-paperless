@@ -59,7 +59,7 @@ struct RecentlyBrowsedCapTests {
 
   // MARK: - Settling back to the cap
 
-  @Test("a list not viewed recently settles back to the cap, and its freed documents go")
+  @Test("a list not viewed recently settles back to the cap, and its documents keep their rows")
   func settlesBackToCap() async throws {
     let server = UUID()
     let database = try database(server)
@@ -69,9 +69,9 @@ struct RecentlyBrowsedCapTests {
     let result = try await database.capRecentlyBrowsedQueries(
       serverID: server, keepingFirst: 3, notViewedSince: cutoff)
 
-    #expect(result == RecentlyBrowsedCapResult(truncatedRows: 7, removedDocuments: 7))
+    #expect(result == RecentlyBrowsedCapResult(truncatedRows: 7))
     #expect(try await ids(list, server, database) == [1, 2, 3])
-    #expect(try await database.documentCount(serverID: server) == 3)
+    #expect(try await database.documentCount(serverID: server) == 10)
     // The count pill keeps the server's total, and the list keeps its stamp.
     #expect(try await database.queryStatus(queryKey: list, serverID: server).totalCount == 10)
     #expect(try await database.queryViewedAt(queryKey: list, serverID: server) == date(1000))
@@ -94,7 +94,7 @@ struct RecentlyBrowsedCapTests {
       serverID: server, keepingFirst: 3, notViewedSince: cutoff)
 
     #expect(try await ids(list, server, database) == [1, 2, 3])
-    #expect(try await database.documentCount(serverID: server) == 3)
+    #expect(try await database.documentCount(serverID: server) == 10)
   }
 
   @Test("a document still listed by another cached list survives its tail being cut")
@@ -109,19 +109,18 @@ struct RecentlyBrowsedCapTests {
     let result = try await database.capRecentlyBrowsedQueries(
       serverID: server, keepingFirst: 2, notViewedSince: cutoff)
 
-    #expect(result.removedDocuments == 2)
-    #expect(try await database.document(serverID: server, id: 5) != nil)
-    #expect(try await database.document(serverID: server, id: 4) == nil)
+    #expect(result.truncatedRows == 3)
+    #expect(try await ids(other, server, database) == [5])
+    #expect(try await database.documentCount(serverID: server) == 5)
   }
 
-  @Test("steady state: nothing over the cap truncates nothing and scans for no orphans")
-  func noPruneWhenNothingTruncated() async throws {
+  @Test("steady state: nothing over the cap truncates nothing")
+  func noopWhenNothingOverTheCap() async throws {
     let server = UUID()
     let database = try database(server)
     let list = key("list")
     try await cacheList(list, ids: 1...3, viewedAt: date(1000), server: server, on: database)
-    // Cached by something other than a list (an ASN lookup, say). The prune is
-    // tied to having freed something, so this is left for a pass that does.
+    // Cached by something other than a list (an ASN lookup, say).
     try await database.upsertDocuments([doc(99)], serverID: server)
 
     let result = try await database.capRecentlyBrowsedQueries(
@@ -221,7 +220,7 @@ struct RecentlyBrowsedCapTests {
     let result = try await database.capRecentlyBrowsedQueries(
       serverID: server, keepingFirst: 3, notViewedSince: cutoff)
 
-    #expect(result == RecentlyBrowsedCapResult(truncatedRows: 7, removedDocuments: 6))
+    #expect(result == RecentlyBrowsedCapResult(truncatedRows: 7))
     #expect(try await ids(list, server, database) == [1, 2, 3])
     #expect(try await database.document(serverID: server, id: 9) != nil)
   }

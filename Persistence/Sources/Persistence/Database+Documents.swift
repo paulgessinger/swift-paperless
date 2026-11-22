@@ -402,44 +402,9 @@ extension Database {
       .deleteAll(db)
   }
 
-  /// Deletes every `document` row for `serverID` no longer referenced by any
-  /// `query_order` row for that server (the anti-join mirror of the
-  /// skeleton-read `queryWindowSQL`) and not kept offline, plus its
-  /// detail-cache siblings. Called when a server's `OfflineBrowsingMode`
-  /// transitions `.entireLibrary` → `.recentlyBrowsed`, to reclaim documents
-  /// that were only cached because of the proactive fill, and by the cap and
-  /// the reachability sweep. Returns the number of documents removed (for
-  /// logging/tests).
-  @discardableResult
-  public func pruneUnreferencedDocuments(serverID: UUID) async throws -> Int {
-    try await wrappingAsync("pruneUnreferencedDocuments") {
-      try await writer.write { try Self.pruneUnreferenced($0, serverID: serverID) }
-    }
-  }
-
-  @discardableResult
-  static func pruneUnreferenced(_ db: GRDB.Database, serverID: UUID) throws -> Int {
-    let orphanIDs = try UInt.fetchAll(
-      db,
-      sql: """
-        SELECT d.id FROM document d
-        LEFT JOIN query_order q
-          ON q.server_id = d.server_id AND q.remote_id = d.id
-        WHERE d.server_id = ? AND q.remote_id IS NULL
-          AND NOT \(keptOfflineExists)
-        """,
-      arguments: [serverID])
-    guard !orphanIDs.isEmpty else { return 0 }
-    try pruneDocumentDetail(db, serverID: serverID, documentIDs: orphanIDs)
-    return
-      try DocumentRecord
-      .filter(Column("server_id") == serverID && orphanIDs.contains(Column("id")))
-      .deleteAll(db)
-  }
-
   /// Drops every cached query's `query_order` / `query_meta` /
   /// `query_sync_error` for `serverID` except `exceptQueryKey` (the default
-  /// list). Called ahead of ``pruneUnreferencedDocuments(serverID:)`` on a
+  /// list). Called on a
   /// `.entireLibrary` → `.recentlyBrowsed` downgrade: saved views proactively
   /// filled while `.entireLibrary` was active should no longer be tracked at
   /// all — they eager-fill again from scratch if reopened, matching
@@ -517,14 +482,16 @@ extension Database {
 
   /// The whole `.entireLibrary` → `.recentlyBrowsed` reclaim in **one**
   /// transaction: drop every tracked query but the default list, cap that list
-  /// to `keepingFirst` rows, prune now-unreferenced documents, clear the
-  /// coverage marker. Returns the documents reclaimed.
+  /// to `keepingFirst` rows, clear the coverage marker. Returns the
+  /// `query_order` rows removed.
   ///
-  /// One transaction because the destructive half runs first: stopping midway
-  /// leaves saved views untracked *and* every document still on disk, with
-  /// nothing scheduled to finish. The marker is cleared for the same reason — a
-  /// later re-upgrade must re-fill rather than trust a stamp over a gutted
-  /// cache.
+  /// Document rows stay: every document's metadata is kept in both modes, and
+  /// only the remote-delete sweep removes a row. What the downgrade gives back
+  /// is the files, which `ContentReclaimer.removeLibraryFiles` drops.
+  ///
+  /// One transaction so a suspended app can't leave the lists half-dropped.
+  /// The marker is cleared so a later re-upgrade re-fills the saved views
+  /// rather than trusting a stamp over lists that are gone.
   @discardableResult
   public func reclaimAfterDowngrade(
     serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
@@ -540,9 +507,9 @@ extension Database {
   private static func reclaim(
     _ db: GRDB.Database, serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
   ) throws -> Int {
-    try dropQueries(db, serverID: serverID, exceptQueryKey: defaultQueryKey)
-    try truncateQuery(db, serverID: serverID, queryKey: defaultQueryKey, keepingFirst: limit)
-    let removed = try pruneUnreferenced(db, serverID: serverID)
+    var removed = try dropQueries(db, serverID: serverID, exceptQueryKey: defaultQueryKey)
+    removed += try truncateQuery(
+      db, serverID: serverID, queryKey: defaultQueryKey, keepingFirst: limit)
     try updateSyncState(db, serverID: serverID) { $0.libraryCoverageAt = nil }
     return removed
   }
@@ -837,8 +804,7 @@ extension Database {
   /// run **before** the `document` row is deleted, in the same transaction —
   /// `file_metadata` cleanup needs the still-live `versions` list. Neither
   /// detail table has an FK to `document` (only to `server`), so this is
-  /// explicit bookkeeping, not a cascade. Shared by `deleteDocuments` and
-  /// `pruneUnreferencedDocuments`.
+  /// explicit bookkeeping, not a cascade.
   private static func pruneDocumentDetail(
     _ db: GRDB.Database, serverID: UUID, documentIDs: [UInt]
   ) throws {

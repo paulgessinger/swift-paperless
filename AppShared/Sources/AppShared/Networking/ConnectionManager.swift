@@ -623,13 +623,11 @@ public final class ConnectionManager {
     }
   }
 
-  /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`.
-  /// Turning the mode off doesn't by itself orphan anything — `query_order`
-  /// rows persist until something replaces them — so an orphan prune alone
-  /// finds nothing to reclaim. `reclaimAfterDowngrade` does the two steps that
-  /// make room first (drop every tracked query except the default list, then
-  /// cap that list), prunes, and clears the coverage marker, all in one
-  /// transaction so a suspended app can't leave the cache half-reclaimed.
+  /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`:
+  /// `reclaimAfterDowngrade` drops every tracked query except the default
+  /// list, caps that list and clears the coverage marker, in one transaction
+  /// so a suspended app can't leave it half-done. Document rows stay;
+  /// `onDowngrade` removes the library's files.
   ///
   /// Off the main actor because a server filled at `.entireLibrary` can have a
   /// lot of rows to sweep and this is reached from a Settings picker binding.
@@ -643,7 +641,7 @@ public final class ConnectionManager {
           serverID: serverID,
           defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
           keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
-        Logger.api.info("Downgrade GC removed \(removed) unreferenced documents")
+        Logger.api.info("Downgrade GC removed \(removed) list row(s)")
         await onDowngrade?(serverID)
       } catch {
         Logger.api.error("Downgrade GC failed: \(error)")
