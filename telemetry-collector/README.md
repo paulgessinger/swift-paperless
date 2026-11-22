@@ -160,7 +160,7 @@ dokku nginx:set telemetry access-log-path off
 dokku nginx:set telemetry error-log-path /dev/null
 dokku nginx:set telemetry client-max-body-size 4k
 
-# Per-IP rate limit (in-memory nginx zone): http-context zone + server-context limit.
+# Rate limits (in-memory nginx zones): http-context zones + server-context limits.
 sudo cp deploy/nginx-ratelimit.conf /etc/nginx/conf.d/telemetry-ratelimit.conf
 sudo -u dokku mkdir -p /home/dokku/telemetry/nginx.conf.d
 sudo -u dokku cp deploy/nginx.conf.d/ratelimit.conf /home/dokku/telemetry/nginx.conf.d/
@@ -172,9 +172,18 @@ dokku letsencrypt:enable telemetry
 dokku proxy:build-config telemetry
 ```
 
-- The rate limit is 20 requests per minute per IP with a burst of 5, answered
-  with 429. Dokku's default template defines no `limit_req` of its own, so its
-  locations inherit the server-level one from `nginx.conf.d`. The zone file
+- Two rate limits apply, both answered with 429:
+  - 20 requests per minute with a burst of 5 per client: an IPv4 address, or
+    an IPv6 /64, so rotating addresses within one allocation shares a limit.
+    An IPv6 address whose first four groups nginx writes compressed (`::`) is
+    keyed as a whole.
+  - 300 requests per minute with a burst of 60 for the whole server, whatever
+    the number of senders. Raise it if legitimate traffic approaches it; two
+    pings per install per day is about 1.4 per minute per thousand installs
+    on average.
+
+  Dokku's default template defines no `limit_req` of its own, so its
+  locations inherit the server-level ones from `nginx.conf.d`. The zone file
   must exist before the app's nginx config is built, or `nginx -t` fails.
 - Run nothing in front of nginx (no CDN or tunnel); it would see client IPs.
 - Deploy collector updates (new feature or error names in the schema) before
@@ -450,7 +459,8 @@ from about 45 days of seeded data. To cap it:
   happen before a server block is chosen (e.g. failed TLS handshakes); point
   `error_log` in `/etc/nginx/nginx.conf` at `/dev/null` if that matters.
 - The only deliberate use of the client IP is nginx's in-memory `limit_req`
-  zone, which is neither logged nor persisted.
+  zone (keyed by the IPv4 address or the IPv6 /64), which is neither logged
+  nor persisted.
 - Request bodies are never logged or echoed. Error responses have empty
   bodies; FastAPI's validation handler is replaced.
 - A feature ping's `day` reveals how long ago the install was last active
