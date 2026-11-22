@@ -106,7 +106,9 @@ uses WAL mode with `secure_delete=ON`, and after each write a `PASSIVE`
 checkpoint copies the WAL into the database file. It never waits: while a
 dashboard read is in progress it can stop short, and a later write's checkpoint
 completes it. A failed checkpoint is logged and counted, and the ping is still
-accepted, since it is already committed.
+accepted, since it is already committed. `journal_size_limit=0` cuts the WAL back
+to the current transaction each time it restarts, so it keeps no older images
+of pages the last write changed.
 
 ## Reporting
 

@@ -313,3 +313,15 @@ def test_open_read_does_not_delay_a_write(client, db_path):
     assert time.perf_counter() - started < 1
     reader.execute("COMMIT")
     reader.close()
+
+
+def test_wal_holds_only_the_last_transaction(client, db_path):
+    for _ in range(3):
+        assert client.post("/t/health", json=health_payload()).status_code == 204
+    conn = sqlite3.connect(db_path)
+    page_size = conn.execute("PRAGMA page_size").fetchone()[0]
+    _, frames, _ = conn.execute("PRAGMA wal_checkpoint(PASSIVE)").fetchone()
+    conn.close()
+    wal = db_path.with_name(db_path.name + "-wal")
+    # WAL header plus one header-and-page per valid frame: no stale frames after them.
+    assert wal.stat().st_size == 32 + frames * (24 + page_size)

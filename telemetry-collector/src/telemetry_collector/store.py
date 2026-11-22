@@ -43,6 +43,10 @@ def connect(path: Path) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")
     # Overwrite freed content so superseded counter pages don't linger in the file.
     conn.execute("PRAGMA secure_delete=ON")
+    # secure_delete does not reach the WAL, and a PASSIVE checkpoint never
+    # shrinks it: without a limit, frames past the current transaction keep
+    # older images of pages the last ping rewrote.
+    conn.execute("PRAGMA journal_size_limit=0")
     conn.execute(SCHEMA_SQL)
     return conn
 
