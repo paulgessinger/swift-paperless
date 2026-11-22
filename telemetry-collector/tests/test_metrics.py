@@ -37,6 +37,6 @@ def test_metrics_carry_no_payload_content(make_client):
     for version in ("1.11.2", "18.3", "2.14.3"):
         assert version not in text
     # Every label value is one of the allowed operational values.
-    allowed = {"health", "feature", "accepted", "rejected_400", "too_large", "ok", "error"}
+    allowed = {"health", "feature", "accepted", "rejected_400", "too_large", "write_failed", "ok", "error"}
     for value in re.findall(r'(?:endpoint|outcome|result)="([^"]*)"', text):
         assert value in allowed

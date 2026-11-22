@@ -203,10 +203,16 @@ def test_ping_visible_in_db_once_accepted(client, db_path):
 def test_write_failure_returns_503_and_writes_nothing(client, db_path):
     from telemetry_collector.store import SCHEMA_SQL
 
+    def failed() -> float:
+        labels = {"endpoint": "health", "outcome": "write_failed"}
+        return REGISTRY.get_sample_value("telemetry_requests_total", labels) or 0.0
+
+    before = failed()
     other = sqlite3.connect(db_path, isolation_level=None)
     other.execute("DROP TABLE counters")
     r = client.post("/t/health", json=health_payload())
     assert r.status_code == 503
+    assert failed() == before + 1
     assert r.content == b""
     other.execute(SCHEMA_SQL)
     other.close()
@@ -325,3 +331,13 @@ def test_wal_holds_only_the_last_transaction(client, db_path):
     wal = db_path.with_name(db_path.name + "-wal")
     # WAL header plus one header-and-page per valid frame: no stale frames after them.
     assert wal.stat().st_size == 32 + frames * (24 + page_size)
+
+
+def test_db_size_includes_the_wal(client, db_path):
+    from telemetry_collector.store import db_size
+
+    assert client.post("/t/health", json=health_payload()).status_code == 204
+    wal = db_path.with_name(db_path.name + "-wal")
+    assert wal.stat().st_size > 0
+    assert db_size(db_path) == db_path.stat().st_size + wal.stat().st_size
+    assert REGISTRY.get_sample_value("telemetry_db_size_bytes") == db_size(db_path)

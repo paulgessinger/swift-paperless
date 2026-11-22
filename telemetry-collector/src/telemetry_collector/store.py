@@ -35,6 +35,12 @@ def utc_today() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
+def db_size(path: Path) -> int:
+    """Bytes on disk of the database file and its WAL; 0 for files that don't exist."""
+    files = (path, path.with_name(path.name + "-wal"))
+    return sum(f.stat().st_size for f in files if f.exists())
+
+
 def connect(path: Path) -> sqlite3.Connection:
     """Open the collector's connection. Use it from the thread that opened it only (the event loop)."""
     conn = sqlite3.connect(path, isolation_level=None)

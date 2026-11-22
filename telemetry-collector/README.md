@@ -205,11 +205,11 @@ public app never serves `/metrics` (it 404s through nginx). Publish the port on
 the Tailscale address only, as above, and scrape it from the tailnet.
 
 Exported: request counts by endpoint (`health`/`feature`) and outcome
-(`accepted`, `rejected_400`, `too_large`), write transactions by result
-(`telemetry_writes_total`, `ok`/`error`), write duration including the
-checkpoint, failed checkpoints (`telemetry_checkpoint_failures_total`), rows
-written, last write time, DB file size, and the default
-process/Python metrics. Requests rejected by nginx (rate limit, body size)
+(`accepted`, `rejected_400`, `too_large`, `write_failed`), write transactions
+by result (`telemetry_writes_total`, `ok`/`error`), write duration including
+the checkpoint, failed checkpoints (`telemetry_checkpoint_failures_total`),
+rows written, last write time, size of the database file plus its WAL, and the
+default process/Python metrics. Requests rejected by nginx (rate limit, body size)
 never reach the collector and are not counted here.
 
 ## Dashboard

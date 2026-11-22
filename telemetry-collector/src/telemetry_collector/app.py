@@ -19,7 +19,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from . import metrics
 from .config import MAX_BODY_BYTES, Settings
 from .schema import Schema, feature_day_valid, load_schema
-from .store import connect, utc_today, write_ping
+from .store import connect, db_size, utc_today, write_ping
 
 
 class _BodyTooLarge(Exception):
@@ -48,7 +48,7 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
         conn = connect(settings.db_path)
         app.state.conn = conn
         db_path = settings.db_path
-        metrics.DB_SIZE.set_function(lambda: db_path.stat().st_size if db_path.exists() else 0)
+        metrics.DB_SIZE.set_function(lambda: db_size(db_path))
         try:
             yield
         finally:
@@ -92,6 +92,7 @@ def create_app(settings: Settings, today: Callable[[], str] = utc_today) -> Fast
         try:
             write_ping(request.app.state.conn, day, fields["channel"], ping, split(payload))
         except sqlite3.Error:
+            metrics.REQUESTS.labels(ping, "write_failed").inc()
             return Response(status_code=503)
         metrics.REQUESTS.labels(ping, "accepted").inc()
         return Response(status_code=204)

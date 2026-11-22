@@ -12,7 +12,7 @@ from prometheus_client import Counter, Gauge, Histogram
 REQUESTS = Counter(
     "telemetry_requests",
     "Ingest requests by endpoint and outcome",
-    ["endpoint", "outcome"],  # endpoint: health|feature; outcome: accepted|rejected_400|too_large
+    ["endpoint", "outcome"],  # endpoint: health|feature; outcome: accepted|rejected_400|too_large|write_failed
 )
 WRITES = Counter("telemetry_writes", "Counter write transactions, one per accepted ping", ["result"])  # ok|error
 ROWS_WRITTEN = Counter("telemetry_rows_written", "Counter rows upserted")
@@ -23,10 +23,10 @@ WRITE_DURATION = Histogram(
     buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0),
 )
 CHECKPOINT_FAILURES = Counter("telemetry_checkpoint_failures", "WAL checkpoints that raised after a committed write")
-DB_SIZE = Gauge("telemetry_db_size_bytes", "Size of the SQLite database file")
+DB_SIZE = Gauge("telemetry_db_size_bytes", "Size of the SQLite database file plus its WAL")
 
 for _endpoint in ("health", "feature"):
-    for _outcome in ("accepted", "rejected_400", "too_large"):
+    for _outcome in ("accepted", "rejected_400", "too_large", "write_failed"):
         REQUESTS.labels(_endpoint, _outcome)
 for _result in ("ok", "error"):
     WRITES.labels(_result)
