@@ -67,9 +67,14 @@ def write_ping(
         log.exception("counter write failed")
         metrics.WRITES.labels("error").inc()
         raise
-    # Moves the write into the database file and empties the WAL. Best effort:
-    # while a dashboard read is open it may not complete, and the next write retries.
-    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    # The ping is committed: a checkpoint problem must neither fail the request
+    # nor block the event loop. PASSIVE never waits on readers; pages it can't
+    # copy while a dashboard read is open are copied by a later write.
+    try:
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+    except sqlite3.Error:
+        log.warning("WAL checkpoint failed", exc_info=True)
+        metrics.CHECKPOINT_FAILURES.inc()
     metrics.WRITE_DURATION.observe(time.perf_counter() - started)
     metrics.WRITES.labels("ok").inc()
     metrics.ROWS_WRITTEN.inc(len(rows))

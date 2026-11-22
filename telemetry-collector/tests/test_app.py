@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
+from typing import Any
 
 import pytest
 from conftest import days_before, feature_payload, health_payload, rows
@@ -219,13 +221,14 @@ def test_not_found_and_wrong_method_bare(client):
     assert client.post("/nope", json={}).content == b""
 
 
-def test_wal_mode_and_truncated_after_write(client, db_path):
+def test_wal_mode_and_checkpointed_after_write(client, db_path):
     client.post("/t/health", json=health_payload())
     conn = sqlite3.connect(db_path)
     assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+    # (busy, frames in the WAL, frames checkpointed): everything is in the database file.
+    _, logged, checkpointed = conn.execute("PRAGMA wal_checkpoint(PASSIVE)").fetchone()
+    assert logged == checkpointed
     conn.close()
-    wal = db_path.with_name(db_path.name + "-wal")
-    assert not wal.exists() or wal.stat().st_size == 0
 
 
 def test_feature_counters_filed_under_ping_day(client, db_path, clock):
@@ -277,3 +280,36 @@ def test_feature_day_bounds(client, db_path, day, status):
 def test_feature_day_must_be_string(client, db_path):
     assert client.post("/t/feature", json=feature_payload(day=20261106)).status_code == 400
     assert rows(db_path) == []
+
+
+def test_checkpoint_failure_still_accepts_the_committed_ping(client, db_path):
+    class FailingCheckpoint:
+        def __init__(self, conn: sqlite3.Connection) -> None:
+            self._conn = conn
+
+        def __getattr__(self, name: str) -> object:
+            return getattr(self._conn, name)
+
+        def execute(self, sql: str, *args: Any) -> sqlite3.Cursor:
+            if "wal_checkpoint" in sql:
+                raise sqlite3.OperationalError("checkpoint failed")
+            return self._conn.execute(sql, *args)
+
+    conn = client.app.state.conn
+    client.app.state.conn = FailingCheckpoint(conn)
+    try:
+        assert client.post("/t/health", json=health_payload()).status_code == 204
+    finally:
+        client.app.state.conn = conn
+    assert [n for (*_, f, _, n) in rows(db_path) if f == "_pings"] == [1]
+
+
+def test_open_read_does_not_delay_a_write(client, db_path):
+    reader = sqlite3.connect(db_path, isolation_level=None)
+    reader.execute("BEGIN")
+    reader.execute("SELECT count(*) FROM counters").fetchone()
+    started = time.perf_counter()
+    assert client.post("/t/health", json=health_payload()).status_code == 204
+    assert time.perf_counter() - started < 1
+    reader.execute("COMMIT")
+    reader.close()

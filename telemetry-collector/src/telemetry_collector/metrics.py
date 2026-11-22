@@ -22,6 +22,7 @@ WRITE_DURATION = Histogram(
     "Duration of a write transaction plus WAL checkpoint",
     buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0),
 )
+CHECKPOINT_FAILURES = Counter("telemetry_checkpoint_failures", "WAL checkpoints that raised after a committed write")
 DB_SIZE = Gauge("telemetry_db_size_bytes", "Size of the SQLite database file")
 
 for _endpoint in ("health", "feature"):

@@ -102,10 +102,11 @@ growing as installs report them when the app is next opened.
 
 Each accepted ping's increments are written in one transaction (an UPSERT per
 counter) before the response is sent; nothing is held in memory. The database
-uses WAL mode with `secure_delete=ON`, and after each write the WAL is
-checkpointed with `TRUNCATE`, so the write moves into the database file and
-the WAL is emptied. If a dashboard read is in progress the checkpoint can stop
-short, and the next write's checkpoint completes it.
+uses WAL mode with `secure_delete=ON`, and after each write a `PASSIVE`
+checkpoint copies the WAL into the database file. It never waits: while a
+dashboard read is in progress it can stop short, and a later write's checkpoint
+completes it. A failed checkpoint is logged and counted, and the ping is still
+accepted, since it is already committed.
 
 ## Reporting
 
@@ -195,7 +196,8 @@ the Tailscale address only, as above, and scrape it from the tailnet.
 Exported: request counts by endpoint (`health`/`feature`) and outcome
 (`accepted`, `rejected_400`, `too_large`), write transactions by result
 (`telemetry_writes_total`, `ok`/`error`), write duration including the
-checkpoint, rows written, last write time, DB file size, and the default
+checkpoint, failed checkpoints (`telemetry_checkpoint_failures_total`), rows
+written, last write time, DB file size, and the default
 process/Python metrics. Requests rejected by nginx (rate limit, body size)
 never reach the collector and are not counted here.
 
