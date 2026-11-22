@@ -38,8 +38,10 @@ def utc_today() -> str:
 def connect(path: Path) -> sqlite3.Connection:
     """Open the collector's connection. Use it from the thread that opened it only (the event loop)."""
     conn = sqlite3.connect(path, isolation_level=None)
-    # Waits instead of failing if another writer (e.g. an overlapping deploy) holds the lock.
-    conn.execute("PRAGMA busy_timeout=5000")
+    # Waits briefly if another writer (e.g. an overlapping deploy) holds the lock.
+    # The write runs on the event loop, so this bounds the stall for every
+    # request; past it the ping gets a 503 and the app retries on a later open.
+    conn.execute("PRAGMA busy_timeout=250")
     conn.execute("PRAGMA journal_mode=WAL")
     # Overwrite freed content so superseded counter pages don't linger in the file.
     conn.execute("PRAGMA secure_delete=ON")
