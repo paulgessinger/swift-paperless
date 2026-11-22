@@ -623,25 +623,18 @@ public final class ConnectionManager {
     }
   }
 
-  /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`:
-  /// `reclaimAfterDowngrade` drops every tracked query except the default
-  /// list, caps that list and clears the coverage marker, in one transaction
-  /// so a suspended app can't leave it half-done. Document rows stay;
-  /// `onDowngrade` removes the library's files.
+  /// After a downgrade to `.recentlyBrowsed`: reset the *Entire library*
+  /// fill state (`resetAfterDowngrade`), then let `onDowngrade` remove the
+  /// library's files. Lists and documents stay.
   ///
-  /// Off the main actor because a server filled at `.entireLibrary` can have a
-  /// lot of rows to sweep and this is reached from a Settings picker binding.
-  /// `Database` is `Sendable`, so a detached task is enough.
+  /// Off the main actor because this is reached from a Settings picker
+  /// binding. `Database` is `Sendable`, so a detached task is enough.
   private func runDowngradeGC(serverID: UUID) {
     let database = database
     let onDowngrade = onDowngrade
     Task.detached(priority: .utility) {
       do {
-        let removed = try await database.reclaimAfterDowngrade(
-          serverID: serverID,
-          defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
-          keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
-        Logger.api.info("Downgrade GC removed \(removed) list row(s)")
+        try await database.resetAfterDowngrade(serverID: serverID)
         await onDowngrade?(serverID)
       } catch {
         Logger.api.error("Downgrade GC failed: \(error)")

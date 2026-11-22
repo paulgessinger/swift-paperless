@@ -89,17 +89,6 @@ enum QueryRetentionPolicy {
   /// a session's worth of browsing, not a history. Each retained key costs one
   /// `query_order` row per member document.
   static let recentAdHocCap = 20
-
-  /// How long a viewed list stays exempt from the *Recently browsed* cap
-  /// (`OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows per list).
-  ///
-  /// Recency rather than position decides *which* lists get cut back: a list the
-  /// user just browsed stays whole, so the older documents they scrolled down to
-  /// are still there offline, and storage settles back to the cap once they've
-  /// moved on. A day rather than a session: "browsed this morning, offline on the
-  /// train tonight" is the case the mode is named for, and it matches the *Entire
-  /// library* coverage backstop (``LibraryCoverage/maxAge``).
-  static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
 /// How a detail-fill or content-fill pass that ran to the end left things.
@@ -748,10 +737,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     )
     for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
-      // A downgrade mid-fill means the rest of these views are no longer wanted,
-      // and `reclaimAfterDowngrade` runs right behind us — continuing would
-      // write back rows it has just reclaimed. One connection-row read per view,
-      // and there are few views.
+      // A downgrade mid-fill means the rest of these views are no longer
+      // wanted. One connection-row read per view, and there are few views.
       guard offlineBrowsingMode == .entireLibrary else {
         Logger.sync.info("Library fill: mode left Entire library mid-pass; stopping")
         return
@@ -900,8 +887,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         reports.run { progress?(activity) }
       }
 
-      // A downgrade mid-pass means the rest is no longer wanted, and
-      // `reclaimAfterDowngrade` runs right behind us.
+      // A downgrade mid-pass means the rest is no longer wanted.
       @MainActor func leftEntireLibrary() -> Bool {
         guard done.isMultiple(of: DetailFillPolicy.downgradeCheckStride) else { return false }
         return offlineBrowsingMode != .entireLibrary
@@ -1792,55 +1778,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         try await database.replaceQueryOrder(
           queryKey: key, serverID: serverID, orderedIDs: orderedIDs, basis: basis)
       else { throw CancellationError() }
-    }
-  }
-
-  /// Apply the *Recently browsed* storage cap: cut every list not viewed within
-  /// ``QueryRetentionPolicy/recentlyBrowsedGrace`` back to its first
-  /// `OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows. Document rows
-  /// stay.
-  ///
-  /// Only correct while none of this server's lists can be on screen or filling
-  /// (see `Database.capRecentlyBrowsedQueries`), so ``ServerSession`` runs it as
-  /// part of its first repository build, which every list waits for.
-  ///
-  /// The list the app opens with is exempt: the default list, and the filter the
-  /// document list restores from last time, which is what actually opens when
-  /// one was left applied. That list opens as soon as the store has a
-  /// repository, and every open refills it in full, so cutting it here would
-  /// only cost a download online and lose rows offline. So are the kept saved
-  /// views' lists.
-  ///
-  /// Soft-fail: a missed pass leaves the cache as it was until the next launch.
-  func applyRecentlyBrowsedCap() async {
-    // The accessor re-checks the mode; this only skips a pointless write.
-    guard offlineBrowsingMode == .recentlyBrowsed else { return }
-    let cutoff = Date().addingTimeInterval(-QueryRetentionPolicy.recentlyBrowsedGrace)
-    let opening: Set<QueryKey> = [
-      QueryKey(serverID: serverID, filter: .default),
-      QueryKey(serverID: serverID, filter: FilterModel.restoredFilterState()),
-    ]
-    do {
-      // A kept view's whole list, so it browses in full offline. Its members
-      // are kept whatever the cap cuts.
-      let keptIDs = Set(try await database.keptOfflineViews(serverID: serverID).map(\.savedViewID))
-      let kept = try await database.elements(SavedViewRecord.self, serverID: serverID)
-        .filter { keptIDs.contains($0.id) }
-        .map { QueryKey(serverID: serverID, filter: FilterState(savedView: $0)) }
-      let result = try await database.capRecentlyBrowsedQueries(
-        serverID: serverID,
-        keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap,
-        notViewedSince: cutoff,
-        exempting: opening.union(kept))
-      if result.truncatedRows > 0 {
-        Logger.sync.info(
-          "Recently browsed cap: trimmed \(result.truncatedRows, privacy: .public) row(s) for server \(self.serverLogLabel, privacy: .public)"
-        )
-      }
-    } catch {
-      Logger.sync.error(
-        "Recently browsed cap failed for server \(self.serverLogLabel, privacy: .public): \(error)"
-      )
     }
   }
 

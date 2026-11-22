@@ -33,153 +33,67 @@ struct DowngradeGCTests {
     try Database.seeded(serverID: server)
   }
 
-  // MARK: - Document rows
+  // MARK: - resetAfterDowngrade
 
-  @Test("reclaimAfterDowngrade keeps every document row and its detail")
-  func reclaimKeepsDocumentRows() async throws {
+  @Test("resetAfterDowngrade keeps every list, document row and its detail")
+  func resetKeepsListsAndDocuments() async throws {
     let server = UUID()
     let database = try database(server)
-    let keep = QueryKey(sentinel: "default")
-    let drop = QueryKey(sentinel: "saved-view")
+    let list = QueryKey(sentinel: "default")
+    let view = QueryKey(sentinel: "saved-view")
 
     try await database.upsertDocuments([doc(1, "A"), doc(2, "B"), doc(3, "C")], serverID: server)
     try await database.replaceQueryOrder(
-      queryKey: keep, serverID: server, orderedIDs: [1, 2], basis: .initial)
-    // 3 is listed only by the saved view the downgrade drops.
+      queryKey: list, serverID: server, orderedIDs: [1, 2], basis: .initial)
     try await database.replaceQueryOrder(
-      queryKey: drop, serverID: server, orderedIDs: [3], basis: .initial)
+      queryKey: view, serverID: server, orderedIDs: [3], basis: .initial)
     try await database.setNotes([note(1)], serverID: server, documentID: 3)
     try await database.setFileMetadata(
       metadata("sum"), serverID: server, versionID: 3, documentModified: nil)
 
-    try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: keep, keepingFirst: 1)
+    try await database.resetAfterDowngrade(serverID: server)
 
     #expect(try await database.documentCount(serverID: server) == 3)
+    #expect(
+      try await database.queryDocuments(queryKey: list, serverID: server, limit: 10).map(\.id)
+        == [1, 2])
+    #expect(
+      try await database.queryDocuments(queryKey: view, serverID: server, limit: 10).map(\.id)
+        == [3])
     #expect(try await database.notes(serverID: server, documentID: 3)?.count == 1)
     #expect(try await database.fileMetadata(serverID: server, versionID: 3) != nil)
   }
 
-  // MARK: - dropQueryOrder
-
-  @Test("dropQueryOrder removes every other query's order/meta/sync-error, keeps the given one")
-  func dropQueryOrderKeepsOnlyGivenKey() async throws {
+  @Test("resetAfterDowngrade drops the server's recorded list failures")
+  func resetDropsSyncErrors() async throws {
     let server = UUID()
+    let other = UUID()
     let database = try database(server)
-    let keep = QueryKey(sentinel: "default")
-    let drop = QueryKey(sentinel: "saved-view")
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: other, url: URL(string: "https://other.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "bob")))
+    for id in [server, other] {
+      try await database.recordQuerySyncError(
+        serverID: id, queryKey: "saved-view", savedViewName: "Saved", message: "boom")
+    }
 
-    try await database.upsertDocuments([doc(1, "A"), doc(2, "B")], serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: keep, serverID: server, orderedIDs: [1, 2], basis: .initial)
-    try await database.replaceQueryOrder(
-      queryKey: drop, serverID: server, orderedIDs: [1, 2], basis: .initial)
-    try await database.recordQuerySyncError(
-      serverID: server, queryKey: drop.rawValue, savedViewName: "Saved", message: "boom")
+    try await database.resetAfterDowngrade(serverID: server)
 
-    try await database.dropQueryOrder(serverID: server, exceptQueryKey: keep)
-
-    #expect(
-      try await database.queryDocuments(queryKey: keep, serverID: server, limit: 10).map(\.id) == [
-        1, 2,
-      ])
-    #expect(try await database.queryDocuments(queryKey: drop, serverID: server, limit: 10).isEmpty)
-    // query_meta gone too: totalCount reads nil, not just localCount == 0.
-    #expect(try await database.queryStatus(queryKey: drop, serverID: server).totalCount == nil)
-    #expect(try await database.queryStatus(queryKey: keep, serverID: server).totalCount == 2)
+    #expect(try await firstErrors(database, server).isEmpty)
+    #expect(try await firstErrors(database, other).count == 1)
   }
 
-  // MARK: - truncateQueryOrder
-
-  @Test("truncateQueryOrder keeps only the first N positions")
-  func truncateKeepsPrefix() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let key = QueryKey(sentinel: "default")
-
-    try await database.upsertDocuments((1...5).map { doc($0, "d\($0)") }, serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5], basis: .initial)
-
-    try await database.truncateQueryOrder(serverID: server, queryKey: key, keepingFirst: 3)
-
-    #expect(
-      try await database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
-        1, 2, 3,
-      ])
-    // The server's true total is untouched by the local cap.
-    #expect(try await database.queryStatus(queryKey: key, serverID: server).totalCount == 5)
+  private func firstErrors(_ database: Persistence.Database, _ server: UUID) async throws
+    -> [QuerySyncError]
+  {
+    for try await errors in database.observeQuerySyncErrors(serverID: server) {
+      return errors
+    }
+    return []
   }
 
-  @Test("truncateQueryOrder counts rows, not position values, when positions are gappy")
-  func truncateCountsRowsNotPositions() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let key = QueryKey(sentinel: "default")
-
-    try await database.upsertDocuments((1...5).map { doc($0, "d\($0)") }, serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: key, serverID: server, orderedIDs: [1, 2, 3, 4, 5], basis: .initial)
-    // Punch a hole the way a page-boundary repeat or a remote delete does: the
-    // surviving rows now sit at positions 0, 2, 3, 4 rather than 0...3.
-    try await database.deleteDocuments(serverID: server, removedIDs: [2])
-
-    try await database.truncateQueryOrder(serverID: server, queryKey: key, keepingFirst: 3)
-
-    // Three rows kept. A `position < 3` test would have kept only two (0 and 2).
-    #expect(
-      try await database.queryDocuments(queryKey: key, serverID: server, limit: 10).map(\.id) == [
-        1, 3, 4,
-      ])
-  }
-
-  @Test(
-    "A truncated query is no longer complete, though it keeps its fill stamp",
-    .bug("https://github.com/paulgessinger/swift-paperless/pull/723"))
-  func truncatedQueryIsIncomplete() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let key = QueryKey(sentinel: "default")
-
-    try await database.replaceQueryPage(
-      queryKey: key, serverID: server, documents: (1...5).map { doc($0, "d\($0)") },
-      totalCount: 5, basis: .initial)
-    try await database.markQueryFillComplete(queryKey: key, serverID: server)
-    #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete)
-
-    try await database.truncateQueryOrder(serverID: server, queryKey: key, keepingFirst: 3)
-
-    let status = try await database.queryStatus(queryKey: key, serverID: server)
-    #expect(status.isComplete == false)
-    #expect(status.totalCount == 5)
-    // The stamp survives on purpose: the reachability LRU ranks on it.
-    #expect(try await database.queryFillCompletedAt(queryKey: key, serverID: server) != nil)
-  }
-
-  @Test("reclaimAfterDowngrade leaves the capped default list incomplete")
-  func reclaimLeavesDefaultListIncomplete() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let key = QueryKey(sentinel: "default")
-
-    try await database.replaceQueryPage(
-      queryKey: key, serverID: server, documents: (1...4).map { doc($0, "d\($0)") },
-      totalCount: 4, basis: .initial)
-    try await database.markQueryFillComplete(queryKey: key, serverID: server)
-
-    try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: key, keepingFirst: 2)
-
-    #expect(try await database.queryStatus(queryKey: key, serverID: server).isComplete == false)
-    // A cap at or above the list's size cuts nothing, so it stays complete.
-    let whole = QueryKey(sentinel: "whole")
-    try await database.replaceQueryPage(
-      queryKey: whole, serverID: server, documents: [doc(1, "d1"), doc(2, "d2")],
-      totalCount: 2, basis: .initial)
-    try await database.markQueryFillComplete(queryKey: whole, serverID: server)
-    try await database.truncateQueryOrder(serverID: server, queryKey: whole, keepingFirst: 200)
-    #expect(try await database.queryStatus(queryKey: whole, serverID: server).isComplete)
-  }
+  // MARK: - Order completeness
 
   @Test("A complete fill with position gaps still reads complete")
   func gappyCompleteFillIsComplete() async throws {
@@ -223,71 +137,30 @@ struct DowngradeGCTests {
     #expect(Database.isOrderComplete(filledAt: stamp, lastPosition: nil, totalCount: nil))
   }
 
-  // MARK: - reclaimAfterDowngrade
+  // MARK: - Sync state
 
-  @Test("reclaimAfterDowngrade drops and truncates the lists in one call")
-  func reclaimDoesTheWholeSequence() async throws {
+  @Test("resetAfterDowngrade clears the library-coverage marker")
+  func resetClearsCoverageMarker() async throws {
     let server = UUID()
     let database = try database(server)
-    let keep = QueryKey(sentinel: "default")
-    let drop = QueryKey(sentinel: "saved-view")
-
-    try await database.upsertDocuments((1...6).map { doc($0, "d\($0)") }, serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: keep, serverID: server, orderedIDs: [1, 2, 3, 4], basis: .initial)
-    // 5 and 6 are only reachable through the saved view.
-    try await database.replaceQueryOrder(
-      queryKey: drop, serverID: server, orderedIDs: [5, 6], basis: .initial)
-
-    let removed = try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: keep, keepingFirst: 2)
-
-    // The saved view's two rows, and 3 and 4 off the truncated prefix.
-    #expect(removed == 4)
-    #expect(
-      try await database.queryDocuments(queryKey: keep, serverID: server, limit: 10).map(\.id) == [
-        1, 2,
-      ])
-    #expect(try await database.queryDocuments(queryKey: drop, serverID: server, limit: 10).isEmpty)
-    #expect(try await database.documentCount(serverID: server) == 6)
-  }
-
-  @Test("reclaimAfterDowngrade clears the library-coverage marker")
-  func reclaimClearsCoverageMarker() async throws {
-    let server = UUID()
-    let database = try database(server)
-    let keep = QueryKey(sentinel: "default")
-
-    try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
     try await database.setLibraryCoverageAt(date(5000), serverID: server)
 
-    try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+    try await database.resetAfterDowngrade(serverID: server)
 
-    // The cache no longer matches what the marker claimed, so a later
-    // re-upgrade has to re-fill instead of reading a fresh stamp.
+    // A later re-upgrade has to fill the saved views again instead of
+    // reading a fresh stamp.
     #expect(try await database.libraryCoverageAt(serverID: server) == nil)
   }
 
-  @Test("reclaimAfterDowngrade leaves the delta watermark alone")
-  func reclaimKeepsDeltaWatermark() async throws {
+  @Test("resetAfterDowngrade leaves the delta watermark alone")
+  func resetKeepsDeltaWatermark() async throws {
     let server = UUID()
     let database = try database(server)
-    let keep = QueryKey(sentinel: "default")
-
-    try await database.upsertDocuments([doc(1, "A")], serverID: server)
-    try await database.replaceQueryOrder(
-      queryKey: keep, serverID: server, orderedIDs: [1], basis: .initial)
     try await database.setDeltaWatermark(date(7000), serverID: server)
     try await database.setLibraryCoverageAt(date(5000), serverID: server)
 
-    try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+    try await database.resetAfterDowngrade(serverID: server)
 
-    // Documents that survive the reclaim still want their changes applied, so
-    // the delta must not re-baseline over them.
     #expect(try await database.deltaWatermark(serverID: server) == date(7000))
   }
 
@@ -308,10 +181,8 @@ struct DowngradeGCTests {
     try await database.setNotes([note(1)], serverID: server, documentID: 2)
     try await database.setKeptOffline(serverID: server, documentID: 2, kept: true)
 
-    let removed = try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+    try await database.resetAfterDowngrade(serverID: server)
 
-    #expect(removed == 2)
     #expect(try await database.document(serverID: server, id: 2) != nil)
     #expect(try await database.notes(serverID: server, documentID: 2)?.count == 1)
     #expect(try await database.keptOfflineIDs(serverID: server) == [2])
@@ -338,8 +209,7 @@ struct DowngradeGCTests {
         size: 10, modified: nil, checksum: nil, storedAt: date(1), lastAccessedAt: nil)
     }
 
-    try await database.reclaimAfterDowngrade(
-      serverID: server, defaultQueryKey: keep, keepingFirst: 200)
+    try await database.resetAfterDowngrade(serverID: server)
 
     #expect(try await database.documentCount(serverID: server) == 3)
     #expect(try await database.isKept(serverID: server, documentID: 2))
