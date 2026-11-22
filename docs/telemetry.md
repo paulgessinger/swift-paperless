@@ -26,13 +26,13 @@ Here are some of the types of questions that usage data can answer for me:
 
 ## How does it work and what is sent
 
-When you turn the feature on, **and only then**, the app starts preparing two packages that contains information about your install, software versions and features. 
+When you turn the feature on, **and only then**, the app starts preparing two packages that contains information about your install, software versions and features.
 
-The app sends information in two distinct operations, each at most once a day. On the first app open each day, the app will try to send a setup report (see table below for an example of the contents). This report contains install-level information. 
+The app sends information in two distinct operations, each at most once a day. On the first app open each day, the app will try to send a setup report (see table below for an example of the contents). This report contains install-level information.
 
-For each complete day, sent on the first launch at some point after that do, the app will attempt to send information on the actual usage of the app, in broad categories rather than a detailed log of everything that you did. 
+For each complete day, sent on the first launch at some point after that do, the app will attempt to send information on the actual usage of the app, in broad categories rather than a detailed log of everything that you did.
 
-The usage server does not attempt to combine or link information from these two reports. 
+The usage server does not attempt to combine or link information from these two reports.
 
 Below you can find information on what exactly is collected locally and periodically sent to the usage server:
 
@@ -143,7 +143,7 @@ Example (the same features report, on a day with an error):
 
 The primary goal here is to build something that is as anonymous as feasible. The data collected already intentionally does not include any account or device identifiers,  reports cannot directly be connected that way. Technically, the IP addresses used to submit the reports could be used to connect them, but the receiver intentionally does not store them, and they are only briefly held in memory in the web server to prevent abuse.
 
-Despite all of that, it would theoretically be possible anyway to *fingerprint* data based on the correlation between variables, say a particular backend version in combination with a particular iOS version. To mitigate this, the usage collector server decomposes the tuples of data that come in right away, and then increments independent counters per attribute, e.g. backend version. This essentially avoids storing any correlated information. 
+Despite all of that, it would theoretically be possible anyway to *fingerprint* data based on the correlation between variables, say a particular backend version in combination with a particular iOS version. To mitigate this, the usage collector server decomposes the tuples of data that come in right away, and then increments independent counters per attribute, e.g. backend version. This essentially avoids storing any correlated information.
 
 The app and the usage collector are open source: sender and receiver code are both in the [Swift Paperless repository](https://github.com/paulgessinger/swift-paperless), so you can read exactly what it does.
 
