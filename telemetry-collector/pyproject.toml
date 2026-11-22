@@ -35,6 +35,11 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# Hatchling leaves git-ignored files out; the vendored JavaScript is ignored
+# because scripts/fetch_vendor.py downloads it.
+[tool.hatch.build.targets.wheel]
+artifacts = ["src/telemetry_collector/static/vendor/**"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = [
@@ -57,6 +62,6 @@ select = ["E", "F", "I", "UP", "B", "SIM", "S"]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
 reportDeprecated = true
-include = ["src", "tests"]
+include = ["src", "tests", "scripts"]
 venvPath = "."
 venv = ".venv"

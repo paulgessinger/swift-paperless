@@ -312,14 +312,15 @@ carry a content hash (`?v=…`), so they are sent with
 
 **Vendored Chart.js:**
 
-- Version 4.6.1, UMD build `dist/chart.umd.min.js`, from the npm package
-  <https://www.npmjs.com/package/chart.js/v/4.6.1>, fetched with
-  `npm pack chart.js@4.6.1`.
-- The tarball's integrity matched the registry's `dist.integrity`
-  (`sha512-hJyniucsFmq//EvXYvJ6c6mahPoI3kaxdjVH8awTaJ/fDNWeSqqqArixMJWkWNN6fcYvPU3HneSANFNYtRi61g==`).
-- File SHA-256: `87364cc2b2a76a6684929e7d6b80b18a897794db38400caff1fcf1791c6925d2`.
-- Stored unmodified at `static/vendor/chartjs/` with its `LICENSE.md` (MIT).
-- To update: repeat with the new version and replace both files.
+- Version 4.6.1, UMD build `dist/chart.umd.min.js` and its `LICENSE.md` (MIT),
+  from the npm package <https://www.npmjs.com/package/chart.js/v/4.6.1>.
+- Not committed. `scripts/fetch_vendor.py` downloads the tarball, checks it
+  against the registry's `dist.integrity` and each file against a pinned
+  SHA-256, and writes them unmodified to `static/vendor/chartjs/`. It needs
+  only the Python standard library and skips files that already match.
+- Run it with `just telemetry-vendor` before testing or running the dashboard
+  locally. The image's build stage and CI run it too.
+- To update: change the version and hashes in the script.
 
 ### Authentication
 

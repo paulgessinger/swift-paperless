@@ -114,3 +114,9 @@ def make_client(db_path: Path, clock: Clock) -> Callable[..., AbstractContextMan
 def client(make_client: Callable[..., AbstractContextManager[TestClient]]) -> Generator[TestClient]:
     with make_client() as c:
         yield c
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    chartjs = Path(__file__).parent.parent / "src/telemetry_collector/static/vendor/chartjs/chart.umd.min.js"
+    if not chartjs.is_file():
+        pytest.exit("Chart.js is missing: run `just telemetry-vendor` first.", returncode=2)
