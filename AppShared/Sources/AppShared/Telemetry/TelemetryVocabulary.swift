@@ -13,7 +13,8 @@ import Foundation
 public enum TelemetryChannel: String, Codable, CaseIterable, Sendable {
   case appstore
   case testflight
-  /// Debug and simulator builds. Only ever sent to the dev collector.
+  /// Debug and simulator builds. Sent to the production collector and
+  /// counted separately from the other channels.
   case dev
 
   public init(_ configuration: AppConfiguration) {
