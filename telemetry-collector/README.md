@@ -259,6 +259,13 @@ counters are read back to the first month and week that overlap the range.
   counts twice. A failed send leaves the markers unchanged, so the retry is
   still marked first; a ping the collector stored but whose response was lost
   is followed by another marked first.
+- The app sets the markers from its own clock, while the collector files a
+  health ping under the day it receives it. A ping sent in the last moments of
+  a month or week and received after midnight UTC is filed in the next period
+  with the previous period's marker, so the install counts twice there and is
+  missed in the period before. The window is the request's flight time plus
+  the device's clock error, typically well under a second, so this is
+  accepted rather than corrected.
 
 ### Average active days
 
