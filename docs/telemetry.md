@@ -26,13 +26,17 @@ Here are some of the types of questions that usage data can answer for me:
 
 ## How does it work and what is sent
 
-When you turn the feature on, **and only then**, the app starts preparing a package that contains information about your install, software versions and features. For each complete day, and only once a day at most, the app will attempt to send information to the usage server.
-<!-- Claude: there are two separate reports. The setup report (the table below) is sent once per UTC day, for the current day, on the first launch that day. The features report covers one completed past day (the last day you used the app) and is sent on the next launch. The server never stores anything that joins the two. Worth saying here, since the rest of the page talks about "the report". -->
+When you turn the feature on, **and only then**, the app starts preparing two packages that contains information about your install, software versions and features. 
+
+The app sends information in two distinct operations, each at most once a day. On the first app open each day, the app will try to send a setup report (see table below for an example of the contents). This report contains install-level information. 
+
+For each complete day, sent on the first launch at some point after that do, the app will attempt to send information on the actual usage of the app, in broad categories rather than a detailed log of everything that you did. 
+
+The usage server does not attempt to combine or link information from these two reports. 
 
 Below you can find information on what exactly is collected locally and periodically sent to the usage server:
 
-**Your setup**
-<!-- Claude: this table is exactly the setup (health) report; the heading could say so. -->
+**Your setup (install-level information)**
 
 | What | Example |
 |---|---|
@@ -50,8 +54,7 @@ Below you can find information on what exactly is collected locally and periodic
 | Roughly how long ago you started sharing | under a week / under a month / under a year / longer |
 | Whether this is the first report this month / this week | yes / no |
 
-Below you can see an example payload that looks exactly like the ones the app sends. You can in fact see the json payload with the exact contents that the app will send under **Settings → Anonymous usage → What's sent**.
-<!-- Claude: "an example payload" → "an example setup report". The What's sent screen shows both reports; the features report appears only while one is due. -->
+Below you can see an example setup report that looks exactly like the ones the app sends. You can in fact see the json payload with the exact contents that the app will send under **Settings → Anonymous usage → What's sent**.
 
 ```json
 {
@@ -75,8 +78,7 @@ Below you can see an example payload that looks exactly like the ones the app se
 
 **Features you used**
 
-To understand which features are relevant to roughly how many users, the app sends a list of features that were used in the relevant day. I tried to come up with a system that reveals as little as possible.
-<!-- Claude: "the relevant day" is the last day you used the app before today, at most 30 days back, carried as a UTC date in the report. Days you didn't open the app send nothing; a day you opened it without using any listed feature still sends an empty report. Uploads from the share extension and the Upload Document shortcut are counted too. -->
+To understand which features are relevant to roughly how many users, the app sends a list of features that were used in the relevant day, roughly the last day that you’ve used the app before today, at most 30 days in the past. I tried to come up with a system that reveals as little as possible.
 
 The app counts the number of times each feature was used, but only sends a rough bucket of usage: once, 2–9 times, 10 or more. This is used to help separate occasionally used features from features that are used all the time.
 
@@ -111,12 +113,11 @@ The data also contains a list of the features that are available to you. This is
 }
 ```
 
-<!-- Claude: errors aren't a separate report: they are the "errors" field of the features report, for the same day. As its own H2 this reads like a third report. Suggest making it a sub-part of "Features you used" (e.g. bold "Errors" like the other two) and saying "the features report also lists..." instead of "keeps a daily report". -->
-## Error Reports
+**Errors**
 
-The app also keeps a daily report of the types of errors encountered. This is very coarse information, it only contains the category, for example "certificate error" or "server too old", never any error details that could leak information about your install or library.
+The feature report also contains a daily list of the types of errors encountered. This is very coarse information, it only contains the category, for example "certificate error" or "server too old", never any error details that could leak information about your install or library.
 
-- Example (the same features report, on a day with an error):
+Example (the same features report, on a day with an error):
 
 ```json
 {
@@ -140,26 +141,21 @@ The app also keeps a daily report of the types of errors encountered. This is ve
 
 ## How it's protected
 
-The primary goal here is to build something that is as anonymous as feasible. The data collected already intentionally does not include any account or device identifiers, making it impossible to directly connect reports that way. The IP addresses used to submit the reports are not logged, and only briefly held in memory in the web server to prevent abuse.
-<!-- Claude: "impossible to directly connect reports": while receiving, the server sees both reports arrive from the same IP within seconds, so it could pair them at that moment; it just doesn't log or store the IP. Worth stating, since it's the honest version of the claim. -->
+The primary goal here is to build something that is as anonymous as feasible. The data collected already intentionally does not include any account or device identifiers,  reports cannot directly be connected that way. Technically, the IP addresses used to submit the reports could be used to connect them, but the receiver intentionally does not store them, and they are only briefly held in memory in the web server to prevent abuse.
 
-Despite all of that, it would theoretically be possible anyway to *fingerprint* data based on the correlation between variables, say a particular backend version in combination with a particular iOS version. To mitigate this, the usage collector server decomposes the tuples of data that come in right away, and then increments independent counters per attribute, e.g. backend version . This essentially avoids storing any correlated information, making it very hard to do any kind of fingerprinting.
-<!-- Claude: counters are per value, day and channel. In small groups (TestFlight, or a rare value such as an old server version), a day's counters can amount to one install's whole report, so "very hard" overstates it there. Suggest adding that, and that it's accepted because every value is coarse and from a fixed list. Also a stray space in "backend version .". -->
+Despite all of that, it would theoretically be possible anyway to *fingerprint* data based on the correlation between variables, say a particular backend version in combination with a particular iOS version. To mitigate this, the usage collector server decomposes the tuples of data that come in right away, and then increments independent counters per attribute, e.g. backend version. This essentially avoids storing any correlated information. 
 
 The app and the usage collector are open source: sender and receiver code are both in the [Swift Paperless repository](https://github.com/paulgessinger/swift-paperless), so you can read exactly what it does.
 
 ## What it reveals
 
-Overall, here’s what the sent data tells me a about you:
-<!-- Claude: typo: "a about". -->
+Overall, here’s what the sent data tells me about you:
 
 - Your install was used that day; unavoidable
 - The report's date reveals the last day the app was used before the current one
 - The first-this-month / first-this-week answers reveal whether the install was already used earlier that month or week (UTC; weeks start Monday)
 - TestFlight reports are counted separately from App Store ones
-<!-- Claude: the earlier draft also had: fewer TestFlight users, so less anonymity in that group; a day's totals there can be one install's setup and feature use. Consider keeping it. -->
 
 ## Turning it off
 
-If you opted in and change your mind, you can turn the usage system off in **Settings → Anonymous usage**. From that moment, nothing more is sent and the on-device bookkeeping (days not yet reported, opt-in date, month and week of the last report, pending counts) are deleted immediately
-<!-- Claude: "bookkeeping ... is deleted" (singular) and a missing full stop. -->
+If you opted in and change your mind, you can turn the usage system off in **Settings → Anonymous usage**. From that moment, nothing more is sent and the on-device bookkeeping (days not yet reported, opt-in date, month and week of the last report, pending counts) is deleted immediately.
