@@ -14,6 +14,11 @@ public enum StoragePolicy {
   /// total across servers; past it the least recently accessed go first.
   public static let documentBudgetBytes: Int64 = 500_000_000
 
+  /// What the evictable thumbnails may take in total across servers, kept
+  /// apart from the document budget so thumbnails never push out PDFs.
+  /// Thumbnails of an *Entire library* server or a kept document are exempt.
+  public static let thumbnailBudgetBytes: Int64 = 200_000_000
+
   /// The resized thumbnails the image pipeline derives, a plain
   /// least-recently-used cache next to the content store.
   public static let thumbnailVariantCacheBytes = 150 * 1024 * 1024

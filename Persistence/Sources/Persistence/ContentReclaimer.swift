@@ -20,9 +20,9 @@ import os
 /// server's leftovers from another server's live files.
 ///
 /// A pass runs three phases. *Unreferenced*: rows whose version no cached
-/// document is at any more lose their file and their row. *Eviction*: the
-/// evictable files are removed least recently accessed first until what is
-/// left fits the budget. *Repair*: the directory is matched against the
+/// document is at any more lose their file and their row. *Eviction*: per
+/// ``EvictionPool``, the evictable files are removed least recently accessed
+/// first until what is left fits that pool's budget. *Repair*: the directory is matched against the
 /// index, so a file without a row is adopted (when a build from before the
 /// index left its sidecar) or removed, and a row without a file is dropped.
 /// A file is unlinked only after its row was claimed, and only if nothing
@@ -59,8 +59,10 @@ public actor ContentReclaimer: FileIndex {
     public var orphanRows = 0
     /// Files with no row left alone because they were written too recently.
     public var keptRecent = 0
-    /// What the evictable files take after the pass.
+    /// What the evictable document files take after the pass.
     public var evictableBytes: Int64 = 0
+    /// What the evictable thumbnails take after the pass.
+    public var evictableThumbnailBytes: Int64 = 0
 
     public var removedFiles: Int { unreferencedRows + evictedFiles + orphanFiles }
     public var removedBytes: Int64 { unreferencedBytes + evictedBytes + orphanBytes }
@@ -76,6 +78,7 @@ public actor ContentReclaimer: FileIndex {
 
   private let database: Database
   private let budget: Int64
+  private let thumbnailBudget: Int64
   private let now: @Sendable () -> Date
 
   private var current: Task<Report, Never>?
@@ -89,11 +92,13 @@ public actor ContentReclaimer: FileIndex {
   ///   without backdating them.
   public init(
     database: Database, store: ContentStore?, budget: Int64 = StoragePolicy.documentBudgetBytes,
+    thumbnailBudget: Int64 = StoragePolicy.thumbnailBudgetBytes,
     now: @escaping @Sendable () -> Date = { Date() }
   ) {
     self.database = database
     self.store = store
     self.budget = budget
+    self.thumbnailBudget = thumbnailBudget
     self.now = now
   }
 
@@ -165,16 +170,19 @@ public actor ContentReclaimer: FileIndex {
     // Without a store nothing can be unlinked, so neither phase below has
     // anything to do.
     if let store {
-      do {
-        let candidates = try await database.evictionCandidates(
-          budget: budget,
-          protectAccessedAfter: now.addingTimeInterval(-StoragePolicy.recentAccessGrace))
-        for row in try await database.deleteFiles(candidates) {
-          report.evictedBytes += unlink(row)
-          report.evictedFiles += 1
+      for pool in EvictionPool.allCases {
+        do {
+          let candidates = try await database.evictionCandidates(
+            budget: budget(for: pool),
+            protectAccessedAfter: now.addingTimeInterval(-StoragePolicy.recentAccessGrace),
+            pool: pool)
+          for row in try await database.deleteFiles(candidates) {
+            report.evictedBytes += unlink(row)
+            report.evictedFiles += 1
+          }
+        } catch {
+          Logger.persistence.error("Content reclaim: eviction failed: \(error)")
         }
-      } catch {
-        Logger.persistence.error("Content reclaim: eviction failed: \(error)")
       }
 
       if reason != .overBudget {
@@ -186,7 +194,9 @@ public actor ContentReclaimer: FileIndex {
       }
     }
 
-    report.evictableBytes = (try? await database.evictableFileBytes()) ?? 0
+    report.evictableBytes = (try? await database.evictableFileBytes(pool: .documents)) ?? 0
+    report.evictableThumbnailBytes =
+      (try? await database.evictableFileBytes(pool: .thumbnails)) ?? 0
     Logger.persistence.info(
       "Content reclaim (\(reason.rawValue, privacy: .public)) removed \(report.removedFiles, privacy: .public) files (\(report.removedBytes, privacy: .public) bytes): \(report.unreferencedRows, privacy: .public) unreferenced, \(report.evictedFiles, privacy: .public) evicted, \(report.orphanFiles, privacy: .public) orphans; adopted \(report.adoptedFiles, privacy: .public), dropped \(report.orphanRows, privacy: .public) rows, kept \(report.keptRecent, privacy: .public) recent; \(report.evictableBytes, privacy: .public) evictable bytes left"
     )
@@ -220,7 +230,7 @@ public actor ContentReclaimer: FileIndex {
           FileAdoption(
             key: entry.key, size: entry.size, modified: sidecar.modified,
             storedAt: sidecar.writtenAt,
-            lastAccessedAt: Self.isEvictable(entry.key.kind) ? sidecar.writtenAt : nil))
+            lastAccessedAt: sidecar.writtenAt))
         continue
       }
       // No row and no record of what it is. A download lands on disk before
@@ -271,8 +281,11 @@ public actor ContentReclaimer: FileIndex {
     return size
   }
 
-  private static func isEvictable(_ kind: ContentStore.Kind) -> Bool {
-    FileRecord.evictableKinds.contains(kind.rawValue)
+  private func budget(for pool: EvictionPool) -> Int64 {
+    switch pool {
+    case .documents: budget
+    case .thumbnails: thumbnailBudget
+    }
   }
 
   // MARK: - FileIndex
@@ -285,17 +298,16 @@ public actor ContentReclaimer: FileIndex {
     try await database.storedFile(key)?.checksum
   }
 
-  /// Records the row and, when the evictable total has gone over the budget,
-  /// starts a pass to bring it back under.
+  /// Records the row and, when the evictable total of its pool has gone over
+  /// that pool's budget, starts a pass to bring it back under.
   public func recordStore(
     _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
     storedAt: Date
   ) async throws {
-    let evictable = Self.isEvictable(key.kind)
     let total = try await database.recordFile(
       key, documentID: documentID, size: size, modified: modified, checksum: checksum,
-      storedAt: storedAt, lastAccessedAt: evictable ? storedAt : nil)
-    if evictable, total > budget {
+      storedAt: storedAt, lastAccessedAt: storedAt)
+    if total > budget(for: EvictionPool(kind: key.kind)) {
       Task { await run(reason: .overBudget) }
     }
   }

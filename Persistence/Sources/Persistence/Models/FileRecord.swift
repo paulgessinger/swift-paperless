@@ -41,18 +41,15 @@ public struct FileRecord:
     }
   }
 
-  /// The kinds the storage budget may evict. Thumbnails live and die with
-  /// their document row instead.
-  static let evictableKinds = [ContentStore.Kind.original, .archive, .content].map(\.rawValue)
-
   /// The kinds the file pass keeps on the device: a document's archive and
   /// its text, for a server in *Entire library* or a document kept offline.
+  /// The downgrade removes a server's rows of these kinds.
   static let pinnableKinds = [ContentStore.Kind.archive, .content].map(\.rawValue)
 
-  /// The rows the storage budget may evict: evictable kinds, except the
-  /// pinnable ones of a server in *Entire library* and of a document kept
-  /// offline. The one definition of "evictable".
-  static var evictable: QueryInterfaceRequest<FileRecord> {
+  /// The rows a storage budget may evict, least recently accessed first: the
+  /// pool's kinds, except its pinned kinds for a server in *Entire library*
+  /// and for a document kept offline. The one definition of "evictable".
+  static func evictable(_ pool: EvictionPool) -> QueryInterfaceRequest<FileRecord> {
     let file = TableAlias()
     let libraryServer =
       ConnectionRecord
@@ -61,9 +58,40 @@ public struct FileRecord:
     let kept = KeptOfflineRecord.keeping(
       server: file[Column("server_id")], document: file[Column("document_id")])
     return aliased(file)
-      .filter(evictableKinds.contains(Column("kind")))
+      .filter(pool.kinds.contains(Column("kind")))
       .filter(
-        !(pinnableKinds.contains(Column("kind"))
+        !(pool.pinnedKinds.contains(Column("kind"))
           && (libraryServer.exists() || kept.exists())))
+  }
+}
+
+/// A set of file kinds held against one storage budget.
+public enum EvictionPool: Sendable, CaseIterable {
+  /// Originals, archives and texts, against `StoragePolicy.documentBudgetBytes`.
+  case documents
+  /// Thumbnails, against `StoragePolicy.thumbnailBudgetBytes`.
+  case thumbnails
+
+  /// The pool a file of `kind` is held in.
+  public init(kind: ContentStore.Kind) {
+    switch kind {
+    case .original, .archive, .content: self = .documents
+    case .thumbnail: self = .thumbnails
+    }
+  }
+
+  var kinds: [String] {
+    switch self {
+    case .documents: [ContentStore.Kind.original, .archive, .content].map(\.rawValue)
+    case .thumbnails: [ContentStore.Kind.thumbnail.rawValue]
+    }
+  }
+
+  /// The kinds an *Entire library* server or a kept document exempts.
+  var pinnedKinds: [String] {
+    switch self {
+    case .documents: FileRecord.pinnableKinds
+    case .thumbnails: [ContentStore.Kind.thumbnail.rawValue]
+    }
   }
 }

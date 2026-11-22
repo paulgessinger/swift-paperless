@@ -36,7 +36,14 @@ public final class ContentStoreDataCache: DataCaching, Sendable {
 
   public func cachedData(for key: String) -> Data? {
     if let parsed = ThumbnailImageID.parse(key) {
-      return try? Data(contentsOf: store.url(for: parsed.key))
+      guard let data = try? Data(contentsOf: store.url(for: parsed.key)) else { return nil }
+      // The thumbnail budget evicts least recently accessed first. The index
+      // coalesces repeated stamps, so a scroll doesn't write per row.
+      let index = index
+      Task.detached(priority: .utility) {
+        try? await index.recordAccess(parsed.key, at: Date())
+      }
+      return data
     }
     return variantCache(for: key)?.cachedData(for: key)
   }
