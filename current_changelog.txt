@@ -89,4 +89,4 @@
 - Documents can be uploaded without a title: the server then titles them from the filename, unless its matching rules or workflows assign one
 - Tapping "Title" in the search mode menu now registers reliably; the menu button next to the search field is also no longer tinted with the accent color
 - Thumbnails now have their own storage limit of 200 MB outside "Entire library", and the least recently viewed are removed first; thumbnails of kept documents always stay
-- Switching offline browsing back to "Recently browsed" no longer deletes downloaded PDF files right away: they stay until they exceed the storage limit, least recently opened first, and your document list stays available offline
+- Switching offline browsing back to "Recently browsed" no longer deletes downloaded files right away: documents, their text and thumbnails stay until they exceed the storage limit, least recently opened first, and your document list stays available offline

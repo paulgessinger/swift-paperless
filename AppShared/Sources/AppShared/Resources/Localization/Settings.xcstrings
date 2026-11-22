@@ -2782,7 +2782,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PDF files downloaded for offline use on this server stay on the device until they need the space: past the storage limit, the least recently opened are removed first. Documents you keep offline always stay, and so does your document list."
+            "value" : "Files downloaded for offline use on this server, such as documents, their text and thumbnails, stay on the device until they need the space: past the storage limit, the least recently opened are removed first. Documents you keep offline always stay, and so does your document list."
           }
         },
         "fr" : {
@@ -2890,7 +2890,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When set to Entire library, every saved view, your full document list and the PDF of every document are downloaded over Wi-Fi so you can read them offline. After switching back to Recently browsed, downloaded files are removed only once they exceed the storage limit."
+            "value" : "When set to Entire library, every saved view, your full document list and each document's file, text and thumbnail are downloaded over Wi-Fi so you can read them offline. After switching back to Recently browsed, downloaded files are removed only once they exceed the storage limit."
           }
         },
         "fr" : {
