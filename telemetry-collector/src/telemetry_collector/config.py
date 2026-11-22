@@ -26,7 +26,8 @@ def split_commas(value: Any) -> Any:
 
 
 class CommonSettings(BaseSettings):
-    model_config = SettingsConfigDict(frozen=True, case_sensitive=True)
+    # Validation errors would otherwise echo the raw environment, secrets included.
+    model_config = SettingsConfigDict(frozen=True, case_sensitive=True, hide_input_in_errors=True)
 
     db_path: Path = Field(default=Path("telemetry.sqlite3"), alias="TELEMETRY_DB_PATH")
     schema_path: Path | None = Field(default=None, alias="TELEMETRY_SCHEMA_PATH")

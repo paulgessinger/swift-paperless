@@ -94,6 +94,16 @@ def test_secrets_hidden(monkeypatch):
         assert "session-secret-" not in text
 
 
+def test_validation_errors_hide_secrets(monkeypatch):
+    monkeypatch.setenv("OIDC_CLIENT_SECRET", "client-secret-value")
+    monkeypatch.setenv("DASHBOARD_SESSION_SECRET", "session-secret-" + "x" * 32)
+    with pytest.raises(ValidationError) as exc:
+        DashboardSettings()
+    assert "missing settings" in str(exc.value)
+    assert "client-secret-value" not in str(exc.value)
+    assert "session-secret-" not in str(exc.value)
+
+
 @pytest.mark.parametrize(("name", "value"), [("TELEMETRY_DEV", "maybe"), ("DASHBOARD_AUTH", "disabled")])
 def test_invalid_dashboard_values_name_the_variable(monkeypatch, name, value):
     for k, v in DASHBOARD_ENV.items():
