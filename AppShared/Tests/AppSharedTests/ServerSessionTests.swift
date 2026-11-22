@@ -282,9 +282,11 @@ struct ServerSessionTests {
     StubDownloadURLProtocol.responder = { _ in nil }
     let harness = try await StoreHarness.make(
       documents: [document(1)], fileDownloader: StoreHarness.stubbedDownloader)
-    for id: UInt in [1, 2] {
+    // Document 2 is older than the delta's baseline (document 1), so only the
+    // kept-offline sweep fetches its row.
+    for (id, modified): (UInt, TimeInterval) in [(1, 500), (2, 100)] {
       var document = document(id)
-      document.modified = Date(timeIntervalSince1970: 500)
+      document.modified = Date(timeIntervalSince1970: modified)
       _ = try await harness.transient.update(document: document)
     }
     for id: UInt in [1, 2, 3] {

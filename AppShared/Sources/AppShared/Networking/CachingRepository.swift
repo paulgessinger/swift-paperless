@@ -269,8 +269,8 @@ public protocol CachingBackend: AnyObject, Sendable {
   func reconcileDocumentDeletions() async throws
 
   /// Changed-metadata delta (R3δ): page forward from the per-server watermark
-  /// and refresh the cached rows that changed, keeping already-cached documents
-  /// fresh without re-opening their list.
+  /// and write every document that changed or is new, in both offline modes, so
+  /// the cache holds the whole library's metadata without re-opening a list.
   ///
   /// Detection is by `modified`, so it only sees what the server timestamps.
   /// Servers older than paperless-ngx#13170 don't bump `modified` on a version
@@ -1461,17 +1461,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws {
-    let entireLibrary = offlineBrowsingMode == .entireLibrary
-
-    // Delta refreshes changed rows. Under *Recently browsed* it only touches
-    // already-cached rows (new docs surface via on-open list fills); under
-    // *Entire library* it also keeps brand-new docs, so the whole library stays
-    // current between full fills. The list payload always carries full object
-    // detail; the setting only governs which docs are kept (every row is written
-    // at `.full`). Nothing cached ⇒ the proactive fill (or a list open) seeds
-    // first.
-    let localIDs = try await database.allDocumentIDs(serverID: serverID)
-    guard !localIDs.isEmpty else { return }
+    // Every changed or new document is kept, whatever the offline mode: the
+    // mode governs files, not metadata. Nothing cached ⇒ a list fill seeds
+    // first, and the delta baselines from what it cached.
+    guard try await database.documentCount(serverID: serverID) > 0 else { return }
 
     let watermark: Date
     if let stored = try await deltaWatermark() {
@@ -1530,17 +1523,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         if modified > cursor { cursor = modified }
       }
 
-      // *Entire library*: keep every changed/new doc. *Recently browsed*: only
-      // refresh rows already cached. Either way the row is written at `.full`.
-      //
-      // `localIDs` is a snapshot taken before the paging began, so a document
-      // cached mid-pass is skipped here even though the cursor moves past it.
-      // Harmless: whatever cached it did so by fetching it from the network,
-      // which is strictly fresher than this delta page's copy of it.
-      let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
-      if !toUpsert.isEmpty {
+      if !changed.isEmpty {
         Logger.sync.info(
-          "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
+          "Reconcile: refreshing \(changed.count, privacy: .public) changed documents")
         // Note edits bump `modified`, so a changed doc's cached notes may be
         // stale. Dropping them is cheap and local — the upsert refreshes each
         // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an
@@ -1554,12 +1539,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // is fetched online again. The same write marks the lists a changed
         // document may have moved in.
         let marked = try await database.applyChangedDocuments(
-          toUpsert, serverID: serverID, deletions: deletions)
+          changed, serverID: serverID, deletions: deletions)
         if marked > 0 {
           Logger.sync.info(
             "Reconcile: \(marked, privacy: .public) cached list(s) may be out of order")
         }
-        applied += toUpsert.count
+        applied += changed.count
       }
       // Commit the cursor per page rather than once at the end — this is what
       // makes an interrupted pass resume instead of restart. A separate
