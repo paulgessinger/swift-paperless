@@ -217,6 +217,39 @@ extension Database {
     }
   }
 
+  /// Emits now, and again whenever the index's file count or total size
+  /// changes: a download, a thumbnail, an eviction. Access stamps don't count.
+  /// Only the newest change is buffered, so a slow consumer sees one pending
+  /// change rather than a backlog.
+  public func observeFileIndexChanges() -> AsyncThrowingStream<Void, Error> {
+    let observation =
+      ValueObservation
+      .tracking { db -> [Double] in
+        guard let row = try Row.fetchOne(db, sql: "SELECT count(*), total(size) FROM file")
+        else { return [] }
+        let count: Int64 = row[0]
+        let size: Double = row[1]
+        return [Double(count), size]
+      }
+      .removeDuplicates()
+    let writer = writer
+    return AsyncThrowingStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
+      let task = Task {
+        do {
+          for try await _ in observation.values(in: writer) {
+            continuation.yield()
+          }
+          continuation.finish()
+        } catch is CancellationError {
+          continuation.finish()
+        } catch {
+          continuation.finish(throwing: error)
+        }
+      }
+      continuation.onTermination = { _ in task.cancel() }
+    }
+  }
+
   /// What the indexed files occupy, from `size`; no directory walk.
   public func fileUsage() async throws -> FileUsage {
     try await wrappingAsync("fileUsage") {
