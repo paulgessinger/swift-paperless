@@ -614,18 +614,17 @@ public final class ConnectionManager {
       Logger.api.error("setOfflineBrowsingMode DB write failed: \(error)")
     }
 
-    // Only reclaim once the new mode is actually on disk. The reclaim is
-    // destructive and irreversible; running it after a failed write would gut
-    // the cache and then come back at `.entireLibrary` on the next launch,
-    // which is the one combination the user can neither see nor undo.
+    // Only reset once the new mode is actually on disk: the pass that follows
+    // evicts the library's files, which is not something to run for a mode
+    // that comes back as `.entireLibrary` on the next launch.
     if persisted, previousMode == .entireLibrary, mode == .recentlyBrowsed {
       runDowngradeGC(serverID: stored.id)
     }
   }
 
   /// After a downgrade to `.recentlyBrowsed`: reset the *Entire library*
-  /// fill state (`resetAfterDowngrade`), then let `onDowngrade` remove the
-  /// library's files. Lists and documents stay.
+  /// fill state (`resetAfterDowngrade`), then let `onDowngrade` run the
+  /// budget pass that trims the now-evictable library files.
   ///
   /// Off the main actor because this is reached from a Settings picker
   /// binding. `Database` is `Sendable`, so a detached task is enough.

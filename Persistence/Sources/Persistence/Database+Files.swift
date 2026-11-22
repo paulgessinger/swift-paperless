@@ -123,24 +123,6 @@ extension Database {
     }
   }
 
-  /// A server's archive and text rows apart from the kept documents', for
-  /// the downgrade that removes them.
-  public func libraryPinnedFiles(serverID: UUID) async throws -> [FileRecord] {
-    try await wrappingAsync("libraryPinnedFiles") {
-      try await writer.read { db in
-        let file = TableAlias()
-        let kept = KeptOfflineRecord.keeping(
-          server: file[Column("server_id")], document: file[Column("document_id")])
-        return
-          try FileRecord.aliased(file)
-          .filter(Column("server_id") == serverID)
-          .filter(FileRecord.pinnableKinds.contains(Column("kind")))
-          .filter(!kept.exists())
-          .fetchAll(db)
-      }
-    }
-  }
-
   /// Bytes the evictable files of `pool` take.
   public func evictableFileBytes(pool: EvictionPool = .documents) async throws -> Int64 {
     try await wrappingAsync("evictableFileBytes") {

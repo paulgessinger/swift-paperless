@@ -150,10 +150,10 @@ public struct OfflineSyncView: View {
             selection: Binding(
               get: { connectionManager.activeOfflineBrowsingMode },
               set: { newMode in
-                // Leaving Entire library reclaims the cache, which is destructive
-                // and can't be undone short of downloading it all again. Confirm
-                // first; until then the picker snaps back, because `get:` still
-                // reads the unchanged stored mode.
+                // Leaving Entire library lets downloaded files be evicted past
+                // the storage budget. Confirm first; until then the picker
+                // snaps back, because `get:` still reads the unchanged stored
+                // mode.
                 if connectionManager.activeOfflineBrowsingMode == .entireLibrary,
                   newMode == .recentlyBrowsed
                 {
@@ -183,9 +183,7 @@ public struct OfflineSyncView: View {
           isPresented: $downgradeRequested,
           titleVisibility: .visible
         ) {
-          Button(
-            String(localized: .settings(.offlineBrowsingDowngradeConfirm)), role: .destructive
-          ) {
+          Button(String(localized: .settings(.offlineBrowsingDowngradeConfirm))) {
             connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
           }
 

@@ -213,8 +213,7 @@ struct DowngradeGCTests {
 
     #expect(try await database.documentCount(serverID: server) == 3)
     #expect(try await database.isKept(serverID: server, documentID: 2))
-    // The archives the downgrade removes: not the kept view's member.
-    #expect(
-      Set(try await database.libraryPinnedFiles(serverID: server).map(\.documentId)) == [1, 3])
+    // The archives the budget may now evict: not the kept view's member.
+    #expect(try await database.evictableFileBytes() == 20)
   }
 }

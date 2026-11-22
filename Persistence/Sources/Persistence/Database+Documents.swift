@@ -406,8 +406,9 @@ extension Database {
   /// transaction: the library-coverage marker, so a later re-upgrade fills the
   /// saved views again, and the server's recorded list failures, which only the
   /// *Entire library* fill and membership sweep record and which would
-  /// otherwise stay on the Offline & Sync screen. Lists and documents stay; the
-  /// downgrade's files go through `ContentReclaimer.removeLibraryFiles`.
+  /// otherwise stay on the Offline & Sync screen. Lists, documents and files
+  /// stay; the library's files are evictable from here on, and the budget
+  /// pass that follows trims them.
   public func resetAfterDowngrade(serverID: UUID) async throws {
     try await wrappingAsync("resetAfterDowngrade") {
       try await writer.write { db in

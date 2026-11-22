@@ -43,7 +43,6 @@ public struct FileRecord:
 
   /// The kinds the file pass keeps on the device: a document's archive and
   /// its text, for a server in *Entire library* or a document kept offline.
-  /// The downgrade removes a server's rows of these kinds.
   static let pinnableKinds = [ContentStore.Kind.archive, .content].map(\.rawValue)
 
   /// The rows a storage budget may evict, least recently accessed first: the

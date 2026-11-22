@@ -122,27 +122,6 @@ public actor ContentReclaimer: FileIndex {
     return report
   }
 
-  /// Remove a server's archives and texts, rows and files, when it leaves
-  /// *Entire library*: the index cannot tell the ones the library pass
-  /// downloaded from the ones an open did, and the user confirmed that
-  /// downloaded documents go. A pass follows for what the downgrade's prune
-  /// left unreferenced.
-  @discardableResult
-  public func removeLibraryFiles(serverID: UUID) async -> (files: Int, bytes: Int64) {
-    var removed = (files: 0, bytes: Int64(0))
-    do {
-      for row in try await database.deleteFiles(database.libraryPinnedFiles(serverID: serverID)) {
-        removed.bytes += unlink(row)
-        removed.files += 1
-      }
-    } catch {
-      Logger.persistence.error(
-        "Content reclaim: dropping a server's library files failed: \(error)")
-    }
-    await run(reason: .afterDowngrade)
-    return removed
-  }
-
   /// Run a pass if none has run for ``StoragePolicy/sweepInterval``; `nil` otherwise.
   @discardableResult
   public func runIfDue(reason: Reason) async -> Report? {
