@@ -9,7 +9,7 @@ import time
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-import httpx
+import httpx2
 import pytest
 from conftest import by_field, days_before, feature_payload, health_payload
 from fastapi.testclient import TestClient
@@ -35,17 +35,17 @@ def b64(data: bytes) -> str:
 
 
 class FakeProvider:
-    """OIDC provider behind an httpx.MockTransport: discovery, JWKS, token endpoint."""
+    """OIDC provider behind an httpx2.MockTransport: discovery, JWKS, token endpoint."""
 
     def __init__(self) -> None:
         self.issuer = ISSUER
         self.id_token = ""
-        self.token_requests: list[httpx.Request] = []
+        self.token_requests: list[httpx2.Request] = []
 
-    def handler(self, request: httpx.Request) -> httpx.Response:
+    def handler(self, request: httpx2.Request) -> httpx2.Response:
         url = str(request.url)
         if url == f"{ISSUER}/.well-known/openid-configuration":
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "issuer": self.issuer,
@@ -56,11 +56,11 @@ class FakeProvider:
                 },
             )
         if url == f"{ISSUER}/.well-known/jwks.json":
-            return httpx.Response(200, json={"keys": [KEY.as_dict(private=False)]})
+            return httpx2.Response(200, json={"keys": [KEY.as_dict(private=False)]})
         if url == f"{ISSUER}/api/oidc/token":
             self.token_requests.append(request)
-            return httpx.Response(200, json={"access_token": "at", "token_type": "Bearer", "id_token": self.id_token})
-        return httpx.Response(404)
+            return httpx2.Response(200, json={"access_token": "at", "token_type": "Bearer", "id_token": self.id_token})
+        return httpx2.Response(404)
 
 
 class Clock:
@@ -99,7 +99,7 @@ def dclock() -> Clock:
 def make_dashboard(db_path, provider, dclock):
     def factory(**overrides) -> TestClient:
         app = create_dashboard_app(
-            settings(db_path, **overrides), transport=httpx.MockTransport(provider.handler), clock=dclock
+            settings(db_path, **overrides), transport=httpx2.MockTransport(provider.handler), clock=dclock
         )
         return TestClient(app, base_url="https://dash.example.test", follow_redirects=False)
 
@@ -380,7 +380,7 @@ def test_collector_role_does_not_load_dashboard_dependencies(tmp_path):
         "import sys\n"
         "from telemetry_collector import serve\n"
         "serve._app()\n"
-        "heavy = {'authlib', 'joserfc', 'cryptography', 'httpx', 'itsdangerous', 'typer', 'jinja2'}\n"
+        "heavy = {'authlib', 'joserfc', 'cryptography', 'httpx2', 'itsdangerous', 'typer', 'jinja2'}\n"
         "print(','.join(sorted({m.split('.')[0] for m in sys.modules} & heavy)))\n"
     )
     env = {"TELEMETRY_ROLE": "collector", "TELEMETRY_DB_PATH": str(tmp_path / "t.sqlite3"), "PATH": ""}

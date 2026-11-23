@@ -463,7 +463,7 @@ start but does not wait until the address is assigned.
 ### Resources
 
 Idle RSS of the dashboard process is about 69 MB (Linux container, with
-Authlib, cryptography, httpx and Jinja2 loaded), and about 72 MB after
+Authlib, cryptography, httpx2 and Jinja2 loaded), and about 72 MB after
 rendering pages. The collector process stays at about 53 MB, because the
 collector role never imports the dashboard's dependencies; a test checks this.
 The image is about 61 MB of content. A 90-day page renders in a few milliseconds

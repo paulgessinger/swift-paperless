@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
-import httpx
+import httpx2
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -123,7 +123,7 @@ def _templates(static: dict[str, StaticFile]) -> Environment:
 
 def create_dashboard_app(
     settings: DashboardSettings,
-    transport: httpx.AsyncBaseTransport | None = None,
+    transport: httpx2.AsyncBaseTransport | None = None,
     clock: Callable[[], float] = time.time,
 ) -> FastAPI:
     """`transport` replaces the HTTP transport to the identity provider (tests)."""
@@ -212,7 +212,7 @@ def create_dashboard_app(
         try:
             await check_issuer()
             response = await oauth.oidc.authorize_redirect(request, settings.redirect_uri)
-        except (httpx.HTTPError, ValueError) as exc:
+        except (httpx2.HTTPError, ValueError) as exc:
             log.warning("discovery failed: %s", type(exc).__name__)
             return failure(502, "The identity provider is unreachable or misconfigured.")
         request.session["next"] = safe_next(next)
@@ -226,7 +226,7 @@ def create_dashboard_app(
             await check_issuer()
             token = await oauth.oidc.authorize_access_token(request)
             claims = dict(token["userinfo"])
-        except httpx.HTTPError as exc:
+        except httpx2.HTTPError as exc:
             log.warning("sign-in failed: %s", type(exc).__name__)
             return failure(502, "The identity provider could not be reached.")
         except SIGN_IN_ERRORS as exc:
