@@ -18,6 +18,8 @@ struct OfflineStorageSection: View {
   /// `nil` until the first measurement lands; the rows show a spinner rather
   /// than a misleading "Zero KB" meanwhile.
   @State private var usage: OfflineStorageUsage?
+  /// Bumped per measurement, so an older one that finishes late is dropped.
+  @State private var generation = 0
 
   var body: some View {
     CustomSection {
@@ -56,12 +58,38 @@ struct OfflineStorageSection: View {
     .task(
       id: RefreshKey(syncing: store.isAnyServerSyncing, downloading: store.libraryFilesInFlight > 0)
     ) {
-      let measured = await store.storageUsage()
-      // The detached scan ignores cancellation, so a superseded one can still
-      // finish after the newer one; drop its result.
-      guard !Task.isCancelled else { return }
-      usage = measured
+      await remeasure()
     }
+    // And while on screen, whenever the file index grows or shrinks: a
+    // document opened, thumbnails stored while scrolling, an eviction pass.
+    // At most once a second; the stream keeps only the newest change.
+    .task {
+      guard let changes = store.fileIndexChanges() else { return }
+      var first = true
+      do {
+        for try await _ in changes {
+          // The stream's initial value; the task above measured already.
+          if first {
+            first = false
+            continue
+          }
+          // The second runs alongside the scan, not after it.
+          async let pause: Void = Task.sleep(for: .seconds(1))
+          await remeasure()
+          try await pause
+        }
+      } catch {}
+    }
+  }
+
+  private func remeasure() async {
+    generation += 1
+    let current = generation
+    let measured = await store.storageUsage()
+    // The detached scan ignores cancellation, so a superseded one can still
+    // finish after a newer one; drop its result.
+    guard !Task.isCancelled, current == generation else { return }
+    usage = measured
   }
 
   /// The file count, plus the active server's share once another server has

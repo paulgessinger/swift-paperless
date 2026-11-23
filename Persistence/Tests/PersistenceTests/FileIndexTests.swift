@@ -82,6 +82,22 @@ struct FileIndexTests {
     #expect(try await database.allFileKeys() == [key, self.key(server, 1, .thumbnail)])
   }
 
+  @Test("The change stream ticks now, on a new file and on a removed one")
+  func changeStream() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    var changes = database.observeFileIndexChanges().makeAsyncIterator()
+    // The initial value.
+    #expect(try await changes.next() != nil)
+
+    try await record(database, key(server, 1), size: 100, accessed: date(1))
+    #expect(try await changes.next() != nil)
+
+    try await database.deleteFile(key(server, 1))
+    #expect(try await changes.next() != nil)
+    #expect(try await database.allFileKeys().isEmpty)
+  }
+
   @Test("Touching a row moves its access stamp")
   func touch() async throws {
     let server = UUID()

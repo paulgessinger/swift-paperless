@@ -1146,6 +1146,12 @@ extension DocumentStore {
     }.value
   }
 
+  /// Ticks when the file index's count or size changes, for every server, so
+  /// the Storage section can re-measure. `nil` before login.
+  public func fileIndexChanges() -> AsyncThrowingStream<Void, Error>? {
+    session?.backend?.database.observeFileIndexChanges()
+  }
+
   /// Debug: the database's row counts and sync bookkeeping, for every server.
   /// The database is reached through the active session, so this is `nil`
   /// before login.
