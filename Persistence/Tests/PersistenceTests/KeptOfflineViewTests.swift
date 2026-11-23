@@ -122,13 +122,10 @@ struct KeptOfflineViewTests {
     try await database.setKeptOffline(serverID: server, documentID: 2, kept: true)
 
     #expect(try await database.evictableFileBytes() == 10)
-    #expect(try await database.libraryPinnedFiles(serverID: server).map(\.documentId) == [3])
 
     try await database.releaseOfflineView(serverID: server, savedViewID: 1)
 
     #expect(try await database.evictableFileBytes() == 20)
-    #expect(
-      Set(try await database.libraryPinnedFiles(serverID: server).map(\.documentId)) == [1, 3])
   }
 
   @Test("The kept scope downloads and counts a view's members, a document kept twice once")

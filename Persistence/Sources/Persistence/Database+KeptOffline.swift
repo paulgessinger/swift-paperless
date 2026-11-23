@@ -3,8 +3,8 @@ import GRDB
 
 /// The *Kept offline* membership: which documents the user keeps on the
 /// device, on their own or through a kept saved view (a row per reason, see
-/// `KeptOfflineRecord.savedViewId`). Every protection (document prune, file
-/// eviction, the downgrade's archive removal) and the file pass ask whether
+/// `KeptOfflineRecord.savedViewId`). Every protection (file eviction, the
+/// downgrade's archive removal) and the file pass ask whether
 /// any row exists, nothing else. The list, its toggle and its counts are about
 /// the documents kept on their own. Async only, like every table but `server`.
 extension Database {

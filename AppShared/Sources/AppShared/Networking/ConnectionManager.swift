@@ -614,36 +614,26 @@ public final class ConnectionManager {
       Logger.api.error("setOfflineBrowsingMode DB write failed: \(error)")
     }
 
-    // Only reclaim once the new mode is actually on disk. The reclaim is
-    // destructive and irreversible; running it after a failed write would gut
-    // the cache and then come back at `.entireLibrary` on the next launch,
-    // which is the one combination the user can neither see nor undo.
+    // Only reset once the new mode is actually on disk: the pass that follows
+    // evicts the library's files, which is not something to run for a mode
+    // that comes back as `.entireLibrary` on the next launch.
     if persisted, previousMode == .entireLibrary, mode == .recentlyBrowsed {
       runDowngradeGC(serverID: stored.id)
     }
   }
 
-  /// Shrinks the cache back down after a downgrade to `.recentlyBrowsed`.
-  /// Turning the mode off doesn't by itself orphan anything — `query_order`
-  /// rows persist until something replaces them — so an orphan prune alone
-  /// finds nothing to reclaim. `reclaimAfterDowngrade` does the two steps that
-  /// make room first (drop every tracked query except the default list, then
-  /// cap that list), prunes, and clears the coverage marker, all in one
-  /// transaction so a suspended app can't leave the cache half-reclaimed.
+  /// After a downgrade to `.recentlyBrowsed`: reset the *Entire library*
+  /// fill state (`resetAfterDowngrade`), then let `onDowngrade` run the
+  /// budget pass that trims the now-evictable library files.
   ///
-  /// Off the main actor because a server filled at `.entireLibrary` can have a
-  /// lot of rows to sweep and this is reached from a Settings picker binding.
-  /// `Database` is `Sendable`, so a detached task is enough.
+  /// Off the main actor because this is reached from a Settings picker
+  /// binding. `Database` is `Sendable`, so a detached task is enough.
   private func runDowngradeGC(serverID: UUID) {
     let database = database
     let onDowngrade = onDowngrade
     Task.detached(priority: .utility) {
       do {
-        let removed = try await database.reclaimAfterDowngrade(
-          serverID: serverID,
-          defaultQueryKey: QueryKey(serverID: serverID, filter: .default),
-          keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap)
-        Logger.api.info("Downgrade GC removed \(removed) unreferenced documents")
+        try await database.resetAfterDowngrade(serverID: serverID)
         await onDowngrade?(serverID)
       } catch {
         Logger.api.error("Downgrade GC failed: \(error)")

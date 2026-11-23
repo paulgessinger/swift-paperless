@@ -64,7 +64,8 @@ extension Database {
   }
 
   /// Insert or replace the row for `key`. Returns the bytes the evictable
-  /// files take after the write, for the caller to hold against the budget.
+  /// files of `key`'s pool take after the write, for the caller to hold
+  /// against that pool's budget.
   @discardableResult
   public func recordFile(
     _ key: ContentStore.Key, documentID: UInt, size: Int64, modified: Date?, checksum: String?,
@@ -76,7 +77,7 @@ extension Database {
           key, documentID: documentID, size: size, modified: modified, checksum: checksum,
           storedAt: storedAt, lastAccessedAt: lastAccessedAt
         ).save(db)
-        return try Self.evictableBytes(db)
+        return try Self.evictableBytes(db, pool: EvictionPool(kind: key.kind))
       }
     }
   }
@@ -122,28 +123,10 @@ extension Database {
     }
   }
 
-  /// A server's archive and text rows apart from the kept documents', for
-  /// the downgrade that removes them.
-  public func libraryPinnedFiles(serverID: UUID) async throws -> [FileRecord] {
-    try await wrappingAsync("libraryPinnedFiles") {
-      try await writer.read { db in
-        let file = TableAlias()
-        let kept = KeptOfflineRecord.keeping(
-          server: file[Column("server_id")], document: file[Column("document_id")])
-        return
-          try FileRecord.aliased(file)
-          .filter(Column("server_id") == serverID)
-          .filter(FileRecord.pinnableKinds.contains(Column("kind")))
-          .filter(!kept.exists())
-          .fetchAll(db)
-      }
-    }
-  }
-
-  /// Bytes the evictable files take.
-  public func evictableFileBytes() async throws -> Int64 {
+  /// Bytes the evictable files of `pool` take.
+  public func evictableFileBytes(pool: EvictionPool = .documents) async throws -> Int64 {
     try await wrappingAsync("evictableFileBytes") {
-      try await writer.read { db in try Self.evictableBytes(db) }
+      try await writer.read { db in try Self.evictableBytes(db, pool: pool) }
     }
   }
 
@@ -163,18 +146,19 @@ extension Database {
     }
   }
 
-  /// The evictable rows to remove, least recently accessed first, so that what
-  /// remains fits `budget`. Never the most recently accessed row, so a single
-  /// file larger than the budget stays; and never one accessed after
-  /// `protectAccessedAfter`, which stops the walk since later rows are newer.
-  public func evictionCandidates(budget: Int64, protectAccessedAfter cutoff: Date) async throws
-    -> [FileRecord]
-  {
+  /// The evictable rows of `pool` to remove, least recently accessed first,
+  /// so that what remains fits `budget`. Never the most recently accessed
+  /// row, so a single file larger than the budget stays; and never one
+  /// accessed after `protectAccessedAfter`, which stops the walk since later
+  /// rows are newer.
+  public func evictionCandidates(
+    budget: Int64, protectAccessedAfter cutoff: Date, pool: EvictionPool = .documents
+  ) async throws -> [FileRecord] {
     try await wrappingAsync("evictionCandidates") {
       try await writer.read { db in
-        var total = try Self.evictableBytes(db)
+        var total = try Self.evictableBytes(db, pool: pool)
         guard total > budget else { return [] }
-        var rows = try FileRecord.evictable
+        var rows = try FileRecord.evictable(pool)
           .order(Column("last_accessed_at").asc, Column("stored_at").asc)
           .fetchAll(db)
         rows.removeLast()
@@ -273,8 +257,8 @@ extension Database {
     file(serverID: key.serverID, versionID: key.versionID, kind: key.kind.rawValue)
   }
 
-  static func evictableBytes(_ db: GRDB.Database) throws -> Int64 {
-    try FileRecord.evictable
+  static func evictableBytes(_ db: GRDB.Database, pool: EvictionPool = .documents) throws -> Int64 {
+    try FileRecord.evictable(pool)
       .select(sum(Column("size")) ?? 0, as: Int64.self)
       .fetchOne(db) ?? 0
   }

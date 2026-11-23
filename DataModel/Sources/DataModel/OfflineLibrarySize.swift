@@ -19,11 +19,4 @@ public enum OfflineLibrarySize {
     guard let count else { return false }
     return count < entireLibraryThreshold
   }
-
-  /// How many of the default list's cached rows survive a `.entireLibrary` →
-  /// `.recentlyBrowsed` downgrade. Deliberately much smaller than
-  /// `entireLibraryThreshold` — that number answers "is this library small
-  /// enough to go greedy by default," this one answers "how light should
-  /// `.recentlyBrowsed` stay."
-  public static let recentlyBrowsedDefaultListCap = 200
 }

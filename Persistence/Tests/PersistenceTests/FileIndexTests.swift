@@ -69,15 +69,16 @@ struct FileIndexTests {
       key, documentID: 1, size: 250, modified: date(2), checksum: nil, storedAt: date(2),
       lastAccessedAt: date(2))
     #expect(second == 250)
-    // Thumbnails are indexed but never count.
+    // A thumbnail reports its own pool's total, not the documents'.
     let third = try await database.recordFile(
       self.key(server, 1, .thumbnail), documentID: 1, size: 9_999, modified: nil, checksum: nil,
       storedAt: date(3), lastAccessedAt: nil)
-    #expect(third == 250)
+    #expect(third == 9_999)
 
     #expect(try await database.freshFile(key, modified: date(1)) == nil)
     #expect(try await database.freshFile(key, modified: date(2))?.size == 250)
     #expect(try await database.evictableFileBytes() == 250)
+    #expect(try await database.evictableFileBytes(pool: .thumbnails) == 9_999)
     #expect(try await database.allFileKeys() == [key, self.key(server, 1, .thumbnail)])
   }
 

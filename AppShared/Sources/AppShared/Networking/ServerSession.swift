@@ -92,13 +92,6 @@ public final class ServerSession {
   @ObservationIgnored private var built:
     (connection: Connection, repository: any Repository & CachingBackend)?
 
-  /// Whether this session has built a repository yet.
-  ///
-  /// The first build is the one moment none of this server's lists can be open
-  /// or filling, so it is where the *Recently browsed* cap runs. A rebuild after a
-  /// re-auth or a connection edit happens with lists on screen and must skip it.
-  @ObservationIgnored private var hasBuiltRepository = false
-
   /// The build currently in flight, if any.
   ///
   /// `prepareRepository` has an `await` between "is `built` still good?" and
@@ -129,6 +122,7 @@ public final class ServerSession {
   private let elementSyncSlot = TaskSlot<Void, any Error>()
   private let reconcileSlot = TaskSlot<ReconcileResult, Never>()
   private let libraryFillSlot = TaskSlot<Bool, Never>()
+  private let librarySeedSlot = TaskSlot<Bool, Never>()
   private let detailFillSlot = TaskSlot<Bool, Never>()
   private let fileFillSlot = TaskSlot<Bool, Never>()
   private let contentFillSlot = TaskSlot<Bool, Never>()
@@ -149,8 +143,8 @@ public final class ServerSession {
   /// this flag.
   public var isSyncing: Bool {
     syncSlot.isOccupied || elementSyncSlot.isOccupied || reconcileSlot.isOccupied
-      || libraryFillSlot.isOccupied || detailFillSlot.isOccupied || fileFillSlot.isOccupied
-      || contentFillSlot.isOccupied
+      || libraryFillSlot.isOccupied || librarySeedSlot.isOccupied || detailFillSlot.isOccupied
+      || fileFillSlot.isOccupied || contentFillSlot.isOccupied
   }
 
   public private(set) var state: State = .idle
@@ -424,24 +418,15 @@ public final class ServerSession {
         // one — an edited URL is exactly how "host not found" gets fixed.
         failureLedger.reset()
       }
-      // The cap runs inside the build rather than after it. A caller waiting on
-      // `building` resumes when the build finishes, so work done after it could
-      // still be running when that caller opens a list on the new repository.
-      let isFirstBuild = !hasBuiltRepository
       // No suspension between `waitUntilIdle` returning and this claim, so the
       // slot is empty here and this starts the build rather than joining one.
       let repository = try await building.joinOrStart {
-        let repository = try await makeCachingRepository(
+        try await makeCachingRepository(
           for: stored, database: database, mode: mode,
           contentStore: self.contentReclaimer?.store, fileIndex: self.contentReclaimer)
-        if isFirstBuild {
-          await repository.applyRecentlyBrowsedCap()
-        }
-        return repository
       }
       adopt(repository)
       built = (connection, repository)
-      hasBuiltRepository = true
       return repository
     }
   }
@@ -457,6 +442,7 @@ public final class ServerSession {
     elementSyncSlot.retire()
     reconcileSlot.retire()
     libraryFillSlot.retire()
+    librarySeedSlot.retire()
     detailFillSlot.retire()
     fileFillSlot.retire()
     contentFillSlot.retire()
@@ -617,10 +603,9 @@ public final class ServerSession {
     // in every offline list). The delta and the membership sweep are no-ops
     // unless *Entire library* is enabled.
     //
-    // The query-key GC goes last, in both modes, and specifically *after* the
-    // membership sweep: it prunes documents no cached query lists any more, and
-    // the membership sweep is what puts newly-matched documents into a list. Run
-    // ahead of it, it would reclaim rows the very next sweep re-fetches.
+    // The query-key GC goes last, in both modes: it drops the lists nothing
+    // reaches any more, after the membership sweep has rewritten the ones that
+    // stay.
     await NetworkTransfer.$category.withValue(.reconcile) {
       await sweep(.deletions) { try await backend.reconcileDocumentDeletions() }
       await sweep(.changes) {
@@ -656,7 +641,7 @@ public final class ServerSession {
     }
 
     // File reclaim last, and outside the transfer category: it touches no
-    // network. After the delete sweep on purpose — a document pruned above
+    // network. After the delete sweep on purpose — a document deleted above
     // loses its downloaded file in the same pass rather than a pass later.
     // The reclaimer is process-wide and throttles itself, so every server's
     // reconcile may ask and only the first in an hour sweeps.
@@ -727,6 +712,40 @@ public final class ServerSession {
           return true
         } catch is CancellationError {
           Logger.sync.debug("Proactive library fill cancelled")
+          await self?.recorder.end(row, .cancelled)
+          return false
+        } catch {
+          self?.recordFailure(error, at: .libraryFill)
+          await self?.recorder.end(row, .failed, message: Self.failureMessage(error))
+          return false
+        }
+      }
+    }
+  }
+
+  /// One-time metadata seed, in either offline mode: see
+  /// `CachingBackend.seedLibrary`. Recorded on the library-fill site, which a
+  /// later fill clears, since the fill pages the same list. Returns whether
+  /// the pass finished, like ``fillLibrary(force:)``.
+  @discardableResult
+  public func seedLibrary() async -> Bool {
+    guard let backend = current else { return true }
+    // Its own slot: joining an in-flight *Entire library* fill would be fine
+    // for the seed, but a fill that joined a seed would skip the saved views.
+    return await librarySeedSlot.joinOrStart { [weak self] in
+      guard let self else { return false }
+      return await asBackgroundWork { [weak self] in
+        let row = await self?.recorder.begin(.libraryFill)
+        do {
+          try await NetworkTransfer.$category.withValue(.fill) {
+            try await backend.seedLibrary { self?.report($0, for: .libraryFill) }
+          }
+          try Task.checkCancellation()
+          self?.recordSuccess(at: .libraryFill)
+          await self?.recorder.end(row, .ok)
+          return true
+        } catch is CancellationError {
+          Logger.sync.debug("Library seed cancelled")
           await self?.recorder.end(row, .cancelled)
           return false
         } catch {
@@ -1028,6 +1047,9 @@ public final class ServerSession {
           // so the reconcile's 300 s sub-throttle — which exists to keep the
           // *active* server's on-appear flurry off the wire — must not veto it.
           reconcile = await reconcileDocuments(force: true)
+        case .seed:
+          guard !reconcile.cancelled else { continue }
+          filled = await seedLibrary() && filled
         case .fill:
           // A reconcile that was called off means the pass as a whole is
           // unwanted; don't start paging the library behind it.

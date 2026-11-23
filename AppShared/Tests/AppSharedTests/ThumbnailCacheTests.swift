@@ -53,7 +53,18 @@ struct ThumbnailCacheTests {
         documentID: documentID, size: size, modified: modified, checksum: checksum)
     }
 
-    func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {}
+    var accessed: [ContentStore.Key] = []
+
+    func recordAccess(_ key: ContentStore.Key, at date: Date) async throws {
+      accessed.append(key)
+    }
+
+    func accesses(of key: ContentStore.Key) async -> Int {
+      for _ in 0..<100 where !accessed.contains(key) {
+        try? await Task.sleep(for: .milliseconds(10))
+      }
+      return accessed.filter { $0 == key }.count
+    }
 
     func forget(_ key: ContentStore.Key) async throws {
       entries[key] = nil
@@ -165,6 +176,23 @@ struct ThumbnailCacheTests {
     cache.storeData(Data("again".utf8), for: resized)
     cache.removeData(for: resized)
     #expect(!cache.containsData(for: resized))
+  }
+
+  @Test("Reading a resized variant stamps its thumbnail as accessed")
+  func variantHitStampsThumbnail() async throws {
+    let store = try makeStore()
+    let index = Index()
+    let variants = try #require(ThumbnailVariantCache.make(under: store.root))
+    let cache = ContentStoreDataCache(store: store, index: index, variants: variants)
+    let id = ThumbnailImageID.make(serverID: Self.server, document: document(7))
+    let resized = id + "com.github.kean/nuke/resize?s=(130.0, 9.0)"
+    let key = ContentStore.Key(serverID: Self.server, versionID: 7, kind: .thumbnail)
+    #expect(ThumbnailImageID.variantSource(resized) == key)
+    #expect(ThumbnailImageID.variantSource(id) == nil)
+
+    cache.storeData(Data("small".utf8), for: resized)
+    #expect(cache.cachedData(for: resized) == Data("small".utf8))
+    #expect(await index.accesses(of: key) == 1)
   }
 
   @Test("A key that is not a thumbnail id is neither read nor written")

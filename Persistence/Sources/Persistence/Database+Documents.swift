@@ -13,7 +13,7 @@ import GRDB
 ///
 /// Async only, like every cache table — see the rule in `Database+Connections`.
 /// The `static` bodies taking a `GRDB.Database` handle are what in-package
-/// seeding and the multi-step transactions (`reclaimAfterDowngrade`) compose
+/// seeding and the multi-step transactions compose
 /// from; nothing outside the package can reach the blocking form.
 extension Database {
   // MARK: - Writes
@@ -402,149 +402,20 @@ extension Database {
       .deleteAll(db)
   }
 
-  /// Deletes every `document` row for `serverID` no longer referenced by any
-  /// `query_order` row for that server (the anti-join mirror of the
-  /// skeleton-read `queryWindowSQL`) and not kept offline, plus its
-  /// detail-cache siblings. Called when a server's `OfflineBrowsingMode`
-  /// transitions `.entireLibrary` → `.recentlyBrowsed`, to reclaim documents
-  /// that were only cached because of the proactive fill, and by the cap and
-  /// the reachability sweep. Returns the number of documents removed (for
-  /// logging/tests).
-  @discardableResult
-  public func pruneUnreferencedDocuments(serverID: UUID) async throws -> Int {
-    try await wrappingAsync("pruneUnreferencedDocuments") {
-      try await writer.write { try Self.pruneUnreferenced($0, serverID: serverID) }
-    }
-  }
-
-  @discardableResult
-  static func pruneUnreferenced(_ db: GRDB.Database, serverID: UUID) throws -> Int {
-    let orphanIDs = try UInt.fetchAll(
-      db,
-      sql: """
-        SELECT d.id FROM document d
-        LEFT JOIN query_order q
-          ON q.server_id = d.server_id AND q.remote_id = d.id
-        WHERE d.server_id = ? AND q.remote_id IS NULL
-          AND NOT \(keptOfflineExists)
-        """,
-      arguments: [serverID])
-    guard !orphanIDs.isEmpty else { return 0 }
-    try pruneDocumentDetail(db, serverID: serverID, documentIDs: orphanIDs)
-    return
-      try DocumentRecord
-      .filter(Column("server_id") == serverID && orphanIDs.contains(Column("id")))
-      .deleteAll(db)
-  }
-
-  /// Drops every cached query's `query_order` / `query_meta` /
-  /// `query_sync_error` for `serverID` except `exceptQueryKey` (the default
-  /// list). Called ahead of ``pruneUnreferencedDocuments(serverID:)`` on a
-  /// `.entireLibrary` → `.recentlyBrowsed` downgrade: saved views proactively
-  /// filled while `.entireLibrary` was active should no longer be tracked at
-  /// all — they eager-fill again from scratch if reopened, matching
-  /// what `.recentlyBrowsed` already does for any other saved view. Returns
-  /// the number of `query_order` rows removed.
-  @discardableResult
-  public func dropQueryOrder(serverID: UUID, exceptQueryKey: QueryKey) async throws -> Int {
-    try await wrappingAsync("dropQueryOrder") {
-      try await writer.write {
-        try Self.dropQueries($0, serverID: serverID, exceptQueryKey: exceptQueryKey)
+  /// What an *Entire library* → *Recently browsed* downgrade resets, in one
+  /// transaction: the library-coverage marker, so a later re-upgrade fills the
+  /// saved views again, and the server's recorded list failures, which only the
+  /// *Entire library* fill and membership sweep record and which would
+  /// otherwise stay on the Offline & Sync screen. Lists, documents and files
+  /// stay; the library's files are evictable from here on, and the budget
+  /// pass that follows trims them.
+  public func resetAfterDowngrade(serverID: UUID) async throws {
+    try await wrappingAsync("resetAfterDowngrade") {
+      try await writer.write { db in
+        _ = try QuerySyncErrorRecord.filter(Column("server_id") == serverID).deleteAll(db)
+        try Self.updateSyncState(db, serverID: serverID) { $0.libraryCoverageAt = nil }
       }
     }
-  }
-
-  @discardableResult
-  static func dropQueries(
-    _ db: GRDB.Database, serverID: UUID, exceptQueryKey: QueryKey
-  ) throws -> Int {
-    let removed =
-      try QueryOrderRow
-      .filter(Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue)
-      .deleteAll(db)
-    try QueryMetaRow
-      .filter(Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue)
-      .deleteAll(db)
-    try QuerySyncErrorRecord
-      .filter(Column("server_id") == serverID && Column("query_key") != exceptQueryKey.rawValue)
-      .deleteAll(db)
-    return removed
-  }
-
-  /// Deletes the tail of a cached query's ordered membership, keeping the first
-  /// `keepingFirst` **rows** in position order. Used to cap the default list's
-  /// `query_order` on a `.recentlyBrowsed` downgrade. The remaining prefix still
-  /// reads correctly via the existing growing-prefix observation;
-  /// `query_meta.total_count` is left as the server's true count, so
-  /// `QueryStatus.localCount < totalCount` reports the cap the same way it
-  /// already reports any other partial local presence. `filled_at` is kept too
-  /// (the reachability LRU ranks on it); `QueryStatus.isComplete` still reads
-  /// `false` afterwards, because the order no longer reaches the total. Returns
-  /// the number of `query_order` rows removed.
-  ///
-  /// Counts rows rather than testing `position < limit`, because positions are
-  /// gappy by design (a skipped page-boundary repeat, a deleted document), so a
-  /// position test silently keeps fewer rows than asked.
-  @discardableResult
-  public func truncateQueryOrder(
-    serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
-  ) async throws -> Int {
-    try await wrappingAsync("truncateQueryOrder") {
-      try await writer.write {
-        try Self.truncateQuery(
-          $0, serverID: serverID, queryKey: queryKey, keepingFirst: limit)
-      }
-    }
-  }
-
-  @discardableResult
-  static func truncateQuery(
-    _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey, keepingFirst limit: Int
-  ) throws -> Int {
-    try db.execute(
-      sql: """
-        DELETE FROM query_order
-        WHERE rowid IN (
-          SELECT rowid FROM query_order
-          WHERE server_id = ? AND query_key = ?
-          ORDER BY position
-          LIMIT -1 OFFSET ?
-        )
-        """,
-      arguments: [serverID, queryKey.rawValue, limit])
-    return db.changesCount
-  }
-
-  /// The whole `.entireLibrary` → `.recentlyBrowsed` reclaim in **one**
-  /// transaction: drop every tracked query but the default list, cap that list
-  /// to `keepingFirst` rows, prune now-unreferenced documents, clear the
-  /// coverage marker. Returns the documents reclaimed.
-  ///
-  /// One transaction because the destructive half runs first: stopping midway
-  /// leaves saved views untracked *and* every document still on disk, with
-  /// nothing scheduled to finish. The marker is cleared for the same reason — a
-  /// later re-upgrade must re-fill rather than trust a stamp over a gutted
-  /// cache.
-  @discardableResult
-  public func reclaimAfterDowngrade(
-    serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
-  ) async throws -> Int {
-    try await wrappingAsync("reclaimAfterDowngrade") {
-      try await writer.write {
-        try Self.reclaim(
-          $0, serverID: serverID, defaultQueryKey: defaultQueryKey, keepingFirst: limit)
-      }
-    }
-  }
-
-  private static func reclaim(
-    _ db: GRDB.Database, serverID: UUID, defaultQueryKey: QueryKey, keepingFirst limit: Int
-  ) throws -> Int {
-    try dropQueries(db, serverID: serverID, exceptQueryKey: defaultQueryKey)
-    try truncateQuery(db, serverID: serverID, queryKey: defaultQueryKey, keepingFirst: limit)
-    let removed = try pruneUnreferenced(db, serverID: serverID)
-    try updateSyncState(db, serverID: serverID) { $0.libraryCoverageAt = nil }
-    return removed
   }
 
   // MARK: - Reads (one-shot; observations live in Database+Observe)
@@ -805,17 +676,15 @@ extension Database {
 
   /// Whether a cached order is its query's whole membership.
   ///
-  /// The fill stamp alone isn't enough: `truncateQuery` cuts the tail and keeps
-  /// `filled_at` on purpose (the reachability LRU ranks on it, so a capped list
-  /// has to keep its place). A cut order therefore also has to reach the
-  /// server's total.
+  /// The fill stamp alone isn't enough: an order the stamp says was filled
+  /// also has to reach the server's total.
   ///
   /// Measured by the last position rather than the row count. A complete fill
   /// can hold fewer rows than the total — a document repeated across a page
   /// boundary is skipped by the `remote_id` unique key, and a remote delete
-  /// prunes a row — but positions still run to the end, while a truncation
-  /// always removes the tail. The one miss is conservative: a deleted *last*
-  /// row reads as incomplete until the next fill.
+  /// prunes a row — but positions still run to the end. The one miss is
+  /// conservative: a deleted *last* row reads as incomplete until the next
+  /// fill.
   ///
   /// No recorded total leaves the stamp to decide.
   static func isOrderComplete(filledAt: Date?, lastPosition: Int?, totalCount: UInt?) -> Bool {
@@ -837,8 +706,7 @@ extension Database {
   /// run **before** the `document` row is deleted, in the same transaction —
   /// `file_metadata` cleanup needs the still-live `versions` list. Neither
   /// detail table has an FK to `document` (only to `server`), so this is
-  /// explicit bookkeeping, not a cascade. Shared by `deleteDocuments` and
-  /// `pruneUnreferencedDocuments`.
+  /// explicit bookkeeping, not a cascade.
   private static func pruneDocumentDetail(
     _ db: GRDB.Database, serverID: UUID, documentIDs: [UInt]
   ) throws {

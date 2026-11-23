@@ -42,7 +42,7 @@ struct QueryViewedAtTests {
     #expect(try await database.queryViewedAt(queryKey: list, serverID: server) == date(2000))
   }
 
-  @Test("fill, rewrite and truncate writes leave the stamp alone")
+  @Test("fill and rewrite writes leave the stamp alone")
   func fillWritesKeepStamp() async throws {
     let server = UUID()
     let database = try Database.seeded(serverID: server)
@@ -59,7 +59,6 @@ struct QueryViewedAtTests {
     try await database.markQueryFillComplete(queryKey: list, serverID: server)
     try await database.replaceQueryOrder(
       queryKey: list, serverID: server, orderedIDs: [4, 3, 2, 1], basis: .initial)
-    try await database.truncateQueryOrder(serverID: server, queryKey: list, keepingFirst: 1)
 
     #expect(try await database.queryViewedAt(queryKey: list, serverID: server) == date(1000))
     #expect(try await database.queryStatus(queryKey: list, serverID: server).totalCount == 4)

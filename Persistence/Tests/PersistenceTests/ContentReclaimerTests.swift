@@ -37,7 +37,7 @@ struct ContentReclaimerTests {
     try write(store, key, bytes: bytes)
     try await database.recordFile(
       key, documentID: key.versionID, size: try #require(store.size(of: key)), modified: nil,
-      checksum: nil, storedAt: Date(), lastAccessedAt: key.kind == .thumbnail ? nil : accessed)
+      checksum: nil, storedAt: Date(), lastAccessedAt: accessed)
   }
 
   /// The old sidecar, as builds before the index wrote it.
@@ -124,6 +124,59 @@ struct ContentReclaimerTests {
     #expect(store.exists(key(server, 4, .thumbnail)))
   }
 
+  @Test("Thumbnails are evicted against their own budget, least recently accessed first")
+  func thumbnailEviction() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    let store = try makeStore()
+    for (version, accessed) in [(1, 1000.0), (2, 2000), (3, 3000)] {
+      try await cache(store, database, key(server, UInt(version)), bytes: 100, accessed: date(1))
+      try await cache(
+        store, database, key(server, UInt(version), .thumbnail), bytes: 100,
+        accessed: date(accessed))
+    }
+    let reclaimer = ContentReclaimer(
+      database: database, store: store, budget: 1_000_000, thumbnailBudget: 150,
+      now: { self.date(9000) })
+
+    let report = await reclaimer.run(reason: .manual)
+
+    #expect(report.evictedFiles == 2)
+    #expect(report.evictableThumbnailBytes == store.size(of: key(server, 3, .thumbnail)))
+    #expect(!store.exists(key(server, 1, .thumbnail)))
+    #expect(!store.exists(key(server, 2, .thumbnail)))
+    #expect(store.exists(key(server, 3, .thumbnail)))
+    // The archives are a different pool, well within theirs.
+    for version: UInt in 1...3 { #expect(store.exists(key(server, version))) }
+  }
+
+  @Test("An Entire-library server's thumbnails and a kept document's are not evicted")
+  func pinnedThumbnailsAreKept() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
+    try FileFixtures.addServer(server, to: database, offlineBrowsingMode: "entireLibrary")
+    let store = try makeStore()
+    for (version, accessed) in [(1, 1000.0), (2, 2000), (3, 3000)] {
+      try await cache(
+        store, database, key(server, UInt(version), .thumbnail), bytes: 100,
+        accessed: date(accessed))
+    }
+    let reclaimer = ContentReclaimer(
+      database: database, store: store, thumbnailBudget: 50, now: { self.date(9000) })
+
+    #expect(await reclaimer.run(reason: .manual).evictedFiles == 0)
+
+    try FileFixtures.addServer(server, to: database, offlineBrowsingMode: "recentlyBrowsed")
+    try await database.setKeptOffline(serverID: server, documentID: 1, kept: true)
+    let after = await reclaimer.run(reason: .manual)
+
+    // Document 1 is kept; of 2 and 3 the newest always stays.
+    #expect(after.evictedFiles == 1)
+    #expect(store.exists(key(server, 1, .thumbnail)))
+    #expect(!store.exists(key(server, 2, .thumbnail)))
+    #expect(store.exists(key(server, 3, .thumbnail)))
+  }
+
   @Test("An Entire-library server's archives are not evicted until it leaves the mode")
   func libraryArchivesAreKept() async throws {
     let server = UUID()
@@ -149,34 +202,6 @@ struct ContentReclaimerTests {
     let after = await reclaimer.run(reason: .manual)
     #expect(after.evictedFiles == 1)
     #expect(!store.exists(key(server, 1)))
-  }
-
-  @Test("removeLibraryFiles drops only that server's archive and text rows and files")
-  func removeLibraryFiles() async throws {
-    let server = UUID()
-    let other = UUID()
-    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
-    try addServer(other, to: database)
-    try await database.upsertDocuments([doc(3)], serverID: other)
-    let store = try makeStore()
-    try await cache(store, database, key(server, 1), accessed: date(1000))
-    try await cache(store, database, key(server, 1, .content), accessed: date(1000))
-    try await cache(store, database, key(server, 1, .original), accessed: date(1000))
-    try await cache(store, database, key(server, 2, .thumbnail), accessed: date(1000))
-    try await cache(store, database, key(other, 3), accessed: date(1000))
-    let reclaimer = ContentReclaimer(database: database, store: store, now: { self.date(9000) })
-
-    let removed = await reclaimer.removeLibraryFiles(serverID: server)
-
-    #expect(removed.files == 2)
-    #expect(removed.bytes == 2 * store.size(of: key(other, 3))!)
-    #expect(!store.exists(key(server, 1)))
-    #expect(!store.exists(key(server, 1, .content)))
-    #expect(try await database.anyFile(key(server, 1)) == nil)
-    #expect(store.exists(key(server, 1, .original)))
-    #expect(store.exists(key(server, 2, .thumbnail)))
-    #expect(store.exists(key(other, 3)))
-    #expect(try await database.anyFile(key(other, 3)) != nil)
   }
 
   @Test("A file accessed inside the protection window is not evicted")
@@ -385,7 +410,7 @@ struct ContentReclaimerTests {
     init(_ now: Date) { self.now = now }
   }
 
-  @Test("A kept document's archive is not evicted and survives the downgrade")
+  @Test("A kept document's archive is not evicted until it is released")
   func keptArchivesAreKept() async throws {
     let server = UUID()
     let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2), doc(3)])
@@ -404,16 +429,13 @@ struct ContentReclaimerTests {
     #expect(store.exists(key(server, 1)))
     #expect(!store.exists(key(server, 2)))
 
-    let removed = await reclaimer.removeLibraryFiles(serverID: server)
-    #expect(removed.files == 1)
-    #expect(store.exists(key(server, 1)))
-    #expect(!store.exists(key(server, 3)))
-    #expect(try await database.anyFile(key(server, 1)) != nil)
-
     try await database.setKeptOffline(serverID: server, documentID: 1, kept: false)
     try await cache(store, database, key(server, 2), bytes: 100, accessed: date(5000))
     let after = await reclaimer.run(reason: .manual)
-    #expect(after.evictedFiles == 1)
+    // Released, 1 is the oldest again; 3 goes too, and the newest stays.
+    #expect(after.evictedFiles == 2)
     #expect(!store.exists(key(server, 1)))
+    #expect(!store.exists(key(server, 3)))
+    #expect(store.exists(key(server, 2)))
   }
 }

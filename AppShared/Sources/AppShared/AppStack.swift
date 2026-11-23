@@ -111,11 +111,13 @@ public final class AppStack {
         }
       }
     }
-    // Leaving Entire library drops the server's archives and texts, after its downloads.
+    // Leaving Entire library makes the server's archives, texts and thumbnails
+    // evictable. A pass, after its downloads stop, trims them to the budgets,
+    // least recently accessed first.
     connectionManager.onDowngrade = { serverID in
       await fileDownloader?.cancel(serverID: serverID)
       _ = await suspension.performBackgroundWork {
-        await contentReclaimer.removeLibraryFiles(serverID: serverID)
+        await contentReclaimer.run(reason: .afterDowngrade)
       }
     }
 

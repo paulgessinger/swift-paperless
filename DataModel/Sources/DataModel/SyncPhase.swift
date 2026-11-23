@@ -14,6 +14,11 @@ public enum SyncPhase: Int, Sendable, Equatable, CaseIterable, Comparable {
   case elements
   /// Remote deletes, the changed-metadata delta, saved-view membership.
   case reconcile
+  /// The one-time metadata seed: page the default list to the end once, so
+  /// the cache holds every document's row whatever the offline mode. The
+  /// delta keeps it complete afterwards. A no-op once that list has been
+  /// paged to the end.
+  case seed
   /// The proactive *Entire library* fill: every query's pages, then the
   /// per-document details.
   case fill

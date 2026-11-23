@@ -32,8 +32,13 @@ public enum ThumbnailImageID {
   /// Whether `key` is an id followed by a processor suffix: the key Nuke
   /// stores a resized variant under.
   public static func isVariant(_ key: String) -> Bool {
-    guard let (_, suffix) = split(key) else { return false }
-    return !suffix.isEmpty
+    variantSource(key) != nil
+  }
+
+  /// The thumbnail a resized variant's `key` was derived from.
+  public static func variantSource(_ key: String) -> ContentStore.Key? {
+    guard let (parsed, suffix) = split(key), !suffix.isEmpty else { return nil }
+    return parsed.key
   }
 
   /// The id at the start of `key` and whatever follows the version's digits.

@@ -1054,11 +1054,15 @@ extension DocumentStore {
   /// on disk. Every caller already paired them — except the one that forgot,
   /// leaving notes and file metadata to wait for the next launch.
   public func fillIfEnabled(phases: SyncPhases, force: Bool = false) async {
-    guard phases.contains(.fill) || phases.contains(.files) else { return }
+    guard phases.contains(.seed) || phases.contains(.fill) || phases.contains(.files)
+    else { return }
     // One session for every part: re-reading it between them would page one
     // server's library and then walk a different server's details.
     guard let session else { return }
     await SyncRunContext.$current.withValue(.child(.foreground)) {
+      if phases.contains(.seed) {
+        await session.seedLibrary()
+      }
       if phases.contains(.fill) {
         await session.fillLibrary(force: force)
         await session.fillDocumentDetails()

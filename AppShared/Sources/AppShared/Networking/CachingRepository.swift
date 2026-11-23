@@ -87,21 +87,8 @@ enum QueryRetentionPolicy {
   /// Twenty rather than a handful or a hundred: what the retention buys is "go
   /// back to what I was just looking at and it's still there offline", which is
   /// a session's worth of browsing, not a history. Each retained key costs one
-  /// `query_order` row per member document *and* — through the anti-join in
-  /// `pruneUnreferencedDocuments` — pins every document it lists, so this is
-  /// really a cap on how much of the library an abandoned filter can keep alive.
+  /// `query_order` row per member document.
   static let recentAdHocCap = 20
-
-  /// How long a viewed list stays exempt from the *Recently browsed* cap
-  /// (`OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows per list).
-  ///
-  /// Recency rather than position decides *which* lists get cut back: a list the
-  /// user just browsed stays whole, so the older documents they scrolled down to
-  /// are still there offline, and storage settles back to the cap once they've
-  /// moved on. A day rather than a session: "browsed this morning, offline on the
-  /// train tonight" is the case the mode is named for, and it matches the *Entire
-  /// library* coverage backstop (``LibraryCoverage/maxAge``).
-  static let recentlyBrowsedGrace: TimeInterval = 24 * 60 * 60
 }
 
 /// How a detail-fill or content-fill pass that ran to the end left things.
@@ -220,6 +207,12 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// failed advances nothing, so it retries.
   func fillLibrary(force: Bool, progress: SyncProgressReporter?) async throws
 
+  /// One-time metadata seed, in both offline modes: page the default list to
+  /// the end, so every document the server lists has a row. A no-op once that
+  /// list has been paged to the end; the delta keeps the rows complete from
+  /// there. Throws when the fill fails or is cancelled.
+  func seedLibrary(progress: SyncProgressReporter?) async throws
+
   /// Proactive per-document detail fill (*Entire library*): give every
   /// cached document its notes and file-metadata so it's fully renderable
   /// offline even if never opened. Zero-note documents are seeded from the
@@ -269,9 +262,8 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// Reachability GC for cached query keys: delete `query_order` / `query_meta`
   /// / `query_sync_error` for every key that is no longer reachable (the default
   /// list, the current saved views, a bounded LRU of recent ad-hoc filters,
-  /// anything in use right now), then reclaim the documents those orphans were
-  /// pinning. Runs in *both* offline modes — an ad-hoc filter leaves a key
-  /// behind either way.
+  /// anything in use right now). Document rows stay. Runs in *both* offline
+  /// modes — an ad-hoc filter leaves a key behind either way.
   func collectUnreachableQueries() async throws
 
   /// Remote-delete reconcile (R2): fetch the server's authoritative live id set
@@ -283,8 +275,8 @@ public protocol CachingBackend: AnyObject, Sendable {
   func reconcileDocumentDeletions() async throws
 
   /// Changed-metadata delta (R3δ): page forward from the per-server watermark
-  /// and refresh the cached rows that changed, keeping already-cached documents
-  /// fresh without re-opening their list.
+  /// and write every document that changed or is new, in both offline modes, so
+  /// the cache holds the whole library's metadata without re-opening a list.
   ///
   /// Detection is by `modified`, so it only sees what the server timestamps.
   /// Servers older than paperless-ngx#13170 don't bump `modified` on a version
@@ -294,8 +286,8 @@ public protocol CachingBackend: AnyObject, Sendable {
 
   /// Bring what is kept offline up to date: sync every kept saved view
   /// (``syncKeptOfflineView(savedViewID:)``), then fetch the kept documents
-  /// whose rows are not cached (after a cache wipe, or a document pruned
-  /// before it was kept), so the lists have rows and the file pass has a
+  /// whose rows are not cached (after a cache wipe, or a document that was
+  /// never fetched), so the lists have rows and the file pass has a
   /// `modified` to download against. A view that fails is recorded and
   /// stepped over.
   ///
@@ -751,10 +743,8 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     )
     for (index, (name, filter)) in views.enumerated() {
       try Task.checkCancellation()
-      // A downgrade mid-fill means the rest of these views are no longer wanted,
-      // and `reclaimAfterDowngrade` runs right behind us — continuing would
-      // write back rows it has just reclaimed. One connection-row read per view,
-      // and there are few views.
+      // A downgrade mid-fill means the rest of these views are no longer
+      // wanted. One connection-row read per view, and there are few views.
       guard offlineBrowsingMode == .entireLibrary else {
         Logger.sync.info("Library fill: mode left Entire library mid-pass; stopping")
         return
@@ -837,6 +827,36 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     try? await database.setLibraryCoverageAt(Date(), serverID: serverID)
   }
 
+  public func seedLibrary(progress: SyncProgressReporter?) async throws {
+    let key = QueryKey(serverID: serverID, filter: .default)
+    guard try await database.queryFillCompletedAt(queryKey: key, serverID: serverID) == nil
+    else { return }
+
+    defer { progress?(nil) }
+    progress?(SyncActivity(stage: .libraryFill))
+    Logger.sync.info(
+      "Library seed: paging the default list for server \(self.serverLogLabel, privacy: .public)")
+    // A page's report hops to the main actor and can land after the stage ended.
+    let reporting = FillReportGate()
+    reporting.index = 0
+    defer { reporting.index = nil }
+    let handle = try await fillQuery(filter: .default, category: .fill) { position, total in
+      Task { @MainActor in
+        guard reporting.index == 0 else { return }
+        progress?(
+          SyncActivity(
+            stage: .libraryFill, completed: position, total: total.map { Int($0) }))
+      }
+    }
+    // The paging runs on a detached task; see `fillLibrary`.
+    try await withTaskCancellationHandler {
+      try await handle.awaitCompletion()
+    } onCancel: {
+      handle.cancel()
+    }
+    try Task.checkCancellation()
+  }
+
   @discardableResult
   public func fillDocumentDetails(progress: SyncProgressReporter?) async throws
     -> DetailFillOutcome
@@ -903,8 +923,7 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         reports.run { progress?(activity) }
       }
 
-      // A downgrade mid-pass means the rest is no longer wanted, and
-      // `reclaimAfterDowngrade` runs right behind us.
+      // A downgrade mid-pass means the rest is no longer wanted.
       @MainActor func leftEntireLibrary() -> Bool {
         guard done.isMultiple(of: DetailFillPolicy.downgradeCheckStride) else { return false }
         return offlineBrowsingMode != .entireLibrary
@@ -1478,17 +1497,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   }
 
   public func reconcileDocumentChanges(progress: SyncProgressReporter?) async throws {
-    let entireLibrary = offlineBrowsingMode == .entireLibrary
-
-    // Delta refreshes changed rows. Under *Recently browsed* it only touches
-    // already-cached rows (new docs surface via on-open list fills); under
-    // *Entire library* it also keeps brand-new docs, so the whole library stays
-    // current between full fills. The list payload always carries full object
-    // detail; the setting only governs which docs are kept (every row is written
-    // at `.full`). Nothing cached ⇒ the proactive fill (or a list open) seeds
-    // first.
-    let localIDs = try await database.allDocumentIDs(serverID: serverID)
-    guard !localIDs.isEmpty else { return }
+    // Every changed or new document is kept, whatever the offline mode: the
+    // mode governs files, not metadata. Nothing cached ⇒ a list fill seeds
+    // first, and the delta baselines from what it cached.
+    guard try await database.documentCount(serverID: serverID) > 0 else { return }
 
     let watermark: Date
     if let stored = try await deltaWatermark() {
@@ -1547,17 +1559,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         if modified > cursor { cursor = modified }
       }
 
-      // *Entire library*: keep every changed/new doc. *Recently browsed*: only
-      // refresh rows already cached. Either way the row is written at `.full`.
-      //
-      // `localIDs` is a snapshot taken before the paging began, so a document
-      // cached mid-pass is skipped here even though the cursor moves past it.
-      // Harmless: whatever cached it did so by fetching it from the network,
-      // which is strictly fresher than this delta page's copy of it.
-      let toUpsert = entireLibrary ? changed : changed.filter { localIDs.contains($0.id) }
-      if !toUpsert.isEmpty {
+      if !changed.isEmpty {
         Logger.sync.info(
-          "Reconcile: refreshing \(toUpsert.count, privacy: .public) changed documents")
+          "Reconcile: refreshing \(changed.count, privacy: .public) changed documents")
         // Note edits bump `modified`, so a changed doc's cached notes may be
         // stale. Dropping them is cheap and local — the upsert refreshes each
         // doc's `notesCount`, so the next `fillDocumentDetails` re-seeds an
@@ -1571,12 +1575,12 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
         // is fetched online again. The same write marks the lists a changed
         // document may have moved in.
         let marked = try await database.applyChangedDocuments(
-          toUpsert, serverID: serverID, deletions: deletions)
+          changed, serverID: serverID, deletions: deletions)
         if marked > 0 {
           Logger.sync.info(
             "Reconcile: \(marked, privacy: .public) cached list(s) may be out of order")
         }
-        applied += toUpsert.count
+        applied += changed.count
       }
       // Commit the cursor per page rather than once at the end — this is what
       // makes an interrupted pass resume instead of restart. A separate
@@ -1798,61 +1802,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
   }
 
-  /// Apply the *Recently browsed* storage cap: cut every list not viewed within
-  /// ``QueryRetentionPolicy/recentlyBrowsedGrace`` back to its first
-  /// `OfflineLibrarySize.recentlyBrowsedDefaultListCap` rows, and drop the
-  /// documents that frees.
-  ///
-  /// Only correct while none of this server's lists can be on screen or filling
-  /// (see `Database.capRecentlyBrowsedQueries`), so ``ServerSession`` runs it as
-  /// part of its first repository build, which every list waits for.
-  ///
-  /// The list the app opens with is exempt: the default list, and the filter the
-  /// document list restores from last time, which is what actually opens when
-  /// one was left applied. That list opens as soon as the store has a
-  /// repository, and every open refills it in full, so cutting it here would
-  /// only cost a download online and lose rows offline. So are the kept saved
-  /// views' lists.
-  ///
-  /// Soft-fail: a missed pass leaves the cache as it was until the next launch.
-  func applyRecentlyBrowsedCap() async {
-    // The accessor re-checks the mode; this only skips a pointless write.
-    guard offlineBrowsingMode == .recentlyBrowsed else { return }
-    let cutoff = Date().addingTimeInterval(-QueryRetentionPolicy.recentlyBrowsedGrace)
-    let opening: Set<QueryKey> = [
-      QueryKey(serverID: serverID, filter: .default),
-      QueryKey(serverID: serverID, filter: FilterModel.restoredFilterState()),
-    ]
-    do {
-      // A kept view's whole list, so it browses in full offline. Its members
-      // are kept whatever the cap cuts.
-      let keptIDs = Set(try await database.keptOfflineViews(serverID: serverID).map(\.savedViewID))
-      let kept = try await database.elements(SavedViewRecord.self, serverID: serverID)
-        .filter { keptIDs.contains($0.id) }
-        .map { QueryKey(serverID: serverID, filter: FilterState(savedView: $0)) }
-      let result = try await database.capRecentlyBrowsedQueries(
-        serverID: serverID,
-        keepingFirst: OfflineLibrarySize.recentlyBrowsedDefaultListCap,
-        notViewedSince: cutoff,
-        exempting: opening.union(kept))
-      if result.truncatedRows > 0 {
-        Logger.sync.info(
-          "Recently browsed cap: trimmed \(result.truncatedRows, privacy: .public) row(s), reclaimed \(result.removedDocuments, privacy: .public) document(s) for server \(self.serverLogLabel, privacy: .public)"
-        )
-      }
-    } catch {
-      Logger.sync.error(
-        "Recently browsed cap failed for server \(self.serverLogLabel, privacy: .public): \(error)"
-      )
-    }
-  }
-
   public func collectUnreachableQueries() async throws {
     // Deliberately not gated on `offlineBrowsingMode`: `fillQuery` writes a
     // key's rows on every list open in either mode, so orphans accumulate in
-    // either mode — under *Recently browsed* they are in fact the *only* thing
-    // keeping the reclaimed library from growing back one abandoned filter at a
-    // time.
+    // either mode.
     let savedViews = try await database.elements(SavedViewRecord.self, serverID: serverID)
     let cached = try await database.cachedQueries(serverID: serverID)
 
@@ -1910,17 +1863,6 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     Logger.sync.info(
       "Reachability sweep: collected \(collected.count, privacy: .public) orphaned query key(s) for server \(self.serverLogLabel, privacy: .public)"
     )
-    // Only when something was actually collected: this is the anti-join that
-    // orphaned keys were blocking, and running it on every reconcile regardless
-    // would scan the whole document table to find nothing — and would widen the
-    // blast radius of "referenced means `query_order` membership" (a document
-    // cached by an ASN scan and listed nowhere) to every sweep rather than the
-    // passes that just freed something.
-    let reclaimed = try await database.pruneUnreferencedDocuments(serverID: serverID)
-    if reclaimed > 0 {
-      Logger.sync.info(
-        "Reachability sweep: reclaimed \(reclaimed, privacy: .public) unreferenced document(s)")
-    }
   }
 
   /// Per-server delta watermark (newest `modified` applied), in

@@ -57,8 +57,8 @@ struct AppStackTests {
     await downloader.invalidate()
   }
 
-  @Test("Leaving Entire library calls the server's downloads off and drops its archives")
-  func downgradeDropsArchives() async throws {
+  @Test("Leaving Entire library calls the server's downloads off and keeps archives within budget")
+  func downgradeKeepsArchivesWithinBudget() async throws {
     let lease = await StubDownloadURLProtocol.lease()
     defer { lease.release() }
     StubDownloadURLProtocol.responder = { _ in nil }
@@ -80,13 +80,21 @@ struct AppStackTests {
     try store.storeData(Data("PDF".utf8), for: key)
     try await stack.contentReclaimer.recordStore(
       key, documentID: 1, size: 3, modified: document.modified, checksum: nil, storedAt: Date())
+    try await database.setLibraryCoverageAt(Date(), serverID: serverID)
     stack.connectionManager.setActiveConnection(id: serverID, animated: false)
 
     stack.connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
 
-    try await waitUntil({ !store.exists(key) }, "the archive was never removed")
-    #expect(try await database.allFileKeys().isEmpty)
+    // The reset ran, and nothing is left to download for the server.
+    for _ in 0..<500 where try await database.libraryCoverageAt(serverID: serverID) != nil {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    #expect(try await database.libraryCoverageAt(serverID: serverID) == nil)
     #expect(try await downloader.refill(serverID: serverID) == .complete)
+    // Evictable now, but far under the budget: it stays.
+    await stack.contentReclaimer.run(reason: .manual)
+    #expect(store.exists(key))
+    #expect(try await database.allFileKeys() == [key])
     await downloader.invalidate()
   }
 
