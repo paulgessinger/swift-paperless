@@ -39,7 +39,7 @@ struct TelemetrySettingsView: View {
     keeps only totals, never the reports themselves. Your IP address isn't \
     stored.
 
-    [How this works](https://swift-paperless.app/telemetry/)
+    [How this works](https://swift-paperless.app/usage/)
     """
 
   @Bindable private var appSettings = AppSettings.shared

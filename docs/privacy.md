@@ -17,7 +17,7 @@ off unless you turn it on, and you can change it at any time in
 **Settings → Anonymous usage**. The reports contain no documents, no server
 address and no identifier, and the server keeps only totals. What is sent, and
 how it is handled, is described in detail on
-[Anonymous usage statistics](telemetry.md).
+[Anonymous usage statistics](usage.md).
 
 ## Other connections
 

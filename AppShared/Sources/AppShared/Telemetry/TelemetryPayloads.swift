@@ -51,7 +51,7 @@ public enum TelemetryEndpoint: String, CaseIterable, Sendable {
 
 public enum TelemetryCollector {
   /// Compiled in, for every channel: debug builds report as `dev`.
-  public static let baseURL = URL(string: "https://telemetry.swift-paperless.app")!
+  public static let baseURL = URL(string: "https://usage.swift-paperless.app")!
 }
 
 public enum TelemetryEncoding {

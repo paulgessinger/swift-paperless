@@ -82,6 +82,6 @@ nav:
       - common_issues/supported-versions.md
   - Privacy:
       - privacy.md
-      - telemetry.md
+      - usage.md
   - libraries.md
   - maintenance.md
