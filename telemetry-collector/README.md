@@ -142,8 +142,8 @@ remote. Pushing to it needs your public key registered with
 `dokku ssh-keys:add` on `$SERVER`.
 
 ```sh
-scp -r telemetry-collector/deploy "$SERVER":telemetry-deploy
-git remote add dokku "dokku@$SERVER:telemetry"
+scp -r telemetry-collector/deploy "${SERVER}:telemetry-deploy"
+git remote add dokku "dokku@${SERVER}:telemetry"
 ```
 
 On `$SERVER`:
@@ -417,7 +417,7 @@ The dashboard requests the scopes `openid email profile groups`.
 On your machine:
 
 ```sh
-git remote add dokku-dashboard "dokku@$SERVER:telemetry-dashboard"
+git remote add dokku-dashboard "dokku@${SERVER}:telemetry-dashboard"
 ```
 
 On `$SERVER`:
