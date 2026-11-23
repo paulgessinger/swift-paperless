@@ -6,7 +6,7 @@ per-field counters, and stores nothing else. The same package and image also
 run a read-only, OIDC-protected analytics dashboard as a separate process
 (see [Dashboard](#dashboard)). The design and privacy model are
 in `plans/privacy-preserving-telemetry.md`; the user-facing description is
-`docs/telemetry.md`.
+`docs/usage.md`.
 
 `telemetry-schema.json` is the shared contract with the app: channels, bucket
 values, device/auth values, feature names and error names. The collector loads
