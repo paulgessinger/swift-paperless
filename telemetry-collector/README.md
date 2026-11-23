@@ -134,8 +134,8 @@ directory, and Dokku's default nginx proxy sits in front of it.
 
 `$SERVER` is the Dokku host as you reach it with `ssh`, as a user with sudo.
 Commands marked "on your machine" run from the repository root of a local
-checkout; the others run in an `ssh $SERVER` session. Replace `telemetry`, the
-email address and the Tailscale IP (`tailscale ip -4` on `$SERVER`).
+checkout; the others run in an `ssh $SERVER` session. Replace `telemetry` and
+the email address.
 
 On your machine, copy the nginx include files to the server and add the git
 remote. Pushing to it needs your public key registered with
@@ -167,7 +167,7 @@ dokku ps:scale telemetry web=1
 dokku checks:disable telemetry
 
 # Metrics on the Tailscale address only.
-dokku docker-options:add telemetry deploy "-p 100.x.y.z:9100:9100"
+dokku docker-options:add telemetry deploy "-p $(tailscale ip -4):9100:9100"
 
 # Edge logging and body cap.
 dokku nginx:set telemetry access-log-path off
@@ -435,9 +435,9 @@ dokku config:set --no-restart telemetry-dashboard TELEMETRY_ROLE=dashboard \
   DASHBOARD_SESSION_SECRET="$(openssl rand -hex 32)"
 dokku ps:scale telemetry-dashboard web=1
 
-# Listen on the Tailscale addresses only (`tailscale ip -4` / `tailscale ip -6`).
-dokku nginx:set telemetry-dashboard bind-address-ipv4 100.x.y.z
-dokku nginx:set telemetry-dashboard bind-address-ipv6 fd7a:115c:a1e0::xxxx
+# Listen on the Tailscale addresses only.
+dokku nginx:set telemetry-dashboard bind-address-ipv4 "$(tailscale ip -4)"
+dokku nginx:set telemetry-dashboard bind-address-ipv6 "$(tailscale ip -6)"
 dokku nginx:set telemetry-dashboard access-log-path off
 dokku nginx:set telemetry-dashboard error-log-path /dev/null
 
