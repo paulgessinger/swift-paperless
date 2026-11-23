@@ -153,10 +153,10 @@ dokku apps:create telemetry
 dokku builder:set telemetry build-dir telemetry-collector
 dokku ports:set telemetry http:80:5000
 
-# Database volume. The container runs as uid 10001.
-dokku storage:ensure-directory telemetry-data
-sudo chown 10001:10001 /var/lib/dokku/data/storage/telemetry-data
-dokku storage:mount telemetry /var/lib/dokku/data/storage/telemetry-data:/data
+# Database volume in /var/lib/dokku/data/storage/telemetry-data, owned by the
+# container's uid 10001.
+dokku storage:create telemetry-data --chown 10001
+dokku storage:mount telemetry telemetry-data --container-dir /data
 
 dokku config:set --no-restart telemetry \
   METRICS_HOST=0.0.0.0 METRICS_PORT=9100
@@ -425,7 +425,7 @@ dokku apps:create telemetry-dashboard
 dokku builder:set telemetry-dashboard build-dir telemetry-collector
 dokku ports:set telemetry-dashboard http:80:5000
 # Same storage as the collector.
-dokku storage:mount telemetry-dashboard /var/lib/dokku/data/storage/telemetry-data:/data
+dokku storage:mount telemetry-dashboard telemetry-data --container-dir /data
 dokku config:set --no-restart telemetry-dashboard TELEMETRY_ROLE=dashboard \
   OIDC_ISSUER=https://id.example.org OIDC_CLIENT_ID=... OIDC_CLIENT_SECRET=... \
   OIDC_REDIRECT_URI=https://dash.example.org/auth/callback OIDC_REQUIRED_GROUP=telemetry \
