@@ -175,9 +175,11 @@ dokku nginx:set telemetry error-log-path /dev/null
 dokku nginx:set telemetry client-max-body-size 4k
 
 # Rate limits (in-memory nginx zones): http-context zones + server-context limits.
-sudo cp telemetry-deploy/nginx-ratelimit.conf /etc/nginx/conf.d/telemetry-ratelimit.conf
-sudo -u dokku mkdir -p /home/dokku/telemetry/nginx.conf.d
-sudo -u dokku cp telemetry-deploy/nginx.conf.d/ratelimit.conf /home/dokku/telemetry/nginx.conf.d/
+# Copied as root: the dokku user can't read your home directory.
+sudo install -m 644 telemetry-deploy/nginx-ratelimit.conf /etc/nginx/conf.d/telemetry-ratelimit.conf
+sudo install -d -o dokku -g dokku /home/dokku/telemetry/nginx.conf.d
+sudo install -m 644 -o dokku -g dokku telemetry-deploy/nginx.conf.d/ratelimit.conf \
+  /home/dokku/telemetry/nginx.conf.d/ratelimit.conf
 
 dokku domains:set telemetry usage.swift-paperless.app
 ```
