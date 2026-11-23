@@ -4,8 +4,7 @@ Counter-only collector for Swift Paperless's opt-in telemetry. It accepts two
 pings, `POST /t/health` and `POST /t/feature`, splits each into independent
 per-field counters, and stores nothing else. The same package and image also
 run a read-only, OIDC-protected analytics dashboard as a separate process
-(see [Dashboard](#dashboard)). The design and privacy model are
-in `plans/privacy-preserving-telemetry.md`; the user-facing description is
+(see [Dashboard](#dashboard)). The user-facing description is
 `docs/usage.md`.
 
 `telemetry-schema.json` is the shared contract with the app: channels, bucket
@@ -165,7 +164,7 @@ sudo cp deploy/nginx-ratelimit.conf /etc/nginx/conf.d/telemetry-ratelimit.conf
 sudo -u dokku mkdir -p /home/dokku/telemetry/nginx.conf.d
 sudo -u dokku cp deploy/nginx.conf.d/ratelimit.conf /home/dokku/telemetry/nginx.conf.d/
 
-dokku domains:set telemetry t.example.org
+dokku domains:set telemetry usage.swift-paperless.app
 git push dokku HEAD:main       # Dokku deploys what is pushed to its main; any local branch works
 dokku letsencrypt:set telemetry email you@example.org
 dokku letsencrypt:enable telemetry
@@ -414,6 +413,13 @@ dokku proxy:build-config telemetry-dashboard
   Tailscale address only; the hop from the proxy travels inside the tailnet.
   The proxy must forward `Host: dash.example.org` (the name in
   `domains:set`).
+- **The proxy is internal too:** it must not be reachable from the internet,
+  or the dashboard is public behind OIDC alone. If it also serves public
+  sites, restrict this host to the tailnet (`100.64.0.0/10`,
+  `fd7a:115c:a1e0::/48`) and the local network.
+- **DNS:** `dash.example.org` resolves to the proxy, from a resolver only the
+  tailnet or local network uses. The proxy must reach the Dokku VM's
+  Tailscale address.
 - **Tailscale ACLs:** allow port 80 on the Dokku VM's Tailscale address only
   from the proxy's node, so nothing else on the tailnet can bypass the proxy.
 - **Issuer reachability:** the Dokku VM must reach `OIDC_ISSUER` directly, at
