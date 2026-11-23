@@ -14,3 +14,36 @@ updates:
       default-days: 7
     commit-message:
       prefix: "ci"
+
+  - package-ecosystem: "swift"
+    directories:
+      - "/AppShared"
+      - "/AppViews"
+      - "/Common"
+      - "/DataModel"
+      - "/Networking"
+      - "/Persistence"
+      - "/Scanning"
+    schedule:
+      interval: "weekly"
+    groups:
+      swift:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build"
+
+  - package-ecosystem: "uv"
+    directory: "/scripts"
+    schedule:
+      interval: "monthly"
+    groups:
+      scripts:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
