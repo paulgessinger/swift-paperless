@@ -143,8 +143,8 @@ public final class ServerSession {
   /// this flag.
   public var isSyncing: Bool {
     syncSlot.isOccupied || elementSyncSlot.isOccupied || reconcileSlot.isOccupied
-      || libraryFillSlot.isOccupied || detailFillSlot.isOccupied || fileFillSlot.isOccupied
-      || contentFillSlot.isOccupied
+      || libraryFillSlot.isOccupied || librarySeedSlot.isOccupied || detailFillSlot.isOccupied
+      || fileFillSlot.isOccupied || contentFillSlot.isOccupied
   }
 
   public private(set) var state: State = .idle
@@ -442,6 +442,7 @@ public final class ServerSession {
     elementSyncSlot.retire()
     reconcileSlot.retire()
     libraryFillSlot.retire()
+    librarySeedSlot.retire()
     detailFillSlot.retire()
     fileFillSlot.retire()
     contentFillSlot.retire()
