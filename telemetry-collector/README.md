@@ -185,10 +185,11 @@ dokku domains:set telemetry usage.swift-paperless.app
 ```
 
 On your machine (Dokku deploys what is pushed to its `main`; any local branch
-works):
+works). `--no-verify` skips the Git LFS pre-push hook: Dokku has no LFS
+server, and the LFS files (`app_store/`) aren't part of the build:
 
 ```sh
-git push dokku HEAD:main
+git push --no-verify dokku HEAD:main
 ```
 
 On `$SERVER`:
@@ -224,7 +225,7 @@ dokku proxy:build-config telemetry
 
 ### Updating
 
-`git push dokku HEAD:main` rebuilds the image and applies the `nginx:set`
+`git push --no-verify dokku HEAD:main` rebuilds the image and applies the `nginx:set`
 settings, which Dokku keeps on the host. It does not copy anything from
 `deploy/`: `.dockerignore` keeps it out of the image, and the nginx files live
 outside the app. When `deploy/` changes, copy it with `scp` and both files into
@@ -447,7 +448,7 @@ On your machine, then `dokku proxy:build-config telemetry-dashboard` on
 `$SERVER`:
 
 ```sh
-git push dokku-dashboard HEAD:main
+git push --no-verify dokku-dashboard HEAD:main
 ```
 
 - **TLS** is terminated by the separate internal reverse proxy that holds the
