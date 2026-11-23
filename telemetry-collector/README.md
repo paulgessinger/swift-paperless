@@ -120,7 +120,7 @@ the month's average active days per install (see
 [Active installs](#active-installs)). It reads counters back to the start of
 that month and week, whatever `--days` is.
 
-On the Dokku host (`enter` runs inside the live container; the report opens the
+On `$SERVER` (`enter` runs inside the live container; the report opens the
 database read-only):
 
 ```sh
@@ -130,8 +130,23 @@ dokku enter telemetry web telemetry-report --days 14
 ## Deploy (Dokku)
 
 The app is built from `Dockerfile` with `telemetry-collector/` as the build
-directory, and Dokku's default nginx proxy sits in front of it. Replace
-`telemetry`, the domain, the email address and the Tailscale IP:
+directory, and Dokku's default nginx proxy sits in front of it.
+
+`$SERVER` is the Dokku host as you reach it with `ssh`, as a user with sudo.
+Commands marked "on your machine" run from the repository root of a local
+checkout; the others run in an `ssh $SERVER` session. Replace `telemetry`, the
+email address and the Tailscale IP (`tailscale ip -4` on `$SERVER`).
+
+On your machine, copy the nginx include files to the server and add the git
+remote. Pushing to it needs your public key registered with
+`dokku ssh-keys:add` on `$SERVER`.
+
+```sh
+scp -r telemetry-collector/deploy "$SERVER":telemetry-deploy
+git remote add dokku "dokku@$SERVER:telemetry"
+```
+
+On `$SERVER`:
 
 ```sh
 dokku apps:create telemetry
@@ -160,12 +175,23 @@ dokku nginx:set telemetry error-log-path /dev/null
 dokku nginx:set telemetry client-max-body-size 4k
 
 # Rate limits (in-memory nginx zones): http-context zones + server-context limits.
-sudo cp deploy/nginx-ratelimit.conf /etc/nginx/conf.d/telemetry-ratelimit.conf
+sudo cp telemetry-deploy/nginx-ratelimit.conf /etc/nginx/conf.d/telemetry-ratelimit.conf
 sudo -u dokku mkdir -p /home/dokku/telemetry/nginx.conf.d
-sudo -u dokku cp deploy/nginx.conf.d/ratelimit.conf /home/dokku/telemetry/nginx.conf.d/
+sudo -u dokku cp telemetry-deploy/nginx.conf.d/ratelimit.conf /home/dokku/telemetry/nginx.conf.d/
 
 dokku domains:set telemetry usage.swift-paperless.app
-git push dokku HEAD:main       # Dokku deploys what is pushed to its main; any local branch works
+```
+
+On your machine (Dokku deploys what is pushed to its `main`; any local branch
+works):
+
+```sh
+git push dokku HEAD:main
+```
+
+On `$SERVER`:
+
+```sh
 dokku letsencrypt:set telemetry email you@example.org
 dokku letsencrypt:enable telemetry
 dokku proxy:build-config telemetry
@@ -199,7 +225,8 @@ dokku proxy:build-config telemetry
 `git push dokku HEAD:main` rebuilds the image and applies the `nginx:set`
 settings, which Dokku keeps on the host. It does not copy anything from
 `deploy/`: `.dockerignore` keeps it out of the image, and the nginx files live
-outside the app. When `deploy/` changes, copy both files again as above, then:
+outside the app. When `deploy/` changes, copy it with `scp` and both files into
+place again as above, then on `$SERVER`:
 
 ```sh
 dokku proxy:build-config telemetry   # rebuilds the app's nginx config, runs nginx -t, reloads
@@ -385,6 +412,14 @@ The dashboard requests the scopes `openid email profile groups`.
 
 ### Deploy (Dokku, Tailscale only)
 
+On your machine:
+
+```sh
+git remote add dokku-dashboard "dokku@$SERVER:telemetry-dashboard"
+```
+
+On `$SERVER`:
+
 ```sh
 dokku apps:create telemetry-dashboard
 dokku builder:set telemetry-dashboard build-dir telemetry-collector
@@ -404,8 +439,13 @@ dokku nginx:set telemetry-dashboard access-log-path off
 dokku nginx:set telemetry-dashboard error-log-path /dev/null
 
 dokku domains:set telemetry-dashboard dash.example.org
-git push dokku-dashboard main   # a second git remote for this app
-dokku proxy:build-config telemetry-dashboard
+```
+
+On your machine, then `dokku proxy:build-config telemetry-dashboard` on
+`$SERVER`:
+
+```sh
+git push dokku-dashboard HEAD:main
 ```
 
 - **TLS** is terminated by the separate internal reverse proxy that holds the
@@ -448,7 +488,7 @@ binding to it fails and the host's single nginx does not start, which takes
 the public collector down too. (nginx binds only the wildcard socket when
 another server on the same port listens on all addresses, as the collector
 does, but do not rely on that.) Allow binding to addresses that are not up
-yet (recommended):
+yet (recommended), on `$SERVER`:
 
 ```sh
 printf 'net.ipv4.ip_nonlocal_bind = 1\nnet.ipv6.ip_nonlocal_bind = 1\n' \
