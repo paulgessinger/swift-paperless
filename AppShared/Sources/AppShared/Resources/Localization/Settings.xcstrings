@@ -2715,13 +2715,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fjern hentede dokumenter"
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Heruntergeladene Dokumente entfernen"
           }
         },
@@ -2733,31 +2733,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Supprimer les documents téléchargés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Rimuovi i documenti scaricati"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Gedownloade documenten verwijderen"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Usuń pobrane dokumenty"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "İndirilen dokümanları kaldır"
           }
         }
@@ -2769,13 +2769,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dokumenter og PDF-filer, der er hentet til offlinebrug på denne server, bliver fjernet – bortset fra de nyeste dokumenter i din dokumentliste og de dokumenter, du beholder offline. Filerne hentes igen, når du åbner et dokument."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Für die Offline-Nutzung auf diesem Server heruntergeladene Dokumente und PDF-Dateien werden entfernt – außer den neuesten Dokumenten in deiner Dokumentliste und den Dokumenten, die du offline behältst. Dateien werden erneut heruntergeladen, sobald du ein Dokument öffnest."
           }
         },
@@ -2787,31 +2787,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Les documents et fichiers PDF téléchargés pour une utilisation hors ligne sur ce serveur seront supprimés, à l'exception des documents les plus récents de votre liste de documents et de ceux que vous conservez hors ligne. Les fichiers sont téléchargés à nouveau lorsque vous ouvrez un document."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "I documenti e i file PDF scaricati per l'uso offline su questo server verranno rimossi, tranne i documenti più recenti nel tuo elenco di documenti e quelli che mantieni offline. I file vengono scaricati di nuovo quando apri un documento."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Documenten en pdf-bestanden die op deze server voor offlinegebruik zijn gedownload, worden verwijderd, behalve de meest recente documenten in je documentenlijst en de documenten die je offline bewaart. Bestanden worden opnieuw gedownload zodra je een document opent."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dokumenty i pliki PDF pobrane do użytku offline na tym serwerze zostaną usunięte, z wyjątkiem najnowszych dokumentów z Twojej listy dokumentów i dokumentów zachowanych offline. Pliki zostaną pobrane ponownie po otwarciu dokumentu."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bu sunucuda çevrimdışı kullanım için indirilen dokümanlar ve PDF dosyaları, doküman listenizdeki en yeni dokümanlar ve çevrimdışı tuttuğunuz dokümanlar dışında kaldırılacak. Dosyalar, bir dokümanı açtığınızda yeniden indirilir."
           }
         }
@@ -2877,13 +2877,13 @@
       "localizations" : {
         "da" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Når Hele biblioteket er valgt, hentes alle gemte visninger, hele din dokumentliste og PDF-filen for hvert dokument via Wi-Fi, så du kan læse dem offline. Skifter du tilbage til Senest gennemsete, fjernes det, der er hentet."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bei „Gesamte Bibliothek“ werden alle gespeicherten Ansichten, deine vollständige Dokumentliste und die PDF-Datei jedes Dokuments über WLAN heruntergeladen, damit du sie offline lesen kannst. Beim Wechsel zurück zu „Zuletzt angesehen“ wird das Heruntergeladene entfernt."
           }
         },
@@ -2895,31 +2895,31 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Avec « Bibliothèque entière », toutes les vues enregistrées, votre liste de documents complète et le PDF de chaque document sont téléchargés en Wi-Fi afin que vous puissiez les lire hors ligne. Revenir à « Récemment consultés » supprime ce qui a été téléchargé."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Con «Intera libreria», tutte le viste salvate, l'elenco completo dei documenti e il PDF di ogni documento vengono scaricati tramite Wi-Fi, così puoi leggerli offline. Tornando a «Consultati di recente» viene rimosso ciò che è stato scaricato."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bij Volledige bibliotheek worden alle opgeslagen weergaven, je volledige documentenlijst en de pdf van elk document via wifi gedownload, zodat je ze offline kunt lezen. Terugschakelen naar Onlangs bekeken verwijdert wat is gedownload."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Przy ustawieniu Cała biblioteka wszystkie zapisane widoki, pełna lista dokumentów i plik PDF każdego dokumentu są pobierane przez Wi-Fi, aby można je było czytać offline. Przełączenie z powrotem na Ostatnio przeglądane usuwa to, co zostało pobrane."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tüm kitaplık seçildiğinde, tüm kayıtlı görünümler, eksiksiz doküman listeniz ve her dokümanın PDF dosyası çevrimdışı okuyabilmeniz için Wi-Fi üzerinden indirilir. Son görüntülenenler seçeneğine geri dönmek indirilenleri kaldırır."
           }
         }
