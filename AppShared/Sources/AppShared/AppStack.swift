@@ -26,6 +26,9 @@ public final class AppStack {
   public let suspension: DatabaseSuspensionController
   /// The cached files' index and budget, one for every server's store.
   public let contentReclaimer: ContentReclaimer
+  /// Keeps the full-text index over the stored document texts up to date,
+  /// for searching on the device. One for every server's store.
+  public let searchIndexer: SearchIndexer
   /// The library's file downloads on the background session. Only the app
   /// process builds one: the session's identifier is the app's, and the Share
   /// Extension must not create a second session under it.
@@ -62,6 +65,7 @@ public final class AppStack {
     self.connectionManager = connectionManager
     let contentReclaimer = ContentReclaimer(database: database, store: contentStore)
     self.contentReclaimer = contentReclaimer
+    searchIndexer = SearchIndexer(database: database, store: contentStore)
     // The downloader needs the registry, for a server's repository, and the
     // registry is built with the downloader, to hand it to every session. So
     // the downloader's lookup reads the registry from a box filled once the
@@ -150,6 +154,12 @@ public final class AppStack {
       }
       _ = await suspension.performBackgroundWork {
         await contentReclaimer.run(reason: .launch)
+      }
+      // After the sweep, so texts it drops aren't indexed first. From here on
+      // every stored text is indexed as its file is recorded; the first pass
+      // takes up whatever an earlier build or run left unindexed.
+      await searchIndexer.follow { [suspension] pass in
+        await suspension.performBackgroundWork { await pass() }
       }
     }
   }

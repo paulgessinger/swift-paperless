@@ -964,6 +964,17 @@ extension DocumentStore {
     return try await backend.fillQuery(filter: filter, category: .list, onPage: nil)
   }
 
+  /// Answer a list on the device, for when its fill can't reach the server.
+  /// The list's observation picks the result up; see
+  /// ``CachingBackend/evaluateQueryLocally(filter:)``.
+  ///
+  /// - Returns: `nil` without a caching backend, or when a fill owns the query.
+  @discardableResult
+  public func evaluateDocumentQueryLocally(filter: FilterState) async throws -> LocalEvaluation? {
+    guard let backend = session?.backend else { return nil }
+    return try await backend.evaluateQueryLocally(filter: filter)
+  }
+
   /// Re-sync a stale list's cached membership from the server's id list,
   /// hydrating what its first `window` rows are missing.
   ///

@@ -11,11 +11,33 @@ import Testing
 struct DocumentListStateTests {
   private func state(
     hasRows: Bool = false, isFetching: Bool = false, isFillTakenOver: Bool = false,
-    totalCount: UInt? = nil, isCacheComplete: Bool = false, fillFailed: Bool = false
+    totalCount: UInt? = nil, isCacheComplete: Bool = false, fillFailed: Bool = false,
+    isLocalEvaluation: Bool = false
   ) -> DocumentListState {
     DocumentListState(
       hasRows: hasRows, isFetching: isFetching, isFillTakenOver: isFillTakenOver,
-      totalCount: totalCount, isCacheComplete: isCacheComplete, fillFailed: fillFailed)
+      totalCount: totalCount, isCacheComplete: isCacheComplete, fillFailed: fillFailed,
+      isLocalEvaluation: isLocalEvaluation)
+  }
+
+  @Test("A list answered on the device shows its rows without the incomplete notice")
+  func localEvaluationIsNotIncomplete() {
+    let rows = state(hasRows: true, totalCount: 3, fillFailed: true, isLocalEvaluation: true)
+    #expect(rows.content == .documents)
+    #expect(!rows.isIncomplete)
+    #expect(rows.isLocalEvaluation)
+    // Unchanged while the server is tried again.
+    let retrying = state(
+      hasRows: true, isFetching: true, totalCount: 3, isLocalEvaluation: true)
+    #expect(retrying.content == .documents)
+    #expect(retrying.isLocalEvaluation)
+  }
+
+  @Test("No matches on the device is an empty result, not a failed load")
+  func emptyLocalEvaluationIsEmpty() {
+    #expect(state(totalCount: 0, fillFailed: true, isLocalEvaluation: true).content == .empty)
+    // Also while a fill is in flight: the device has already answered.
+    #expect(state(isFetching: true, totalCount: 0, isLocalEvaluation: true).content == .empty)
   }
 
   @Test(

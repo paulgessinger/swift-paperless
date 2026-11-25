@@ -208,7 +208,7 @@ struct DatabaseSchemaTests {
       #expect(
         Set(meta.map(\.name)) == [
           "server_id", "query_key", "total_count", "filled_at", "viewed_at",
-          "order_generation", "order_basis",
+          "order_generation", "order_basis", "local_evaluation",
         ])
       for name in ["order_generation", "order_basis"] {
         let column = try #require(meta.first(where: { $0.name == name }))
@@ -499,6 +499,24 @@ struct DatabaseSchemaTests {
       try db.tableExists("server")
     }
     #expect(serverExists)
+  }
+
+  @Test("v22 creates the content index, its full-text table and the local-evaluation mark")
+  func v22CreatesSearchIndex() throws {
+    let database = try Database.inMemory()
+    try database.writer.read { db in
+      #expect(
+        Set(try db.columns(in: "content_index").map(\.name)) == [
+          "id", "server_id", "document_id", "version_id", "checksum", "stored_at", "length",
+        ])
+      #expect(try db.primaryKey("content_index").columns == ["id"])
+      #expect(try db.tableExists("content_fts"))
+
+      let mark = try #require(
+        try db.columns(in: "query_meta").first(where: { $0.name == "local_evaluation" }))
+      #expect(!mark.isNotNull)
+      #expect(mark.type.uppercased() == "TEXT")
+    }
   }
 
   @Test("v4 indexes document.asn for the ASN-scanner lookup")

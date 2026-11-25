@@ -78,6 +78,7 @@ public final class Database: Sendable {
       try db.execute(sql: "PRAGMA synchronous = NORMAL;")
       try db.execute(sql: "PRAGMA busy_timeout = 5000;")
       try db.execute(sql: "PRAGMA foreign_keys = ON;")
+      db.add(function: Self.containsFunction)
     }
 
     let pool: DatabasePool
@@ -131,6 +132,7 @@ public final class Database: Sendable {
     config.label = "swift-paperless.persistence.inMemory"
     config.prepareDatabase { db in
       try db.execute(sql: "PRAGMA foreign_keys = ON;")
+      db.add(function: Self.containsFunction)
     }
     let queue: DatabaseQueue
     do {
