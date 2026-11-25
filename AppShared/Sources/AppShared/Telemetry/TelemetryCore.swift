@@ -97,6 +97,11 @@ public enum TelemetryDay {
   public static func shouldSend(lastSent: String?, now: Date) -> Bool {
     lastSent != string(for: now)
   }
+
+  /// The start of the UTC day after the one containing `date`.
+  public static func nextDayStart(after date: Date) -> Date {
+    calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date))!
+  }
 }
 
 // MARK: - Activity signals
@@ -301,6 +306,24 @@ public struct TelemetryState: Equatable, Sendable {
   }
 }
 
+/// When the app next tries to send a ping. Pings only go out when the app
+/// becomes active with a server set up.
+public enum TelemetryNextSend: Equatable, Sendable {
+  /// Due: sent the next time the app becomes active.
+  case nextActivation
+  /// Not due again before this instant, the next UTC midnight.
+  case notBefore(Date)
+}
+
+/// One ping as it would next be sent (see ``TelemetryPings/upcoming(environment:state:now:pretty:)``).
+public struct TelemetryUpcomingPing: Equatable, Sendable {
+  public var endpoint: TelemetryEndpoint
+  public var body: Data
+  /// The UTC day a feature ping covers; `nil` for the health ping.
+  public var day: String?
+  public var nextSend: TelemetryNextSend
+}
+
 public enum TelemetryPings {
   public static func healthPing(
     environment env: TelemetryEnvironment, state: TelemetryState, now: Date
@@ -336,6 +359,37 @@ public enum TelemetryPings {
         .compactMapValues(TelemetryCountBucket.init(count:)),
       available: TelemetryFeature.allCases.filter(env.availableFeatures.contains),
       errors: errors.isEmpty ? nil : errors)
+  }
+
+  /// Each ping as it would next be sent, given `state` and `environment` as
+  /// they are now. A ping that is due goes out on the next activation. One
+  /// that is not is built for the next UTC midnight, when it is due again:
+  /// the health ping with that day's `first_month`, `first_week` and
+  /// `install_age`, and the feature ping for today.
+  public static func upcoming(
+    environment: TelemetryEnvironment, state: TelemetryState, now: Date, pretty: Bool = false
+  ) throws -> [TelemetryUpcomingPing] {
+    let nextDay = TelemetryDay.nextDayStart(after: now)
+
+    let healthDue = TelemetryDay.shouldSend(lastSent: state.healthLastSent, now: now)
+    let healthAt = healthDue ? now : nextDay
+    let health = TelemetryUpcomingPing(
+      endpoint: .health,
+      body: try TelemetryEncoding.encode(
+        healthPing(environment: environment, state: state, now: healthAt), pretty: pretty),
+      day: nil,
+      nextSend: healthDue ? .nextActivation : .notBefore(nextDay))
+
+    let dueDay = state.featureReportDay(now: now)
+    let featureDay = dueDay ?? TelemetryDay.string(for: now)
+    let feature = TelemetryUpcomingPing(
+      endpoint: .feature,
+      body: try TelemetryEncoding.encode(
+        featurePing(environment: environment, state: state, day: featureDay), pretty: pretty),
+      day: featureDay,
+      nextSend: dueDay != nil ? .nextActivation : .notBefore(nextDay))
+
+    return [health, feature]
   }
 
   /// The exact bytes of one ping, or `nil` for a feature ping with no day to

@@ -47,13 +47,28 @@ struct TelemetrySettingsView: View {
   @Environment(DocumentStore.self) private var store
   @Environment(ConnectionManager.self) private var connectionManager
 
-  /// The pings as the service would send them now, by endpoint.
-  @State private var payloads: [TelemetryEndpoint: String] = [:]
+  /// Both pings as the service would next send them.
+  @State private var pings: [TelemetryUpcomingPing] = []
 
-  private func loadPayloads() async {
+  private func loadPings() async {
     let environment = await TelemetryEnvironment.current(
       store: store, connectionManager: connectionManager)
-    payloads = TelemetryService.current.preview(environment: environment)
+    pings = TelemetryService.current.upcoming(environment: environment)
+  }
+
+  private func schedule(_ ping: TelemetryUpcomingPing) -> String {
+    guard appSettings.telemetryOptIn == true else {
+      return "Not sent while sharing is off."
+    }
+    switch ping.nextSend {
+    case .nextActivation:
+      return "Sent the next time you open the app."
+    case .notBefore(let date):
+      let time = date.formatted(date: .abbreviated, time: .shortened)
+      return ping.endpoint == .health
+        ? "Sent today. Sent again the first time you open the app after \(time)."
+        : "Still recording today. Sent the first time you open the app after \(time)."
+    }
   }
 
   var body: some View {
@@ -74,16 +89,22 @@ struct TelemetrySettingsView: View {
 
       Section {
         DisclosureGroup {
-          ForEach(TelemetryEndpoint.allCases, id: \.self) { endpoint in
-            if let payload = payloads[endpoint] {
-              VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: "POST \(endpoint.path)")
-                  .font(.caption.bold())
+          ForEach(pings, id: \.endpoint) { ping in
+            VStack(alignment: .leading, spacing: 6) {
+              Text(verbatim: "POST \(ping.endpoint.path)")
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+              if let day = ping.day {
+                Text(verbatim: "Covers \(day) (UTC)")
+                  .font(.caption)
                   .foregroundStyle(.secondary)
-                Text(verbatim: payload)
-                  .font(.caption.monospaced())
-                  .textSelection(.enabled)
               }
+              Text(verbatim: schedule(ping))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+              Text(verbatim: String(decoding: ping.body, as: UTF8.self))
+                .font(.caption.monospaced())
+                .textSelection(.enabled)
             }
           }
         } label: {
@@ -92,12 +113,12 @@ struct TelemetrySettingsView: View {
       } footer: {
         Text(
           verbatim:
-            "The exact reports this device would send now. The features report covers the last day you used the app and is shown only until it has been sent. Sending any report tells the server that an install of the app was used."
+            "The exact reports this device would send, as things stand now. They can still change before they're sent, and the app sends only when you open it while connected to a server. Sending any report tells the server that an install of the app was used."
         )
       }
     }
     .task(id: appSettings.telemetryOptIn) {
-      await loadPayloads()
+      await loadPings()
     }
     .navigationTitle(Text(verbatim: Self.title))
     .navigationBarTitleDisplayMode(.inline)

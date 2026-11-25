@@ -155,20 +155,36 @@ public final class TelemetryService {
     }
   }
 
-  /// The pings as they would be sent right now, pretty-printed. The feature
-  /// ping is absent when no completed day is due.
-  public func preview(environment: TelemetryEnvironment) -> [TelemetryEndpoint: String] {
+  /// Both pings as they would next be sent, pretty-printed, with when (see
+  /// ``TelemetryPings/upcoming(environment:state:now:pretty:)``).
+  public func upcoming(environment: TelemetryEnvironment) -> [TelemetryUpcomingPing] {
+    let now = now()
+    return
+      (try? TelemetryPings.upcoming(
+        environment: environment, state: storage.load(now: now), now: now, pretty: true)) ?? []
+  }
+
+  /// Everything stored, for the debug menu.
+  public func debugSnapshot(environment: TelemetryEnvironment) -> TelemetryDebugSnapshot {
     let now = now()
     let state = storage.load(now: now)
-    var result: [TelemetryEndpoint: String] = [:]
-    for endpoint in TelemetryEndpoint.allCases {
-      if let data = try? TelemetryPings.encodedPing(
-        endpoint, environment: environment, state: state, now: now, pretty: true)
-      {
-        result[endpoint] = String(decoding: data, as: UTF8.self)
-      }
+    let today = TelemetryDay.string(for: now)
+    let next = state.featureReportDay(now: now)
+    let days = TelemetryReportableDays.pruned(
+      state.activeDays.union(state.pendingFeatures.keys).union(state.pendingErrors.keys),
+      now: now, lastReported: state.featureLastReported
+    )
+    let featureDays = days.sorted(by: >).map { day in
+      TelemetryDebugSnapshot.FeatureDay(
+        day: day,
+        status: day == today ? .today : day == next ? .next : .skipped,
+        body: (try? TelemetryEncoding.encode(
+          TelemetryPings.featurePing(environment: environment, state: state, day: day),
+          pretty: true)).map { String(decoding: $0, as: UTF8.self) } ?? "")
     }
-    return result
+    return TelemetryDebugSnapshot(
+      consented: isConsented(), now: now, state: state,
+      pendingByProcess: storage.pendingByProcess(), featureDays: featureDays)
   }
 
   /// Waits for an in-flight send. For tests.
@@ -226,4 +242,35 @@ public final class TelemetryService {
       if let day = sent.featureReportDay(now: now) { storage.featureLastReported = day }
     }
   }
+}
+
+/// The stored telemetry state and every feature payload it could produce, for
+/// the debug menu.
+public struct TelemetryDebugSnapshot: Sendable {
+  public struct FeatureDay: Sendable, Identifiable {
+    public enum Status: Sendable {
+      /// Today, still recording; reported from tomorrow at the earliest.
+      case today
+      /// The day the next feature ping reports.
+      case next
+      /// Older than the day reported next, so never reported.
+      case skipped
+    }
+
+    public var day: String
+    public var status: Status
+    /// The feature ping for this day, pretty-printed.
+    public var body: String
+    public var id: String { day }
+  }
+
+  public var consented: Bool
+  public var now: Date
+  /// The state pings are built from: every process's pending uses merged and
+  /// pruned.
+  public var state: TelemetryState
+  /// Each process's pending key as stored, unpruned, by process name.
+  public var pendingByProcess: [String: TelemetryPending]
+  /// Every reportable day, newest first.
+  public var featureDays: [FeatureDay]
 }

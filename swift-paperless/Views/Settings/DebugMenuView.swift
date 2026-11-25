@@ -146,6 +146,19 @@ struct DebugMenuView: View {
         }
       }
 
+      if AppFeatures.enabled(.telemetry) {
+        NavigationLink {
+          TelemetryDebugView()
+        } label: {
+          Label {
+            Text(verbatim: "Telemetry state")
+              .accentColor(.primary)
+          } icon: {
+            Image(systemName: "chart.bar.doc.horizontal")
+          }
+        }
+      }
+
       Section {
         Button {
           exportConnectionsToLegacyStorage()

@@ -863,22 +863,59 @@ struct TelemetryServiceTests {
     service.record(.tls)
     clock.now = utc("2026-01-06")
     service.appBecameActive { environment() }
-    let preview = service.preview(environment: environment())
+    let upcoming = service.upcoming(environment: environment())
     await service.waitForPendingSends()
 
-    // Nothing left to report until tomorrow.
-    #expect(service.preview(environment: environment())[.feature] == nil)
-    #expect(service.preview(environment: environment())[.health] != nil)
-
-    for endpoint in TelemetryEndpoint.allCases {
-      let shown =
-        try JSONSerialization.jsonObject(
-          with: Data(try #require(preview[endpoint]).utf8)) as? NSDictionary
+    #expect(upcoming.map(\.nextSend) == [.nextActivation, .nextActivation])
+    #expect(upcoming.first { $0.endpoint == .feature }?.day == "2026-01-05")
+    for ping in upcoming {
+      let shown = try JSONSerialization.jsonObject(with: ping.body) as? NSDictionary
       let sent =
         try JSONSerialization.jsonObject(
-          with: try #require(spy.sent.first { $0.0 == endpoint }?.1)) as? NSDictionary
+          with: try #require(spy.sent.first { $0.0 == ping.endpoint }?.1)) as? NSDictionary
       #expect(shown == sent)
     }
+
+    // Both sent: neither is due again before the next UTC midnight, and the
+    // feature ping then reports today.
+    let after = service.upcoming(environment: environment())
+    #expect(
+      after.map(\.nextSend) == [
+        .notBefore(utc("2026-01-07", hour: 0)), .notBefore(utc("2026-01-07", hour: 0)),
+      ])
+    #expect(after.first { $0.endpoint == .feature }?.day == "2026-01-06")
+  }
+
+  @Test("A health ping not due until tomorrow is shown as tomorrow's")
+  func upcomingHealthTomorrow() throws {
+    // Sunday 2026-01-11; the ping after midnight is the first of a new ISO week.
+    let now = utc("2026-01-11", hour: 23)
+    let state = TelemetryState(
+      healthLastSent: "2026-01-11", healthLastMonth: "2026-01", healthLastWeek: "2026-W02")
+    let upcoming = try TelemetryPings.upcoming(environment: environment(), state: state, now: now)
+    let health = try #require(upcoming.first { $0.endpoint == .health })
+    #expect(health.nextSend == .notBefore(utc("2026-01-12", hour: 0)))
+    let ping = try JSONDecoder().decode(HealthPing.self, from: health.body)
+    #expect(!ping.first_month)
+    #expect(ping.first_week)
+  }
+
+  @Test("The debug snapshot marks which pending day is reported next")
+  func debugSnapshot() {
+    let service = makeService()
+    consent.optedIn = true
+    for day in ["2026-01-02", "2026-01-04"] {
+      clock.now = utc(day)
+      service.record(.savedView)
+    }
+    clock.now = utc("2026-01-05")
+    service.record(.search)
+
+    let snapshot = service.debugSnapshot(environment: environment())
+    #expect(snapshot.consented)
+    #expect(snapshot.featureDays.map(\.day) == ["2026-01-05", "2026-01-04", "2026-01-02"])
+    #expect(snapshot.featureDays.map(\.status) == [.today, .next, .skipped])
+    #expect(snapshot.pendingByProcess["app"]?.features["2026-01-02"] == [.savedView: 1])
   }
 }
 

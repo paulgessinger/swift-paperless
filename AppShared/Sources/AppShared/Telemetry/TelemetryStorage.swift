@@ -100,6 +100,17 @@ struct TelemetryStorage {
       installStamp: installStamp)
   }
 
+  /// Every process's pending key as stored, by process name, unpruned.
+  func pendingByProcess() -> [String: TelemetryPending] {
+    Dictionary(
+      uniqueKeysWithValues: pendingKeys.map {
+        (
+          String($0.dropFirst(Self.pendingKeyPrefix.count)),
+          Self.decode(defaults.dictionary(forKey: $0))
+        )
+      })
+  }
+
   /// Removes every telemetry key, those of other processes included.
   func clear() {
     for key in storedKeys {
