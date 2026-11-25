@@ -418,9 +418,9 @@ def test_page_references_versioned_assets_and_no_inline_code(make_dashboard, pro
     assert re.search(r'<script src="/static/vendor/chartjs/chart\.umd\.min\.js\?v=[0-9a-f]{12}" defer>', html)
     assert re.search(r'<link rel="stylesheet" href="/static/dashboard\.css\?v=[0-9a-f]{12}">', html)
     # Every <script> either loads a file or is the JSON data block; no inline styles.
-    for tag in re.findall(r"<script[^>]*>", html):
+    for tag in re.findall(r"<script[^>]*>", html, re.IGNORECASE):
         assert 'src="/static/' in tag or 'type="application/json"' in tag
-    assert "style=" not in html and "<style" not in html
+    assert "style=" not in html.lower() and "<style" not in html.lower()
     block = re.search(r'<script type="application/json" id="chart-data">(.*?)</script>', html, re.S)
     assert block is not None
     data = json.loads(block[1])
