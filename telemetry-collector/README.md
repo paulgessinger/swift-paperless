@@ -159,15 +159,15 @@ dokku storage:create telemetry-data --chown 10001
 dokku storage:mount telemetry telemetry-data --container-dir /data
 
 dokku config:set --no-restart telemetry \
-  METRICS_HOST=0.0.0.0 METRICS_PORT=9100
+  METRICS_HOST=0.0.0.0 METRICS_PORT=9110
 
 dokku ps:scale telemetry web=1
 # Old container stops before the new one starts, so two containers never clash
 # on the published metrics port; costs a few seconds of downtime per deploy.
 dokku checks:disable telemetry
 
-# Metrics on the Tailscale address only.
-dokku docker-options:add telemetry deploy "-p $(tailscale ip -4):9100:9100"
+# Metrics on the Tailscale address only. Not 9100: that is node_exporter's port.
+dokku docker-options:add telemetry deploy "-p $(tailscale ip -4):9110:9110"
 
 # Edge logging and body cap.
 dokku nginx:set telemetry access-log-path off
