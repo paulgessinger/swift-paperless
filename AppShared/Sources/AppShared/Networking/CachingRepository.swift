@@ -323,10 +323,17 @@ public protocol CachingBackend: AnyObject, Sendable {
   /// order like any other, marked as a ``LocalEvaluation``, until a fill
   /// replaces it.
   ///
+  /// - Parameter whileFilling: answer even though a fill owns the query, as
+  ///   long as the server has given it no rows yet. For a list whose fill is
+  ///   taking long: a request to a server that doesn't answer can sit for
+  ///   minutes before it fails. The fill's first page replaces the answer.
   /// - Returns: what the answer covers, or `nil`, writing nothing, if a fill
-  ///   owns the query or took it over meanwhile: the server's answer is on
-  ///   its way and must not be overwritten.
-  func evaluateQueryLocally(filter: FilterState) async throws -> LocalEvaluation?
+  ///   owns the query or took it over meanwhile (the server's answer is on
+  ///   its way and must not be overwritten), or with `whileFilling` if the
+  ///   server's rows are already there.
+  func evaluateQueryLocally(
+    filter: FilterState, whileFilling: Bool
+  ) async throws -> LocalEvaluation?
 
   /// This server's offline browsing mode (per-server; read live from the
   /// `server` row). The reconcile sweeps and the proactive fill branch on it.
@@ -722,11 +729,19 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
   }
 
-  public func evaluateQueryLocally(filter: FilterState) async throws -> LocalEvaluation? {
+  public func evaluateQueryLocally(
+    filter: FilterState, whileFilling: Bool
+  ) async throws -> LocalEvaluation? {
     let key = QueryKey(serverID: serverID, filter: filter)
     // The list on screen is what asks for this; pinned like a fill's key, so
     // the reachability sweep leaves the order alone while it is shown.
     noteRequested(key)
+    if whileFilling {
+      // Not owned: the fill keeps the key, and the database decides in one
+      // transaction whether the server's rows got there first.
+      return try await database.evaluateQueryLocally(
+        filter: filter, queryKey: key, serverID: serverID, onlyIfUnanswered: true)
+    }
     // Steps over a key in use, like the membership sweep: a fill that owns it
     // is about to write the server's answer.
     guard !isFilling(key) else { return nil }

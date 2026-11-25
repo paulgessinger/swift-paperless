@@ -94,6 +94,21 @@ class DocumentListViewModel {
   /// through and replaces the order.
   private(set) var localEvaluation: LocalEvaluation?
 
+  /// What the list should say about rows the device found itself.
+  enum LocalResults: Equatable {
+    /// The server is still being asked; these are shown meanwhile.
+    case meanwhile(LocalEvaluation)
+    /// The server can't be reached; these are what there is.
+    case offline(LocalEvaluation)
+  }
+
+  var localResults: LocalResults? {
+    guard let localEvaluation else { return nil }
+    let stillAsking = (isFetching || awaitingFill) && fillError == nil
+    return stillAsking && !expectsUnreachableServer
+      ? .meanwhile(localEvaluation) : .offline(localEvaluation)
+  }
+
   /// The device is answering the query on screen right now. Counted as
   /// fetching, so the list doesn't show the load failure in the beat between
   /// the fill failing and the local answer landing.
@@ -116,7 +131,9 @@ class DocumentListViewModel {
       totalCount: totalCount,
       isCacheComplete: isCacheComplete,
       fillFailed: fillError != nil || replacementStoppedShort,
-      isLocalEvaluation: localEvaluation != nil)
+      // An answer shown meanwhile is not the list's outcome: with no rows it
+      // stays on placeholders until the server has answered or failed.
+      isLocalEvaluation: { if case .offline = localResults { true } else { false } }())
   }
 
   /// A list the app keeps itself: served from the database, never filled.
@@ -154,6 +171,7 @@ class DocumentListViewModel {
   @ObservationIgnored private nonisolated(unsafe) var statusTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var completionTask: Task<Void, Never>?
   @ObservationIgnored private nonisolated(unsafe) var staleResyncTask: Task<Void, Never>?
+  @ObservationIgnored private nonisolated(unsafe) var previewTask: Task<Void, Never>?
   /// The observed query's order-stale flag and mark counter as last seen,
   /// `nil` until the status observation first reports for it.
   @ObservationIgnored private var lastOrderMark: (stale: Bool, generation: QueryOrderGeneration)?
@@ -190,6 +208,7 @@ class DocumentListViewModel {
   deinit {
     documentTask?.cancel()
     statusTask?.cancel()
+    previewTask?.cancel()
     completionTask?.cancel()
     fill?.cancel()
   }
@@ -207,6 +226,11 @@ class DocumentListViewModel {
     if hasViewPermission(), let key = store.documentQueryKey(source: source) {
       subscribe(to: key, resettingWindow: true)
       ready = true
+      if expectsUnreachableServer {
+        // A list nothing is cached for, opened offline: the device's answer
+        // rather than placeholders for as long as the requests take to fail.
+        await evaluateLocally(generation: fillGeneration, afterWriters: false)
+      }
     }
 
     // Up-to-date permissions (soft: a sync failure leaves cached perms in place).
@@ -269,6 +293,12 @@ class DocumentListViewModel {
       // rows — or its failure — under the new filter.
       if let key = store.documentQueryKey(source: source), key != queryKey {
         subscribe(to: key, resettingWindow: true)
+        if expectsUnreachableServer {
+          // Before the element sync as well, for the same reason: the answer
+          // to a search typed offline should not wait for a request to time
+          // out. The fill below finds it done.
+          await evaluateLocally(generation: fillGeneration, afterWriters: false)
+        }
       }
     }
 
@@ -381,7 +411,7 @@ class DocumentListViewModel {
     // This fill takes the key back from whatever the list was following.
     isFollowingReplacement = false
     replacementStoppedShort = false
-    if serverSeemsUnreachable || errorController.isOffline?() == true {
+    if expectsUnreachableServer {
       // The fill below is likely to fail, and may take a timeout to do it.
       await evaluateLocally(generation: generation, afterWriters: false)
     }
@@ -510,6 +540,14 @@ class DocumentListViewModel {
 
   // MARK: - Answering on the device
 
+  /// There is reason to think a request would not reach the server: the
+  /// device is offline, the list's last fill couldn't get through, or the
+  /// server's last sync failed as unreachable.
+  private var expectsUnreachableServer: Bool {
+    serverSeemsUnreachable || errorController.isOffline?() == true
+      || store.syncFailures.contains { $0.failureClass == .unreachable }
+  }
+
   /// The server can't be asked: the device is offline, or the server isn't
   /// answering. Anything else (a rejected request, missing permissions) is the
   /// server's own answer and is shown as the failure it is.
@@ -526,7 +564,14 @@ class DocumentListViewModel {
   /// - Parameter afterWriters: wait for the query's writers first. The fill
   ///   that just failed releases the query a beat after it reports, and until
   ///   then the evaluation would step aside for it.
-  private func evaluateLocally(generation: Int, afterWriters: Bool) async {
+  ///   - generation: the fill this answer belongs to, dropped if the list has
+  ///     moved on from it; `nil` for one that belongs to the query whatever
+  ///     fill is asking for it.
+  ///   - whileFilling: answer although a fill owns the query, as long as the
+  ///     server has given it no rows yet.
+  private func evaluateLocally(
+    generation: Int?, afterWriters: Bool, whileFilling: Bool = false
+  ) async {
     guard let filter = source.filter, let key = queryKey else { return }
     isEvaluatingLocally = true
     defer { isEvaluatingLocally = false }
@@ -535,7 +580,10 @@ class DocumentListViewModel {
     }
     let status = try? await store.queryStatus(queryKey: key)
     // The list moved on while waiting; the newer fill or query owns the state.
-    guard generation == fillGeneration, queryKey == key else { return }
+    func isCurrent() -> Bool {
+      (generation == nil || generation == fillGeneration) && queryKey == key
+    }
+    guard isCurrent() else { return }
     guard let status, !status.isComplete else { return }
     // A retry a moment after the last answer would compute the same one.
     if let last = status.localEvaluation,
@@ -545,8 +593,9 @@ class DocumentListViewModel {
       return
     }
     do {
-      let evaluation = try await store.evaluateDocumentQueryLocally(filter: filter)
-      guard generation == fillGeneration, queryKey == key, let evaluation else { return }
+      let evaluation = try await store.evaluateDocumentQueryLocally(
+        filter: filter, whileFilling: whileFilling)
+      guard isCurrent(), let evaluation else { return }
       Logger.shared.info(
         "Document list answered on the device from \(evaluation.documents, privacy: .public) documents"
       )
@@ -561,6 +610,30 @@ class DocumentListViewModel {
 
   /// How long a local answer stands before a retry computes it again.
   private static let localEvaluationValidity: TimeInterval = 30
+
+  /// How long the list waits for the server before it shows what the device
+  /// finds in the meantime. Long enough that a server answering normally is
+  /// never preceded by a different list, short enough that one that doesn't
+  /// answer isn't waited on: its requests can take minutes to fail.
+  private static let localPreviewDelay: Duration = .seconds(2)
+
+  /// Once the query on screen has waited ``localPreviewDelay`` with nothing to
+  /// show, answer it on the device. Whatever is asking the server goes on
+  /// asking, and its first page replaces the answer.
+  private func scheduleLocalPreview(for key: QueryKey) {
+    previewTask?.cancel()
+    guard source.filter != nil else { return }
+    previewTask = Task { @MainActor [weak self] in
+      try? await Task.sleep(for: Self.localPreviewDelay)
+      guard let self, !Task.isCancelled, queryKey == key else { return }
+      // Only to bridge a wait: not over rows, the server's or the device's,
+      // and not once the outcome is known.
+      guard documents.isEmpty, localEvaluation == nil, fillError == nil,
+        isFetching || awaitingFill
+      else { return }
+      await evaluateLocally(generation: nil, afterWriters: false, whileFilling: true)
+    }
+  }
 
   // MARK: - Viewed stamp
 
@@ -615,6 +688,7 @@ class DocumentListViewModel {
     staleResyncTask = nil
     startStatusObservation(key)
     startDocumentObservation(key, limit: prefixLimit)
+    scheduleLocalPreview(for: key)
   }
 
   private func startDocumentObservation(_ key: QueryKey, limit: Int) {
@@ -727,6 +801,8 @@ class DocumentListViewModel {
     lastOrderMark = nil
     statusTask?.cancel()
     statusTask = nil
+    previewTask?.cancel()
+    previewTask = nil
     completionTask?.cancel()
     completionTask = nil
     fill?.cancel()

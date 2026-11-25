@@ -97,4 +97,43 @@ struct LocalEvaluationTests {
     await gate.release()
     try await fill.value.awaitCompletion()
   }
+
+  @Test("While a fill is still waiting for the server, the device may answer meanwhile")
+  func answersWhileFillWaits() async throws {
+    let harness = try await StoreHarness.make(documents: (1...3).map { document($0) })
+    var onServer = document(12)
+    onServer.title = "Document 2 on the server"
+    _ = try await harness.transient.update(document: onServer)
+    let gate = Gate()
+    harness.transient.onRequest = { name in await gate.pass(name) }
+    let filter = filter
+    let key = try #require(harness.store.documentQueryKey(filter: filter))
+
+    let fill = Task { try await harness.store.fillDocumentQuery(filter: filter) }
+    for _ in 0..<500 where await !gate.entered {
+      try await Task.sleep(for: .milliseconds(5))
+    }
+
+    // The fill owns the query and has written nothing: the device answers.
+    let evaluation = try await harness.store.evaluateDocumentQueryLocally(
+      filter: filter, whileFilling: true)
+    #expect(evaluation != nil)
+    let meanwhile = try await harness.database.queryDocuments(
+      queryKey: key, serverID: harness.serverID, limit: 10)
+    #expect(meanwhile.map(\.id) == [2])
+
+    // The server's first page replaces it.
+    await gate.release()
+    try await fill.value.awaitCompletion()
+    let status = try #require(try await harness.store.queryStatus(queryKey: key))
+    #expect(status.localEvaluation == nil)
+    let entries = try await harness.database.queryDocuments(
+      queryKey: key, serverID: harness.serverID, limit: 10)
+    #expect(entries.map(\.id) == [12])
+
+    // And from then on the device holds back.
+    #expect(
+      try await harness.store.evaluateDocumentQueryLocally(filter: filter, whileFilling: true)
+        == nil)
+  }
 }

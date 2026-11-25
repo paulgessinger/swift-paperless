@@ -329,7 +329,7 @@ struct DocumentList: View {
           Group {
             if viewModel.scope == .keptOffline {
               KeptOfflineEmptyView()
-            } else if let evaluation = viewModel.localEvaluation {
+            } else if case .offline(let evaluation) = viewModel.localResults {
               // The device answered, and found nothing: say that it was the
               // device, so it doesn't read as the server having no matches.
               NoOfflineResultsView(evaluation: evaluation, retry: retry)
@@ -421,8 +421,8 @@ struct DocumentList: View {
                   retry: retry
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
-              } else if let evaluation = viewModel.localEvaluation {
-                OfflineResultsBanner(evaluation: evaluation, retry: retry)
+              } else if let results = viewModel.localResults {
+                LocalResultsBanner(results: results, retry: retry)
                   .transition(.move(edge: .top).combined(with: .opacity))
               }
             }
@@ -731,25 +731,40 @@ extension LocalEvaluation {
   }
 }
 
-/// Above rows the device found itself because the server couldn't be reached:
-/// a search or filter applied to the cached documents, not the server's answer.
+/// Above rows the device found itself: a search or filter applied to the
+/// cached documents, not the server's answer.
 ///
 /// Not a warning like ``IncompleteDocumentsBanner``: this is the offline mode
-/// working, so it is tinted neutrally. Retry asks the server again, which
-/// replaces the rows if it answers.
-private struct OfflineResultsBanner: View {
-  var evaluation: LocalEvaluation
+/// working, so it is tinted neutrally. While the server is still being asked
+/// it says so and shows that it is waiting; once the server is known to be
+/// unreachable it offers Retry, which asks again and replaces the rows if the
+/// server answers.
+private struct LocalResultsBanner: View {
+  var results: DocumentListViewModel.LocalResults
   var retry: () -> Void
+
+  private var evaluation: LocalEvaluation {
+    switch results {
+    case .meanwhile(let evaluation), .offline(let evaluation): evaluation
+    }
+  }
+
+  private var isOffline: Bool {
+    if case .offline = results { true } else { false }
+  }
 
   var body: some View {
     HStack(spacing: 12) {
-      Image(systemName: "icloud.slash")
+      Image(systemName: isOffline ? "icloud.slash" : "iphone")
         .foregroundStyle(.secondary)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: 2) {
-        Text(.app(.documentListOfflineResults))
-          .font(.subheadline)
-          .fontWeight(.semibold)
+        Text(
+          isOffline
+            ? .app(.documentListOfflineResults) : .app(.documentListLocalResultsMeanwhile)
+        )
+        .font(.subheadline)
+        .fontWeight(.semibold)
         Text(evaluation.summary)
           .font(.caption)
           .foregroundStyle(.secondary)
@@ -757,9 +772,13 @@ private struct OfflineResultsBanner: View {
       }
       .accessibilityElement(children: .combine)
       Spacer(minLength: 0)
-      Button(String(localized: .app(.documentListRetry)), action: retry)
-        .buttonStyle(.bordered)
-        .controlSize(.small)
+      if isOffline {
+        Button(String(localized: .app(.documentListRetry)), action: retry)
+          .buttonStyle(.bordered)
+          .controlSize(.small)
+      } else {
+        ProgressView()
+      }
     }
     .padding(12)
     // Rows scroll under the inset.

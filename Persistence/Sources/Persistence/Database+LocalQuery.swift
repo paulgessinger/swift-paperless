@@ -29,14 +29,32 @@ extension Database {
   /// order, replacing what was cached for it.
   ///
   /// The caller owns the key while this runs, like any other writer of a
-  /// query's order (`KeyOwnership` in `CachingRepository`).
+  /// query's order (`KeyOwnership` in `CachingRepository`), unless it passes
+  /// `onlyIfUnanswered`.
+  ///
+  /// - Parameter onlyIfUnanswered: write only while the server has given the
+  ///   query no rows: it has none cached, or what it has is an earlier local
+  ///   answer. This is for answering *while a fill is still asking the
+  ///   server*, without owning the key: the check and the write are one
+  ///   transaction, so the answer either lands before the fill's first page,
+  ///   which then replaces it, or finds that page there and leaves it alone.
+  /// - Returns: `nil`, writing nothing, when `onlyIfUnanswered` held it back.
   @discardableResult
   public func evaluateQueryLocally(
     filter: FilterState, queryKey: QueryKey, serverID: UUID,
-    now: Date = Date(), calendar: Calendar = .current
-  ) async throws -> LocalEvaluation {
+    now: Date = Date(), calendar: Calendar = .current, onlyIfUnanswered: Bool = false
+  ) async throws -> LocalEvaluation? {
     try await wrappingAsync("evaluateQueryLocally") {
       try await writer.write { db in
+        if onlyIfUnanswered {
+          let isLocal =
+            try Self.fetchLocalEvaluation(db, queryKey: queryKey, serverID: serverID) != nil
+          let hasRows =
+            try QueryOrderRow
+            .filter(Column("server_id") == serverID && Column("query_key") == queryKey.rawValue)
+            .isEmpty(db) == false
+          guard isLocal || !hasRows else { return nil }
+        }
         let plan = try LocalQueryPlan(
           db, filter: filter, serverID: serverID, now: now, calendar: calendar)
 

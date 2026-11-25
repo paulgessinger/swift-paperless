@@ -5599,6 +5599,24 @@
         }
       }
     },
+    "documentListLocalResultsMeanwhile" : {
+      "comment" : "Title of the banner above a document list that shows what was found on the device while the server has not answered yet. It is replaced by the server's results when they arrive. Keep it to about 25 characters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnisse von diesem Gerät"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results from this device"
+          }
+        }
+      }
+    },
     "documentListOfflineFiltersSkipped" : {
       "comment" : "Added to the offline results caption when a part of the filter (custom fields, duplicates, advanced search syntax) could not be applied on the device, so the list may show more documents than the server would.",
       "extractionState" : "manual",

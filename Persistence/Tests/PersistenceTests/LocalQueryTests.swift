@@ -115,8 +115,9 @@ struct LocalQueryTests {
     _ database: Persistence.Database, _ filter: FilterState
   ) async throws -> (ids: [UInt], evaluation: LocalEvaluation) {
     let key = QueryKey(serverID: server, filter: filter)
-    let evaluation = try await database.evaluateQueryLocally(
-      filter: filter, queryKey: key, serverID: server, now: Self.now, calendar: Self.calendar)
+    let evaluation = try #require(
+      try await database.evaluateQueryLocally(
+        filter: filter, queryKey: key, serverID: server, now: Self.now, calendar: Self.calendar))
     let entries = try await database.queryDocuments(queryKey: key, serverID: server, limit: 100)
     return (entries.map(\.id), evaluation)
   }
@@ -433,6 +434,32 @@ struct LocalQueryTests {
     #expect(status.localEvaluation == nil)
     let entries = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
     #expect(entries.map(\.id) == [2, 1])
+  }
+
+  @Test("asked only if unanswered, the device leaves the server's rows alone")
+  func onlyIfUnanswered() async throws {
+    let database = try database()
+    let filter = filter { $0.tags = .anyOf(ids: [1]) }
+    let key = QueryKey(serverID: server, filter: filter)
+    func evaluate() async throws -> LocalEvaluation? {
+      try await database.evaluateQueryLocally(
+        filter: filter, queryKey: key, serverID: server, onlyIfUnanswered: true)
+    }
+
+    // Nothing cached: answered.
+    #expect(try await evaluate() != nil)
+    // Its own earlier answer: answered again.
+    #expect(try await evaluate() != nil)
+
+    // The server's first page landed meanwhile: held back, rows untouched.
+    let basis = try await database.queryWriteBasis(queryKey: key, serverID: server)
+    try await database.replaceQueryPage(
+      queryKey: key, serverID: server, documents: [FileFixtures.doc(2)], totalCount: 1,
+      basis: basis)
+    #expect(try await evaluate() == nil)
+    let entries = try await database.queryDocuments(queryKey: key, serverID: server, limit: 10)
+    #expect(entries.map(\.id) == [2])
+    #expect(try await database.queryStatus(queryKey: key, serverID: server).localEvaluation == nil)
   }
 
   @Test("a membership rewrite clears the mark too")

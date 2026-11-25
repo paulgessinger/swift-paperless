@@ -968,11 +968,14 @@ extension DocumentStore {
   /// The list's observation picks the result up; see
   /// ``CachingBackend/evaluateQueryLocally(filter:)``.
   ///
-  /// - Returns: `nil` without a caching backend, or when a fill owns the query.
+  /// - Returns: `nil` without a caching backend, or when the answer was held
+  ///   back in favour of the server's.
   @discardableResult
-  public func evaluateDocumentQueryLocally(filter: FilterState) async throws -> LocalEvaluation? {
+  public func evaluateDocumentQueryLocally(
+    filter: FilterState, whileFilling: Bool = false
+  ) async throws -> LocalEvaluation? {
     guard let backend = session?.backend else { return nil }
-    return try await backend.evaluateQueryLocally(filter: filter)
+    return try await backend.evaluateQueryLocally(filter: filter, whileFilling: whileFilling)
   }
 
   /// Re-sync a stale list's cached membership from the server's id list,
