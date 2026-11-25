@@ -24,7 +24,9 @@ struct OfflineStorageSection: View {
   var body: some View {
     CustomSection {
       VStack(spacing: 0) {
-        sizeRow(String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes)
+        sizeRow(
+          String(localized: .settings(.offlineStorageDatabase)), bytes: usage?.database.bytes,
+          caption: searchIndexCaption)
         Divider()
         sizeRow(
           String(localized: .settings(.offlineStorageDocuments)),
@@ -106,6 +108,15 @@ struct OfflineStorageSection: View {
     return Text(
       .settings(
         .offlineStorageThisServer(files, thisServer.bytes.formatted(.byteCount(style: .file)))))
+  }
+
+  /// What the full-text index takes of the database, once it holds anything:
+  /// it is the part of that figure that grows with the downloaded texts.
+  private var searchIndexCaption: Text? {
+    guard let index = usage?.searchIndex, index.files > 0 else { return nil }
+    return Text(
+      .settings(
+        .offlineStorageSearchIndex(index.bytes.formatted(.byteCount(style: .file)), index.files)))
   }
 
   @ViewBuilder

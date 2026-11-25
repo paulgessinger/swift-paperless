@@ -3195,6 +3195,180 @@
         }
       }
     },
+    "offlineLibrarySizeApproximate" : {
+      "comment" : "Value of the 'Size of entire library' row when the size is an estimate. %@ is a formatted size such as '3.2 GB'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ca. %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "about %@"
+          }
+        }
+      }
+    },
+    "offlineLibrarySizeDocuments" : {
+      "comment" : "Caption of the 'Size of entire library' row when every file's size is known. %lld is the number of documents in the library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Datei, Text und Vorschaubild von %lld Dokument."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dateien, Text und Vorschaubilder von %lld Dokumenten."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Files, text and thumbnail of %lld document."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Files, text and thumbnails of %lld documents."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "offlineLibrarySizeFree" : {
+      "comment" : "Second caption of the 'Size of entire library' row: free storage on the device. %@ is a formatted size such as '51 GB'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ auf diesem Gerät frei."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ free on this device."
+          }
+        }
+      }
+    },
+    "offlineLibrarySizeLabel" : {
+      "comment" : "Label of a row under the Offline browsing picker showing how much storage the Entire library option takes on the device for this server.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe der gesamten Bibliothek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Size of entire library"
+          }
+        }
+      }
+    },
+    "offlineLibrarySizeSampled" : {
+      "comment" : "Caption of the 'Size of entire library' row when the size is an estimate. %1$lld is how many documents' file sizes are known, %2$lld is the number of documents in the library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Geschätzt anhand der Dateien von %1$lld von %2$lld Dokumenten."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Geschätzt anhand der Dateien von %1$lld von %2$lld Dokumenten."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Estimated from the files of %1$lld of %2$lld documents."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Estimated from the files of %1$lld of %2$lld documents."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "offlineLibrarySizeTooLarge" : {
+      "comment" : "Second caption of the 'Size of entire library' row, shown as a warning when the library is larger than the free storage on the device. %@ is the free storage as a formatted size such as '2 GB'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehr als die %@, die auf diesem Gerät frei sind."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More than the %@ free on this device."
+          }
+        }
+      }
+    },
+    "offlineLibrarySizeUnknown" : {
+      "comment" : "Value of the 'Size of entire library' row when the size cannot be estimated yet, for example because the server could not be reached.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht bekannt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not known yet"
+          }
+        }
+      }
+    },
     "offlineStorageDatabase" : {
       "comment" : "Row label in the Storage section: size of the local database holding cached documents and lists",
       "extractionState" : "manual",
@@ -3569,6 +3743,48 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Depolama"
+          }
+        }
+      }
+    },
+    "offlineStorageSearchIndex" : {
+      "comment" : "Caption under the Database row of the Storage section: how much of the database is the index that makes document text searchable offline. %1$@ is a formatted size such as '12 MB', %2$lld the number of documents whose text is in the index.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Enthält %1$@ Suchindex für den Text von %2$lld Dokument"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Enthält %1$@ Suchindex für den Text von %2$lld Dokumenten"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Includes %1$@ search index for the text of %2$lld document"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Includes %1$@ search index for the text of %2$lld documents"
+                }
+              }
+            }
           }
         }
       }

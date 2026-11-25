@@ -36,6 +36,11 @@ public struct OfflineSyncView: View {
 
   /// The active server's figures, observed while this screen is up.
   @State private var status: OfflineStatus?
+  /// What the whole library would take on this device, and what is free;
+  /// `estimatedSize` stays `nil` until one is known.
+  @State private var estimatedSize: LibrarySizeEstimate?
+  @State private var estimatingSize = true
+  @State private var availableStorage: Int64?
 
   /// Whether the steps are listed: during a pass and shortly after it.
   @State private var stepsVisible = false
@@ -125,6 +130,19 @@ public struct OfflineSyncView: View {
     .background(Color(uiColor: .systemGroupedBackground))
     .task { libraryTotal = await store.libraryDocumentCount() }
     .task(id: store.activeServerID) { status = store.makeOfflineStatus() }
+    // What is known on the device first, so the row has a figure at once;
+    // then with a sample from the server, which can take a moment.
+    .task(id: SizeEstimateKey(server: store.activeServerID, syncing: store.isSyncing)) {
+      availableStorage = store.availableDeviceStorage()
+      if let quick = await store.estimateLibrarySize(sampling: false) {
+        estimatedSize = quick
+      }
+      guard !Task.isCancelled else { return }
+      let sampled = await store.estimateLibrarySize(sampling: true)
+      guard !Task.isCancelled else { return }
+      if let sampled { estimatedSize = sampled }
+      estimatingSize = false
+    }
     // The steps stay up briefly after a pass that succeeded, so the last one
     // is seen to finish. A failed pass has no finish to show, and an automatic
     // pass that fails at once, as against an unreachable server, never shows
@@ -144,53 +162,57 @@ public struct OfflineSyncView: View {
 
   private var modeSection: some View {
     CustomSection {
-      CustomSectionRow {
-        LabeledContent {
-          Picker(
-            selection: Binding(
-              get: { connectionManager.activeOfflineBrowsingMode },
-              set: { newMode in
-                // Leaving Entire library lets downloaded files be evicted past
-                // the storage budget. Confirm first; until then the picker
-                // snaps back, because `get:` still reads the unchanged stored
-                // mode.
-                if connectionManager.activeOfflineBrowsingMode == .entireLibrary,
-                  newMode == .recentlyBrowsed
-                {
-                  downgradeRequested = true
-                } else {
-                  connectionManager.setOfflineBrowsingMode(newMode)
-                  if newMode == .entireLibrary {
-                    Task { await store.fillIfEnabled(phases: plannedPhases, force: true) }
+      VStack(spacing: 0) {
+        CustomSectionRow {
+          LabeledContent {
+            Picker(
+              selection: Binding(
+                get: { connectionManager.activeOfflineBrowsingMode },
+                set: { newMode in
+                  // Leaving Entire library lets downloaded files be evicted past
+                  // the storage budget. Confirm first; until then the picker
+                  // snaps back, because `get:` still reads the unchanged stored
+                  // mode.
+                  if connectionManager.activeOfflineBrowsingMode == .entireLibrary,
+                    newMode == .recentlyBrowsed
+                  {
+                    downgradeRequested = true
+                  } else {
+                    connectionManager.setOfflineBrowsingMode(newMode)
+                    if newMode == .entireLibrary {
+                      Task { await store.fillIfEnabled(phases: plannedPhases, force: true) }
+                    }
                   }
-                }
-              })
-          ) {
-            ForEach(OfflineBrowsingMode.allCases, id: \.self) { mode in
-              Text(mode.localizedName).tag(mode)
+                })
+            ) {
+              ForEach(OfflineBrowsingMode.allCases, id: \.self) { mode in
+                Text(mode.localizedName).tag(mode)
+              }
+            } label: {
+              Text(.settings(.offlineBrowsingModeLabel))
             }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .tint(.secondary)
           } label: {
             Text(.settings(.offlineBrowsingModeLabel))
           }
-          .labelsHidden()
-          .pickerStyle(.menu)
-          .tint(.secondary)
-        } label: {
-          Text(.settings(.offlineBrowsingModeLabel))
-        }
-        .confirmationDialog(
-          String(localized: .settings(.offlineBrowsingDowngradeTitle)),
-          isPresented: $downgradeRequested,
-          titleVisibility: .visible
-        ) {
-          Button(String(localized: .settings(.offlineBrowsingDowngradeConfirm))) {
-            connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
-          }
+          .confirmationDialog(
+            String(localized: .settings(.offlineBrowsingDowngradeTitle)),
+            isPresented: $downgradeRequested,
+            titleVisibility: .visible
+          ) {
+            Button(String(localized: .settings(.offlineBrowsingDowngradeConfirm))) {
+              connectionManager.setOfflineBrowsingMode(.recentlyBrowsed)
+            }
 
-          Button(String(localized: .app(.cancel)), role: .cancel) {}
-        } message: {
-          Text(.settings(.offlineBrowsingDowngradeMessage))
+            Button(String(localized: .app(.cancel)), role: .cancel) {}
+          } message: {
+            Text(.settings(.offlineBrowsingDowngradeMessage))
+          }
         }
+        Divider()
+        CustomSectionRow { librarySizeRow }
       }
     } header: {
       Text(.settings(.offlineBrowsingModeHeader))
@@ -202,6 +224,55 @@ public struct OfflineSyncView: View {
         }
       }
     }
+  }
+
+  /// What *Entire library* takes on the device, known before it is turned
+  /// on: the estimate, what it rests on, and whether it fits.
+  private var librarySizeRow: some View {
+    LabeledContent {
+      if let estimatedSize {
+        let size = estimatedSize.totalBytes.formatted(.byteCount(style: .file))
+        Text(
+          estimatedSize.isExact
+            ? size : String(localized: .settings(.offlineLibrarySizeApproximate(size)))
+        )
+        .foregroundStyle(.secondary)
+      } else if estimatingSize {
+        ProgressView()
+      } else {
+        Text(.settings(.offlineLibrarySizeUnknown)).foregroundStyle(.secondary)
+      }
+    } label: {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(.settings(.offlineLibrarySizeLabel))
+        if let estimatedSize {
+          Group {
+            Text(librarySizeBasis(estimatedSize))
+            if let availableStorage {
+              if estimatedSize.totalBytes > availableStorage, mode != .entireLibrary {
+                Text(.settings(.offlineLibrarySizeTooLarge(byteText(availableStorage))))
+                  .foregroundStyle(.orange)
+              } else {
+                Text(.settings(.offlineLibrarySizeFree(byteText(availableStorage))))
+              }
+            }
+          }
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          // The value is one short figure; the captions may wrap under it.
+          .lineLimit(nil)
+          .fixedSize(horizontal: false, vertical: true)
+        }
+      }
+    }
+  }
+
+  private func librarySizeBasis(_ estimate: LibrarySizeEstimate) -> String {
+    estimate.isExact
+      ? String(localized: .settings(.offlineLibrarySizeDocuments(estimate.documents)))
+      : String(
+        localized: .settings(
+          .offlineLibrarySizeSampled(estimate.sampledDocuments, estimate.documents)))
   }
 
   private var cellularSection: some View {
@@ -660,6 +731,13 @@ private struct KeptOfflineViewsView: View {
     .navigationTitle(Text(.settings(.offlineSyncKeptOfflineHeader)))
     .navigationBarTitleDisplayMode(.inline)
   }
+}
+
+/// When the size estimate is taken again: for another server, and when a
+/// sync starts or ends, which is when file sizes and downloads change.
+private struct SizeEstimateKey: Equatable {
+  let server: UUID?
+  let syncing: Bool
 }
 
 private func keptFilesText(_ progress: LibraryFileProgress) -> String {
