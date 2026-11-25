@@ -445,6 +445,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     return mode
   }
 
+  /// Whether every document's text is fetched and kept: under *Entire
+  /// library*, or with the server's own "text of the entire library" setting.
+  /// Read live, like the mode.
+  private var keepsLibraryText: Bool {
+    guard let record = try? database.connection(id: serverID) else { return false }
+    return record.libraryText
+      || record.offlineBrowsingMode == OfflineBrowsingMode.entireLibrary.rawValue
+  }
+
   /// Friendly-name + UUID for sync logs (see ``StoredConnection/logLabel``);
   /// falls back to the bare UUID if the connection row can't be read.
   private var serverLogLabel: String {
@@ -1008,9 +1017,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func fillContents(
     scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
   ) async throws -> DetailFillOutcome {
-    // Read for every batch: leaving Entire library mid-pass narrows the rest of it.
+    // Read for every batch: leaving Entire library mid-pass narrows the rest
+    // of it, and so does turning the library's text off.
     var currentScope: LibraryFileScope {
-      scope ?? (offlineBrowsingMode == .entireLibrary ? .library : .keptOffline)
+      scope ?? (keepsLibraryText ? .library : .keptOffline)
     }
     progress?(SyncActivity(stage: .contentFill))
     defer { progress?(nil) }

@@ -36,6 +36,7 @@ extension StoredConnection {
       offlineBrowsingMode: OfflineBrowsingMode(rawValue: record.offlineBrowsingMode)
         ?? .recentlyBrowsed,
       syncOverCellular: record.syncOverCellular,
+      keepsLibraryText: record.libraryText,
       knownVersions: Self.knownVersions(
         apiVersion: record.apiVersion, backendVersion: record.backendVersion))
   }
@@ -72,6 +73,7 @@ extension StoredConnection {
       needsAuth: needsAuth,
       offlineBrowsingMode: offlineBrowsingMode.rawValue,
       syncOverCellular: syncOverCellular,
+      libraryText: keepsLibraryText,
       apiVersion: storableVersions?.apiVersion,
       backendVersion: storableVersions?.backendVersion)
   }

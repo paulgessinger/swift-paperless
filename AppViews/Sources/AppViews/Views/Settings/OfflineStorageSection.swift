@@ -136,6 +136,9 @@ struct OfflineStorageSection: View {
             caption
               .font(.caption)
               .foregroundStyle(.secondary)
+              // The row keeps its label to one line; a caption may wrap.
+              .lineLimit(nil)
+              .fixedSize(horizontal: false, vertical: true)
           }
         }
       }

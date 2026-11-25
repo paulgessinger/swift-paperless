@@ -3369,6 +3369,60 @@
         }
       }
     },
+    "offlineLibraryTextDescription" : {
+      "comment" : "Footer under the Offline browsing section explaining the 'Search all documents offline' switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Alle Dokumente offline durchsuchen“ lädt den Text jedes Dokuments ohne die Datei herunter. Die Suche findet dann auch offline alle deine Dokumente über ihren Inhalt und braucht nur einen Bruchteil des Speicherplatzes."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Search all documents offline” downloads the text of every document without its file. Search then finds all of your documents by their content while offline, using a fraction of the space."
+          }
+        }
+      }
+    },
+    "offlineLibraryTextLabel" : {
+      "comment" : "Label of a switch under the Offline browsing picker. When on, the text of every document is downloaded without the document files, so searching works offline for the whole library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Dokumente offline durchsuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search all documents offline"
+          }
+        }
+      }
+    },
+    "offlineLibraryTextSize" : {
+      "comment" : "Caption under the 'Search all documents offline' switch: the estimated space the texts take. %@ is a formatted size such as '45 MB'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur Text, ca. %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text only, about %@"
+          }
+        }
+      }
+    },
     "offlineStorageDatabase" : {
       "comment" : "Row label in the Storage section: size of the local database holding cached documents and lists",
       "extractionState" : "manual",
@@ -3748,7 +3802,7 @@
       }
     },
     "offlineStorageSearchIndex" : {
-      "comment" : "Caption under the Database row of the Storage section: how much of the database is the index that makes document text searchable offline. %1$@ is a formatted size such as '12 MB', %2$lld the number of documents whose text is in the index.",
+      "comment" : "Caption under the Database row of the Storage section: how much of the database is the index that makes document text searchable offline. %1$@ is a formatted size such as '12 MB', %2$lld the number of documents whose text is in the index. Keep it short.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -3757,13 +3811,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Enthält %1$@ Suchindex für den Text von %2$lld Dokument"
+                  "value" : "Davon %1$@ Suchindex (%2$lld Dokument)"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Enthält %1$@ Suchindex für den Text von %2$lld Dokumenten"
+                  "value" : "Davon %1$@ Suchindex (%2$lld Dokumente)"
                 }
               }
             }
@@ -3775,13 +3829,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Includes %1$@ search index for the text of %2$lld document"
+                  "value" : "%1$@ of it search index (%2$lld document)"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Includes %1$@ search index for the text of %2$lld documents"
+                  "value" : "%1$@ of it search index (%2$lld documents)"
                 }
               }
             }
@@ -6431,6 +6485,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İstatistikleri sıfırla"
+          }
+        }
+      }
+    },
+    "offlineSyncSearchableText" : {
+      "comment" : "Label of a status row on the Offline & Sync screen: how many documents have their text on the device and can be found by it while offline.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text für Offline-Suche"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text for offline search"
+          }
+        }
+      }
+    },
+    "offlineSyncSearchableTextCount" : {
+      "comment" : "Value of the 'Text for offline search' status row. %1$lld is the number of documents whose text is on the device, %2$lld the number of documents in the library.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld"
           }
         }
       }

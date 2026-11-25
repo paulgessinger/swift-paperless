@@ -213,6 +213,11 @@ public struct OfflineSyncView: View {
         }
         Divider()
         CustomSectionRow { librarySizeRow }
+        // Entire library downloads the texts as part of everything else.
+        if mode != .entireLibrary {
+          Divider()
+          CustomSectionRow { libraryTextToggle }
+        }
       }
     } header: {
       Text(.settings(.offlineBrowsingModeHeader))
@@ -221,6 +226,9 @@ public struct OfflineSyncView: View {
         Text(.settings(.offlineBrowsingModeDescription))
         if recommendsEntireLibrary {
           Text(.settings(.offlineBrowsingModeRecommendation))
+        }
+        if mode != .entireLibrary {
+          Text(.settings(.offlineLibraryTextDescription))
         }
       }
     }
@@ -267,6 +275,33 @@ public struct OfflineSyncView: View {
     }
   }
 
+  /// The step between the two modes: every document's text without its file,
+  /// which is what searching offline needs and takes little space.
+  private var libraryTextToggle: some View {
+    Toggle(
+      isOn: Binding(
+        get: { connectionManager.activeKeepsLibraryText },
+        set: { enabled in
+          connectionManager.setKeepsLibraryText(enabled)
+          if enabled {
+            Task { await store.fillIfEnabled(phases: plannedPhases) }
+          }
+        })
+    ) {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(.settings(.offlineLibraryTextLabel))
+        if let estimatedSize, estimatedSize.documents > 0 {
+          Text(.settings(.offlineLibraryTextSize(byteText(estimatedSize.textBytes))))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+    }
+    // A toggle lays itself out as labeled content; the status rows' baseline
+    // alignment would push the switch down.
+    .labeledContentStyle(.automatic)
+  }
+
   private func librarySizeBasis(_ estimate: LibrarySizeEstimate) -> String {
     estimate.isExact
       ? String(localized: .settings(.offlineLibrarySizeDocuments(estimate.documents)))
@@ -305,6 +340,17 @@ public struct OfflineSyncView: View {
           CustomSectionRow { documentsRow }
         }
         keptOfflineRow
+        if let coverage = status?.searchCoverage, coverage.indexedDocuments > 0 {
+          Divider()
+          CustomSectionRow {
+            statusRow(
+              String(localized: .settings(.offlineSyncSearchableText)),
+              value: String(
+                localized: .settings(
+                  .offlineSyncSearchableTextCount(coverage.indexedDocuments, coverage.documents)
+                )))
+          }
+        }
         Divider()
         CustomSectionRow {
           dateStatusRow(
@@ -436,7 +482,9 @@ public struct OfflineSyncView: View {
     var stages: Set<SyncActivity.Stage> = [.elementSync, .reconcile]
     if mode == .entireLibrary {
       stages.formUnion(SyncActivity.Stage.allCases)
-    } else if !store.keptOfflineViewIDs.isEmpty || !store.keptOfflineDocumentIDs.isEmpty {
+    } else if connectionManager.activeKeepsLibraryText || !store.keptOfflineViewIDs.isEmpty
+      || !store.keptOfflineDocumentIDs.isEmpty
+    {
       stages.formUnion([.contentFill, .fileDownload])
     }
     return stages.union(store.syncActivities.map(\.stage))

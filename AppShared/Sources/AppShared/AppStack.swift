@@ -124,6 +124,13 @@ public final class AppStack {
         await contentReclaimer.run(reason: .afterDowngrade)
       }
     }
+    // No downloads to call off here: the texts are fetched by the sync pass,
+    // which re-reads the setting for every batch.
+    connectionManager.onLibraryTextReleased = { _ in
+      _ = await suspension.performBackgroundWork {
+        await contentReclaimer.run(reason: .afterDowngrade)
+      }
+    }
 
     // Steps the previous process never finished. Only rows older than this
     // process, so a step this one starts first is left alone.

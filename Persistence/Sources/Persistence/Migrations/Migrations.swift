@@ -139,6 +139,10 @@ enum Migrations {
       try V22_CreateSearchIndex.run(db)
     }
 
+    migrator.registerMigration("v23_add_library_text") { db in
+      try V23_AddLibraryText.run(db)
+    }
+
     return migrator
   }
 }

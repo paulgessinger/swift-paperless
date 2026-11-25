@@ -33,14 +33,14 @@ struct ContentFillTests {
   }
 
   private nonisolated static func setMode(
-    _ mode: String, in database: Database, serverID: UUID
+    _ mode: String, libraryText: Bool = false, in database: Database, serverID: UUID
   ) throws {
     try database.upsertConnection(
       ConnectionRecord(
         id: serverID,
         url: URL(string: "https://paperless.example.com/api/")!,
         user: .init(id: 1, isSuperUser: true, username: "preview"),
-        offlineBrowsingMode: mode))
+        offlineBrowsingMode: mode, libraryText: libraryText))
   }
 
   private func contentStore() throws -> ContentStore {
@@ -169,6 +169,41 @@ struct ContentFillTests {
     _ = try await #require(harness.session.backend).fillContents()
 
     #expect(await requests.batches == [[2]])
+  }
+
+  @Test("A server that keeps its library's text has every text fetched, whatever its mode")
+  func libraryTextFetchesEveryText() async throws {
+    let harness = try await harness(documents: 30, mode: "recentlyBrowsed")
+    try Self.setMode(
+      "recentlyBrowsed", libraryText: true, in: harness.database, serverID: harness.serverID)
+    let requests = Requests()
+    harness.transient.onFetchContents = { ids in
+      await requests.append(ids)
+      return Set(ids)
+    }
+
+    let outcome = try await #require(harness.session.backend).fillContents()
+
+    #expect(outcome.failed == 0)
+    #expect(await requests.batches.flatMap { $0 } == Array((1...30).reversed()))
+  }
+
+  @Test("Turning the library's text off mid-pass narrows the rest to the kept documents")
+  func libraryTextOffMidPass() async throws {
+    let harness = try await harness(documents: 60, mode: "recentlyBrowsed")
+    let database = harness.database
+    let serverID = harness.serverID
+    try Self.setMode("recentlyBrowsed", libraryText: true, in: database, serverID: serverID)
+    let requests = Requests()
+    harness.transient.onFetchContents = { ids in
+      await requests.append(ids)
+      try Self.setMode("recentlyBrowsed", libraryText: false, in: database, serverID: serverID)
+      return Set(ids)
+    }
+
+    _ = try await #require(harness.session.backend).fillContents()
+
+    #expect(await requests.batches.count == 1)
   }
 
   @Test("A foreground files phase fetches the kept documents' texts")

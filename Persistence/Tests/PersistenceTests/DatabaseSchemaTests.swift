@@ -16,6 +16,7 @@ struct DatabaseSchemaTests {
         names == [
           "id", "url", "friendly_name", "identity", "user", "extra_headers", "needs_auth",
           "offline_browsing_mode", "sync_over_cellular", "api_version", "backend_version",
+          "library_text",
         ])
 
       // Added by V8 on an existing table, so it needs a default for every row

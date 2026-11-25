@@ -146,6 +146,18 @@ extension Database {
       documents: try DocumentRecord.filter(Column("server_id") == serverID).fetchCount(db))
   }
 
+  /// Live ``searchIndexCoverage(serverID:)``. Re-runs for every text indexed,
+  /// so a consumer throttles it.
+  public func observeSearchIndexCoverage(
+    serverID: UUID
+  ) -> AsyncThrowingStream<SearchIndexCoverage, Error> {
+    let observation =
+      ValueObservation
+      .tracking { db in try Self.searchIndexCoverage(db, serverID: serverID) }
+      .removeDuplicates()
+    return stream(observation)
+  }
+
   /// Bytes the full-text index takes inside the database file, every
   /// server's. Read from the index's own segments, so it is a little under
   /// what the pages holding them occupy. The file's size (``diskUsage()``)
