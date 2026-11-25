@@ -468,7 +468,21 @@ git push --no-verify dokku-dashboard HEAD:main
 - **Issuer reachability:** the Dokku VM must reach `OIDC_ISSUER` directly, at
   exactly the issuer URL Pocket ID advertises in its discovery document. The
   dashboard fetches discovery, JWKS and tokens server-side and refuses an
-  issuer mismatch.
+  issuer mismatch. If the issuer's name only resolves in a private DNS the
+  Dokku VM doesn't use, pin it for the dashboard container (it becomes an
+  `/etc/hosts` entry; `run` covers `dokku enter` and `dokku run`). The
+  address must reach the issuer's HTTPS server over the tailnet:
+
+  ```sh
+  dokku docker-options:add telemetry-dashboard deploy,run \
+    "--add-host id.example.org:100.a.b.c"
+  dokku ps:restart telemetry-dashboard
+
+  # Check: prints 200 and the issuer, which must equal OIDC_ISSUER.
+  dokku enter telemetry-dashboard web python -c "import json, urllib.request as u; \
+  r = u.urlopen('https://id.example.org/.well-known/openid-configuration'); \
+  print(r.status, json.load(r)['issuer'])"
+  ```
 - **Redirect URI:** `OIDC_REDIRECT_URI` is the proxy's name as reached on the
   tailnet (`https://dash.example.org/auth/callback`), not the Dokku VM's
   address.
