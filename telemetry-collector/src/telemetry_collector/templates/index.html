@@ -79,7 +79,7 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
 <div class="grid">
   <section class="card">
     <h2>Features · install-days, last {{ days }} days</h2>
-    <table>
+    <div class="table-scroll"><table>
       <tr><th>Feature</th><th class="n">Used</th><th class="n">Available</th><th class="n">Ratio</th>
         <th class="n">{{ count_buckets | join(' / ') }}</th><th></th></tr>
       {% for f in features %}
@@ -87,25 +87,25 @@ Channel <b>{{ channel }}</b>. Counts are install-days from opted-in users.</p>
         <td class="n">{{ f.ratio | pct }}</td><td class="n muted">{{ f.buckets | join(' / ') }}</td>
         <td>{% if f.unused %}<span class="warn">no use in range</span>{% elif not f.available %}<span class="muted">not available</span>{% endif %}</td></tr>
       {% endfor %}
-    </table>
+    </table></div>
     <p class="muted">Installs report a day's features when they next open the app, so the last {{ filling_days }} days are still filling in.</p>
   </section>
   <section class="card">
     <h2>Completion (install-days)</h2>
-    <table>
+    <div class="table-scroll"><table>
       <tr><th>Pair</th><th class="n">Started</th><th class="n">Done</th><th class="n">Rate</th></tr>
       {% for p in pairs %}
       <tr><td>{{ p.started }} → {{ p.done }}</td><td class="n">{{ p.started_n }}</td><td class="n">{{ p.done_n }}</td><td class="n">{{ p.rate | pct }}</td></tr>
       {% endfor %}
-    </table>
+    </table></div>
     <p class="muted">Ratio of marginals; not a per-install funnel.</p>
     <h2 class="spaced">Error classes</h2>
-    <table>
+    <div class="table-scroll"><table>
       <tr><th>Error</th><th class="n">Install-days</th><th class="n">of feature pings</th></tr>
       {% for e in errors %}
       <tr><td>{{ e.name }}</td><td class="n">{{ e.count }}</td><td class="n">{{ e.share | pct }}</td></tr>
       {% endfor %}
-    </table>
+    </table></div>
     <p class="muted">From feature pings, so the last {{ filling_days }} days are still filling in.</p>
   </section>
 </div>
