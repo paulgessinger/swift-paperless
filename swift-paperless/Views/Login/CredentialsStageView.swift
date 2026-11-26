@@ -32,6 +32,10 @@ struct CredentialsStageView<Preamble: View>: View {
 
   @FocusState private var focus: CredentialField?
 
+  /// Fixed row height for the username and password fields; their own height
+  /// can change on focus, which would shift everything around them.
+  @ScaledMetric(relativeTo: .body) private var credentialRowHeight = 40.0
+
   init(
     onSuccess: @escaping (StoredConnection) -> Void,
     @ViewBuilder preamble: @escaping () -> Preamble
@@ -211,7 +215,7 @@ struct CredentialsStageView<Preamble: View>: View {
   private var passwordSection: some View {
     @Bindable var viewModel = viewModel
     Section {
-      VStack {
+      VStack(spacing: 0) {
         TextField(.login(.username), text: $viewModel.username)
           .autocorrectionDisabled()
           .textInputAutocapitalization(.never)
@@ -219,14 +223,15 @@ struct CredentialsStageView<Preamble: View>: View {
           .focused($focus, equals: .username)
           .submitLabel(.next)
           .onSubmit { focus = .password }
+          .frame(height: credentialRowHeight)
         Divider()
         SecureField(.login(.password), text: $viewModel.password)
           .textContentType(.password)
           .focused($focus, equals: .password)
           .submitLabel(.go)
           .onSubmit { validate() }
+          .frame(height: credentialRowHeight)
       }
-      .padding(.vertical, 10)
     } header: {
       if offersSSO {
         Text(.login(.localAccount))
