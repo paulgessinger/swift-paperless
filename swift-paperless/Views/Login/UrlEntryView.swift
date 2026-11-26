@@ -20,59 +20,61 @@ struct UrlEntryView: View {
     @Bindable var viewModel = viewModel
 
     HStack(spacing: 1) {
-      HStack(spacing: 3) {
-        Label(
-          localized: .login(.schemeSelectionLabel),
-          systemImage: "chevron.up.chevron.down"
-        )
-        .labelStyle(.iconOnly)
-        .font(.footnote)
+      // A scheme typed into the field shows there until the probe moves it here.
+      if !viewModel.urlHasScheme {
+        HStack(spacing: 3) {
+          Label(
+            localized: .login(.schemeSelectionLabel),
+            systemImage: "chevron.up.chevron.down"
+          )
+          .labelStyle(.iconOnly)
+          .font(.footnote)
 
-        VStack {
-          if viewModel.scheme == .http {
-            Text(Scheme.http.label)
-              .transition(
-                .move(edge: .bottom)
-                  .combined(with: .opacity)
-              )
-          }
-          if viewModel.scheme == .https {
-            Text(Scheme.https.label)
-              .transition(
-                .move(edge: .top)
-                  .combined(with: .opacity)
-              )
-          }
-        }
-        .fontWeight(.medium)
-        .animation(.spring(duration: 0.2, bounce: 0.5), value: viewModel.scheme)
-      }
-      .overlay {
-        Menu {
-          ForEach([Scheme.https, Scheme.http], id: \.self) { value in
-            Button {
-              viewModel.scheme = value
-            } label: {
-              if viewModel.scheme == value {
-                Label(value.label, systemImage: "checkmark")
-              } else {
-                Text(value.label)
-              }
+          VStack {
+            if viewModel.scheme == .http {
+              Text(Scheme.http.label)
+                .transition(
+                  .move(edge: .bottom)
+                    .combined(with: .opacity)
+                )
             }
-            .disabled(viewModel.scheme == value)
+            if viewModel.scheme == .https {
+              Text(Scheme.https.label)
+                .transition(
+                  .move(edge: .top)
+                    .combined(with: .opacity)
+                )
+            }
           }
-        } label: {
-          Color.clear
+          .fontWeight(.medium)
+          .animation(.spring(duration: 0.2, bounce: 0.5), value: viewModel.scheme)
         }
+        .overlay {
+          Menu {
+            ForEach([Scheme.https, Scheme.http], id: \.self) { value in
+              Button {
+                viewModel.scheme = value
+              } label: {
+                if viewModel.scheme == value {
+                  Label(value.label, systemImage: "checkmark")
+                } else {
+                  Text(value.label)
+                }
+              }
+              .disabled(viewModel.scheme == value)
+            }
+          } label: {
+            Color.clear
+          }
+        }
+        .tint(.primary)
       }
-      .tint(.primary)
 
       TextField(String(localized: .login(.urlPlaceholder)), text: $viewModel.url)
         .padding(.vertical, 10)
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
         .keyboardType(.URL)
-        .textContentType(.URL)
         .focused($focus)
         .submitLabel(.continue)
       Spacer()
