@@ -31,6 +31,7 @@ iOS app for <a href="https://github.com/paperless-ngx/paperless-ngx">Paperless-n
 
 ---
 
+<!-- --8<-- [start:intro] -->
 **Swift Paperless** native iOS app for the
 [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) software.
 Paperless-ngx is a self-hosted document management system that helps you
@@ -66,6 +67,7 @@ settings) rather than the generated project, then re-run `just generate`.
 
 If you have any questions or need support create an issue on [GitHub](https://github.com/paulgessinger/swift-paperless/issues/new) or send me a [message](mailto:swift-paperless@paulgessinger.com).
 
+<!-- --8<-- [end:intro] -->
 <!-- --8<-- [end:overview] -->
 
 <!-- --8<-- [start:maintenance] -->
