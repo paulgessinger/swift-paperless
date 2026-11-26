@@ -4,43 +4,34 @@ import MarkdownUI
 import Persistence
 import SwiftUI
 
-/// The opt-in toggle and a live view of the pings. The text stays out of the
-/// string catalogs until it is final.
+/// The opt-in toggle and a live view of the pings.
 struct TelemetrySettingsView: View {
-  nonisolated static let title = "Anonymous usage"
-
   /// Also the onboarding card's detail page, so both say the same thing.
-  nonisolated static let explanation = """
-    Once a day, the app can send two short, separate reports to a server run \
-    by the developer. They help decide what to build and fix, and when it's \
-    safe to drop support for old versions.
-
-    **Your setup**
-
-    - App version, iOS version (such as 18), and iPhone or iPad
-    - App language, without your region
-    - Your server's Paperless-ngx version (such as 2.14.3)
-    - Rough library size, and how you sign in
-    - On how many days this month you opened the app, in ranges
-    - Kinds of connection problems seen that day
-
-    **Features you used**
-
-    - Which features you used that day, and roughly how often: once, a few \
-    times, or 10 or more
-
-    **Never sent**
-
-    - Your documents or any data from your server
-    - Your server's address, your username, or anything you type
-    - Any identifier for you or your device
-
-    The server can't tell which reports came from the same device, and it \
-    keeps only totals, never the reports themselves. Your IP address isn't \
-    stored.
-
-    [How this works](https://swift-paperless.app/usage/)
-    """
+  /// Assembled here, so translators never handle Markdown syntax.
+  nonisolated static var explanation: String {
+    func text(_ key: String.Telemetry) -> String {
+      String(localized: .telemetry(key))
+    }
+    func section(_ heading: String.Telemetry, _ items: [String.Telemetry]) -> String {
+      "**\(text(heading))**\n\n" + items.map { "- \(text($0))" }.joined(separator: "\n")
+    }
+    return [
+      text(.explanationIntro),
+      text(.explanationReports),
+      section(
+        .setupHeading,
+        [
+          .setupChannel, .setupVersions, .setupDevice, .setupLanguage, .setupServer,
+          .setupLibrary, .setupConnection, .setupInstallAge, .setupFirstReport,
+        ]),
+      section(.featuresHeading, [.featuresUsed, .featuresAvailable, .featuresErrors]),
+      section(
+        .neverHeading, [.neverServerData, .neverServer, .neverSearch, .neverIdentifier]),
+      text(.explanationServer),
+      text(.explanationTurnOff),
+      "[\(text(.howItWorksLink))](https://swift-paperless.app/usage/)",
+    ].joined(separator: "\n\n")
+  }
 
   @Bindable private var appSettings = AppSettings.shared
 
@@ -58,33 +49,57 @@ struct TelemetrySettingsView: View {
 
   private func schedule(_ ping: TelemetryUpcomingPing) -> String {
     guard appSettings.telemetryOptIn == true else {
-      return "Not sent while sharing is off."
+      return String(localized: .telemetry(.scheduleOff))
     }
     switch ping.nextSend {
     case .nextActivation:
-      return "Sent the next time you open the app."
+      return String(localized: .telemetry(.scheduleNextOpen))
     case .notBefore(let date):
       let time = date.formatted(date: .abbreviated, time: .shortened)
       return ping.endpoint == .health
-        ? "Sent today. Sent again the first time you open the app after \(time)."
-        : "Still recording today. Sent the first time you open the app after \(time)."
+        ? String(localized: .telemetry(.scheduleHealthAfter(time)))
+        : String(localized: .telemetry(.scheduleFeaturesAfter(time)))
     }
+  }
+
+  /// Matches the onboarding card, so the screen introduces itself the same way.
+  private var header: some View {
+    VStack(spacing: 12) {
+      Image(systemName: "chart.bar")
+        .font(.system(size: 30))
+        .foregroundStyle(.tint)
+        .frame(width: 60, height: 60)
+        .background(.tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 15))
+        .accessibilityHidden(true)
+      Text(.telemetry(.shareToggle))
+        .font(.title2)
+        .bold()
+      Text(.telemetry(.summary))
+        .foregroundStyle(.secondary)
+    }
+    .multilineTextAlignment(.center)
   }
 
   var body: some View {
     Form {
       Section {
+        header
+          .frame(maxWidth: .infinity)
+          .listRowBackground(Color.clear)
+      }
+
+      Section {
         Toggle(isOn: Binding($appSettings.telemetryOptIn, default: false)) {
-          Text(verbatim: "Share anonymous usage")
+          Text(.telemetry(.shareToggle))
         }
       } footer: {
-        Text(verbatim: "Off unless you turn it on. Nothing identifies you or your documents.")
+        Text(.telemetry(.shareFooter))
       }
 
       Section {
         Markdown(Self.explanation)
       } header: {
-        Text(verbatim: "What's shared")
+        Text(.telemetry(.sharedHeader))
       }
 
       Section {
@@ -95,7 +110,7 @@ struct TelemetrySettingsView: View {
                 .font(.caption.bold())
                 .foregroundStyle(.secondary)
               if let day = ping.day {
-                Text(verbatim: "Covers \(day) (UTC)")
+                Text(.telemetry(.reportCovers(day)))
                   .font(.caption)
                   .foregroundStyle(.secondary)
               }
@@ -108,19 +123,16 @@ struct TelemetrySettingsView: View {
             }
           }
         } label: {
-          Text(verbatim: "What's sent")
+          Text(.telemetry(.sentHeader))
         }
       } footer: {
-        Text(
-          verbatim:
-            "The exact reports this device would send, as things stand now. They can still change before they're sent, and the app sends only when you open it while connected to a server. Sending any report tells the server that an install of the app was used."
-        )
+        Text(.telemetry(.sentFooter))
       }
     }
     .task(id: appSettings.telemetryOptIn) {
       await loadPings()
     }
-    .navigationTitle(Text(verbatim: Self.title))
+    .navigationTitle(Text(.telemetry(.title)))
     .navigationBarTitleDisplayMode(.inline)
   }
 }

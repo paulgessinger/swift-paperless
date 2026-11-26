@@ -1,0 +1,486 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "explanationIntro" : {
+      "comment" : "First paragraph of the usage sharing explanation, written by the developer in the first person.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless is largely developed by a single developer, me, in my spare time. Usage data helps me spend that time where it improves the app the most, for example by showing which Paperless-ngx and iOS versions are still in use, and which features people actually use."
+          }
+        }
+      }
+    },
+    "explanationReports" : {
+      "comment" : "Second paragraph of the explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you turn this on, and only then, the app sends two separate reports, each at most once a day. The usage server does not combine or link them."
+          }
+        }
+      }
+    },
+    "explanationServer" : {
+      "comment" : "Paragraph about what the usage server keeps.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The usage server never reads IP addresses and doesn't log them. It splits each report up right away and only counts each value on its own, so it doesn't store which values came together."
+          }
+        }
+      }
+    },
+    "explanationTurnOff" : {
+      "comment" : "Last paragraph of the explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you turn this off, nothing more is sent, and the bookkeeping on this device is deleted immediately."
+          }
+        }
+      }
+    },
+    "featuresAvailable" : {
+      "comment" : "List item under 'Features you used'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which features are available to you"
+          }
+        }
+      }
+    },
+    "featuresErrors" : {
+      "comment" : "List item under 'Features you used'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The types of errors you ran into that day, never any details"
+          }
+        }
+      }
+    },
+    "featuresHeading" : {
+      "comment" : "Heading of the list of what the features report contains.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Features you used"
+          }
+        }
+      }
+    },
+    "featuresUsed" : {
+      "comment" : "List item under 'Features you used'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which features you used on one earlier day, and roughly how often: once, 2–9 times, or 10 or more"
+          }
+        }
+      }
+    },
+    "howItWorksLink" : {
+      "comment" : "Link to the web page that explains usage sharing in detail.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How this works"
+          }
+        }
+      }
+    },
+    "neverHeading" : {
+      "comment" : "Heading of the list of what the reports never contain.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never sent"
+          }
+        }
+      }
+    },
+    "neverIdentifier" : {
+      "comment" : "List item under 'Never sent'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any identifier: no account, device ID or advertising ID, nothing stable across days"
+          }
+        }
+      }
+    },
+    "neverSearch" : {
+      "comment" : "List item under 'Never sent'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search terms or filter values"
+          }
+        }
+      }
+    },
+    "neverServer" : {
+      "comment" : "List item under 'Never sent'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server address, username, or anything you type"
+          }
+        }
+      }
+    },
+    "neverServerData" : {
+      "comment" : "List item under 'Never sent'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documents, titles, contents, tags, correspondents, or any other server data"
+          }
+        }
+      }
+    },
+    "onboardingChangeLater" : {
+      "comment" : "Note under the onboarding sharing buttons.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change this anytime in Settings."
+          }
+        }
+      }
+    },
+    "onboardingDontShare" : {
+      "comment" : "Onboarding button: decline usage sharing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't share"
+          }
+        }
+      }
+    },
+    "onboardingMore" : {
+      "comment" : "Link on the onboarding card that opens the full explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See what's sent"
+          }
+        }
+      }
+    },
+    "onboardingShare" : {
+      "comment" : "Onboarding button: turn on usage sharing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        }
+      }
+    },
+    "reportCovers" : {
+      "comment" : "Which day a report covers. The argument is a date such as 2026-11-25.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Covers %@ (UTC)"
+          }
+        }
+      }
+    },
+    "scheduleFeaturesAfter" : {
+      "comment" : "When the features report is sent next. The argument is a date and time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still recording today. Sent the first time you open the app after %@."
+          }
+        }
+      }
+    },
+    "scheduleHealthAfter" : {
+      "comment" : "When the setup report is sent next. The argument is a date and time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent today. Sent again the first time you open the app after %@."
+          }
+        }
+      }
+    },
+    "scheduleNextOpen" : {
+      "comment" : "When a report is sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent the next time you open the app."
+          }
+        }
+      }
+    },
+    "scheduleOff" : {
+      "comment" : "When a report is sent, while sharing is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not sent while sharing is off."
+          }
+        }
+      }
+    },
+    "sentFooter" : {
+      "comment" : "Footer under the exact reports.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The exact reports this device would send, as things stand now. They can still change before they're sent, and the app sends only when you open it while connected to a server. Sending any report tells the server that an install of the app was used."
+          }
+        }
+      }
+    },
+    "sentHeader" : {
+      "comment" : "Expandable section showing the exact reports as JSON.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's sent"
+          }
+        }
+      }
+    },
+    "setupChannel" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whether you got the app from the App Store or TestFlight"
+          }
+        }
+      }
+    },
+    "setupConnection" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whether you use a client certificate or custom headers, and whether you have more than one server"
+          }
+        }
+      }
+    },
+    "setupDevice" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device type: iPhone, iPad or Mac, never the model"
+          }
+        }
+      }
+    },
+    "setupFirstReport" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whether this is the first report this month and this week"
+          }
+        }
+      }
+    },
+    "setupHeading" : {
+      "comment" : "Heading of the list of what the setup report contains.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your setup"
+          }
+        }
+      }
+    },
+    "setupInstallAge" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roughly how long ago you installed the app"
+          }
+        }
+      }
+    },
+    "setupLanguage" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App language, never your region"
+          }
+        }
+      }
+    },
+    "setupLibrary" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rough library size, and how you sign in"
+          }
+        }
+      }
+    },
+    "setupServer" : {
+      "comment" : "List item under 'Your setup'. Paperless-ngx is a product name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paperless-ngx and API version of your server, without build tags"
+          }
+        }
+      }
+    },
+    "setupVersions" : {
+      "comment" : "List item under 'Your setup'.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App version, and iOS version without the last number"
+          }
+        }
+      }
+    },
+    "shareFooter" : {
+      "comment" : "Footer under the sharing toggle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off unless you turn it on."
+          }
+        }
+      }
+    },
+    "shareToggle" : {
+      "comment" : "Toggle in Settings, and the title of the onboarding card that asks the same.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share anonymous usage"
+          }
+        }
+      }
+    },
+    "sharedHeader" : {
+      "comment" : "Section header above the explanation of what the reports contain.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's shared"
+          }
+        }
+      }
+    },
+    "summary" : {
+      "comment" : "Short description of usage sharing, under its title in Settings and on the onboarding card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help decide what gets built next. Nothing identifies you or your documents."
+          }
+        }
+      }
+    },
+    "title" : {
+      "comment" : "Title of the anonymous usage sharing screen in Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonymous usage"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

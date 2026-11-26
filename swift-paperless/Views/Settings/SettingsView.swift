@@ -122,7 +122,7 @@ struct SettingsView: View {
           TelemetrySettingsView()
         } label: {
           Label {
-            Text(verbatim: TelemetrySettingsView.title)
+            Text(.telemetry(.title))
           } icon: {
             Image(systemName: "chart.bar.fill")
           }

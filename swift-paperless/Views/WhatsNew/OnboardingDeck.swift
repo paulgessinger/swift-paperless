@@ -29,8 +29,8 @@ extension WhatsNewDeck {
       .telemetry(
         Card(
           icon: "chart.bar",
-          title: "Share anonymous usage",
-          text: "Help decide what gets built next. Nothing identifies you or your documents.",
+          title: String(localized: .telemetry(.shareToggle)),
+          text: String(localized: .telemetry(.summary)),
           detail: TelemetrySettingsView.explanation)),
     ]
 

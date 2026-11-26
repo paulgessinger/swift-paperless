@@ -285,8 +285,6 @@ private struct TipBlock: View {
 
 /// Records the choice in ``AppSettings/telemetryOptIn``. Sharing and not
 /// sharing are two equal buttons, and neither is chosen until the user taps one.
-/// The text is a placeholder until telemetry exists, so it stays out of the
-/// string catalogs.
 private struct TelemetryBlock: View {
   let card: WhatsNewDeck.Card
 
@@ -294,14 +292,14 @@ private struct TelemetryBlock: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      CardView(card: card, moreLabel: "See what's sent")
+      CardView(card: card, moreLabel: String(localized: .telemetry(.onboardingMore)))
 
       HStack(spacing: 10) {
-        choiceButton("Don't share", value: false)
-        choiceButton("Share", value: true)
+        choiceButton(String(localized: .telemetry(.onboardingDontShare)), value: false)
+        choiceButton(String(localized: .telemetry(.onboardingShare)), value: true)
       }
 
-      Text(verbatim: "Change this anytime in Settings.")
+      Text(.telemetry(.onboardingChangeLater))
         .font(.footnote)
         .foregroundStyle(.secondary)
     }
