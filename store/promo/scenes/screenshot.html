@@ -12,6 +12,8 @@
   ?img=<path>           captured screen, relative to this file
   ?ar=<h/w>             aspect ratio of the captured screen
   ?line1=&line2=&accent=&sub=   headline text (see store/promo/headlines.toml)
+  ?bare&screenW=<px>    the device alone on a transparent canvas, its screen
+                        <px> wide, without headline, background or decorations
 
   `swpngx promo screenshots` fills these in.
 -->
@@ -72,7 +74,18 @@
     duo_inner: { W: 2853, H: 2007, u: 1.1, pad: 160, h1: 120, lh: 130, sub: 50, headY: 190,
                  screenW: 1950, screenY: 500, bezel: 36, radius: 70, ribbonY: 1150 },
   };
-  const L = LAYOUTS[device];
+  const bare = params.has("bare");
+  const base = LAYOUTS[device];
+  const k = bare ? parseFloat(params.get("screenW") ?? base.screenW) / base.screenW : 1;
+  const L = bare
+    ? { ...base, screenW: base.screenW * k, bezel: base.bezel * k, radius: base.radius * k,
+        screenY: base.bezel * k, W: base.screenW * k + 2 * base.bezel * k,
+        H: base.screenW * k * ar + 2 * base.bezel * k }
+    : base;
+  if (bare) {
+    document.documentElement.style.background = document.body.style.background = "transparent";
+    document.querySelectorAll("#canvas > rect").forEach(r => r.remove());
+  }
   window.__scene = { duration: 0, width: L.W, height: L.H };
 
   const PILLS = {
@@ -173,7 +186,7 @@
       ${corner(x, y + h, el, 1, -1, false)} V ${y + el}
       ${corner(x, y, el, 1, 1, true)} Z"`;
   };
-  document.getElementById("scene").innerHTML = `
+  const backdrop = bare ? "" : `
     ${ribbon(0, 260 * u, "#17541f", 1)}
     ${ribbon(-160 * u, 40 * u, "#2e7d32", .55)}
 
@@ -181,15 +194,16 @@
     <text x="${L.pad}" y="${L.headY + L.lh}" font-size="${L.h1}" font-weight="800" fill="#12331a" letter-spacing="-3" class="head">${esc(text("line2"))}<tspan fill="#17541f">${esc(text("accent"))}</tspan></text>
     <text x="${L.pad + 4}" y="${L.headY + L.lh + L.sub * 1.7}" font-size="${L.sub}" font-weight="500" fill="#5d6b5f" id="sub">${esc(text("sub"))}</text>
 
-    ${decorations("back")}
-
+    ${decorations("back")}`;
+  document.getElementById("scene").innerHTML = `
+    ${backdrop}
     <clipPath id="screen-clip">${rect(sx, sy, sw, sh, 0)}/></clipPath>
-    ${rect(sx - b, sy - b, sw + 2 * b, sh + 2 * b, b)} fill="#1b1d1b" filter="url(#device-shadow)"/>
+    ${rect(sx - b, sy - b, sw + 2 * b, sh + 2 * b, b)} fill="#1b1d1b" ${bare ? "" : 'filter="url(#device-shadow)"'}/>
     ${rect(sx - b + 3, sy - b + 3, sw + 2 * b - 6, sh + 2 * b - 6, b - 3)} fill="none" stroke="#9aa09a" stroke-width="6"/>
     <image href="${img}" x="${sx}" y="${sy}" width="${sw}" height="${sh}" clip-path="url(#screen-clip)" preserveAspectRatio="xMidYMid slice"/>
     ${cutout}
 
-    ${decorations("front")}`;
+    ${bare ? "" : decorations("front")}`;
 
   // Shrink text that runs past the margin: both headline lines by the same
   // factor so they stay the same size, the subtitle on its own.
@@ -200,8 +214,10 @@
       nodes.forEach(n => n.setAttribute("font-size", size * maxWidth / widest));
     }
   };
-  fit([...document.querySelectorAll(".head")], L.h1);
-  fit([document.getElementById("sub")], L.sub);
+  if (!bare) {
+    fit([...document.querySelectorAll(".head")], L.h1);
+    fit([document.getElementById("sub")], L.sub);
+  }
 </script>
 </body>
 </html>
