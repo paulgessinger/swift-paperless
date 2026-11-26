@@ -52,7 +52,7 @@ extra_css:
   - extra.css
 
 nav:
-  - index.md
+  - overview.md
   - Release notes:
       - release_notes/v1.11.0.md
       - release_notes/v1.10.4.md
