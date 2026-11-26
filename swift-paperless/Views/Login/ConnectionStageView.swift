@@ -103,7 +103,7 @@ struct ConnectionStageView: View {
 
     // Pinned to the bottom so it rides on top of the keyboard instead of
     // scrolling underneath it.
-    .safeAreaInset(edge: .bottom) {
+    .keyboardBottomBar {
       Button {
         proceed()
       } label: {

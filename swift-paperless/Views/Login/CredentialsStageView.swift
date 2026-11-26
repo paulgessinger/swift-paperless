@@ -334,7 +334,7 @@ struct CredentialsStageView<Preamble: View>: View {
 
     // Pinned to the bottom so it rides on top of the keyboard instead of
     // scrolling underneath it.
-    .safeAreaInset(edge: .bottom) {
+    .keyboardBottomBar {
       if showsLoginButton {
         button
           .padding(.horizontal)
