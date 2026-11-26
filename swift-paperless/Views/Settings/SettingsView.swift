@@ -265,6 +265,8 @@ struct SettingsView: View {
       .sheet(isPresented: $showLoginSheet) {
         LoginView(connectionManager: connectionManager, initial: false)
           .environmentObject(errorController)
+          // A half-entered server shouldn't vanish on a stray swipe; Cancel closes it.
+          .interactiveDismissDisabled()
       }
 
       // MainView also presents this, but it cannot while the settings sheet is

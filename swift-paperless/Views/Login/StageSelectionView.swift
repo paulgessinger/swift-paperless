@@ -42,8 +42,9 @@ struct StageSelection: View {
 
     .animation(.spring(duration: 0.25, bounce: 0.25), value: stage)
 
-    .padding(.vertical, 10)
-    .padding(.horizontal)
+    // Sized for the navigation bar.
+    .padding(.vertical, 6)
+    .padding(.horizontal, 12)
     .apply {
       if #available(iOS 26.0, *) {
         $0

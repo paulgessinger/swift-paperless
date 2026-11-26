@@ -15,20 +15,30 @@ private typealias Section = CustomSection
 struct ConnectionStageView: View {
   @Binding var stage: LoginStage
 
-  @FocusState private var focus: Bool
+  @State private var focus = false
 
   @Environment(LoginViewModel.self) private var viewModel
   @Environment(IdentityManager.self) private var identityManager
 
-  @State private var showHttpWarning = false
   @State private var showApiWarning = false
-  @State private var showError: LoginError?
 
   private let animation = Animation.spring(duration: 0.2)
 
-  private func checkWarnings() {
-    $showHttpWarning.animation(animation).wrappedValue =
-      viewModel.scheme == .http && !viewModel.isLocalAddress
+  private var showHttpWarning: Bool {
+    viewModel.scheme == .http && !viewModel.url.isEmpty && !viewModel.isLocalAddress
+  }
+
+  private var error: LoginError? {
+    if case .error(let error) = viewModel.loginState {
+      return error
+    }
+    return nil
+  }
+
+  private func proceed() {
+    guard viewModel.loginState == .valid else { return }
+    focus = false
+    stage = .credentials
   }
 
   var body: some View {
@@ -36,13 +46,14 @@ struct ConnectionStageView: View {
     ScrollView(.vertical) {
       VStack {
         Section {
-          UrlEntryView(focus: $focus)
+          UrlEntryView(focus: $focus, onSubmit: proceed)
         } footer: {
           VStack(alignment: .leading) {
             if showHttpWarning {
-              LoginFooterView(systemImage: "info.circle") {
+              LoginFooterView(systemImage: "exclamationmark.triangle.fill") {
                 Text(.login(.httpWarning))
               }
+              .foregroundStyle(.orange)
               .transition(.opacity)
             }
 
@@ -53,7 +64,7 @@ struct ConnectionStageView: View {
               .transition(.opacity)
             }
 
-            if let error = showError {
+            if let error {
               LoginFooterView(systemImage: "xmark") {
                 error.presentation
               }
@@ -61,6 +72,8 @@ struct ConnectionStageView: View {
               .transition(.opacity)
             }
           }
+          .animation(animation, value: showHttpWarning)
+          .animation(animation, value: viewModel.loginState)
         }
 
         if !identityManager.identities.isEmpty {
@@ -84,20 +97,24 @@ struct ConnectionStageView: View {
             Text(.login(.identityDescription))
           }
         }
-
-        Button {
-          focus = false
-          stage = .credentials
-        } label: {
-          Text(.login(.continueButtonLabel))
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 10)
-        }
-        .backport.glassProminentButtonStyle(or: .borderedProminent)
-
-        .padding()
-        .disabled(viewModel.loginState != .valid)
       }
+    }
+    .scrollDismissesKeyboard(.interactively)
+
+    // Pinned to the bottom so it rides on top of the keyboard instead of
+    // scrolling underneath it.
+    .keyboardBottomBar {
+      Button {
+        proceed()
+      } label: {
+        Text(.login(.continueButtonLabel))
+          .frame(maxWidth: .infinity, alignment: .center)
+          .padding(.vertical, 10)
+      }
+      .backport.glassProminentButtonStyle(or: .borderedProminent)
+      .disabled(viewModel.loginState != .valid)
+      .padding(.horizontal)
+      .padding(.vertical, 8)
     }
 
     .modifier(BackgroundColorModifier())
@@ -110,31 +127,17 @@ struct ConnectionStageView: View {
 
     .onChange(of: viewModel.scheme) {
       Haptics.shared.impact(style: .soft)
-      checkWarnings()
       viewModel.onChangeUrl(immediate: true)
     }
 
-    .onChange(of: viewModel.url) { checkWarnings() }
     .onChange(of: viewModel.loginState) {
-      let binding = $showError.animation(animation)
       switch viewModel.loginState {
-      case .error(let error):
+      case .error:
         Haptics.shared.notification(.warning)
-        binding.wrappedValue = error
-      case .checking:
-        break
       case .valid:
         Haptics.shared.notification(.success)
-        fallthrough
       default:
-        binding.wrappedValue = nil
-      }
-    }
-
-    .onSubmit(of: .text) {
-      if viewModel.loginState == .valid {
-        focus = false
-        stage = .credentials
+        break
       }
     }
   }

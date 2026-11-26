@@ -7,55 +7,44 @@
 
 import AppShared
 import AppViews
+import DataModel
 import Foundation
+import Networking
 import Persistence
 import SwiftUI
 import os
 
+/// Screens reachable from the login screen's ⋯ menu.
+private enum LoginDetail: Identifiable {
+  case extraHeaders
+  case identities
+  case logs
+
+  var id: Self { self }
+}
+
 @MainActor
-private struct DetailsView: View {
+private struct LoginDetailView: View {
+  let detail: LoginDetail
   let connectionManager: ConnectionManager
 
-  @Environment(\.dismiss) private var dismiss
   @Environment(LoginViewModel.self) private var viewModel
-
   @Environment(IdentityManager.self) private var identityManager
 
   var body: some View {
-    // Hack
     @Bindable var viewModel = viewModel
 
     NavigationStack {
-      Form {
-        SwiftUI.Section {
-          NavigationLink {
-            ExtraHeadersView(headers: $viewModel.extraHeaders)
-          } label: {
-            Label(
-              markdown: .login(.extraHeaders), systemImage: "list.bullet.rectangle.fill"
-            )
-          }
-          NavigationLink {
-            TLSListView(identityManager: identityManager)
-          } label: {
-            Label(localized: .settings(.identities), systemImage: "lock.fill")
-          }
-
-          NavigationLink {
-            LogView(connectionManager: connectionManager)
-          } label: {
-            Label {
-              Text(.settings(.logs))
-                .accentColor(.primary)
-            } icon: {
-              Image(systemName: "text.word.spacing")
-            }
-          }
+      Group {
+        switch detail {
+        case .extraHeaders:
+          ExtraHeadersView(headers: $viewModel.extraHeaders)
+        case .identities:
+          TLSListView(identityManager: identityManager)
+        case .logs:
+          LogView(connectionManager: connectionManager)
         }
       }
-      .navigationTitle(Text(.login(.detailsTitle)))
-      .navigationBarTitleDisplayMode(.inline)
-
       .toolbar {
         ToolbarItem(placement: .navigationBarLeading) {
           CancelIconButton()
@@ -85,15 +74,27 @@ struct LoginView: View {
   var connectionManager: ConnectionManager
   var initial: Bool = true
 
-  @State private var viewModel = LoginViewModel()
+  @State private var viewModel: LoginViewModel
   @State private var identityManager = IdentityManager()
 
   @Environment(\.dismiss) private var dismiss
   @EnvironmentObject private var errorController: ErrorController
 
-  @State private var showDetails = false
-  @State private var stage = LoginStage.connection
+  @State private var detail: LoginDetail?
+  @State private var stage: LoginStage
   @State private var showSuccessOverlay = false
+
+  init(
+    connectionManager: ConnectionManager,
+    initial: Bool = true,
+    viewModel: LoginViewModel = LoginViewModel(),
+    stage: LoginStage = .connection
+  ) {
+    self.connectionManager = connectionManager
+    self.initial = initial
+    _viewModel = State(initialValue: viewModel)
+    _stage = State(initialValue: stage)
+  }
 
   private func loginSucceeded(stored: StoredConnection) {
     Haptics.shared.notification(.success)
@@ -117,6 +118,30 @@ struct LoginView: View {
     }
   }
 
+  private var moreMenu: some View {
+    Menu {
+      Button {
+        detail = .extraHeaders
+      } label: {
+        Label(markdown: .login(.extraHeaders), systemImage: "list.bullet.rectangle")
+      }
+      Button {
+        detail = .identities
+      } label: {
+        Label(localized: .settings(.identities), systemImage: "lock")
+      }
+      Divider()
+      Button {
+        detail = .logs
+      } label: {
+        Label(localized: .settings(.logs), systemImage: "text.word.spacing")
+      }
+    } label: {
+      Label(
+        String(localized: .login(.moreToolbarButtonLabel)), systemImage: "ellipsis.circle")
+    }
+  }
+
   var body: some View {
     NavigationStack {
       VStack {
@@ -134,28 +159,14 @@ struct LoginView: View {
       .navigationBarTitleDisplayMode(.inline)
 
       .toolbar {
-        if initial {
-          ToolbarItem(placement: .principal) {
-            LogoTitle()
-              .fixedSize()
-          }
+        ToolbarItem(placement: .principal) {
+          StageSelection(stage: $stage)
+            .fixedSize()
         }
 
         ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            showDetails = true
-          } label: {
-            Label(
-              String(localized: .login(.moreToolbarButtonLabel)), systemImage: "ellipsis.circle")
-          }
+          moreMenu
         }
-      }
-
-      .safeAreaInset(edge: .top) {
-        StageSelection(stage: $stage)
-          .padding(.top, 5)
-          .frame(maxWidth: .infinity)
-          .padding(.bottom)
       }
 
       .if(!initial) { view in
@@ -170,8 +181,8 @@ struct LoginView: View {
       }
     }
 
-    .sheet(isPresented: $showDetails) {
-      DetailsView(connectionManager: connectionManager)
+    .sheet(item: $detail) { detail in
+      LoginDetailView(detail: detail, connectionManager: connectionManager)
     }
 
     .successOverlay(isPresented: $showSuccessOverlay, duration: 2.0) {
@@ -185,29 +196,163 @@ struct LoginView: View {
 
 // - MARK: Previews
 
-#Preview("Initial") {
-  LoginView(connectionManager: ConnectionManager(database: try! Database.inMemory()))
-    .environmentObject(ErrorController())
-}
-
-#Preview("Additional") {
-  LoginView(
-    connectionManager: ConnectionManager(database: try! Database.inMemory()), initial: false
+/// Builds a login screen in a fixed state.
+@MainActor
+private func loginPreview(
+  stage: LoginStage = .connection,
+  initial: Bool = true,
+  configure: (LoginViewModel) -> Void = { _ in }
+) -> some View {
+  let viewModel = LoginViewModel()
+  configure(viewModel)
+  return LoginView(
+    connectionManager: ConnectionManager(database: try! Database.inMemory(), previewMode: true),
+    initial: initial,
+    viewModel: viewModel,
+    stage: stage
   )
   .environmentObject(ErrorController())
 }
 
-#Preview("StageSwitch") {
-  @Previewable @State var stage = LoginStage.connection
+@MainActor
+private func validServer(_ viewModel: LoginViewModel) {
+  viewModel.scheme = .https
+  viewModel.url = "paperless.example.com"
+  viewModel.loginState = .valid
+}
 
-  return VStack {
-    StageSelection(stage: $stage)
-    Button("Connection") {
-      stage = .connection
-    }
+private let previewProviders = [
+  OIDCProvider(
+    id: "authentik", name: "Authentik", flows: ["provider_redirect", "provider_token"],
+    clientId: "paperless", openidConfigurationUrl: nil)
+]
 
-    Button("Credentials") {
-      stage = .credentials
-    }
+#Preview("1 Connection · empty") {
+  loginPreview()
+}
+
+#Preview("1 Connection · checking") {
+  loginPreview { viewModel in
+    viewModel.url = "paperless.example.com"
+    viewModel.loginState = .checking
+  }
+}
+
+#Preview("1 Connection · valid") {
+  loginPreview(configure: validServer)
+}
+
+#Preview("1 Connection · HTTP warning") {
+  loginPreview { viewModel in
+    viewModel.scheme = .http
+    viewModel.url = "paperless.example.com:8000"
+    viewModel.loginState = .valid
+  }
+}
+
+#Preview("1 Connection · error") {
+  loginPreview { viewModel in
+    viewModel.url = "paperless.example.com"
+    viewModel.loginState = .error(.request(.unsupportedVersion(sentVersion: nil)))
+  }
+}
+
+#Preview("1 Connection · add server") {
+  loginPreview(initial: false, configure: validServer)
+}
+
+#Preview("2 Credentials · password") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.username = "paperless"
+  }
+}
+
+#Preview("2 Credentials · password + SSO") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.oidcProviders = previewProviders
+  }
+}
+
+#Preview("2 Credentials · validating") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.username = "paperless"
+    viewModel.password = "password"
+    viewModel.credentialState = .validating
+  }
+}
+
+#Preview("2 Credentials · rejected") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.username = "paperless"
+    viewModel.password = "password"
+    viewModel.credentialState = .error(.invalidLogin(detail: nil))
+  }
+}
+
+#Preview("2 Credentials · 2FA code") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.username = "paperless"
+    viewModel.password = "password"
+    viewModel.otpEnabled = true
+  }
+}
+
+#Preview("2 Credentials · token") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.credentialMode = .token
+  }
+}
+
+#Preview("2 Credentials · token rejected") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.credentialMode = .token
+    viewModel.token = "0123456789abcdef"
+    viewModel.credentialState = .error(.invalidToken)
+  }
+}
+
+#Preview("2 Credentials · no credentials") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.credentialMode = .none
+  }
+}
+
+#Preview("2 Credentials · OpenID Connect") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.credentialMode = .oidc
+    viewModel.oidcProviders = previewProviders
+  }
+}
+
+#Preview("2 Credentials · OpenID Connect unavailable") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.credentialMode = .oidc
+  }
+}
+
+#Preview("2 Credentials · OpenID Connect 2FA") {
+  loginPreview(stage: .credentials) { viewModel in
+    validServer(viewModel)
+    viewModel.credentialMode = .oidc
+    viewModel.oidcProviders = previewProviders
+    viewModel.otpEnabled = true
+  }
+}
+
+#Preview("2 Credentials · plain HTTP") {
+  loginPreview(stage: .credentials) { viewModel in
+    viewModel.scheme = .http
+    viewModel.url = "192.168.1.20:8000"
+    viewModel.loginState = .valid
   }
 }
