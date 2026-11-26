@@ -83,20 +83,17 @@ struct LoginView: View {
   @State private var detail: LoginDetail?
   @State private var stage: LoginStage
   @State private var showSuccessOverlay = false
-  @State private var keyboardVisible: Bool
 
   init(
     connectionManager: ConnectionManager,
     initial: Bool = true,
     viewModel: LoginViewModel = LoginViewModel(),
-    stage: LoginStage = .connection,
-    keyboardVisible: Bool = false
+    stage: LoginStage = .connection
   ) {
     self.connectionManager = connectionManager
     self.initial = initial
     _viewModel = State(initialValue: viewModel)
     _stage = State(initialValue: stage)
-    _keyboardVisible = State(initialValue: keyboardVisible)
   }
 
   private func loginSucceeded(stored: StoredConnection) {
@@ -162,36 +159,15 @@ struct LoginView: View {
       .navigationBarTitleDisplayMode(.inline)
 
       .toolbar {
-        // With the keyboard up, the step selector moves into the navigation
-        // bar so the form keeps the space above the keyboard.
-        if keyboardVisible {
-          ToolbarItem(placement: .principal) {
-            StageSelection(stage: $stage, compact: true)
-              .fixedSize()
-          }
-        } else if initial {
-          ToolbarItem(placement: .principal) {
-            LogoTitle()
-              .fixedSize()
-          }
+        ToolbarItem(placement: .principal) {
+          StageSelection(stage: $stage)
+            .fixedSize()
         }
 
         ToolbarItem(placement: .topBarTrailing) {
           moreMenu
         }
       }
-
-      .safeAreaInset(edge: .top) {
-        if !keyboardVisible {
-          StageSelection(stage: $stage)
-            .padding(.top, 5)
-            .frame(maxWidth: .infinity)
-            .padding(.bottom)
-            .transition(.opacity)
-        }
-      }
-      .animation(.spring(duration: 0.25), value: keyboardVisible)
-      .trackKeyboardState(isVisible: $keyboardVisible)
 
       .if(!initial) { view in
         view
@@ -220,13 +196,11 @@ struct LoginView: View {
 
 // - MARK: Previews
 
-/// Builds a login screen in a fixed state. Previews cannot show the software
-/// keyboard, so `keyboard: true` forces the layout used while it is up.
+/// Builds a login screen in a fixed state.
 @MainActor
 private func loginPreview(
   stage: LoginStage = .connection,
   initial: Bool = true,
-  keyboard: Bool = false,
   configure: (LoginViewModel) -> Void = { _ in }
 ) -> some View {
   let viewModel = LoginViewModel()
@@ -235,8 +209,7 @@ private func loginPreview(
     connectionManager: ConnectionManager(database: try! Database.inMemory(), previewMode: true),
     initial: initial,
     viewModel: viewModel,
-    stage: stage,
-    keyboardVisible: keyboard
+    stage: stage
   )
   .environmentObject(ErrorController())
 }
@@ -284,13 +257,6 @@ private let previewProviders = [
   }
 }
 
-#Preview("1 Connection · keyboard") {
-  loginPreview(keyboard: true) { viewModel in
-    viewModel.url = "paperless.exam"
-    viewModel.loginState = .checking
-  }
-}
-
 #Preview("1 Connection · add server") {
   loginPreview(initial: false, configure: validServer)
 }
@@ -306,14 +272,6 @@ private let previewProviders = [
   loginPreview(stage: .credentials) { viewModel in
     validServer(viewModel)
     viewModel.oidcProviders = previewProviders
-  }
-}
-
-#Preview("2 Credentials · password + SSO, keyboard") {
-  loginPreview(stage: .credentials, keyboard: true) { viewModel in
-    validServer(viewModel)
-    viewModel.oidcProviders = previewProviders
-    viewModel.username = "paper"
   }
 }
 
