@@ -11,6 +11,8 @@ import SwiftUI
 
 struct StageSelection: View {
   @Binding var stage: LoginStage
+  /// Tighter padding for the navigation bar, used while the keyboard is up.
+  var compact = false
 
   @Namespace private var animation
 
@@ -42,8 +44,8 @@ struct StageSelection: View {
 
     .animation(.spring(duration: 0.25, bounce: 0.25), value: stage)
 
-    .padding(.vertical, 10)
-    .padding(.horizontal)
+    .padding(.vertical, compact ? 6 : 10)
+    .padding(.horizontal, compact ? 12 : 16)
     .apply {
       if #available(iOS 26.0, *) {
         $0

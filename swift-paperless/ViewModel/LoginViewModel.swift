@@ -126,6 +126,9 @@ class LoginViewModel {
 
   var oidcClient: OIDCClient?
 
+  /// Providers the server offers for single sign-on; empty until discovery finishes.
+  var oidcProviders: [OIDCProvider] = []
+
   @ObservationIgnored
   let imagePipeline = ImagePipeline()
   @ObservationIgnored
@@ -140,6 +143,16 @@ class LoginViewModel {
   }
 
   // - MARK: Methods
+
+  /// Switch how the user signs in. A pending second factor and any previous
+  /// error belong to the old mode, so both are cleared.
+  func selectCredentialMode(_ mode: CredentialMode) {
+    guard mode != credentialMode else { return }
+    credentialMode = mode
+    credentialState = .none
+    otpEnabled = false
+    otp = ""
+  }
 
   /// Load an absolute URL into the pair the login form actually edits: `scheme`
   /// plus a `url` that carries only host and path, which is what `UrlEntryView`
@@ -185,6 +198,7 @@ class LoginViewModel {
   func revalidateUrl(immediate: Bool = false) {
     checkUrlTask?.cancel()
     oidcClient = nil
+    oidcProviders = []
 
     guard !url.isEmpty else {
       loginState = .empty
@@ -406,6 +420,7 @@ class LoginViewModel {
     do {
       try await client.fetchProviders()
       Logger.shared.info("Have providers: \(client.providers)")
+      oidcProviders = client.providers
 
       await prefetchOIDCProviderIcons()
     } catch {

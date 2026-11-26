@@ -71,8 +71,10 @@ struct UrlEntryView: View {
         .padding(.vertical, 10)
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
+        .keyboardType(.URL)
+        .textContentType(.URL)
         .focused($focus)
-        .submitLabel(.next)
+        .submitLabel(.continue)
       Spacer()
       switch viewModel.loginState {
       case .checking:

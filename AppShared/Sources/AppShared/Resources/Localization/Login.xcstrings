@@ -1858,6 +1858,18 @@
         }
       }
     },
+    "localAccount" : {
+      "comment" : "Section header above the username and password fields when the server also offers single sign-on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local account"
+          }
+        }
+      }
+    },
     "moreToolbarButtonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3362,6 +3374,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Swift Paperless'a hoş geldiniz"
+          }
+        }
+      }
+    },
+    "otherSignInOptions" : {
+      "comment" : "Menu button on the login credentials screen to switch between password, token and no-credentials login",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other sign-in options"
           }
         }
       }
