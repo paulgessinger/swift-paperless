@@ -265,7 +265,7 @@ extension Database {
     }
   }
 
-  private static func deleteQueryOrder(
+  static func deleteQueryOrder(
     _ db: GRDB.Database, queryKey: QueryKey, serverID: UUID
   ) throws {
     try QueryOrderRow
@@ -671,7 +671,9 @@ extension Database {
       orderStale: meta?.orderStale ?? false,
       isComplete: isOrderComplete(
         filledAt: meta?.filledAt, lastPosition: lastPosition, totalCount: meta?.totalCount),
-      orderGeneration: QueryOrderGeneration(meta?.orderGeneration ?? 0))
+      orderGeneration: QueryOrderGeneration(meta?.orderGeneration ?? 0),
+      localEvaluation: meta == nil
+        ? nil : try fetchLocalEvaluation(db, queryKey: queryKey, serverID: serverID))
   }
 
   /// Whether a cached order is its query's whole membership.
@@ -747,7 +749,11 @@ extension Database {
 
   /// `basis` is the generation a whole-order rewrite accounts for; `nil` keeps
   /// the stored one.
-  private static func setQueryMeta(
+  ///
+  /// A whole-order rewrite also clears the key's ``LocalEvaluation``: the
+  /// order it marked is gone. The device's own evaluation sets it again after
+  /// this (see `Database+LocalQuery`).
+  static func setQueryMeta(
     _ db: GRDB.Database, serverID: UUID, queryKey: QueryKey,
     totalCount: UInt?, basis: QueryOrderGeneration?, stamp: FillStamp
   ) throws {
@@ -766,5 +772,8 @@ extension Database {
       orderGeneration: existing?.orderGeneration ?? 0,
       orderBasis: basis?.value ?? existing?.orderBasis ?? 0
     ).upsert(db)
+    if basis != nil {
+      try setLocalEvaluation(db, nil, queryKey: queryKey, serverID: serverID)
+    }
   }
 }

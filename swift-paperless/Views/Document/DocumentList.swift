@@ -329,6 +329,10 @@ struct DocumentList: View {
           Group {
             if viewModel.scope == .keptOffline {
               KeptOfflineEmptyView()
+            } else if case .offline(let evaluation) = viewModel.localResults {
+              // The device answered, and found nothing: say that it was the
+              // device, so it doesn't read as the server having no matches.
+              NoOfflineResultsView(evaluation: evaluation, retry: retry)
             } else {
               NoDocumentsView(filtering: filterModel.filterState.filtering)
                 .equatable()
@@ -417,6 +421,9 @@ struct DocumentList: View {
                   retry: retry
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
+              } else if let results = viewModel.localResults {
+                LocalResultsBanner(results: results, retry: retry)
+                  .transition(.move(edge: .top).combined(with: .opacity))
               }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -699,6 +706,110 @@ private struct IncompleteDocumentsBanner: View {
           Text(details)
         }
       })
+  }
+}
+
+extension LocalEvaluation {
+  /// What the device's answer was drawn from, in a line: how many documents,
+  /// how many of them with their text when text was searched, and whether a
+  /// part of the filter had to be left out.
+  fileprivate var summary: String {
+    var parts: [String] = []
+    if let documentsWithText {
+      parts.append(
+        String(localized: .app(.documentListOfflineSearchedText(documents, documentsWithText))))
+    } else {
+      parts.append(String(localized: .app(.documentListOfflineSearched(documents))))
+    }
+    if limitations.contains(.sorting) {
+      parts.append(String(localized: .app(.documentListOfflineSortedByDate)))
+    }
+    if limitations.contains(where: { $0 != .sorting }) {
+      parts.append(String(localized: .app(.documentListOfflineFiltersSkipped)))
+    }
+    return parts.joined(separator: " ")
+  }
+}
+
+/// Above rows the device found itself: a search or filter applied to the
+/// cached documents, not the server's answer.
+///
+/// Not a warning like ``IncompleteDocumentsBanner``: this is the offline mode
+/// working, so it is tinted neutrally. While the server is still being asked
+/// it says so and shows that it is waiting; once the server is known to be
+/// unreachable it offers Retry, which asks again and replaces the rows if the
+/// server answers.
+private struct LocalResultsBanner: View {
+  var results: DocumentListViewModel.LocalResults
+  var retry: () -> Void
+
+  private var evaluation: LocalEvaluation {
+    switch results {
+    case .meanwhile(let evaluation), .offline(let evaluation): evaluation
+    }
+  }
+
+  private var isOffline: Bool {
+    if case .offline = results { true } else { false }
+  }
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Image(systemName: isOffline ? "icloud.slash" : "iphone")
+        .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(
+          isOffline
+            ? .app(.documentListOfflineResults) : .app(.documentListLocalResultsMeanwhile)
+        )
+        .font(.subheadline)
+        .fontWeight(.semibold)
+        Text(evaluation.summary)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .accessibilityElement(children: .combine)
+      Spacer(minLength: 0)
+      if isOffline {
+        Button(String(localized: .app(.documentListRetry)), action: retry)
+          .buttonStyle(.bordered)
+          .controlSize(.small)
+      } else {
+        ProgressView()
+      }
+    }
+    .padding(12)
+    // Rows scroll under the inset.
+    .backport.glassEffect(
+      .regular, in: RoundedRectangle(cornerRadius: 12, style: .continuous),
+      orFill: .regularMaterial
+    )
+    .accessibilityElement(children: .contain)
+    .padding(.horizontal)
+    .padding(.vertical, 6)
+  }
+}
+
+/// The empty state of a list the device answered itself: nothing cached
+/// matches, which says nothing about what the server holds.
+private struct NoOfflineResultsView: View {
+  var evaluation: LocalEvaluation
+  var retry: () -> Void
+
+  var body: some View {
+    ScrollView(.vertical) {
+      ContentUnavailableView {
+        Label(String(localized: .app(.documentListOfflineNoResults)), systemImage: "icloud.slash")
+      } description: {
+        Text(evaluation.summary)
+      } actions: {
+        Button(String(localized: .app(.documentListRetry)), action: retry)
+          .buttonStyle(.bordered)
+      }
+      .padding(.top, 40)
+    }
   }
 }
 

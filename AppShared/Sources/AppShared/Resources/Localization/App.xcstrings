@@ -5599,6 +5599,180 @@
         }
       }
     },
+    "documentListLocalResultsMeanwhile" : {
+      "comment" : "Title of the banner above a document list that shows what was found on the device while the server has not answered yet. It is replaced by the server's results when they arrive. Keep it to about 25 characters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnisse von diesem Gerät"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results from this device"
+          }
+        }
+      }
+    },
+    "documentListOfflineFiltersSkipped" : {
+      "comment" : "Added to the offline results caption when a part of the filter (custom fields, duplicates, advanced search syntax) could not be applied on the device, so the list may show more documents than the server would.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Filter konnten nicht angewendet werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some filters could not be applied."
+          }
+        }
+      }
+    },
+    "documentListOfflineNoResults" : {
+      "comment" : "Title of the document list's empty state when the server could not be reached and searching the documents on the device found nothing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Treffer auf diesem Gerät"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matches on this device"
+          }
+        }
+      }
+    },
+    "documentListOfflineResults" : {
+      "comment" : "Title of the banner above a document list whose documents were found by searching and filtering on the device, because the server could not be reached. Keep it to about 20 characters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline-Ergebnisse"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline results"
+          }
+        }
+      }
+    },
+    "documentListOfflineSearched" : {
+      "comment" : "Caption of the offline results banner and of its empty state: how many documents stored on the device were filtered. %lld is that number of documents.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aus %lld Dokument auf diesem Gerät."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aus %lld Dokumenten auf diesem Gerät."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %lld document on this device."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %lld documents on this device."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "documentListOfflineSearchedText" : {
+      "comment" : "Caption of the offline results banner and of its empty state when the search looks into the documents' text. %1$lld is the number of documents stored on the device, %2$lld how many of them have their text on the device and so can be found by it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aus %1$lld Dokument auf diesem Gerät. Der Text ist für %2$lld verfügbar."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aus %1$lld Dokumenten auf diesem Gerät. Für %2$lld davon ist der Text verfügbar."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %1$lld document on this device. Its text is available for %2$lld."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %1$lld documents on this device. Text is available for %2$lld of them."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "documentListOfflineSortedByDate" : {
+      "comment" : "Added to the offline results caption when the chosen sort order is not available on the device and the list is sorted by creation date instead.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen nach Datum sortiert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorted by date instead."
+          }
+        }
+      }
+    },
     "documentListRetry" : {
       "comment" : "Button in the document list's error state and partial-load banner that tries loading the list again.",
       "extractionState" : "manual",

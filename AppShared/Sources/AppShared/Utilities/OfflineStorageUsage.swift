@@ -18,10 +18,17 @@ public struct OfflineStorageUsage: Sendable, Equatable {
   /// The indexed files. Thumbnails also carry the resized variants and
   /// whatever Nuke's `URLCache` still holds.
   public var files: FileUsage
+  /// The part of ``database`` the full-text index over the document texts
+  /// takes, and how many documents' texts it holds (`files`). Already counted
+  /// in ``database``, so not part of ``totalBytes`` again.
+  public var searchIndex: DiskUsage
 
-  public init(database: DiskUsage = .zero, files: FileUsage = FileUsage()) {
+  public init(
+    database: DiskUsage = .zero, files: FileUsage = FileUsage(), searchIndex: DiskUsage = .zero
+  ) {
     self.database = database
     self.files = files
+    self.searchIndex = searchIndex
   }
 
   public var totalBytes: Int64 {
@@ -50,6 +57,9 @@ public struct OfflineStorageUsage: Sendable, Equatable {
     // stays the only cache where there is no store at all (previews, host
     // tests). Bytes only; its on-disk layout is private, so no file count.
     files.thumbnails.bytes += Int64(DataLoader.sharedUrlCache.currentDiskUsage)
-    return OfflineStorageUsage(database: database?.diskUsage() ?? .zero, files: files)
+    let index = try? await database?.searchIndexUsage()
+    return OfflineStorageUsage(
+      database: database?.diskUsage() ?? .zero, files: files,
+      searchIndex: DiskUsage(bytes: index?.bytes ?? 0, files: index?.documents ?? 0))
   }
 }

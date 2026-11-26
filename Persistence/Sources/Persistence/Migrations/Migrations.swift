@@ -135,6 +135,14 @@ enum Migrations {
       try V21_CreateDefaultUploadTag.run(db)
     }
 
+    migrator.registerMigration("v22_create_search_index") { db in
+      try V22_CreateSearchIndex.run(db)
+    }
+
+    migrator.registerMigration("v23_add_library_text") { db in
+      try V23_AddLibraryText.run(db)
+    }
+
     return migrator
   }
 }

@@ -59,6 +59,10 @@ public struct DocumentListState: Equatable, Sendable {
   /// query, so what is on screen is known to be a truncated answer.
   public var isIncomplete: Bool
 
+  /// What is shown is the device's own answer to the query, not the server's
+  /// (see ``LocalEvaluation``): the server could not be asked.
+  public var isLocalEvaluation: Bool
+
   /// - Parameters:
   ///   - hasRows: The observed cache prefix is non-empty.
   ///   - isFetching: A fill *the list itself started* is pending or in flight.
@@ -75,22 +79,30 @@ public struct DocumentListState: Equatable, Sendable {
   ///   - fillFailed: The list's most recent fill for this query failed, at page
   ///     1 or while paging the rest — or another fill took the query over and
   ///     ended without completing it (see ``DocumentListFillTracking``).
+  ///   - isLocalEvaluation: The cached order was computed on the device. It is
+  ///     the whole of what the device can say, so it is neither a truncated
+  ///     answer nor, when empty, an absence of data: no cached document
+  ///     matches. That holds while a fill is trying the server again, which
+  ///     replaces the order if it gets through.
   public init(
     hasRows: Bool, isFetching: Bool, isFillTakenOver: Bool, totalCount: UInt?,
-    isCacheComplete: Bool, fillFailed: Bool
+    isCacheComplete: Bool, fillFailed: Bool, isLocalEvaluation: Bool = false
   ) {
+    self.isLocalEvaluation = isLocalEvaluation
     let isBeingFilled = isFetching || isFillTakenOver
 
     if hasRows {
       content = .documents
       // Hidden while a retry runs, so the retry visibly does something; it
       // comes back if that attempt fails too.
-      isIncomplete = fillFailed && !isCacheComplete && !isBeingFilled
+      isIncomplete = fillFailed && !isCacheComplete && !isBeingFilled && !isLocalEvaluation
       return
     }
 
     isIncomplete = false
-    if isBeingFilled {
+    if isLocalEvaluation {
+      content = .empty
+    } else if isBeingFilled {
       content = .loading
     } else if fillFailed {
       // An empty *complete* cache is a real zero-match answer from an earlier

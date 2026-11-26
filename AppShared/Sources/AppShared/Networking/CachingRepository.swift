@@ -316,6 +316,25 @@ public protocol CachingBackend: AnyObject, Sendable {
   var database: Database { get }
   var serverID: UUID { get }
 
+  /// Answer `filter` from the device and store the result as the query's
+  /// cached order, for a list whose fill can't reach the server: the filter is
+  /// applied to the cached documents and a text search to their titles and
+  /// stored texts (see `Database.evaluateQueryLocally`). The list observes the
+  /// order like any other, marked as a ``LocalEvaluation``, until a fill
+  /// replaces it.
+  ///
+  /// - Parameter whileFilling: answer even though a fill owns the query, as
+  ///   long as the server has given it no rows yet. For a list whose fill is
+  ///   taking long: a request to a server that doesn't answer can sit for
+  ///   minutes before it fails. The fill's first page replaces the answer.
+  /// - Returns: what the answer covers, or `nil`, writing nothing, if a fill
+  ///   owns the query or took it over meanwhile (the server's answer is on
+  ///   its way and must not be overwritten), or with `whileFilling` if the
+  ///   server's rows are already there.
+  func evaluateQueryLocally(
+    filter: FilterState, whileFilling: Bool
+  ) async throws -> LocalEvaluation?
+
   /// This server's offline browsing mode (per-server; read live from the
   /// `server` row). The reconcile sweeps and the proactive fill branch on it.
   ///
@@ -431,6 +450,15 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
       let mode = OfflineBrowsingMode(rawValue: raw)
     else { return .recentlyBrowsed }
     return mode
+  }
+
+  /// Whether every document's text is fetched and kept: under *Entire
+  /// library*, or with the server's own "text of the entire library" setting.
+  /// Read live, like the mode.
+  private var keepsLibraryText: Bool {
+    guard let record = try? database.connection(id: serverID) else { return false }
+    return record.libraryText
+      || record.offlineBrowsingMode == OfflineBrowsingMode.entireLibrary.rawValue
   }
 
   /// Friendly-name + UUID for sync logs (see ``StoredConnection/logLabel``);
@@ -699,6 +727,34 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
     }
     try Task.checkCancellation()
     return QueryFillHandle(queryKey: key, totalCount: total, fillTask: task)
+  }
+
+  public func evaluateQueryLocally(
+    filter: FilterState, whileFilling: Bool
+  ) async throws -> LocalEvaluation? {
+    let key = QueryKey(serverID: serverID, filter: filter)
+    // The list on screen is what asks for this; pinned like a fill's key, so
+    // the reachability sweep leaves the order alone while it is shown.
+    noteRequested(key)
+    if whileFilling {
+      // Not owned: the fill keeps the key, and the database decides in one
+      // transaction whether the server's rows got there first.
+      return try await database.evaluateQueryLocally(
+        filter: filter, queryKey: key, serverID: serverID, onlyIfUnanswered: true)
+    }
+    // Steps over a key in use, like the membership sweep: a fill that owns it
+    // is about to write the server's answer.
+    guard !isFilling(key) else { return nil }
+    let database = database
+    let serverID = serverID
+    let result = LocalEvaluationBox()
+    // Owned for the write, so a fill starting meanwhile drains it first
+    // instead of interleaving with it. A drained write reports `false`.
+    let completed = try await activeFills.withOwnership(of: [key]) {
+      result.value = try await database.evaluateQueryLocally(
+        filter: filter, queryKey: key, serverID: serverID)
+    }
+    return completed ? result.value : nil
   }
 
   /// Whether a fill (or the membership sweep's own rewrite) currently owns this
@@ -976,9 +1032,10 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func fillContents(
     scope: LibraryFileScope?, progress: SyncProgressReporter?, hasRoom: @MainActor () -> Bool
   ) async throws -> DetailFillOutcome {
-    // Read for every batch: leaving Entire library mid-pass narrows the rest of it.
+    // Read for every batch: leaving Entire library mid-pass narrows the rest
+    // of it, and so does turning the library's text off.
     var currentScope: LibraryFileScope {
-      scope ?? (offlineBrowsingMode == .entireLibrary ? .library : .keptOffline)
+      scope ?? (keepsLibraryText ? .library : .keptOffline)
     }
     progress?(SyncActivity(stage: .contentFill))
     defer { progress?(nil) }
@@ -2129,4 +2186,9 @@ public final class CachingRepository<Wrapped: Repository>: Repository, CachingBa
   public func supports(feature: BackendFeature) -> Bool {
     wrapped.supports(feature: feature)
   }
+}
+
+/// Carries the evaluation out of the ownership's `Void` write.
+private final class LocalEvaluationBox: @unchecked Sendable {
+  var value: LocalEvaluation?
 }

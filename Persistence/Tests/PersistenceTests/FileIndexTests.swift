@@ -198,6 +198,29 @@ struct FileIndexTests {
       try await database.evictionCandidates(budget: 160, protectAccessedAfter: date(9000)).isEmpty)
   }
 
+  @Test("A server that keeps its library's text keeps the texts and nothing else")
+  func libraryTextIsNotEvictable() async throws {
+    let server = UUID()
+    let database = try Database.seeded(serverID: server, documents: [doc(1), doc(2)])
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: server, url: URL(string: "https://paperless.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "preview"), libraryText: true))
+    try await record(database, key(server, 1), size: 40, accessed: date(1000))
+    try await record(database, key(server, 1, .content), size: 7, accessed: date(1000))
+    try await record(database, key(server, 2, .content), size: 7, accessed: date(2000))
+
+    // The archive alone: the texts are pinned.
+    #expect(try await database.evictableFileBytes() == 40)
+
+    // Turned off, the texts count again.
+    try database.upsertConnection(
+      ConnectionRecord(
+        id: server, url: URL(string: "https://paperless.example.com/api/")!,
+        user: .init(id: 1, isSuperUser: true, username: "preview"), libraryText: false))
+    #expect(try await database.evictableFileBytes() == 54)
+  }
+
   @Test("An Entire-library server's archives count for nothing against the budget")
   func libraryArchivesAreNotEvictable() async throws {
     let server = UUID()

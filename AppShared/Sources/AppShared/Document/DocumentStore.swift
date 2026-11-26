@@ -964,6 +964,20 @@ extension DocumentStore {
     return try await backend.fillQuery(filter: filter, category: .list, onPage: nil)
   }
 
+  /// Answer a list on the device, for when its fill can't reach the server.
+  /// The list's observation picks the result up; see
+  /// ``CachingBackend/evaluateQueryLocally(filter:)``.
+  ///
+  /// - Returns: `nil` without a caching backend, or when the answer was held
+  ///   back in favour of the server's.
+  @discardableResult
+  public func evaluateDocumentQueryLocally(
+    filter: FilterState, whileFilling: Bool = false
+  ) async throws -> LocalEvaluation? {
+    guard let backend = session?.backend else { return nil }
+    return try await backend.evaluateQueryLocally(filter: filter, whileFilling: whileFilling)
+  }
+
   /// Re-sync a stale list's cached membership from the server's id list,
   /// hydrating what its first `window` rows are missing.
   ///
@@ -1130,6 +1144,67 @@ extension DocumentStore {
     // Nuke's memory cache and, through the data cache, the thumbnail
     // variants; the thumbnails themselves went with the store.
     imagePipeline.cache.removeAll()
+  }
+
+  /// What the active server's whole library would take on this device under
+  /// *Entire library*, for showing before the user turns it on.
+  ///
+  /// Extrapolated from the documents whose file size the device knows. With
+  /// `sampling`, and fewer of those than
+  /// ``LibrarySizeEstimate/targetSample``, the file metadata of a few random
+  /// documents is fetched first (a small request each, cached like any other
+  /// file metadata), so the figure doesn't rest on the handful of documents
+  /// that happen to have been opened. Soft-fail: offline, it estimates from
+  /// what is there.
+  ///
+  /// - Returns: `nil` before login, or when no file size is known at all.
+  public func estimateLibrarySize(sampling: Bool) async -> LibrarySizeEstimate? {
+    guard let backend = session?.backend else { return nil }
+    let database = backend.database
+    let serverID = backend.serverID
+    do {
+      var sample = try await database.librarySizeSample(serverID: serverID)
+      let wanted = min(LibrarySizeEstimate.targetSample, sample.documents) - sample.files.documents
+      if sampling, wanted > 0 {
+        let ids = try await database.documentIDsWithoutKnownFileSize(
+          serverID: serverID, limit: wanted)
+        let repository = repository
+        await withTaskGroup(of: Void.self) { group in
+          var pending = ids.makeIterator()
+          // A few at a time: this runs while the user looks at the screen.
+          for _ in 0..<4 {
+            guard let id = pending.next() else { break }
+            group.addTask { _ = try? await repository.metadata(documentId: id) }
+          }
+          for await _ in group {
+            guard !Task.isCancelled, let id = pending.next() else { continue }
+            group.addTask { _ = try? await repository.metadata(documentId: id) }
+          }
+        }
+        sample = try await database.librarySizeSample(serverID: serverID)
+      }
+      // The index is one for every server; this server's share by documents.
+      let index = try await database.searchIndexUsage()
+      let share =
+        index.documents > 0 ? Double(sample.indexedDocuments) / Double(index.documents) : 0
+      return LibrarySizeEstimate.estimate(
+        documents: sample.documents, files: sample.files, thumbnails: sample.thumbnails,
+        texts: sample.texts,
+        searchIndex: .init(
+          documents: sample.indexedDocuments, bytes: Int64(Double(index.bytes) * share)))
+    } catch {
+      Logger.shared.info("Library size estimate failed (suppressed): \(error)")
+      return nil
+    }
+  }
+
+  /// Free space on this device for data the user asked for, where the
+  /// offline files live. `nil` when it can't be read.
+  public nonisolated func availableDeviceStorage() -> Int64? {
+    let url =
+      AppGroup.container(identifier: AppGroup.identifier)
+      ?? URL(fileURLWithPath: NSHomeDirectory())
+    return LibraryFileDownloader.volumeCapacity(of: url)
   }
 
   /// How much disk the offline data takes, for the Offline & Sync screen.

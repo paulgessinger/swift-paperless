@@ -1,3 +1,4 @@
+import DataModel
 import Foundation
 import GRDB
 
@@ -106,14 +107,20 @@ public struct QueryStatus: Equatable, Sendable {
   /// is already stale.
   public var orderGeneration: QueryOrderGeneration
 
+  /// Set while the cached order is the device's own answer rather than the
+  /// server's (see `Database+LocalQuery`); such an order is never
+  /// ``isComplete``.
+  public var localEvaluation: LocalEvaluation?
+
   public init(
     totalCount: UInt?, localCount: Int, orderStale: Bool, isComplete: Bool = false,
-    orderGeneration: QueryOrderGeneration = .initial
+    orderGeneration: QueryOrderGeneration = .initial, localEvaluation: LocalEvaluation? = nil
   ) {
     self.totalCount = totalCount
     self.localCount = localCount
     self.orderStale = orderStale
     self.isComplete = isComplete
     self.orderGeneration = orderGeneration
+    self.localEvaluation = localEvaluation
   }
 }

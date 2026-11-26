@@ -47,7 +47,8 @@ public struct FileRecord:
 
   /// The rows a storage budget may evict, least recently accessed first: the
   /// pool's kinds, except its pinned kinds for a server in *Entire library*
-  /// and for a document kept offline. The one definition of "evictable".
+  /// and for a document kept offline, and except the texts of a server that
+  /// keeps its library's text. The one definition of "evictable".
   static func evictable(_ pool: EvictionPool) -> QueryInterfaceRequest<FileRecord> {
     let file = TableAlias()
     let libraryServer =
@@ -56,11 +57,19 @@ public struct FileRecord:
       .filter(ConnectionRecord.Columns.offlineBrowsingMode == "entireLibrary")
     let kept = KeptOfflineRecord.keeping(
       server: file[Column("server_id")], document: file[Column("document_id")])
+    // A server that keeps its library's text keeps every text, and only the
+    // texts: its archives stay evictable.
+    let textServer =
+      ConnectionRecord
+      .filter(Column("id") == file[Column("server_id")])
+      .filter(ConnectionRecord.Columns.libraryText == true)
     return aliased(file)
       .filter(pool.kinds.contains(Column("kind")))
       .filter(
         !(pool.pinnedKinds.contains(Column("kind"))
-          && (libraryServer.exists() || kept.exists())))
+          && (libraryServer.exists() || kept.exists()))
+      )
+      .filter(!(Column("kind") == ContentStore.Kind.content.rawValue && textServer.exists()))
   }
 }
 

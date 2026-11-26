@@ -44,6 +44,10 @@ public final class OfflineStatus {
   /// The same figures for each kept saved view, by saved-view id. Throttled.
   public private(set) var keptOfflineViewProgress: [UInt: LibraryFileProgress] = [:]
 
+  /// How many of the server's documents can be found by their text on the
+  /// device. Throttled: every text indexed changes it.
+  public private(set) var searchCoverage = SearchIndexCoverage()
+
   public let serverID: UUID
 
   @ObservationIgnored private let observationTasks = TaskBox()
@@ -70,6 +74,9 @@ public final class OfflineStatus {
       observationLoop(
         database.observeKeptOfflineViewProgress(serverID: serverID),
         into: \.keptOfflineViewProgress, of: self, throttle: UpdateThrottle()),
+      observationLoop(
+        database.observeSearchIndexCoverage(serverID: serverID),
+        into: \.searchCoverage, of: self, throttle: UpdateThrottle()),
     ])
   }
 

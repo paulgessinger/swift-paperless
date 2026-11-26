@@ -24,6 +24,10 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
   public var offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed
   /// Whether this server's *proactive* sweeps may run on a metered link.
   public var syncOverCellular: Bool = false
+  /// Whether the text of every document is downloaded and kept, so that
+  /// searching on the device covers the whole library without its files.
+  /// *Entire library* includes it.
+  public var keepsLibraryText: Bool = false
   /// The server's versions as last probed, which seed its repository so
   /// activation needs no network. `nil` until a probe has succeeded.
   public var knownVersions: BackendVersions? = nil
@@ -37,6 +41,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     friendlyName: String? = nil,
     offlineBrowsingMode: OfflineBrowsingMode = .recentlyBrowsed,
     syncOverCellular: Bool = false,
+    keepsLibraryText: Bool = false,
     knownVersions: BackendVersions? = nil
   ) {
     self.id = id
@@ -47,6 +52,7 @@ public struct StoredConnection: Equatable, Identifiable, Sendable {
     self.friendlyName = friendlyName
     self.offlineBrowsingMode = offlineBrowsingMode
     self.syncOverCellular = syncOverCellular
+    self.keepsLibraryText = keepsLibraryText
     self.knownVersions = knownVersions
   }
 
@@ -587,6 +593,43 @@ public final class ConnectionManager {
       Logger.api.error("setSyncOverCellular DB write failed: \(error)")
     }
   }
+
+  /// Whether the active server keeps the text of its whole library for
+  /// searching on the device. `false` without an active connection.
+  public var activeKeepsLibraryText: Bool {
+    guard let activeConnectionId, let stored = connections[activeConnectionId] else {
+      return false
+    }
+    return stored.keepsLibraryText
+  }
+
+  public func setKeepsLibraryText(_ enabled: Bool) {
+    guard let activeConnectionId, var stored = connections[activeConnectionId] else {
+      Logger.api.warning("Tried to set library text but have no active connection")
+      return
+    }
+    guard stored.keepsLibraryText != enabled else { return }
+    stored.keepsLibraryText = enabled
+    connections[activeConnectionId] = stored
+    do {
+      try database.upsertConnection(
+        stored.toRecord(needsAuth: needsAuthIds.contains(stored.id)))
+    } catch {
+      Logger.api.error("setKeepsLibraryText DB write failed: \(error)")
+      return
+    }
+    // Turned off, the texts are evictable again, and a pass holds them to
+    // the budget.
+    if !enabled, stored.offlineBrowsingMode != .entireLibrary {
+      let onLibraryTextReleased = onLibraryTextReleased
+      let serverID = stored.id
+      Task { await onLibraryTextReleased?(serverID) }
+    }
+  }
+
+  /// Called after a server stopped keeping its library's text, for trimming
+  /// the texts that are evictable from then on.
+  public var onLibraryTextReleased: (@MainActor (UUID) async -> Void)?
 
   /// Called after a downgrade's reclaim landed, with the server, for what
   /// lives outside the database: its downloads and files.
