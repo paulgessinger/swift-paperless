@@ -1,0 +1,8 @@
+.venv
+**/__pycache__
+.pytest_cache
+tests
+*.sqlite3*
+deploy
+# Always downloaded and verified in the build stage.
+src/telemetry_collector/static/vendor

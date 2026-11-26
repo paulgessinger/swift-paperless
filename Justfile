@@ -5,6 +5,10 @@ zensical := "uv run --with-requirements docs/requirements.txt zensical"
 docs-serve port=default_port:
   {{zensical}} serve -o -a localhost:{{port}}
 
+# Download the telemetry dashboard's vendored JavaScript, verified against pinned hashes.
+telemetry-vendor:
+  python3 -I telemetry-collector/scripts/fetch_vendor.py
+
 docs:
   {{zensical}} build
   rm -f site/requirements.in site/requirements.txt

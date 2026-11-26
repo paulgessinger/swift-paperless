@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+FROM python:3.13-slim AS build
+COPY --from=ghcr.io/astral-sh/uv:0.9.30@sha256:538e0b39736e7feae937a65983e49d2ab75e1559d35041f9878b7b7e51de91e4 /uv /bin/uv
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
+WORKDIR /app
+COPY pyproject.toml uv.lock README.md ./
+# The cache mount keeps downloads across builds; it is not part of the image.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
+COPY src ./src
+COPY scripts/fetch_vendor.py ./scripts/
+RUN python -I scripts/fetch_vendor.py
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-editable
+
+FROM python:3.13-slim
+RUN useradd --system --uid 10001 --home-dir /nonexistent collector \
+ && mkdir /data && chown collector /data
+COPY --from=build /app/.venv /app/.venv
+COPY telemetry-schema.json /app/telemetry-schema.json
+ENV PATH=/app/.venv/bin:$PATH \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TELEMETRY_SCHEMA_PATH=/app/telemetry-schema.json \
+    TELEMETRY_DB_PATH=/data/telemetry.sqlite3 \
+    TELEMETRY_HOST=0.0.0.0 \
+    PORT=5000
+USER collector
+VOLUME /data
+# Dokku maps http:80 to this port; a PORT set at runtime overrides it.
+EXPOSE 5000
+# exec form: uvicorn is PID 1 and receives SIGTERM directly, so it shuts down gracefully.
+CMD ["telemetry-collector-serve"]

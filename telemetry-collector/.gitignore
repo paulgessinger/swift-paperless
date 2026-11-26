@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.sqlite3*
+# Downloaded by scripts/fetch_vendor.py (`just telemetry-vendor`).
+src/telemetry_collector/static/vendor/
