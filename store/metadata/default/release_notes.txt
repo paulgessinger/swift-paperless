@@ -1,29 +1,31 @@
 New app icon
 
-A new icon by The Iconfactory. The previous one is still available in Settings.
+A brand-new icon by The Iconfactory. The previous one is still available in Settings.
 
 
 Offline browsing
 
-Documents you open are kept on your device, with their notes and thumbnails, so
-they open without a connection. Choose "Entire library" to keep everything
-offline, downloaded in the background. A new Offline & Sync screen shows
-progress and storage use.
+The most requested feature: your documents are now available without a connection. Documents you open are kept on your device with their notes, file metadata and thumbnails, and open straight away next time.
+
+Choose "Entire library" to keep every saved view and every PDF on the device, downloaded in the background, also while the app is closed. Downloads stay on Wi-Fi unless you turn on "Sync over cellular".
+
+A new Offline & Sync screen shows sync progress, what failed and why, data use, and how much space offline data takes up.
 
 
 Keep offline
 
-Pin single documents or whole saved views so they are always available
-offline.
+Pin single documents or whole saved views so they are always available offline. Each document in a list now shows whether it is online only, downloaded, or kept offline.
 
 
 Also new
 
-- Upload files from the Shortcuts app
-- See documents that share the same file (Paperless-ngx v3)
-- Default tags for uploads
+- Upload files from the Shortcuts app without opening the app
+- See documents that share the same file, plus a new Duplicates filter (Paperless-ngx v3)
+- Default tags for uploads, also from the share sheet
 - TOTP codes for OIDC logins
 - Search matches the web interface on Paperless-ngx v3
+- Shared files are named like downloads from the web interface
+- Refresh an open document from the toolbar on iPad
 
 
 Fixes
@@ -32,5 +34,6 @@ Fixes
 - Changes that fail while offline now tell you they weren't saved
 - Pull to refresh picks up a new version of an open document
 - Fixed a crash when opening a filter while another was open
+- Uploading and password login work with PAPERLESS_AUTO_LOGIN_USERNAME
 - The per-app language setting works again
 - Many smaller fixes
