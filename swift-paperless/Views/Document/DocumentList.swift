@@ -64,8 +64,6 @@ struct DocumentList: View {
   // Nil on iPhone (push-based navigation needs no list-side highlight).
   var selectedDocumentID: UInt?
 
-  @State private var documentToDelete: Document?
-
   @State private var viewModel: DocumentListViewModel
 
   @EnvironmentObject private var errorController: ErrorController
@@ -95,12 +93,14 @@ struct DocumentList: View {
     var document: Document
     var onSelect: (Document) -> Void
     var documentDeleteConfirmation: Bool
-    @Binding var documentToDelete: Document?
     var viewModel: DocumentListViewModel
     var isSelected: Bool
 
     @EnvironmentObject private var errorController: ErrorController
     @Environment(\.colorScheme) private var colorScheme
+
+    /// Row-local so the dialog's popover anchors on this row, not the list.
+    @State private var isConfirmingDelete = false
 
     private var userCanChange: Bool {
       store.userCanChange(document: document)
@@ -145,15 +145,19 @@ struct DocumentList: View {
 
     private func onDeleteButtonPressed() {
       if documentDeleteConfirmation {
-        documentToDelete = document
+        isConfirmingDelete = true
       } else {
-        Task { [store = self.store, document = self.document] in
-          do {
-            try await store.deleteDocument(document)
-          } catch {
-            Logger.shared.error("Error deleting document: \(error)")
-            errorController.push(mutationError: error)
-          }
+        deleteDocument()
+      }
+    }
+
+    private func deleteDocument() {
+      Task { [store = self.store, document = self.document] in
+        do {
+          try await store.deleteDocument(document)
+        } catch {
+          Logger.shared.error("Error deleting document: \(error)")
+          errorController.push(mutationError: error)
         }
       }
     }
@@ -244,6 +248,22 @@ struct DocumentList: View {
       } preview: {
         PopupDocumentPreview(document: document)
           .environment(store)
+      }
+
+      .confirmationDialog(
+        String(localized: .app(.documentDelete)), isPresented: $isConfirmingDelete
+      ) {
+        Button(role: .destructive) {
+          deleteDocument()
+        } label: {
+          Text(.app(.documentDelete))
+        }
+        Button(role: .cancel) {
+        } label: {
+          Text(.app(.cancel))
+        }
+      } message: {
+        Text(.app(.deleteDocumentName(document.title)))
       }
 
       .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
@@ -367,7 +387,6 @@ struct DocumentList: View {
                         document: document,
                         onSelect: onSelect,
                         documentDeleteConfirmation: appSettings.documentDeleteConfirmation,
-                        documentToDelete: $documentToDelete,
                         viewModel: viewModel,
                         isSelected: document.id == selectedDocumentID
                       )
@@ -505,35 +524,6 @@ struct DocumentList: View {
     }
 
     .onEvent(from: store.events, perform: onReceiveEvent)
-
-    // @FIXME: This somehow causes ERROR: not found in table Localizable of bundle CFBundle 0x600001730200 empty string
-    .confirmationDialog(
-      unwrapping: $documentToDelete,
-      title: { _ in String(localized: .app(.documentDelete)) },
-      actions: { $item in
-        let document = item
-        Button(role: .destructive) {
-          Task {
-            do {
-              try await store.deleteDocument(document)
-            } catch {
-              Logger.shared.error("Error deleting document: \(error)")
-              errorController.push(mutationError: error)
-            }
-          }
-        } label: {
-          Text(.app(.documentDelete))
-        }
-        Button(role: .cancel) {
-          documentToDelete = nil
-        } label: {
-          Text(.app(.cancel))
-        }
-      },
-      message: { $item in
-        let document = item
-        Text(.app(.deleteDocumentName(document.title)))
-      })
   }
 }
 
