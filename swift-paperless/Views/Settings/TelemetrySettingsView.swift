@@ -7,30 +7,8 @@ import SwiftUI
 /// The opt-in toggle and a live view of the pings.
 struct TelemetrySettingsView: View {
   /// Also the onboarding card's detail page, so both say the same thing.
-  /// Assembled here, so translators never handle Markdown syntax.
   nonisolated static var explanation: String {
-    func text(_ key: String.Telemetry) -> String {
-      String(localized: .telemetry(key))
-    }
-    func section(_ heading: String.Telemetry, _ items: [String.Telemetry]) -> String {
-      "**\(text(heading))**\n\n" + items.map { "- \(text($0))" }.joined(separator: "\n")
-    }
-    return [
-      text(.explanationIntro),
-      text(.explanationReports),
-      section(
-        .setupHeading,
-        [
-          .setupChannel, .setupVersions, .setupDevice, .setupLanguage, .setupServer,
-          .setupLibrary, .setupConnection, .setupInstallAge, .setupFirstReport,
-        ]),
-      section(.featuresHeading, [.featuresUsed, .featuresAvailable, .featuresErrors]),
-      section(
-        .neverHeading, [.neverServerData, .neverServer, .neverSearch, .neverIdentifier]),
-      text(.explanationServer),
-      text(.explanationTurnOff),
-      "[\(text(.howItWorksLink))](https://swift-paperless.app/usage/)",
-    ].joined(separator: "\n\n")
+    String(localized: .telemetry(.explanation))
   }
 
   @Bindable private var appSettings = AppSettings.shared
