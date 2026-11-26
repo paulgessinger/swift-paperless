@@ -15,6 +15,7 @@ struct WhatsNewDeckView: View {
   let onDismiss: () -> Void
 
   @State private var page = 0
+  @State private var footerHeight: CGFloat = 0
 
   private var isLastPage: Bool {
     page >= deck.pages.count - 1
@@ -25,17 +26,27 @@ struct WhatsNewDeckView: View {
       TabView(selection: $page) {
         ForEach(deck.pages.indices, id: \.self) { index in
           PageView(page: deck.pages[index])
+            .ignoresSafeArea(.container, edges: .bottom)
             .tag(index)
         }
       }
       .tabViewStyle(.page(indexDisplayMode: .never))
+      // The pages run to the bottom edge, so they scroll under the footer
+      // instead of being cut off above it, and end above it.
+      .contentMargins(.bottom, footerHeight, for: .scrollContent)
+      .ignoresSafeArea(.container, edges: .bottom)
       .safeAreaInset(edge: .top) {
         if deck.pages.count > 1 {
           skipButton
         }
       }
-      .safeAreaInset(edge: .bottom) {
+      .overlay(alignment: .bottom) {
         footer
+          .onGeometryChange(for: CGFloat.self) {
+            $0.size.height
+          } action: {
+            footerHeight = $0
+          }
       }
       .toolbar(.hidden, for: .navigationBar)
     }
@@ -86,7 +97,7 @@ struct WhatsNewDeckView: View {
           .frame(maxWidth: .infinity)
           .padding(.vertical, 6)
       }
-      .buttonStyle(.borderedProminent)
+      .backport.glassProminentButtonStyle(or: .borderedProminent)
       .controlSize(.large)
     }
     .frame(maxWidth: 540)
@@ -99,7 +110,7 @@ private struct PageView: View {
 
   var body: some View {
     ScrollView {
-      VStack(spacing: 24) {
+      VStack(spacing: 16) {
         VStack(spacing: 6) {
           Text(verbatim: page.title)
             .font(.largeTitle)
@@ -112,7 +123,7 @@ private struct PageView: View {
         }
         .multilineTextAlignment(.center)
 
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 14) {
           ForEach(page.blocks.indices, id: \.self) { index in
             switch page.blocks[index] {
             case .card(let card):
@@ -131,6 +142,9 @@ private struct PageView: View {
       .padding()
       .frame(maxWidth: .infinity)
     }
+    // The page ends a little above the screen edge even when it ignores the
+    // safe area, so it would cut its content off there, below the footer.
+    .scrollClipDisabled()
   }
 }
 
@@ -194,6 +208,12 @@ private struct CardView: View {
   let moreLabel: String
 
   @Environment(\.whatsNewBaseURL) private var baseURL
+  /// The handler outside this card, which gets every other link.
+  @Environment(\.openURL) private var openOtherURL
+  @State private var showsDetail = false
+
+  /// Marks the inline "more" link, which opens the detail page.
+  private static let detailURL = URL(string: "swift-paperless-card-detail:")!
 
   var body: some View {
     VStack(spacing: 14) {
@@ -202,6 +222,21 @@ private struct CardView: View {
       }
       row
     }
+    .navigationDestination(isPresented: $showsDetail) {
+      DetailView(card: card)
+    }
+  }
+
+  /// The card's line with the "more" link at its end, so the link shares the
+  /// last line instead of taking one of its own.
+  private var text: AttributedString {
+    var text = card.attributedText(relativeTo: baseURL)
+    if card.detail != nil {
+      var more = AttributedString(moreLabel)
+      more.link = Self.detailURL
+      text += AttributedString(" ") + more
+    }
+    return text
   }
 
   private var row: some View {
@@ -211,18 +246,19 @@ private struct CardView: View {
       VStack(alignment: .leading, spacing: 3) {
         Text(verbatim: card.title)
           .font(.headline)
-        Text(card.attributedText(relativeTo: baseURL))
+        Text(text)
           .font(.subheadline)
           .foregroundStyle(.secondary)
-        if card.detail != nil {
-          NavigationLink {
-            DetailView(card: card)
-          } label: {
-            Text(verbatim: moreLabel)
-              .font(.subheadline)
-          }
-          .padding(.top, 2)
-        }
+          .environment(
+            \.openURL,
+            OpenURLAction { url in
+              if url == Self.detailURL {
+                showsDetail = true
+              } else {
+                openOtherURL(url)
+              }
+              return .handled
+            })
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -283,30 +319,51 @@ private struct TipBlock: View {
   }
 }
 
-/// Records the choice in ``AppSettings/telemetryOptIn``. The text is a placeholder
-/// until telemetry exists, so it stays out of the string catalogs.
+/// Records the choice in ``AppSettings/telemetryOptIn``. Sharing and not
+/// sharing are two equal buttons, and neither is chosen until the user taps one.
 private struct TelemetryBlock: View {
   let card: WhatsNewDeck.Card
 
   @Bindable private var appSettings = AppSettings.shared
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack(spacing: 12) {
-        CardView(card: card, moreLabel: "See what's sent")
+    VStack(alignment: .leading, spacing: 12) {
+      CardView(card: card, moreLabel: String(localized: .telemetry(.onboardingMore)))
 
-        Toggle(isOn: Binding($appSettings.telemetryOptIn, default: false)) {
-          Text(verbatim: card.title)
-        }
-        .labelsHidden()
+      HStack(spacing: 10) {
+        choiceButton(String(localized: .telemetry(.onboardingDontShare)), value: false)
+        choiceButton(String(localized: .telemetry(.onboardingShare)), value: true)
       }
 
-      Text(verbatim: "Change this anytime in Settings.")
+      Text(.telemetry(.onboardingChangeLater))
         .font(.footnote)
         .foregroundStyle(.secondary)
     }
     .padding()
     .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 16))
+  }
+
+  @ViewBuilder
+  private func choiceButton(_ title: String, value: Bool) -> some View {
+    let isSelected = appSettings.telemetryOptIn == value
+    let button = Button {
+      appSettings.telemetryOptIn = value
+    } label: {
+      Label {
+        Text(verbatim: title)
+      } icon: {
+        if isSelected { Image(systemName: "checkmark") }
+      }
+      .frame(maxWidth: .infinity)
+    }
+    .controlSize(.large)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+    if isSelected {
+      button.buttonStyle(.borderedProminent)
+    } else {
+      button.buttonStyle(.bordered)
+    }
   }
 }
 

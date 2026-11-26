@@ -82,6 +82,10 @@ public final class FilterModel {
         return
       }
 
+      for feature in TelemetryFeature.filterChanges(from: oldValue, to: filterState) {
+        TelemetryService.record(feature)
+      }
+
       guard let s = try? JSONEncoder().encode(filterState) else {
         Logger.shared.warning(
           "Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")

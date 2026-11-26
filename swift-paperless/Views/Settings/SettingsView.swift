@@ -122,7 +122,7 @@ struct SettingsView: View {
           TelemetrySettingsView()
         } label: {
           Label {
-            Text(verbatim: TelemetrySettingsView.title)
+            Text(.telemetry(.title))
           } icon: {
             Image(systemName: "chart.bar.fill")
           }
@@ -136,7 +136,7 @@ struct SettingsView: View {
       }
 
       Button {
-        UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
+        openURL(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
       } label: {
         Label {
           Text(.settings(.detailsSourceCode))

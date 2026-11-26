@@ -1,0 +1,924 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "explanation" : {
+      "comment" : "The full explanation of usage sharing, shown in Settings and from the onboarding card. Markdown: keep the **bold** headings, the \"- \" list items and the link target unchanged. Written by the developer in the first person.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless udvikles hovedsageligt af én udvikler, mig, i min fritid. Brugsdata hjælper mig med at bruge den tid, hvor den forbedrer appen mest, for eksempel ved at vise, hvilke versioner af Paperless-ngx og iOS der stadig er i brug, og hvilke funktioner folk faktisk bruger.\n\nNår du slår dette til, og kun da, sender appen to separate rapporter, hver højst én gang om dagen. Brugsserveren kombinerer eller forbinder dem ikke.\n\n**Din opsætning**\n\n- Om du har appen fra App Store eller TestFlight\n- Appversion og iOS-version uden det sidste tal\n- Enhedstype: iPhone, iPad eller Mac, aldrig modellen\n- Appens sprog, aldrig din region\n- Paperless-ngx- og API-version på din server, uden build-tags\n- Omtrentlig størrelse på dit bibliotek, og hvordan du logger ind\n- Om du bruger et klientcertifikat eller ekstra headere, og om du har mere end én server\n- Omtrent hvor længe siden du installerede appen\n- Om dette er den første rapport i denne måned og denne uge\n\n**Funktioner, du har brugt**\n\n- Hvilke funktioner du brugte på en tidligere dag, og omtrent hvor ofte: én gang, 2–9 gange eller 10 eller flere\n- Hvilke funktioner der er tilgængelige for dig\n- Hvilke typer fejl du stødte på den dag, aldrig detaljer\n\n**Sendes aldrig**\n\n- Dokumenter, titler, indhold, etiketter, korrespondenter eller andre data fra serveren\n- Serveradresse, brugernavn eller noget, du skriver\n- Søgeord eller filterværdier\n- Ingen identifikator: ingen konto, enheds-id eller annonce-id, intet, der er det samme fra dag til dag\n\nBrugsserveren læser aldrig IP-adresser og logger dem ikke. Den deler hver rapport op med det samme og tæller kun hver værdi for sig, så den gemmer ikke, hvilke værdier der hørte sammen.\n\nHvis du slår dette fra, sendes der ikke mere, og registreringerne på denne enhed slettes med det samme.\n\n[Sådan fungerer det](https://swift-paperless.app/usage/)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless wird größtenteils von einem einzelnen Entwickler, mir, in meiner Freizeit entwickelt. Nutzungsdaten helfen mir, diese Zeit dort einzusetzen, wo sie die App am meisten verbessert, zum Beispiel indem sie zeigen, welche Paperless-ngx- und iOS-Versionen noch verwendet werden und welche Funktionen tatsächlich genutzt werden.\n\nWenn du das einschaltest, und nur dann, sendet die App zwei getrennte Berichte, jeden höchstens einmal am Tag. Der Nutzungsserver führt sie nicht zusammen und verknüpft sie nicht.\n\n**Deine Einrichtung**\n\n- Ob du die App aus dem App Store oder über TestFlight hast\n- App-Version und iOS-Version ohne die letzte Stelle\n- Gerätetyp: iPhone, iPad oder Mac, nie das Modell\n- App-Sprache, nie deine Region\n- Paperless-ngx- und API-Version deines Servers, ohne Build-Tags\n- Ungefähre Größe deiner Bibliothek und wie du dich anmeldest\n- Ob du ein Client-Zertifikat oder zusätzliche Header verwendest und ob du mehr als einen Server hast\n- Wie lange es ungefähr her ist, dass du die App installiert hast\n- Ob dies der erste Bericht in diesem Monat und in dieser Woche ist\n\n**Genutzte Funktionen**\n\n- Welche Funktionen du an einem früheren Tag genutzt hast und ungefähr wie oft: einmal, 2–9 Mal oder 10 Mal und öfter\n- Welche Funktionen dir zur Verfügung stehen\n- Die Arten von Fehlern, die an diesem Tag aufgetreten sind, nie Details\n\n**Wird nie gesendet**\n\n- Dokumente, Titel, Inhalte, Tags, Korrespondenten oder andere Daten von deinem Server\n- Serveradresse, Benutzername oder irgendetwas, das du eingibst\n- Suchbegriffe oder Filterwerte\n- Keinerlei Kennung: kein Konto, keine Geräte- oder Werbe-ID, nichts, das über Tage gleich bleibt\n\nDer Nutzungsserver liest IP-Adressen nie aus und protokolliert sie nicht. Er zerlegt jeden Bericht sofort und zählt jeden Wert nur für sich, sodass er nicht speichert, welche Werte zusammen kamen.\n\nWenn du das ausschaltest, wird nichts mehr gesendet, und die Aufzeichnungen auf diesem Gerät werden sofort gelöscht.\n\n[So funktioniert es](https://swift-paperless.app/usage/)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless is largely developed by a single developer, me, in my spare time. Usage data helps me spend that time where it improves the app the most, for example by showing which Paperless-ngx and iOS versions are still in use, and which features people actually use.\n\nWhen you turn this on, and only then, the app sends two separate reports, each at most once a day. The usage server does not combine or link them.\n\n**Your setup**\n\n- Whether you got the app from the App Store or TestFlight\n- App version, and iOS version without the last number\n- Device type: iPhone, iPad or Mac, never the model\n- App language, never your region\n- Paperless-ngx and API version of your server, without build tags\n- Rough library size, and how you sign in\n- Whether you use a client certificate or custom headers, and whether you have more than one server\n- Roughly how long ago you installed the app\n- Whether this is the first report this month and this week\n\n**Features you used**\n\n- Which features you used on one earlier day, and roughly how often: once, 2–9 times, or 10 or more\n- Which features are available to you\n- The types of errors you ran into that day, never any details\n\n**Never sent**\n\n- Documents, titles, contents, tags, correspondents, or any other server data\n- Server address, username, or anything you type\n- Search terms or filter values\n- Any identifier: no account, device ID or advertising ID, nothing stable across days\n\nThe usage server never reads IP addresses and doesn't log them. It splits each report up right away and only counts each value on its own, so it doesn't store which values came together.\n\nIf you turn this off, nothing more is sent, and the bookkeeping on this device is deleted immediately.\n\n[How this works](https://swift-paperless.app/usage/)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless est en grande partie développé par une seule personne, moi, sur mon temps libre. Les données d'utilisation m'aident à consacrer ce temps là où il améliore le plus l'app, par exemple en montrant quelles versions de Paperless-ngx et d'iOS sont encore utilisées, et quelles fonctionnalités sont réellement utilisées.\n\nLorsque vous activez cette option, et seulement dans ce cas, l'app envoie deux rapports distincts, chacun au plus une fois par jour. Le serveur d'utilisation ne les combine ni ne les relie.\n\n**Votre configuration**\n\n- Si vous avez obtenu l'app depuis l'App Store ou TestFlight\n- Version de l'app, et version d'iOS sans le dernier chiffre\n- Type d'appareil : iPhone, iPad ou Mac, jamais le modèle\n- Langue de l'app, jamais votre région\n- Versions de Paperless-ngx et de l'API de votre serveur, sans les tags de build\n- Taille approximative de votre bibliothèque, et votre méthode de connexion\n- Si vous utilisez un certificat client ou des en-têtes supplémentaires, et si vous avez plus d'un serveur\n- Depuis combien de temps environ vous avez installé l'app\n- S'il s'agit du premier rapport de ce mois-ci et de cette semaine\n\n**Fonctionnalités utilisées**\n\n- Les fonctionnalités que vous avez utilisées lors d'un jour précédent, et à peu près combien de fois : une fois, 2 à 9 fois, ou 10 fois ou plus\n- Les fonctionnalités qui vous sont disponibles\n- Les types d'erreurs rencontrées ce jour-là, jamais aucun détail\n\n**Jamais envoyé**\n\n- Documents, titres, contenus, tags, correspondants ou toute autre donnée du serveur\n- Adresse du serveur, nom d'utilisateur ou tout ce que vous saisissez\n- Termes de recherche ou valeurs de filtre\n- Aucun identifiant : ni compte, ni identifiant d'appareil ou publicitaire, rien qui reste identique d'un jour à l'autre\n\nLe serveur d'utilisation ne lit jamais les adresses IP et ne les enregistre pas. Il décompose chaque rapport immédiatement et ne compte chaque valeur que séparément, de sorte qu'il ne conserve pas quelles valeurs allaient ensemble.\n\nSi vous désactivez cette option, plus rien n'est envoyé, et les données de suivi sur cet appareil sont supprimées immédiatement.\n\n[Comment ça marche](https://swift-paperless.app/usage/)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless è sviluppato in gran parte da un solo sviluppatore, io, nel mio tempo libero. I dati di utilizzo mi aiutano a dedicare quel tempo dove migliora di più l'app, ad esempio mostrando quali versioni di Paperless-ngx e di iOS sono ancora in uso e quali funzioni vengono effettivamente usate.\n\nQuando attivi questa opzione, e solo allora, l'app invia due rapporti separati, ciascuno al massimo una volta al giorno. Il server di utilizzo non li combina né li collega.\n\n**La tua configurazione**\n\n- Se hai ottenuto l'app dall'App Store o da TestFlight\n- Versione dell'app e versione di iOS senza l'ultimo numero\n- Tipo di dispositivo: iPhone, iPad o Mac, mai il modello\n- Lingua dell'app, mai la tua regione\n- Versione di Paperless-ngx e dell'API del tuo server, senza tag di build\n- Dimensione approssimativa della libreria e come accedi\n- Se usi un certificato client o header aggiuntivi, e se hai più di un server\n- Circa quanto tempo fa hai installato l'app\n- Se si tratta del primo rapporto di questo mese e di questa settimana\n\n**Funzioni utilizzate**\n\n- Quali funzioni hai usato in un giorno precedente e all'incirca quante volte: una volta, 2–9 volte, o 10 o più\n- Quali funzioni sono disponibili per te\n- I tipi di errore riscontrati quel giorno, mai i dettagli\n\n**Mai inviato**\n\n- Documenti, titoli, contenuti, etichette, corrispondenti o qualsiasi altro dato del server\n- Indirizzo del server, nome utente o qualsiasi cosa tu digiti\n- Termini di ricerca o valori dei filtri\n- Nessun identificatore: nessun account, ID del dispositivo o ID pubblicitario, niente che resti uguale da un giorno all'altro\n\nIl server di utilizzo non legge mai gli indirizzi IP e non li registra. Scompone subito ogni rapporto e conta ogni valore singolarmente, quindi non memorizza quali valori erano insieme.\n\nSe disattivi questa opzione, non viene inviato più nulla e i dati registrati su questo dispositivo vengono eliminati immediatamente.\n\n[Come funziona](https://swift-paperless.app/usage/)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless wordt grotendeels door één ontwikkelaar gemaakt, mij, in mijn vrije tijd. Gebruiksgegevens helpen me die tijd te besteden waar het de app het meest verbetert, bijvoorbeeld door te laten zien welke versies van Paperless-ngx en iOS nog in gebruik zijn en welke functies mensen echt gebruiken.\n\nAls je dit inschakelt, en alleen dan, verstuurt de app twee afzonderlijke rapporten, elk hooguit één keer per dag. De gebruiksserver combineert of koppelt ze niet.\n\n**Je configuratie**\n\n- Of je de app uit de App Store of via TestFlight hebt\n- App-versie, en iOS-versie zonder het laatste getal\n- Apparaattype: iPhone, iPad of Mac, nooit het model\n- App-taal, nooit je regio\n- Paperless-ngx- en API-versie van je server, zonder buildtags\n- Globale grootte van je bibliotheek, en hoe je inlogt\n- Of je een clientcertificaat of extra headers gebruikt, en of je meer dan één server hebt\n- Ongeveer hoe lang geleden je de app hebt geïnstalleerd\n- Of dit het eerste rapport van deze maand en deze week is\n\n**Gebruikte functies**\n\n- Welke functies je op één eerdere dag hebt gebruikt, en ongeveer hoe vaak: één keer, 2–9 keer, of 10 keer of vaker\n- Welke functies voor je beschikbaar zijn\n- De soorten fouten die je die dag tegenkwam, nooit details\n\n**Nooit verstuurd**\n\n- Documenten, titels, inhoud, labels, correspondenten of andere servergegevens\n- Serveradres, gebruikersnaam of iets wat je typt\n- Zoektermen of filterwaarden\n- Geen enkele identificatie: geen account, apparaat-ID of advertentie-ID, niets wat van dag tot dag gelijk blijft\n\nDe gebruiksserver leest IP-adressen nooit uit en logt ze niet. Hij splitst elk rapport meteen op en telt elke waarde afzonderlijk, zodat hij niet opslaat welke waarden bij elkaar hoorden.\n\nAls je dit uitschakelt, wordt er niets meer verstuurd en wordt de administratie op dit apparaat direct verwijderd.\n\n[Hoe dit werkt](https://swift-paperless.app/usage/)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless jest rozwijany głównie przez jednego programistę, mnie, w wolnym czasie. Dane o użytkowaniu pomagają mi poświęcać ten czas tam, gdzie najbardziej ulepsza on aplikację, na przykład pokazując, które wersje Paperless-ngx i iOS są nadal używane oraz z których funkcji ludzie faktycznie korzystają.\n\nGdy to włączysz, i tylko wtedy, aplikacja wysyła dwa osobne raporty, każdy najwyżej raz dziennie. Serwer danych o użytkowaniu ich nie łączy ani nie powiązuje.\n\n**Twoja konfiguracja**\n\n- Czy masz aplikację z App Store, czy z TestFlight\n- Wersja aplikacji oraz wersja iOS bez ostatniej liczby\n- Typ urządzenia: iPhone, iPad lub Mac, nigdy model\n- Język aplikacji, nigdy Twój region\n- Wersja Paperless-ngx i API Twojego serwera, bez znaczników kompilacji\n- Przybliżony rozmiar biblioteki i sposób logowania\n- Czy używasz certyfikatu klienta lub dodatkowych nagłówków oraz czy masz więcej niż jeden serwer\n- Mniej więcej jak dawno temu zainstalowano aplikację\n- Czy to pierwszy raport w tym miesiącu i w tym tygodniu\n\n**Używane funkcje**\n\n- Funkcje używane jednego z wcześniejszych dni i mniej więcej jak często: raz, 2–9 razy lub 10 i więcej razy\n- Funkcje dostępne dla Ciebie\n- Rodzaje błędów, które wystąpiły tego dnia, nigdy szczegóły\n\n**Nigdy nie jest wysyłane**\n\n- Dokumenty, tytuły, treść, tagi, korespondenci ani żadne inne dane z serwera\n- Adres serwera, nazwa użytkownika ani nic, co wpisujesz\n- Wyszukiwane frazy ani wartości filtrów\n- Żaden identyfikator: ani konto, ani identyfikator urządzenia lub reklamowy, nic, co pozostaje stałe między dniami\n\nSerwer danych o użytkowaniu nigdy nie odczytuje adresów IP i ich nie zapisuje. Od razu rozbija każdy raport i zlicza każdą wartość osobno, więc nie przechowuje informacji, które wartości wystąpiły razem.\n\nJeśli to wyłączysz, nic więcej nie zostanie wysłane, a zapisy na tym urządzeniu zostaną natychmiast usunięte.\n\n[Jak to działa](https://swift-paperless.app/usage/)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift Paperless büyük ölçüde tek bir geliştirici, yani ben tarafından boş zamanlarımda geliştiriliyor. Kullanım verileri bu zamanı uygulamayı en çok iyileştireceği yere ayırmama yardımcı oluyor; örneğin hangi Paperless-ngx ve iOS sürümlerinin hâlâ kullanıldığını ve insanların gerçekte hangi özellikleri kullandığını göstererek.\n\nBunu açtığınızda, ve yalnızca o zaman, uygulama her biri günde en fazla bir kez olmak üzere iki ayrı rapor gönderir. Kullanım sunucusu bunları birleştirmez veya ilişkilendirmez.\n\n**Kurulumunuz**\n\n- Uygulamayı App Store'dan mı yoksa TestFlight'tan mı aldığınız\n- Uygulama sürümü ve son rakamı olmadan iOS sürümü\n- Cihaz türü: iPhone, iPad veya Mac, asla model değil\n- Uygulama dili, asla bölgeniz değil\n- Sunucunuzun Paperless-ngx ve API sürümü, derleme etiketleri olmadan\n- Kitaplığınızın yaklaşık boyutu ve nasıl giriş yaptığınız\n- İstemci sertifikası veya ekstra başlıklar kullanıp kullanmadığınız ve birden fazla sunucunuz olup olmadığı\n- Uygulamayı yaklaşık ne kadar önce yüklediğiniz\n- Bunun bu ayın ve bu haftanın ilk raporu olup olmadığı\n\n**Kullandığınız özellikler**\n\n- Daha önceki bir günde hangi özellikleri kullandığınız ve yaklaşık ne sıklıkta: bir kez, 2–9 kez veya 10 ve üzeri\n- Hangi özelliklerin kullanımınıza açık olduğu\n- O gün karşılaştığınız hata türleri, asla ayrıntılar değil\n\n**Asla gönderilmez**\n\n- Dokümanlar, başlıklar, içerikler, etiketler, muhataplar veya diğer sunucu verileri\n- Sunucu adresi, kullanıcı adı veya yazdığınız herhangi bir şey\n- Arama terimleri veya filtre değerleri\n- Hiçbir tanımlayıcı: hesap, cihaz kimliği veya reklam kimliği yok, günler arasında sabit kalan hiçbir şey yok\n\nKullanım sunucusu IP adreslerini asla okumaz ve kaydetmez. Her raporu hemen parçalarına ayırır ve her değeri yalnızca kendi başına sayar; böylece hangi değerlerin birlikte geldiğini saklamaz.\n\nBunu kapatırsanız artık hiçbir şey gönderilmez ve bu cihazdaki kayıtlar hemen silinir.\n\n[Nasıl çalışır](https://swift-paperless.app/usage/)"
+          }
+        }
+      }
+    },
+    "onboardingChangeLater" : {
+      "comment" : "Note under the onboarding sharing buttons.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kan ændre det når som helst i Indstillinger."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kannst das jederzeit in den Einstellungen ändern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change this anytime in Settings."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifiable à tout moment dans les Paramètres."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puoi cambiarlo in qualsiasi momento nelle Impostazioni."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je kunt dit altijd wijzigen in Instellingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Możesz to zmienić w dowolnym momencie w Ustawieniach."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bunu istediğiniz zaman Ayarlar'dan değiştirebilirsiniz."
+          }
+        }
+      }
+    },
+    "onboardingDontShare" : {
+      "comment" : "Onboarding button: decline usage sharing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del ikke"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't share"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne pas partager"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non condividere"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet delen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udostępniaj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paylaşma"
+          }
+        }
+      }
+    },
+    "onboardingMore" : {
+      "comment" : "Link on the onboarding card that opens the full explanation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se, hvad der sendes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesendete Daten ansehen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See what's sent"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voir ce qui est envoyé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vedi cosa viene inviato"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekijk wat wordt verstuurd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobacz, co jest wysyłane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neyin gönderildiğini görün"
+          }
+        }
+      }
+    },
+    "onboardingShare" : {
+      "comment" : "Onboarding button: turn on usage sharing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condividi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udostępniaj"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paylaş"
+          }
+        }
+      }
+    },
+    "reportCovers" : {
+      "comment" : "Which day a report covers. The argument is a date such as 2026-11-25.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gælder %@ (UTC)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gilt für %@ (UTC)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Covers %@ (UTC)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concerne le %@ (UTC)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riferito al %@ (UTC)"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betreft %@ (UTC)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dotyczy dnia %@ (UTC)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapsadığı gün: %@ (UTC)"
+          }
+        }
+      }
+    },
+    "scheduleFeaturesAfter" : {
+      "comment" : "When the features report is sent next. The argument is a date and time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrerer stadig i dag. Sendes første gang, du åbner appen efter %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heute wird noch aufgezeichnet. Wird beim ersten Öffnen der App nach %@ gesendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still recording today. Sent the first time you open the app after %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement en cours aujourd'hui. Envoyé à la première ouverture de l'app après %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrazione di oggi in corso. Inviato alla prima apertura dell'app dopo %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vandaag wordt nog bijgehouden. Wordt verstuurd de eerste keer dat je de app opent na %@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzisiejszy dzień jest jeszcze rejestrowany. Zostanie wysłany przy pierwszym otwarciu aplikacji po %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugün hâlâ kaydediliyor. %@ sonrasında uygulamayı ilk açışınızda gönderilir."
+          }
+        }
+      }
+    },
+    "scheduleHealthAfter" : {
+      "comment" : "When the setup report is sent next. The argument is a date and time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendt i dag. Sendes igen første gang, du åbner appen efter %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heute gesendet. Wird beim ersten Öffnen der App nach %@ erneut gesendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent today. Sent again the first time you open the app after %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé aujourd'hui. Renvoyé à la première ouverture de l'app après %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inviato oggi. Inviato di nuovo alla prima apertura dell'app dopo %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vandaag verstuurd. Wordt opnieuw verstuurd de eerste keer dat je de app opent na %@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysłano dzisiaj. Zostanie wysłany ponownie przy pierwszym otwarciu aplikacji po %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugün gönderildi. %@ sonrasında uygulamayı ilk açışınızda tekrar gönderilir."
+          }
+        }
+      }
+    },
+    "scheduleNextOpen" : {
+      "comment" : "When a report is sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendes næste gang, du åbner appen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird beim nächsten Öffnen der App gesendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent the next time you open the app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé à la prochaine ouverture de l'app."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inviato alla prossima apertura dell'app."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wordt verstuurd de volgende keer dat je de app opent."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zostanie wysłany przy następnym otwarciu aplikacji."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamayı bir sonraki açışınızda gönderilir."
+          }
+        }
+      }
+    },
+    "scheduleOff" : {
+      "comment" : "When a report is sent, while sharing is off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendes ikke, mens deling er slået fra."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird nicht gesendet, solange das Teilen aus ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not sent while sharing is off."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non envoyé tant que le partage est désactivé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non inviato mentre la condivisione è disattivata."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wordt niet verstuurd zolang delen uit staat."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie jest wysyłany, dopóki udostępnianie jest wyłączone."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paylaşım kapalıyken gönderilmez."
+          }
+        }
+      }
+    },
+    "sentFooter" : {
+      "comment" : "Footer under the exact reports.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De præcise rapporter, som denne enhed ville sende, som det ser ud nu. De kan stadig ændre sig, før de sendes, og appen sender kun, når du åbner den, mens den har forbindelse til en server. Når en rapport sendes, fortæller den serveren, at en installation af appen blev brugt."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die genauen Berichte, die dieses Gerät beim aktuellen Stand senden würde. Sie können sich bis zum Senden noch ändern, und die App sendet nur, wenn du sie öffnest, während sie mit einem Server verbunden ist. Jeder gesendete Bericht teilt dem Server mit, dass eine Installation der App genutzt wurde."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The exact reports this device would send, as things stand now. They can still change before they're sent, and the app sends only when you open it while connected to a server. Sending any report tells the server that an install of the app was used."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les rapports exacts que cet appareil enverrait en l'état actuel. Ils peuvent encore changer avant d'être envoyés, et l'app n'envoie que lorsque vous l'ouvrez en étant connecté à un serveur. L'envoi d'un rapport indique au serveur qu'une installation de l'app a été utilisée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I rapporti esatti che questo dispositivo invierebbe allo stato attuale. Possono ancora cambiare prima dell'invio, e l'app invia solo quando la apri mentre è connessa a un server. L'invio di un qualsiasi rapporto comunica al server che un'installazione dell'app è stata usata."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De exacte rapporten die dit apparaat nu zou versturen. Ze kunnen nog veranderen voordat ze worden verstuurd, en de app verstuurt alleen als je hem opent terwijl hij met een server is verbonden. Elk verstuurd rapport laat de server weten dat een installatie van de app is gebruikt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokładne raporty, które to urządzenie wysłałoby w obecnym stanie. Mogą się jeszcze zmienić przed wysłaniem, a aplikacja wysyła je tylko wtedy, gdy otworzysz ją z połączeniem z serwerem. Wysłanie dowolnego raportu informuje serwer, że instalacja aplikacji była używana."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu cihazın şu anki durumuyla göndereceği raporların tam hâli. Gönderilmeden önce hâlâ değişebilirler ve uygulama yalnızca bir sunucuya bağlıyken onu açtığınızda gönderim yapar. Herhangi bir raporun gönderilmesi, sunucuya uygulamanın bir kurulumunun kullanıldığını bildirir."
+          }
+        }
+      }
+    },
+    "sentHeader" : {
+      "comment" : "Expandable section showing the exact reports as JSON.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad der sendes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was gesendet wird"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's sent"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui est envoyé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa viene inviato"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat wordt verstuurd"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Co jest wysyłane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neler gönderilir"
+          }
+        }
+      }
+    },
+    "shareFooter" : {
+      "comment" : "Footer under the sharing toggle.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slået fra, medmindre du slår det til."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus, solange du es nicht einschaltest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off unless you turn it on."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivé tant que vous ne l'activez pas."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattivato finché non lo attivi."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uit, tenzij je het inschakelt."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyłączone, dopóki tego nie włączysz."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siz açmadıkça kapalıdır."
+          }
+        }
+      }
+    },
+    "shareToggle" : {
+      "comment" : "Toggle in Settings, and the title of the onboarding card that asks the same.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del anonyme brugsdata"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonyme Nutzungsdaten teilen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share anonymous usage"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager des données d'utilisation anonymes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condividi dati di utilizzo anonimi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonieme gebruiksgegevens delen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udostępniaj anonimowe dane o użytkowaniu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonim kullanım verilerini paylaş"
+          }
+        }
+      }
+    },
+    "sharedHeader" : {
+      "comment" : "Section header above the explanation of what the reports contain.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvad der deles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was geteilt wird"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What's shared"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui est partagé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa viene condiviso"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat wordt gedeeld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Co jest udostępniane"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neler paylaşılır"
+          }
+        }
+      }
+    },
+    "summary" : {
+      "comment" : "Short description of usage sharing, under its title in Settings and on the onboarding card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hjælp med at bestemme, hvad der skal bygges næste gang. Intet identificerer dig eller dine dokumenter."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hilf mit zu entscheiden, was als Nächstes entsteht. Nichts davon identifiziert dich oder deine Dokumente."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help decide what gets built next. Nothing identifies you or your documents."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aidez à décider de ce qui sera développé ensuite. Rien ne permet de vous identifier, ni vous ni vos documents."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aiuta a decidere cosa sviluppare in seguito. Niente identifica te o i tuoi documenti."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help bepalen wat er hierna gebouwd wordt. Niets identificeert jou of je documenten."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomóż zdecydować, co powstanie w następnej kolejności. Nic nie identyfikuje Ciebie ani Twoich dokumentów."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sırada neyin geliştirileceğine karar vermeye yardım edin. Hiçbir şey sizi veya dokümanlarınızı tanımlamaz."
+          }
+        }
+      }
+    },
+    "title" : {
+      "comment" : "Title of the anonymous usage sharing screen in Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonyme brugsdata"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonyme Nutzungsdaten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonymous usage"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Données d'utilisation anonymes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dati di utilizzo anonimi"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonieme gebruiksgegevens"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonimowe dane o użytkowaniu"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonim kullanım verileri"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}
