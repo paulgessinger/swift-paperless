@@ -136,7 +136,7 @@ struct SettingsView: View {
       }
 
       Button {
-        UIApplication.shared.open(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
+        openURL(URL(string: "https://github.com/paulgessinger/swift-paperless/")!)
       } label: {
         Label {
           Text(.settings(.detailsSourceCode))

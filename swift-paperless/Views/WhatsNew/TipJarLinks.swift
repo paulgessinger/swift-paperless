@@ -4,6 +4,8 @@ import SwiftUI
 
 private struct TipJarLinks: ViewModifier {
   @State private var showTipJar = false
+  /// The handler outside this view, which gets every other link.
+  @Environment(\.openURL) private var openOtherURL
 
   func body(content: Content) -> some View {
     content
@@ -11,7 +13,8 @@ private struct TipJarLinks: ViewModifier {
         \.openURL,
         OpenURLAction { url in
           guard AppFeatures.enabled(.tipJar), TipJarLink.matches(url) else {
-            return .systemAction
+            openOtherURL(url)
+            return .handled
           }
           showTipJar = true
           return .handled
@@ -32,8 +35,9 @@ private struct TipJarLinks: ViewModifier {
 
 extension View {
   /// Opens the tip jar for ``TipJarLink`` instead of the browser, for links
-  /// anywhere in this view. Needs to sit inside any cover or sheet showing the
-  /// links, because a view that is already presenting can't present the tip jar.
+  /// anywhere in this view; other links go to the enclosing `openURL` handler.
+  /// Needs to sit inside any cover or sheet showing the links, because a view
+  /// that is already presenting can't present the tip jar.
   func tipJarLinks() -> some View {
     modifier(TipJarLinks())
   }

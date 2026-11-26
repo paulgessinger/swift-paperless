@@ -537,6 +537,7 @@ struct swift_paperlessApp: App {
   var body: some Scene {
     WindowGroup {
       DatabaseBootstrapView(bootstrap: bootstrap)
+        .inAppBrowserLinks()
     }
   }
 }
