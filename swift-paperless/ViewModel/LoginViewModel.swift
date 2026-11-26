@@ -174,37 +174,20 @@ class LoginViewModel {
   }
 
   /// Reactive handler for edits to `url` (and `scheme`/`selectedIdentity`) in
-  /// the login form: re-runs the probe against the current state, which also
-  /// splits a typed or pasted scheme back out of `url`.
+  /// the login form: splits a pasted absolute URL's scheme back out of `url`,
+  /// then re-runs the probe against the current state.
   func onChangeUrl(immediate: Bool = false) {
-    revalidateUrl(immediate: immediate || schemeJustSplit)
-    schemeJustSplit = false
-  }
-
-  /// Set when the probe moved a typed scheme out of `url`, so the probe that
-  /// this `url` change triggers runs without waiting again.
-  @ObservationIgnored
-  private var schemeJustSplit = false
-
-  /// Matches a `url` that still carries its own `http://` or `https://`.
-  private static let schemePrefix = /^(https?):\/\/(.*)$/
-
-  /// Whether `url` still starts with a typed or pasted scheme.
-  var urlHasScheme: Bool {
-    url.wholeMatch(of: Self.schemePrefix) != nil
-  }
-
-  /// Move a typed or pasted scheme out of `url` into `scheme`. Returns whether
-  /// anything changed.
-  private func splitScheme() -> Bool {
-    guard let match = url.wholeMatch(of: Self.schemePrefix),
-      let typed = Scheme(rawValue: String(match.1))
-    else {
-      return false
+    if url.starts(with: "https://") {
+      scheme = .https
+      url.replace(/^https:\/\//, with: "")
     }
-    scheme = typed
-    url = String(match.2)
-    return true
+
+    if url.starts(with: "http://") {
+      scheme = .http
+      url.replace(/^http:\/\//, with: "")
+    }
+
+    revalidateUrl(immediate: immediate)
   }
 
   /// Cancel any in-flight probe, reset OIDC discovery, and (re)kick the check
@@ -230,14 +213,6 @@ class LoginViewModel {
         } catch {
           return
         }
-      }
-
-      // Rewriting the text field while the user types drops the keystrokes
-      // that arrive right after, so the scheme is split off only once they
-      // pause. The `url` change re-runs this check.
-      if splitScheme() {
-        schemeJustSplit = true
-        return
       }
 
       if !url.isEmpty {
@@ -506,7 +481,7 @@ class LoginViewModel {
   }
 
   var fullUrl: String {
-    urlHasScheme ? url : "\(scheme)://\(url)"
+    "\(scheme)://\(url)"
   }
 
   var isLocalAddress: Bool {

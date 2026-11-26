@@ -15,7 +15,7 @@ private typealias Section = CustomSection
 struct ConnectionStageView: View {
   @Binding var stage: LoginStage
 
-  @FocusState private var focus: Bool
+  @State private var focus = false
 
   @Environment(LoginViewModel.self) private var viewModel
   @Environment(IdentityManager.self) private var identityManager
@@ -46,7 +46,7 @@ struct ConnectionStageView: View {
     ScrollView(.vertical) {
       VStack {
         Section {
-          UrlEntryView(focus: $focus)
+          UrlEntryView(focus: $focus, onSubmit: proceed)
         } footer: {
           VStack(alignment: .leading) {
             if showHttpWarning {
@@ -139,10 +139,6 @@ struct ConnectionStageView: View {
       default:
         break
       }
-    }
-
-    .onSubmit(of: .text) {
-      proceed()
     }
   }
 }
