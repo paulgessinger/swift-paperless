@@ -224,6 +224,13 @@ def screenshots(
     output_dir: Annotated[
         Path, typer.Option("-o", "--output-dir", help="Where `swpngx deliver` reads")
     ] = Path("store/screenshots/framed"),
+    bare: Annotated[
+        bool,
+        typer.Option(
+            help="Only the device, on a transparent background at the capture's "
+            "resolution, for web pages; written as <name>-device.png"
+        ),
+    ] = False,
 ) -> None:
     """Frame `swpngx capture` screenshots in the promo style.
 
@@ -249,25 +256,29 @@ def screenshots(
                     slide = int(capture.stem.split("-")[1][:2])
                     with Image.open(capture) as screen:
                         ratio = screen.height / screen.width
-                    meta = _open(
-                        page,
-                        scene,
-                        {
-                            "device": layout,
-                            "slide": str(slide),
-                            "ar": f"{ratio:.5f}",
-                            "img": capture.resolve().as_uri(),
-                            **headlines[locale]["slides"][slide - 1],
-                        },
-                    )
+                        screen_width = screen.width
+                    query = {
+                        "device": layout,
+                        "slide": str(slide),
+                        "ar": f"{ratio:.5f}",
+                        "img": capture.resolve().as_uri(),
+                        **headlines[locale]["slides"][slide - 1],
+                    }
+                    if bare:
+                        query |= {"bare": "1", "screenW": str(screen_width)}
+                    meta = _open(page, scene, query)
                     page.set_viewport_size(
-                        {"width": meta["width"], "height": meta["height"]}
+                        {"width": round(meta["width"]), "height": round(meta["height"])}
                     )
-                    path = target / f"{capture.stem}-framed.png"
-                    page.screenshot(path=path)
-                    # App Store Connect rejects screenshots with an alpha channel.
-                    with Image.open(path) as framed:
-                        framed.convert("RGB").save(path)
+                    if bare:
+                        path = target / f"{capture.stem}-device.png"
+                        page.screenshot(path=path, omit_background=True)
+                    else:
+                        path = target / f"{capture.stem}-framed.png"
+                        page.screenshot(path=path)
+                        # App Store Connect rejects screenshots with an alpha channel.
+                        with Image.open(path) as framed:
+                            framed.convert("RGB").save(path)
                     found += 1
             console.log(f"{locale}: framed {found} screenshots into {target}")
         browser.close()
