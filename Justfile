@@ -9,6 +9,14 @@ docs-serve port=default_port:
 telemetry-vendor:
   python3 -I telemetry-collector/scripts/fetch_vendor.py
 
+# Expects the `dokku` and `dokku-dashboard` remotes from telemetry-collector/README.md.
+# Force-pushes, since the Dokku remotes only hold deploys; --no-verify skips the LFS hook.
+
+# Deploy the collector and the dashboard from a local branch.
+telemetry-deploy ref="telemetry-collector":
+  git push --no-verify --force dokku "refs/heads/{{ref}}:refs/heads/main"
+  git push --no-verify --force dokku-dashboard "refs/heads/{{ref}}:refs/heads/main"
+
 docs:
   {{zensical}} build
   rm -f site/requirements.in site/requirements.txt
