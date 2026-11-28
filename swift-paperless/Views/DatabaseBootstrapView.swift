@@ -5,6 +5,7 @@
 
 import AppShared
 import AppViews
+import Common
 import Persistence
 import SwiftUI
 import os
@@ -219,7 +220,7 @@ private func previewSQLiteError(
 
 #Preview("App group unavailable") {
   DatabaseFailureView(
-    error: DatabaseError.appGroupUnavailable(identifier: "group.com.paulgessinger.swift-paperless")
+    error: DatabaseError.appGroupUnavailable(identifier: AppGroup.identifier)
   ) {}
 }
 

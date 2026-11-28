@@ -5,6 +5,7 @@
 //  Created by Paul Gessinger on 12.08.23.
 //
 
+import Common
 import DataModel
 import Foundation
 import Observation
@@ -32,7 +33,7 @@ public final class FilterModel {
   public nonisolated static func restoredFilterState() -> FilterState {
     Logger.shared.trace("Loading FilterState")
     guard
-      let data = UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.object(
+      let data = UserDefaults(suiteName: AppGroup.identifier)?.object(
         forKey: "GlobalFilterState") as? Data
     else {
       Logger.shared.trace("No default")
@@ -55,7 +56,7 @@ public final class FilterModel {
 
   /// The local view the list opened on last, if it was one.
   public nonisolated static func restoredLocalView() -> LocalView? {
-    UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?
+    UserDefaults(suiteName: AppGroup.identifier)?
       .string(forKey: "GlobalLocalView").flatMap(LocalView.init(rawValue:))
   }
 
@@ -64,7 +65,7 @@ public final class FilterModel {
   public var localView: LocalView? = FilterModel.restoredLocalView() {
     didSet {
       guard localView != oldValue else { return }
-      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(
+      UserDefaults(suiteName: AppGroup.identifier)?.set(
         localView?.rawValue, forKey: "GlobalLocalView")
     }
   }
@@ -91,7 +92,7 @@ public final class FilterModel {
           "Encoding filter state to UserDefaults failed: \(String(describing: self.filterState))")
         return
       }
-      UserDefaults(suiteName: "group.com.paulgessinger.swift-paperless")?.set(
+      UserDefaults(suiteName: AppGroup.identifier)?.set(
         s, forKey: "GlobalFilterState")
 
       Logger.shared.trace(
